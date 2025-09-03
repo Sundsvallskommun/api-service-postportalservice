@@ -1,4 +1,69 @@
 package se.sundsvall.postportalservice.api.model;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotBlank;
+import java.util.Objects;
+import se.sundsvall.dept44.common.validators.annotation.ValidUuid;
+
+@Schema(description = "Digital registered letter request model")
 public class DigitalRegisteredLetterRequest {
+
+	@Schema(description = "The party id of the recipient", example = "6d0773d6-3e7f-4552-81bc-f0007af95adf")
+	@ValidUuid
+	private String partyId;
+
+	@Schema(description = "The subject of the letter", example = "This is the subject of the letter")
+	@NotBlank
+	private String subject;
+
+	public static DigitalRegisteredLetterRequest create() {
+		return new DigitalRegisteredLetterRequest();
+	}
+
+	public String getPartyId() {
+		return partyId;
+	}
+
+	public void setPartyId(String partyId) {
+		this.partyId = partyId;
+	}
+
+	public DigitalRegisteredLetterRequest withPartyId(String partyId) {
+		this.partyId = partyId;
+		return this;
+	}
+
+	public String getSubject() {
+		return subject;
+	}
+
+	public void setSubject(String subject) {
+		this.subject = subject;
+	}
+
+	public DigitalRegisteredLetterRequest withSubject(String subject) {
+		this.subject = subject;
+		return this;
+	}
+
+	@Override
+	public String toString() {
+		return "DigitalRegisteredLetterRequest{" +
+			"partyId='" + partyId + '\'' +
+			", subject='" + subject + '\'' +
+			'}';
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (o == null || getClass() != o.getClass())
+			return false;
+		DigitalRegisteredLetterRequest that = (DigitalRegisteredLetterRequest) o;
+		return Objects.equals(partyId, that.partyId) && Objects.equals(subject, that.subject);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(partyId, subject);
+	}
 }

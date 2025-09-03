@@ -7,7 +7,7 @@ info:
     url: https://opensource.org/licenses/MIT
   version: "1.0"
 servers:
-  - url: http://localhost:62779
+  - url: http://localhost:54571
     description: Generated server url
 paths:
   /{municipalityId}/precheck:
@@ -115,8 +115,18 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/DigitalRegisteredLetterRequest"
-        required: true
+              required:
+                - attachments
+                - request
+              type: object
+              properties:
+                request:
+                  $ref: "#/components/schemas/DigitalRegisteredLetterRequest"
+                attachments:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
       responses:
         "200":
           description: OK
@@ -159,8 +169,18 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/LetterRequest"
-        required: true
+              required:
+                - attachments
+                - request
+              type: object
+              properties:
+                request:
+                  $ref: "#/components/schemas/LetterRequest"
+                attachments:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
       responses:
         "200":
           description: OK
@@ -627,7 +647,22 @@ paths:
 components:
   schemas:
     PrecheckRequest:
+      required:
+        - recipients
       type: object
+      properties:
+        recipients:
+          minItems: 1
+          type: array
+          description: List of recipients represented by their partyId. Each partyId
+            is a unique identifier for a recipient and must be provided as a valid
+            UUID string.
+          items:
+            minLength: 1
+            type: string
+            description: Recipient partyId (UUID).
+            example: 550e8400-e29b-41d4-a716-446655440000
+      description: Precheck request model
     Problem:
       type: object
       properties:
@@ -641,20 +676,20 @@ components:
           type: object
           additionalProperties:
             type: object
+        status:
+          $ref: "#/components/schemas/StatusType"
         title:
           type: string
         detail:
           type: string
-        status:
-          $ref: "#/components/schemas/StatusType"
     StatusType:
       type: object
       properties:
-        reasonPhrase:
-          type: string
         statusCode:
           type: integer
           format: int32
+        reasonPhrase:
+          type: string
     ConstraintViolationProblem:
       type: object
       properties:
@@ -763,10 +798,147 @@ components:
           type: string
         message:
           type: string
+    SmsRecipient:
+      type: object
+      properties:
+        partyId:
+          type: string
+          description: PartyId is the unique identifier for the recipient
+          example: 6d0773d6-3e7f-4552-81bc-f0007af95adf
+        phoneNumber:
+          type: string
+          description: "Phone number of the recipient, used for SMS notifications"
+          example: "+46701234567"
+      description: SMS recipient model
     SmsRequest:
+      required:
+        - message
+        - recipients
       type: object
+      properties:
+        message:
+          minLength: 1
+          type: string
+          description: The message to be sent
+          example: This is the message to be sent
+        recipients:
+          minItems: 1
+          type: array
+          items:
+            $ref: "#/components/schemas/SmsRecipient"
+      description: SMS request model
     DigitalRegisteredLetterRequest:
+      required:
+        - subject
       type: object
+      properties:
+        partyId:
+          type: string
+          description: The party id of the recipient
+          example: 6d0773d6-3e7f-4552-81bc-f0007af95adf
+        subject:
+          minLength: 1
+          type: string
+          description: The subject of the letter
+          example: This is the subject of the letter
+      description: Digital registered letter request as a JSON string
+    Address:
+      required:
+        - city
+        - country
+        - firstName
+        - lastName
+        - street
+        - zipCode
+      type: object
+      properties:
+        firstName:
+          minLength: 1
+          type: string
+          description: First name of the recipient
+          example: John
+        lastName:
+          minLength: 1
+          type: string
+          description: Last name of the recipient
+          example: Doe
+        street:
+          minLength: 1
+          type: string
+          description: Street address
+          example: Main Street 1
+        apartmentNumber:
+          type: string
+          description: Apartment number
+          example: "1101"
+        careOf:
+          type: string
+          description: Care of
+          example: c/o Jane Doe
+        zipCode:
+          minLength: 1
+          type: string
+          description: Zip code
+          example: "12345"
+        city:
+          minLength: 1
+          type: string
+          description: City
+          example: Sundsvall
+        country:
+          minLength: 1
+          type: string
+          description: Country
+          example: Sweden
+      description: Address model
     LetterRequest:
+      required:
+        - recipients
+        - subject
       type: object
+      properties:
+        subject:
+          minLength: 1
+          type: string
+          description: The subject of the letter
+          example: This is the subject of the letter
+        body:
+          type: string
+          description: The body of the letter
+          example: This is the body of the letter
+        contentType:
+          type: string
+          description: The content type of the body
+          example: text/plain
+        recipients:
+          minItems: 1
+          type: array
+          items:
+            $ref: "#/components/schemas/Recipient"
+        addresses:
+          type: array
+          items:
+            $ref: "#/components/schemas/Address"
+      description: Letter request as a JSON string
+    Recipient:
+      required:
+        - deliveryMethod
+      type: object
+      properties:
+        partyId:
+          type: string
+          description: PartyId is the unique identifier for the recipient
+          example: 6d0773d6-3e7f-4552-81bc-f0007af95adf
+        deliveryMethod:
+          type: string
+          description: Delivery method for the recipient
+          example: DIGITAL_MAIL
+          enum:
+            - DIGITAL_MAIL
+            - SNAIL_MAIL
+            - DELIVERY_NOT_POSSIBLE
+        address:
+          $ref: "#/components/schemas/Address"
+      description: Recipient model
   securitySchemes: { }
+

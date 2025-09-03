@@ -1,11 +1,11 @@
 CREATE TABLE attachment
 (
-    id         VARCHAR(36)  NOT NULL,
-    name       VARCHAR(150) NULL,
-    mime_type  VARCHAR(50)  NULL,
-    content    LONGBLOB     NULL,
-    created    DATETIME     NULL,
-    message_id VARCHAR(36)  NOT NULL,
+    id           VARCHAR(36)  NOT NULL,
+    file_name    VARCHAR(150) NULL,
+    content_type VARCHAR(50)  NULL,
+    content      LONGBLOB     NULL,
+    created      datetime     NULL,
+    message_id   VARCHAR(36)  NOT NULL,
     CONSTRAINT pk_attachment PRIMARY KEY (id)
 );
 
@@ -15,7 +15,7 @@ CREATE TABLE delivery
     status        VARCHAR(50) NULL,
     type          VARCHAR(50) NULL,
     status_detail TEXT        NULL,
-    created       DATETIME    NULL,
+    created       datetime    NULL,
     recipient_id  VARCHAR(36) NOT NULL,
     CONSTRAINT pk_delivery PRIMARY KEY (id)
 );
@@ -33,7 +33,7 @@ CREATE TABLE message
     messaging_id          VARCHAR(36) NULL,
     original_message_type VARCHAR(50) NULL,
     text                  TEXT        NULL,
-    created               DATETIME    NULL,
+    created               datetime    NULL,
     user_id               VARCHAR(36) NULL,
     department_id         VARCHAR(36) NULL,
     CONSTRAINT pk_message PRIMARY KEY (id)
@@ -53,7 +53,7 @@ CREATE TABLE recipient
     zip_code         VARCHAR(10)  NULL,
     city             VARCHAR(100) NULL,
     country          VARCHAR(100) NULL,
-    created          DATETIME     NULL,
+    created          datetime     NULL,
     message_id       VARCHAR(36)  NOT NULL,
     CONSTRAINT pk_recipient PRIMARY KEY (id)
 );

@@ -14,16 +14,16 @@ import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 import org.junit.jupiter.api.Test;
 
-class DigitalRegisteredLetterRequestTest {
+class SmsRecipientTest {
 
 	private final String partyId = "6d0773d6-3e7f-4552-81bc-f0007af95adf";
-	private final String subject = "This is the subject of the letter";
+	private final String phoneNumber = "+46701234567";
 
 	private final Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
 
 	@Test
 	void testBean() {
-		org.hamcrest.MatcherAssert.assertThat(DigitalRegisteredLetterRequest.class, allOf(
+		org.hamcrest.MatcherAssert.assertThat(SmsRecipient.class, allOf(
 			hasValidBeanConstructor(),
 			hasValidGettersAndSetters(),
 			hasValidBeanHashCode(),
@@ -33,55 +33,53 @@ class DigitalRegisteredLetterRequestTest {
 
 	@Test
 	void builderPattern() {
-		final var request = DigitalRegisteredLetterRequest.create()
+		final var smsRecipient = SmsRecipient.create()
 			.withPartyId(partyId)
-			.withSubject(subject);
+			.withPhoneNumber(phoneNumber);
 
-		assertThat(request.getPartyId()).isEqualTo(partyId);
-		assertThat(request.getSubject()).isEqualTo(subject);
-		assertThat(request).hasNoNullFieldsOrProperties();
+		assertThat(smsRecipient.getPartyId()).isEqualTo(partyId);
+		assertThat(smsRecipient.getPhoneNumber()).isEqualTo(phoneNumber);
+		assertThat(smsRecipient).hasNoNullFieldsOrProperties();
 	}
 
 	@Test
 	void settersAndGetters() {
-		final var request = new DigitalRegisteredLetterRequest();
-		request.setPartyId(partyId);
-		request.setSubject(subject);
+		final var smsRecipient = new SmsRecipient();
+		smsRecipient.setPartyId(partyId);
+		smsRecipient.setPhoneNumber(phoneNumber);
 
-		assertThat(request.getPartyId()).isEqualTo(partyId);
-		assertThat(request.getSubject()).isEqualTo(subject);
-		assertThat(request).hasNoNullFieldsOrProperties();
+		assertThat(smsRecipient.getPartyId()).isEqualTo(partyId);
+		assertThat(smsRecipient.getPhoneNumber()).isEqualTo(phoneNumber);
+		assertThat(smsRecipient).hasNoNullFieldsOrProperties();
 	}
 
 	@Test
 	void validateEmptyBean() {
-		final var request = new DigitalRegisteredLetterRequest();
-
-		final var violations = validator.validate(request);
+		final var smsRecipient = new SmsRecipient();
+		final var violations = validator.validate(smsRecipient);
 
 		assertThat(violations).hasSize(2)
 			.extracting(violation -> violation.getPropertyPath().toString(), ConstraintViolation::getMessage)
 			.containsExactlyInAnyOrder(
 				tuple("partyId", "not a valid UUID"),
-				tuple("subject", "must not be blank"));
-		assertThat(request).hasAllNullFieldsOrProperties();
+				tuple("phoneNumber", "must be a valid MSISDN (example: +46701234567). Regular expression: ^\\+[1-9][\\d]{3,14}$"));
+		assertThat(smsRecipient).hasAllNullFieldsOrProperties();
 	}
 
 	@Test
 	void validatePopulatedBean() {
-		final var request = DigitalRegisteredLetterRequest.create()
+		final var bean = SmsRecipient.create()
 			.withPartyId(partyId)
-			.withSubject(subject);
-
-		final var violations = validator.validate(request);
+			.withPhoneNumber(phoneNumber);
+		final var violations = validator.validate(bean);
 
 		assertThat(violations).isEmpty();
-		assertThat(request).hasNoNullFieldsOrProperties();
+		assertThat(bean).hasNoNullFieldsOrProperties();
 	}
 
 	@Test
 	void noDirtOnCreatedBean() {
-		assertThat(DigitalRegisteredLetterRequest.create()).hasAllNullFieldsOrProperties();
-		assertThat(new DigitalRegisteredLetterRequest()).hasAllNullFieldsOrProperties();
+		assertThat(SmsRecipient.create()).hasAllNullFieldsOrProperties();
+		assertThat(new SmsRecipient()).hasAllNullFieldsOrProperties();
 	}
 }

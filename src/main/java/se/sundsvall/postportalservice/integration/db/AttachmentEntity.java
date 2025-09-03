@@ -11,6 +11,7 @@ import jakarta.persistence.Index;
 import jakarta.persistence.Lob;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
+import java.sql.Blob;
 import java.time.OffsetDateTime;
 import java.util.Objects;
 
@@ -25,16 +26,16 @@ public class AttachmentEntity {
 	@Column(name = "id", columnDefinition = "VARCHAR(36)")
 	private String id;
 
-	@Column(name = "name", columnDefinition = "VARCHAR(150)")
-	private String name;
+	@Column(name = "file_name", columnDefinition = "VARCHAR(150)")
+	private String fileName;
 
-	@Column(name = "mime_type", columnDefinition = "VARCHAR(50)")
-	private String mimeType;
+	@Column(name = "content_type", columnDefinition = "VARCHAR(50)")
+	private String contentType;
 
 	@Lob
 	@Basic(fetch = FetchType.LAZY)
 	@Column(name = "content", columnDefinition = "LONGBLOB")
-	private String content;
+	private Blob content;
 
 	@Column(name = "created", columnDefinition = "DATETIME")
 	private OffsetDateTime created;
@@ -52,28 +53,48 @@ public class AttachmentEntity {
 		this.id = id;
 	}
 
-	public String getName() {
-		return name;
+	public AttachmentEntity withId(String id) {
+		this.id = id;
+		return this;
 	}
 
-	public void setName(String name) {
-		this.name = name;
+	public String getFileName() {
+		return fileName;
 	}
 
-	public String getMimeType() {
-		return mimeType;
+	public void setFileName(String fileName) {
+		this.fileName = fileName;
 	}
 
-	public void setMimeType(String mimeType) {
-		this.mimeType = mimeType;
+	public AttachmentEntity withFileName(String fileName) {
+		this.fileName = fileName;
+		return this;
 	}
 
-	public String getContent() {
+	public String getContentType() {
+		return contentType;
+	}
+
+	public void setContentType(String contentType) {
+		this.contentType = contentType;
+	}
+
+	public AttachmentEntity withContentType(String contentType) {
+		this.contentType = contentType;
+		return this;
+	}
+
+	public Blob getContent() {
 		return content;
 	}
 
-	public void setContent(String content) {
+	public void setContent(Blob content) {
 		this.content = content;
+	}
+
+	public AttachmentEntity withContent(Blob content) {
+		this.content = content;
+		return this;
 	}
 
 	public OffsetDateTime getCreated() {
@@ -88,9 +109,9 @@ public class AttachmentEntity {
 	public String toString() {
 		return "AttachmentEntity{" +
 			"id='" + id + '\'' +
-			", name='" + name + '\'' +
-			", mimeType='" + mimeType + '\'' +
-			", content='" + content + '\'' +
+			", fileName='" + fileName + '\'' +
+			", contentType='" + contentType + '\'' +
+			", content=" + content +
 			", created=" + created +
 			'}';
 	}
@@ -100,11 +121,12 @@ public class AttachmentEntity {
 		if (o == null || getClass() != o.getClass())
 			return false;
 		AttachmentEntity that = (AttachmentEntity) o;
-		return Objects.equals(id, that.id) && Objects.equals(name, that.name) && Objects.equals(mimeType, that.mimeType) && Objects.equals(content, that.content) && Objects.equals(created, that.created);
+		return Objects.equals(id, that.id) && Objects.equals(fileName, that.fileName) && Objects.equals(contentType, that.contentType) && Objects.equals(content, that.content) && Objects.equals(created,
+			that.created);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(id, name, mimeType, content, created);
+		return Objects.hash(id, fileName, contentType, content, created);
 	}
 }

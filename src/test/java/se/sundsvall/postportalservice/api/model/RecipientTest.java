@@ -8,22 +8,24 @@ import static com.google.code.beanmatchers.BeanMatchers.hasValidGettersAndSetter
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.hamcrest.CoreMatchers.allOf;
+import static se.sundsvall.postportalservice.TestDataFactory.createValidAddress;
 
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 import org.junit.jupiter.api.Test;
 
-class DigitalRegisteredLetterRequestTest {
+class RecipientTest {
 
 	private final String partyId = "6d0773d6-3e7f-4552-81bc-f0007af95adf";
-	private final String subject = "This is the subject of the letter";
+	private final Recipient.DeliveryMethod deliveryMethod = Recipient.DeliveryMethod.DIGITAL_MAIL;
+	private final Address address = createValidAddress();
 
 	private final Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
 
 	@Test
 	void testBean() {
-		org.hamcrest.MatcherAssert.assertThat(DigitalRegisteredLetterRequest.class, allOf(
+		org.hamcrest.MatcherAssert.assertThat(Recipient.class, allOf(
 			hasValidBeanConstructor(),
 			hasValidGettersAndSetters(),
 			hasValidBeanHashCode(),
@@ -33,55 +35,52 @@ class DigitalRegisteredLetterRequestTest {
 
 	@Test
 	void builderPattern() {
-		final var request = DigitalRegisteredLetterRequest.create()
+		final var recipient = Recipient.create()
 			.withPartyId(partyId)
-			.withSubject(subject);
+			.withDeliveryMethod(deliveryMethod)
+			.withAddress(address);
 
-		assertThat(request.getPartyId()).isEqualTo(partyId);
-		assertThat(request.getSubject()).isEqualTo(subject);
-		assertThat(request).hasNoNullFieldsOrProperties();
+		assertThat(recipient.getPartyId()).isEqualTo(partyId);
+		assertThat(recipient.getDeliveryMethod()).isEqualTo(deliveryMethod);
+		assertThat(recipient.getAddress()).isEqualTo(address);
+		assertThat(recipient).hasNoNullFieldsOrProperties();
 	}
 
 	@Test
 	void settersAndGetters() {
-		final var request = new DigitalRegisteredLetterRequest();
-		request.setPartyId(partyId);
-		request.setSubject(subject);
+		final var recipient = new Recipient();
+		recipient.setPartyId(partyId);
+		recipient.setDeliveryMethod(deliveryMethod);
+		recipient.setAddress(address);
 
-		assertThat(request.getPartyId()).isEqualTo(partyId);
-		assertThat(request.getSubject()).isEqualTo(subject);
-		assertThat(request).hasNoNullFieldsOrProperties();
+		assertThat(recipient.getPartyId()).isEqualTo(partyId);
+		assertThat(recipient.getDeliveryMethod()).isEqualTo(deliveryMethod);
+		assertThat(recipient.getAddress()).isEqualTo(address);
+		assertThat(recipient).hasNoNullFieldsOrProperties();
 	}
 
 	@Test
 	void validateEmptyBean() {
-		final var request = new DigitalRegisteredLetterRequest();
-
-		final var violations = validator.validate(request);
+		final var recipient = new Recipient();
+		final var violations = validator.validate(recipient);
 
 		assertThat(violations).hasSize(2)
 			.extracting(violation -> violation.getPropertyPath().toString(), ConstraintViolation::getMessage)
 			.containsExactlyInAnyOrder(
 				tuple("partyId", "not a valid UUID"),
-				tuple("subject", "must not be blank"));
-		assertThat(request).hasAllNullFieldsOrProperties();
+				tuple("deliveryMethod", "must not be null"));
+		assertThat(recipient).hasAllNullFieldsOrProperties();
 	}
 
 	@Test
 	void validatePopulatedBean() {
-		final var request = DigitalRegisteredLetterRequest.create()
+		final var recipient = Recipient.create()
 			.withPartyId(partyId)
-			.withSubject(subject);
-
-		final var violations = validator.validate(request);
+			.withDeliveryMethod(deliveryMethod)
+			.withAddress(address);
+		final var violations = validator.validate(recipient);
 
 		assertThat(violations).isEmpty();
-		assertThat(request).hasNoNullFieldsOrProperties();
-	}
-
-	@Test
-	void noDirtOnCreatedBean() {
-		assertThat(DigitalRegisteredLetterRequest.create()).hasAllNullFieldsOrProperties();
-		assertThat(new DigitalRegisteredLetterRequest()).hasAllNullFieldsOrProperties();
+		assertThat(recipient).hasNoNullFieldsOrProperties();
 	}
 }
