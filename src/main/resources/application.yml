@@ -40,3 +40,13 @@ openapi:
   title: Postportalservice
   name: postportalservice
   version: '@project.version@'
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      messagingsettings:
+        ignoreExceptions: se.sundsvall.dept44.exception.ClientProblem
+      employee:
+        ignoreExceptions: se.sundsvall.dept44.exception.ClientProblem
+      messaging:
+        ignoreExceptions: se.sundsvall.dept44.exception.ClientProblem

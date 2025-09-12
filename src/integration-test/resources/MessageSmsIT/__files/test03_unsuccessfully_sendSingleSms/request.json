@@ -1,0 +1,9 @@
+{
+	"message": "This is the message to be sent",
+	"recipients": [
+		{
+			"partyId": "6d0773d6-3e7f-4552-81bc-f0007af95adf",
+			"phoneNumber": "+46701234567"
+		}
+	]
+}

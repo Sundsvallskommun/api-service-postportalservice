@@ -1,0 +1,13 @@
+{
+	"request": {
+		"url": "/api-messagingsettings/2281/28/sender-info",
+		"method": "GET"
+	},
+	"response": {
+		"status": 200,
+		"headers": {
+			"Content-Type": "application/json"
+		},
+		"bodyFileName": "test05_partially_successful_sendMultipleSms/responses/messagingsettings-sender-info.json"
+	}
+}

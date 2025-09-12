@@ -15,7 +15,8 @@ import se.sundsvall.postportalservice.integration.messagingsettings.configuratio
 @FeignClient(
 	name = CLIENT_ID,
 	url = "${integration.messagingsettings.url}",
-	configuration = MessagingSettingsConfiguration.class)
+	configuration = MessagingSettingsConfiguration.class,
+	dismiss404 = true)
 public interface MessagingSettingsClient {
 
 	@GetMapping(path = "/{municipalityId}/{departmentId}/sender-info", produces = APPLICATION_JSON_VALUE)

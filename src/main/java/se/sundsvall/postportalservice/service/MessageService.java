@@ -2,6 +2,7 @@ package se.sundsvall.postportalservice.service;
 
 import static java.util.concurrent.CompletableFuture.supplyAsync;
 import static org.zalando.problem.Status.BAD_GATEWAY;
+import static org.zalando.problem.Status.INTERNAL_SERVER_ERROR;
 import static se.sundsvall.postportalservice.integration.db.converter.MessageType.SMS;
 
 import generated.se.sundsvall.messaging.DeliveryResult;
@@ -129,6 +130,9 @@ public class MessageService {
 	}
 
 	void updateRecipient(final MessageResult messageResult, final RecipientEntity recipientEntity) {
+		if (messageResult == null) {
+			return;
+		}
 		var messageId = messageResult.getMessageId();
 		var deliveryResult = Optional.ofNullable(messageResult.getDeliveries()).stream()
 			.flatMap(Collection::stream)
@@ -157,9 +161,10 @@ public class MessageService {
 
 	SentBy getSentBy(final String municipalityId) {
 		var username = Identifier.get().getValue();
-		var personData = employeeIntegration.getPortalPersonData(municipalityId, username);
+		var personData = employeeIntegration.getPortalPersonData(municipalityId, username)
+			.orElseThrow(() -> Problem.valueOf(BAD_GATEWAY, "Failed to retrieve employee data for user [%s]".formatted(username)));
 		var department = EmployeeUtil.parseOrganizationString(personData.getOrgTree())
-			.orElseThrow(() -> Problem.valueOf(BAD_GATEWAY, "Failed to parse organization from employee data"));
+			.orElseThrow(() -> Problem.valueOf(INTERNAL_SERVER_ERROR, "Failed to parse organization from employee data"));
 
 		return new SentBy(username, department.identifier(), department.name());
 	}

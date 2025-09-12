@@ -31,7 +31,8 @@ class EmployeeIntegrationTest {
 
 		var result = employeeIntegration.getPortalPersonData(municipalityId, userName);
 
-		assertThat(result).isEqualTo(portalPersonData);
+		assertThat(result).isPresent();
+		assertThat(result.get()).isEqualTo(portalPersonData);
 		verify(employeeClient).getPortalPersonData(municipalityId, "personal", userName);
 		verifyNoMoreInteractions(employeeClient);
 	}

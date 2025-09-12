@@ -303,7 +303,7 @@ class MessageServiceTest {
 
 		var personData = new PortalPersonData()
 			.orgTree("2|42|En man som heter Ove¤3|880|Sunes sommar¤4|1234|Solsidan¤5|8456|Sällskapsresan¤6|7894|Tomten är far till alla barnen");
-		when(employeeIntegrationMock.getPortalPersonData(MUNICIPALITY_ID, username)).thenReturn(personData);
+		when(employeeIntegrationMock.getPortalPersonData(MUNICIPALITY_ID, username)).thenReturn(Optional.of(personData));
 
 		var result = messageService.getSentBy(MUNICIPALITY_ID);
 
@@ -319,11 +319,11 @@ class MessageServiceTest {
 
 		var personData = new PortalPersonData()
 			.orgTree("invalid-org-tree-format");
-		when(employeeIntegrationMock.getPortalPersonData(MUNICIPALITY_ID, username)).thenReturn(personData);
+		when(employeeIntegrationMock.getPortalPersonData(MUNICIPALITY_ID, username)).thenReturn(Optional.of(personData));
 
 		assertThatThrownBy(() -> messageService.getSentBy(MUNICIPALITY_ID))
 			.isInstanceOf(Problem.class)
-			.hasMessage("Bad Gateway: Failed to parse organization from employee data");
+			.hasMessage("Internal Server Error: Failed to parse organization from employee data");
 
 		verify(employeeIntegrationMock).getPortalPersonData(MUNICIPALITY_ID, username);
 	}
