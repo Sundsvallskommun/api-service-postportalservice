@@ -1,0 +1,13 @@
+{
+	"request": {
+		"url": "/api-messagingsettings/2281/28/sender-info",
+		"method": "GET"
+	},
+	"response": {
+		"status": 502,
+		"headers": {
+			"Content-Type": "application/json"
+		},
+		"bodyFileName": "test07_messagingsettings_failure/responses/messagingsettings-sender-info.json"
+	}
+}

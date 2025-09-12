@@ -4,7 +4,7 @@
         content_type VARCHAR(50),
         file_name VARCHAR(150),
         id VARCHAR(36) not null,
-        message_id VARCHAR(36) NOT NULL,
+        message_id VARCHAR(36),
         content LONGBLOB,
         primary key (id)
     ) engine=InnoDB;
@@ -19,9 +19,10 @@
     create table message (
         created DATETIME,
         department_id VARCHAR(36),
+        display_name VARCHAR(100),
         id VARCHAR(36) not null,
-        messaging_id VARCHAR(36),
-        original_message_type VARCHAR(50),
+        message_type VARCHAR(50),
+        municipality_id VARCHAR(6),
         text TEXT,
         user_id VARCHAR(36),
         primary key (id)
@@ -38,7 +39,8 @@
         first_name VARCHAR(100),
         id VARCHAR(36) not null,
         last_name VARCHAR(100),
-        message_id VARCHAR(36) NOT NULL,
+        message_id VARCHAR(36),
+        messaging_id VARCHAR(36),
         party_id VARCHAR(36),
         phone_number VARCHAR(20),
         status VARCHAR(50),

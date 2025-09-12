@@ -7,7 +7,7 @@ info:
     url: https://opensource.org/licenses/MIT
   version: "1.0"
 servers:
-  - url: http://localhost:54571
+  - url: http://localhost:50695
     description: Generated server url
 paths:
   /{municipalityId}/precheck:
@@ -61,6 +61,11 @@ paths:
       summary: Send an SMS
       operationId: sendSms
       parameters:
+        - name: X-Sent-By
+          in: header
+          required: true
+          schema:
+            type: string
         - name: municipalityId
           in: path
           description: Municipality ID
@@ -941,4 +946,3 @@ components:
           $ref: "#/components/schemas/Address"
       description: Recipient model
   securitySchemes: { }
-

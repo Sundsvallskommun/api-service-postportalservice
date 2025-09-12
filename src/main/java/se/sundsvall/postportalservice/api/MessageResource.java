@@ -1,7 +1,10 @@
 package se.sundsvall.postportalservice.api;
 
+import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
 import static org.springframework.http.MediaType.ALL_VALUE;
 import static org.springframework.http.MediaType.APPLICATION_PROBLEM_JSON_VALUE;
+import static org.springframework.http.ResponseEntity.created;
+import static org.springframework.web.util.UriComponentsBuilder.fromPath;
 import static se.sundsvall.postportalservice.service.util.ParseUtil.parseLetterRequest;
 import static se.sundsvall.postportalservice.service.util.ValidationUtil.validate;
 
@@ -20,16 +23,20 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.zalando.problem.Problem;
 import se.sundsvall.dept44.common.validators.annotation.ValidMunicipalityId;
+import se.sundsvall.dept44.support.Identifier;
 import se.sundsvall.postportalservice.api.model.Attachments;
 import se.sundsvall.postportalservice.api.model.DigitalRegisteredLetterRequest;
 import se.sundsvall.postportalservice.api.model.LetterRequest;
 import se.sundsvall.postportalservice.api.model.SmsRequest;
+import se.sundsvall.postportalservice.api.validation.ValidIdentifier;
+import se.sundsvall.postportalservice.service.MessageService;
 
 @Validated
 @RestController
@@ -42,7 +49,11 @@ import se.sundsvall.postportalservice.api.model.SmsRequest;
 @ApiResponse(responseCode = "502", description = "Bad Gateway", content = @Content(mediaType = APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = Problem.class)))
 class MessageResource {
 
-	MessageResource() {}
+	private final MessageService messageService;
+
+	MessageResource(final MessageService messageService) {
+		this.messageService = messageService;
+	}
 
 	@Operation(summary = "Send a message by either digital mail or as a physical letter. Digital mail is always preferred if possible.", responses = {
 		@ApiResponse(responseCode = "200", description = "OK", useReturnTypeSchema = true)
@@ -84,12 +95,17 @@ class MessageResource {
 	})
 	@PostMapping(value = "/sms", produces = ALL_VALUE)
 	ResponseEntity<Void> sendSms(
+		@RequestHeader(value = Identifier.HEADER_NAME) @ValidIdentifier final String xSentBy,
 		@Parameter(name = "municipalityId", description = "Municipality ID", example = "2281") @ValidMunicipalityId @PathVariable final String municipalityId,
 		@RequestBody @Valid final SmsRequest request) {
+		Identifier.set(Identifier.parse(xSentBy));
 
-		// Should return created and a location header.
-		// /{municipalityId}/history/messages/{messageId}
-		return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
+		final var messageId = messageService.processRequest(municipalityId, request);
+
+		return created(fromPath("/{municipalityId}/history/messages/{messageId}")
+			.buildAndExpand(municipalityId, messageId).toUri())
+			.header(CONTENT_TYPE, ALL_VALUE)
+			.build();
 	}
 
 }

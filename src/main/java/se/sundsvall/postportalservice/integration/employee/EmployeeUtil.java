@@ -17,7 +17,7 @@ public final class EmployeeUtil {
 	 * @param  organizationsString the organization string from the Employee API
 	 * @return                     A department model object that represents the department (level 2) or null if not found
 	 */
-	public static Department parseOrganizationString(final String organizationsString) {
+	public static Optional<Department> parseOrganizationString(final String organizationsString) {
 		final var organizations = Optional.ofNullable(organizationsString)
 			.map(string -> string.split(ORGANIZATION_DELIMITER))
 			.orElse(new String[0]);
@@ -34,11 +34,11 @@ public final class EmployeeUtil {
 			final var name = orgInfo[2];
 
 			if (toInt(level) == 2) {
-				return new Department(organizationIdentifier, name);
+				return Optional.of(new Department(organizationIdentifier, name));
 			}
 		}
 
-		return null;
+		return Optional.empty();
 	}
 
 }

@@ -1,6 +1,7 @@
 package se.sundsvall.postportalservice.integration.employee;
 
 import generated.se.sundsvall.employee.PortalPersonData;
+import java.util.Optional;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
 
@@ -16,8 +17,8 @@ public class EmployeeIntegration {
 	}
 
 	@Cacheable(value = PORTAL_PERSON_DATA_CACHE, key = "{#municipalityId, #userName}")
-	public PortalPersonData getPortalPersonData(final String municipalityId, final String userName) {
-		return client.getPortalPersonData(municipalityId, "personal", userName);
+	public Optional<PortalPersonData> getPortalPersonData(final String municipalityId, final String userName) {
+		return Optional.ofNullable(client.getPortalPersonData(municipalityId, "personal", userName));
 	}
 
 }

@@ -1,0 +1,17 @@
+{
+	"message": "This is a message that will be sent to three different recipients",
+	"recipients": [
+		{
+			"partyId": "6d0773d6-3e7f-4552-81bc-f0007af95ada",
+			"phoneNumber": "+46701234561"
+		},
+		{
+			"partyId": "6d0773d6-3e7f-4552-81bc-f0007af95adb",
+			"phoneNumber": "+46701234562"
+		},
+		{
+			"partyId": "6d0773d6-3e7f-4552-81bc-f0007af95adc",
+			"phoneNumber": "+46701234563"
+		}
+	]
+}

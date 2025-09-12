@@ -21,8 +21,9 @@ import se.sundsvall.postportalservice.integration.db.converter.MessageType;
 class MessageEntityTest {
 
 	private static final String ID = "id";
-	private static final String MESSAGING_ID = "messagingId";
-	private static final MessageType ORIGINAL_MESSAGE_TYPE = MessageType.SMS;
+	private static final String MUNICIPALITY_ID = "municipalityId";
+	private static final String DISPLAY_NAME = "displayName";
+	private static final MessageType MESSAGE_TYPE = MessageType.SMS;
 	private static final String TEXT = "text";
 	private static final OffsetDateTime CREATED = now();
 
@@ -50,20 +51,22 @@ class MessageEntityTest {
 		var recipientEntities = new ArrayList<RecipientEntity>();
 
 		messageEntity.setId(ID);
-		messageEntity.setMessagingId(MESSAGING_ID);
-		messageEntity.setOriginalMessageType(ORIGINAL_MESSAGE_TYPE);
+		messageEntity.setMunicipalityId(MUNICIPALITY_ID);
+		messageEntity.setMessageType(MESSAGE_TYPE);
 		messageEntity.setText(TEXT);
 		messageEntity.setCreated(CREATED);
+		messageEntity.setDisplayName(DISPLAY_NAME);
 		messageEntity.setUser(userEntity);
 		messageEntity.setDepartment(departmentEntity);
 		messageEntity.setAttachments(attachments);
 		messageEntity.setRecipients(recipientEntities);
 
 		assertThat(messageEntity.getId()).isEqualTo(ID);
-		assertThat(messageEntity.getMessagingId()).isEqualTo(MESSAGING_ID);
-		assertThat(messageEntity.getOriginalMessageType()).isEqualTo(ORIGINAL_MESSAGE_TYPE);
+		assertThat(messageEntity.getMunicipalityId()).isEqualTo(MUNICIPALITY_ID);
+		assertThat(messageEntity.getMessageType()).isEqualTo(MESSAGE_TYPE);
 		assertThat(messageEntity.getText()).isEqualTo(TEXT);
 		assertThat(messageEntity.getCreated()).isEqualTo(CREATED);
+		assertThat(messageEntity.getDisplayName()).isEqualTo(DISPLAY_NAME);
 		assertThat(messageEntity.getUser()).isEqualTo(userEntity);
 		assertThat(messageEntity.getDepartment()).isEqualTo(departmentEntity);
 		assertThat(messageEntity.getAttachments()).isEqualTo(attachments);

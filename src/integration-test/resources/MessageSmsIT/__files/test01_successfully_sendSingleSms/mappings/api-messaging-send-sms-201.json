@@ -1,0 +1,13 @@
+{
+	"request": {
+		"url": "/api-messaging/2281/sms",
+		"method": "POST"
+	},
+	"response": {
+		"status": 201,
+		"headers": {
+			"Content-Type": "application/json"
+		},
+		"bodyFileName": "test01_successfully_sendSingleSms/responses/messaging-send-sms.json"
+	}
+}

@@ -20,6 +20,10 @@ public class UserEntity {
 	@Column(name = "name", columnDefinition = "VARCHAR(100)")
 	private String name;
 
+	public static UserEntity create() {
+		return new UserEntity();
+	}
+
 	public String getId() {
 		return id;
 	}
@@ -28,12 +32,22 @@ public class UserEntity {
 		this.id = id;
 	}
 
+	public UserEntity withId(String id) {
+		this.id = id;
+		return this;
+	}
+
 	public String getName() {
 		return name;
 	}
 
 	public void setName(String name) {
 		this.name = name;
+	}
+
+	public UserEntity withName(String name) {
+		this.name = name;
+		return this;
 	}
 
 	@Override

@@ -1,0 +1,13 @@
+{
+	"request": {
+		"url": "/api-employee/2281/portalpersondata/personal/TestUser",
+		"method": "GET"
+	},
+	"response": {
+		"status": 200,
+		"headers": {
+			"Content-Type": "application/json"
+		},
+		"bodyFileName": "test02_successfully_sendMultipleSms/responses/employee-getportalpersondata.json"
+	}
+}

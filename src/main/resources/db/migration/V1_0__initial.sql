@@ -5,7 +5,7 @@ CREATE TABLE attachment
     content_type VARCHAR(50)  NULL,
     content      LONGBLOB     NULL,
     created      datetime     NULL,
-    message_id   VARCHAR(36)  NOT NULL,
+    message_id   VARCHAR(36)  NULL,
     CONSTRAINT pk_attachment PRIMARY KEY (id)
 );
 
@@ -19,13 +19,14 @@ CREATE TABLE department
 
 CREATE TABLE message
 (
-    id                    VARCHAR(36) NOT NULL,
-    messaging_id          VARCHAR(36) NULL,
-    original_message_type VARCHAR(50) NULL,
-    text                  TEXT        NULL,
-    created               datetime    NULL,
-    user_id               VARCHAR(36) NULL,
-    department_id         VARCHAR(36) NULL,
+    id              VARCHAR(36)  NOT NULL,
+    municipality_id VARCHAR(6)   NULL,
+    display_name    VARCHAR(100) NULL,
+    message_type    VARCHAR(50)  NULL,
+    text            TEXT         NULL,
+    created         datetime     NULL,
+    user_id         VARCHAR(36)  NULL,
+    department_id   VARCHAR(36)  NULL,
     CONSTRAINT pk_message PRIMARY KEY (id)
 );
 
@@ -46,8 +47,9 @@ CREATE TABLE recipient
     status           VARCHAR(50)  NULL,
     type             VARCHAR(50)  NULL,
     status_detail    TEXT         NULL,
+    messaging_id     VARCHAR(36)  NULL,
     created          datetime     NULL,
-    message_id       VARCHAR(36)  NOT NULL,
+    message_id       VARCHAR(36)  NULL,
     CONSTRAINT pk_recipient PRIMARY KEY (id)
 );
 
@@ -64,12 +66,12 @@ ALTER TABLE attachment
 CREATE INDEX IDX_ATTACHMENT_MESSAGE_ID ON attachment (message_id);
 
 ALTER TABLE message
-    ADD CONSTRAINT FK_MESSAGE_ON_DEPARTMENT FOREIGN KEY (department_id) REFERENCES department (id);
+    ADD CONSTRAINT FK_MESSAGE_DEPARTMENT FOREIGN KEY (department_id) REFERENCES department (id);
 
 CREATE INDEX IDX_MESSAGE_DEPARTMENT_ID ON message (department_id);
 
 ALTER TABLE message
-    ADD CONSTRAINT FK_MESSAGE_ON_USER FOREIGN KEY (user_id) REFERENCES user (id);
+    ADD CONSTRAINT FK_MESSAGE_USER FOREIGN KEY (user_id) REFERENCES user (id);
 
 CREATE INDEX IDX_MESSAGE_USER_ID ON message (user_id);
 

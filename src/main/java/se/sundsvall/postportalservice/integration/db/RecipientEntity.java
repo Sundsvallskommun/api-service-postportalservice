@@ -66,6 +66,9 @@ public class RecipientEntity {
 	@Column(name = "status_detail", columnDefinition = "TEXT")
 	private String statusDetail;
 
+	@Column(name = "messaging_id", columnDefinition = "VARCHAR(36)")
+	private String messagingId;
+
 	@Column(name = "created", columnDefinition = "DATETIME")
 	private OffsetDateTime created;
 
@@ -88,6 +91,19 @@ public class RecipientEntity {
 
 	public RecipientEntity withMessageStatus(MessageStatus messageStatus) {
 		this.messageStatus = messageStatus;
+		return this;
+	}
+
+	public String getMessagingId() {
+		return messagingId;
+	}
+
+	public void setMessagingId(String messagingId) {
+		this.messagingId = messagingId;
+	}
+
+	public RecipientEntity withMessagingId(String messagingId) {
+		this.messagingId = messagingId;
 		return this;
 	}
 
@@ -304,6 +320,7 @@ public class RecipientEntity {
 			", messageStatus=" + messageStatus +
 			", messageType=" + messageType +
 			", statusDetail='" + statusDetail + '\'' +
+			", messagingId='" + messagingId + '\'' +
 			", created=" + created +
 			'}';
 	}
@@ -316,11 +333,11 @@ public class RecipientEntity {
 		return Objects.equals(id, that.id) && Objects.equals(partyId, that.partyId) && Objects.equals(email, that.email) && Objects.equals(phoneNumber, that.phoneNumber) && Objects.equals(firstName,
 			that.firstName) && Objects.equals(lastName, that.lastName) && Objects.equals(streetAddress, that.streetAddress) && Objects.equals(apartmentNumber, that.apartmentNumber) && Objects.equals(careOf, that.careOf)
 			&& Objects.equals(zipCode, that.zipCode) && Objects.equals(city, that.city) && Objects.equals(country, that.country) && messageStatus == that.messageStatus && messageType == that.messageType
-			&& Objects.equals(statusDetail, that.statusDetail) && Objects.equals(created, that.created);
+			&& Objects.equals(statusDetail, that.statusDetail) && Objects.equals(messagingId, that.messagingId) && Objects.equals(created, that.created);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(id, partyId, email, phoneNumber, firstName, lastName, streetAddress, apartmentNumber, careOf, zipCode, city, country, messageStatus, messageType, statusDetail, created);
+		return Objects.hash(id, partyId, email, phoneNumber, firstName, lastName, streetAddress, apartmentNumber, careOf, zipCode, city, country, messageStatus, messageType, statusDetail, messagingId, created);
 	}
 }

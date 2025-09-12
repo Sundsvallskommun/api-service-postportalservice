@@ -21,6 +21,7 @@ import se.sundsvall.postportalservice.integration.db.converter.MessageType;
 class RecipientEntityTest {
 
 	private static final String ID = "id";
+	private static final String MESSAGING_ID = "messagingId";
 	private static final String PARTY_ID = "partyId";
 	private static final String EMAIL = "email";
 	private static final String PHONE_NUMBER = "phoneNumber";
@@ -70,7 +71,8 @@ class RecipientEntityTest {
 			.withCreated(CREATED)
 			.withStatusDetail(STATUS_DETAIL)
 			.withMessageType(MESSAGE_TYPE)
-			.withMessageStatus(MESSAGE_STATUS);
+			.withMessageStatus(MESSAGE_STATUS)
+			.withMessagingId(MESSAGING_ID);
 
 		assertThat(recipientEntity.getId()).isEqualTo(ID);
 		assertThat(recipientEntity.getPartyId()).isEqualTo(PARTY_ID);
@@ -88,6 +90,7 @@ class RecipientEntityTest {
 		assertThat(recipientEntity.getStatusDetail()).isEqualTo(STATUS_DETAIL);
 		assertThat(recipientEntity.getMessageType()).isEqualTo(MESSAGE_TYPE);
 		assertThat(recipientEntity.getMessageStatus()).isEqualTo(MESSAGE_STATUS);
+		assertThat(recipientEntity.getMessagingId()).isEqualTo(MESSAGING_ID);
 		assertThat(recipientEntity).hasNoNullFieldsOrProperties();
 	}
 
@@ -111,6 +114,7 @@ class RecipientEntityTest {
 		recipientEntity.setStatusDetail(STATUS_DETAIL);
 		recipientEntity.setMessageType(MESSAGE_TYPE);
 		recipientEntity.setMessageStatus(MESSAGE_STATUS);
+		recipientEntity.setMessagingId(MESSAGING_ID);
 
 		assertThat(recipientEntity.getId()).isEqualTo(ID);
 		assertThat(recipientEntity.getPartyId()).isEqualTo(PARTY_ID);
@@ -128,6 +132,7 @@ class RecipientEntityTest {
 		assertThat(recipientEntity.getStatusDetail()).isEqualTo(STATUS_DETAIL);
 		assertThat(recipientEntity.getMessageType()).isEqualTo(MESSAGE_TYPE);
 		assertThat(recipientEntity.getMessageStatus()).isEqualTo(MESSAGE_STATUS);
+		assertThat(recipientEntity.getMessagingId()).isEqualTo(MESSAGING_ID);
 		assertThat(recipientEntity).hasNoNullFieldsOrProperties();
 	}
 

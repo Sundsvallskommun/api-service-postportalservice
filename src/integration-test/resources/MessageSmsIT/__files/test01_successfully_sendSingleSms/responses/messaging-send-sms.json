@@ -1,0 +1,10 @@
+{
+	"messageId": "550e8400-e29b-41d4-a716-446655440000",
+	"deliveries": [
+		{
+			"deliveryId": "111e8400-e29b-41d4-a716-446655440000",
+			"messageType": "SMS",
+			"status": "SENT"
+		}
+	]
+}

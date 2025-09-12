@@ -1,4 +1,4 @@
-package openapi;
+package se.sundsvall.postportalservice.openapi;
 
 import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 import static net.javacrumbs.jsonunit.core.Option.IGNORING_ARRAY_ORDER;

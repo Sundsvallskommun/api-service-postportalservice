@@ -1,0 +1,5 @@
+{
+	"title": "Bad Gateway",
+	"status": 502,
+	"detail": "messagingsettings error: {detail=Failed to retrieve sender info data for department [Testkontoret], status=502 Bad Gateway, title=Bad Gateway}"
+}

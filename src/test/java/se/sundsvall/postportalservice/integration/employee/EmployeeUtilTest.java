@@ -12,15 +12,15 @@ class EmployeeUtilTest {
 
 		var result = EmployeeUtil.parseOrganizationString(organizationString);
 
-		assertThat(result).isNotNull();
-		assertThat(result.identifier()).isEqualTo("28");
-		assertThat(result.name()).isEqualTo("Kommunstyrelsekontoret");
+		assertThat(result).isPresent();
+		assertThat(result.get().identifier()).isEqualTo("28");
+		assertThat(result.get().name()).isEqualTo("Kommunstyrelsekontoret");
 	}
 
 	@Test
 	void parseOrganizationStringWithNull() {
 		var result = EmployeeUtil.parseOrganizationString(null);
 
-		assertThat(result).isNull();
+		assertThat(result).isEmpty();
 	}
 }

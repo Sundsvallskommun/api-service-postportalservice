@@ -1,0 +1,19 @@
+{
+	"priority": 2,
+	"request": {
+		"method": "POST",
+		"urlPath": "/api-messaging/2281/sms",
+		"bodyPatterns": [
+			{
+				"matchesJsonPath": "$[?(@.mobileNumber == '+46701234561')]"
+			}
+		]
+	},
+	"response": {
+		"status": 201,
+		"headers": {
+			"Content-Type": "application/json"
+		},
+		"bodyFileName": "test05_partially_successful_sendMultipleSms/responses/messaging-send-sms-201.json"
+	}
+}

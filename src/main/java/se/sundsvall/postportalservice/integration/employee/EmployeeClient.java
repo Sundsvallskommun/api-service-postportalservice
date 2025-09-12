@@ -12,7 +12,8 @@ import se.sundsvall.postportalservice.integration.employee.configuration.Employe
 @FeignClient(
 	name = CLIENT_ID,
 	url = "${integration.employee.url}",
-	configuration = EmployeeConfiguration.class)
+	configuration = EmployeeConfiguration.class,
+	dismiss404 = true)
 @CircuitBreaker(name = CLIENT_ID)
 public interface EmployeeClient {
 
