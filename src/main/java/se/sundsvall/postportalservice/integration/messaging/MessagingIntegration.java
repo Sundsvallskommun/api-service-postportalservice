@@ -4,6 +4,7 @@ import static se.sundsvall.postportalservice.integration.messaging.MessagingMapp
 import static se.sundsvall.postportalservice.integration.messaging.MessagingMapper.toSmsRequest;
 
 import generated.se.sundsvall.messaging.DeliveryResult;
+import generated.se.sundsvall.messaging.Mailbox;
 import generated.se.sundsvall.messaging.MessageBatchResult;
 import generated.se.sundsvall.messaging.MessageResult;
 import generated.se.sundsvall.messaging.MessageStatus;
@@ -61,11 +62,15 @@ public class MessagingIntegration {
 		return true;
 	}
 
-	public boolean precheckMailBoxes(final String municipalityId) {
-		// Used to precheck digital-mailboxes.
-		// TODO: When messaging exposes the new precheck endpoint, implement the mapping and the call to messaging. The return
-		// value should include which recipients that have an eligible digital-mailbox.
+	public boolean sendSnailMail(final String municipalityId) {
+		// Used to send snail mail.
+		// TODO: When messaging exposes the new snail mail endpoint, implement the mapping and the call to messaging. Also, the
+		// response from messaging should be used to update the status of the message.
 		return true;
+	}
+
+	public List<Mailbox> precheckMailboxes(final String municipalityId, final String organizationNumber, final List<String> partyIds) {
+		return client.precheckMailboxes(municipalityId, organizationNumber, partyIds);
 	}
 
 	String getIdentifierHeaderValue(final String userName) {

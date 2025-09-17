@@ -94,4 +94,42 @@ class MessagingSettingsIntegrationTest {
 
 		verify(clientMock).getSenderInfo(MUNICIPALITY_ID, DEPARTMENT_ID);
 	}
+
+	@Test
+	void getOrganizationNumber() {
+		final var organizationNumber = "162021005489";
+		final var senderInfo = new SenderInfoResponse();
+
+		senderInfo.setOrganizationNumber(organizationNumber);
+
+		when(clientMock.getSenderInfo(MUNICIPALITY_ID, DEPARTMENT_ID)).thenReturn(Optional.of(senderInfo));
+
+		final var result = integration.getOrganizationNumber(MUNICIPALITY_ID, DEPARTMENT_ID);
+
+		assertThat(result).isNotEmpty();
+		assertThat(result.get()).isEqualTo(organizationNumber);
+		verify(clientMock).getSenderInfo(MUNICIPALITY_ID, DEPARTMENT_ID);
+	}
+
+	@Test
+	void getOrganizationNumber_withNoMatch() {
+		when(clientMock.getSenderInfo(MUNICIPALITY_ID, DEPARTMENT_ID)).thenReturn(Optional.empty());
+
+		final var result = integration.getOrganizationNumber(MUNICIPALITY_ID, DEPARTMENT_ID);
+
+		assertThat(result).isEmpty();
+		verify(clientMock).getSenderInfo(MUNICIPALITY_ID, DEPARTMENT_ID);
+	}
+
+	@Test
+	void getOrganizationNumber_withNullValue() {
+		final var senderInfo = new SenderInfoResponse();
+
+		when(clientMock.getSenderInfo(MUNICIPALITY_ID, DEPARTMENT_ID)).thenReturn(Optional.of(senderInfo));
+
+		final var result = integration.getOrganizationNumber(MUNICIPALITY_ID, DEPARTMENT_ID);
+
+		assertThat(result).isEmpty();
+		verify(clientMock).getSenderInfo(MUNICIPALITY_ID, DEPARTMENT_ID);
+	}
 }

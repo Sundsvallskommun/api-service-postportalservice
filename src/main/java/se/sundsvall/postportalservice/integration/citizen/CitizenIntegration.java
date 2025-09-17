@@ -5,6 +5,7 @@ import static java.util.Optional.ofNullable;
 
 import generated.se.sundsvall.citizen.CitizenAddress;
 import generated.se.sundsvall.citizen.CitizenExtended;
+import generated.se.sundsvall.citizen.PersonGuidBatch;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.stereotype.Component;
@@ -20,7 +21,19 @@ public class CitizenIntegration {
 		this.client = client;
 	}
 
+	public List<PersonGuidBatch> getPartyIds(final String municipalityId, final List<String> personIds) {
+		if (personIds.isEmpty()) {
+			return emptyList();
+		}
+
+		return client.getPartyIds(municipalityId, personIds);
+	}
+
 	public List<CitizenExtended> getCitizens(final String municipalityId, final List<String> partyIds) {
+		if (partyIds.isEmpty()) {
+			return emptyList();
+		}
+
 		return client.getCitizens(municipalityId, partyIds);
 	}
 
@@ -34,5 +47,9 @@ public class CitizenIntegration {
 			.stream()
 			.filter(address -> POPULATION_REGISTRATION_ADDRESS.equals(address.getAddressType()))
 			.findFirst();
+	}
+
+	public boolean isRegisteredInSweden(final CitizenExtended citizen) {
+		return getPopulationRegistrationAddress(citizen).isPresent();
 	}
 }

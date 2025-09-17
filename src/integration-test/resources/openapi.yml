@@ -1,39 +1,50 @@
-openapi: 3.0.1
+openapi: "3.0.1"
 info:
   title: Postportalservice
-  contact: { }
+  contact: {}
   license:
     name: MIT License
     url: https://opensource.org/licenses/MIT
   version: "1.0"
 servers:
   - url: http://localhost:52930
-    description: Generated server url
 paths:
-  /{municipalityId}/precheck:
+  "/{municipalityId}/{departmentId}/precheck":
     post:
-      tags:
-        - Precheck Resources
-      summary: "Checks how a recipient can be contacted, digital post or physical\
-        \ letter"
+      tags: ["Precheck Resources"]
+      summary: Checks how a recipient can be contacted, digital post or physical letter
       operationId: precheckRecipients
       parameters:
         - name: municipalityId
           in: path
           description: Municipality ID
           required: true
-          schema:
-            type: string
+          schema: { type: string }
           example: 2281
+        - name: departmentId
+          in: path
+          description: Department ID
+          required: true
+          schema: { type: string }
+          example: SKM
       requestBody:
         content:
-          application/json:
+          multipart/form-data:
             schema:
-              $ref: "#/components/schemas/PrecheckRequest"
-        required: true
+              required: ["file"]
+              type: object
+              properties:
+                file:
+                  type: string
+                  description: Semicolon-delimited CSV with header; first column is personal identity number.
+                  format: binary
       responses:
         "200":
           description: Successful Operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PrecheckResponse"
         "400":
           description: Bad Request
           content:
@@ -54,10 +65,10 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/Problem"
-  /{municipalityId}/messages/sms:
+
+  "/{municipalityId}/messages/sms":
     post:
-      tags:
-        - Message Resources
+      tags: ["Message Resources"]
       summary: Send an SMS
       operationId: sendSms
       parameters:
@@ -70,8 +81,7 @@ paths:
           in: path
           description: Municipality ID
           required: true
-          schema:
-            type: string
+          schema: { type: string }
           example: 2281
       requestBody:
         content:
@@ -80,8 +90,7 @@ paths:
               $ref: "#/components/schemas/SmsRequest"
         required: true
       responses:
-        "200":
-          description: OK
+        "200": { description: OK }
         "400":
           description: Bad Request
           content:
@@ -102,10 +111,10 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/Problem"
-  /{municipalityId}/messages/registered-letter:
+
+  "/{municipalityId}/messages/registered-letter":
     post:
-      tags:
-        - Message Resources
+      tags: ["Message Resources"]
       summary: Send a digital registered letter.
       operationId: sendDigitalRegisteredLetter
       parameters:
@@ -113,16 +122,13 @@ paths:
           in: path
           description: Municipality ID
           required: true
-          schema:
-            type: string
+          schema: { type: string }
           example: 2281
       requestBody:
         content:
           application/json:
             schema:
-              required:
-                - attachments
-                - request
+              required: ["attachments", "request"]
               type: object
               properties:
                 request:
@@ -133,8 +139,7 @@ paths:
                     type: string
                     format: binary
       responses:
-        "200":
-          description: OK
+        "200": { description: OK }
         "400":
           description: Bad Request
           content:
@@ -155,11 +160,12 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/Problem"
-  /{municipalityId}/messages/letter:
+
+  "/{municipalityId}/messages/letter":
     post:
-      tags:
-        - Message Resources
-      summary: Send a message by either digital mail or as a physical letter. Digital
+      tags: ["Message Resources"]
+      summary: >-
+        Send a message by either digital mail or as a physical letter. Digital
         mail is always preferred if possible.
       operationId: sendLetter
       parameters:
@@ -172,16 +178,13 @@ paths:
           in: path
           description: Municipality ID
           required: true
-          schema:
-            type: string
+          schema: { type: string }
           example: 2281
       requestBody:
         content:
           application/json:
             schema:
-              required:
-                - attachments
-                - request
+              required: ["attachments", "request"]
               type: object
               properties:
                 request:
@@ -192,8 +195,7 @@ paths:
                     type: string
                     format: binary
       responses:
-        "200":
-          description: OK
+        "200": { description: OK }
         "400":
           description: Bad Request
           content:
@@ -214,10 +216,10 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/Problem"
-  /{municipalityId}/statistics/users:
+
+  "/{municipalityId}/statistics/users":
     get:
-      tags:
-        - Statistics Resources
+      tags: ["Statistics Resources"]
       summary: Get general statistics for each user within the municipality
       operationId: getStatisticsByUser
       parameters:
@@ -225,12 +227,10 @@ paths:
           in: path
           description: Municipality ID
           required: true
-          schema:
-            type: string
+          schema: { type: string }
           example: 2281
       responses:
-        "200":
-          description: OK
+        "200": { description: OK }
         "400":
           description: Bad Request
           content:
@@ -251,10 +251,10 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/Problem"
-  /{municipalityId}/statistics/users/{userId}:
+
+  "/{municipalityId}/statistics/users/{userId}":
     get:
-      tags:
-        - Statistics Resources
+      tags: ["Statistics Resources"]
       summary: Get statistics for a specific user within the municipality
       operationId: getUserStatistics
       parameters:
@@ -262,19 +262,16 @@ paths:
           in: path
           description: Municipality ID
           required: true
-          schema:
-            type: string
+          schema: { type: string }
           example: 2281
         - name: userId
           in: path
           description: User ID
           required: true
-          schema:
-            type: string
+          schema: { type: string }
           example: joe12doe
       responses:
-        "200":
-          description: OK
+        "200": { description: OK }
         "404":
           description: Not Found
           content:
@@ -301,10 +298,10 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/Problem"
-  /{municipalityId}/statistics/departments:
+
+  "/{municipalityId}/statistics/departments":
     get:
-      tags:
-        - Statistics Resources
+      tags: ["Statistics Resources"]
       summary: Get general statistics for each department within the municipality
       operationId: getStatisticsByDepartment
       parameters:
@@ -312,12 +309,10 @@ paths:
           in: path
           description: Municipality ID
           required: true
-          schema:
-            type: string
+          schema: { type: string }
           example: 2281
       responses:
-        "200":
-          description: OK
+        "200": { description: OK }
         "400":
           description: Bad Request
           content:
@@ -338,10 +333,10 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/Problem"
-  /{municipalityId}/statistics/departments/{departmentId}:
+
+  "/{municipalityId}/statistics/departments/{departmentId}":
     get:
-      tags:
-        - Statistics Resources
+      tags: ["Statistics Resources"]
       summary: Get statistics for a specific department within the municipality
       operationId: getDepartmentStatistics
       parameters:
@@ -349,19 +344,16 @@ paths:
           in: path
           description: Municipality ID
           required: true
-          schema:
-            type: string
+          schema: { type: string }
           example: 2281
         - name: departmentId
           in: path
           description: Department ID
           required: true
-          schema:
-            type: string
+          schema: { type: string }
           example: 1337
       responses:
-        "200":
-          description: OK
+        "200": { description: OK }
         "404":
           description: Not Found
           content:
@@ -388,10 +380,10 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/Problem"
-  /{municipalityId}/history/users/{userId}/messages:
+
+  "/{municipalityId}/history/users/{userId}/messages":
     get:
-      tags:
-        - History Resources
+      tags: ["History Resources"]
       summary: Get messages sent by user
       operationId: getUserMessages
       parameters:
@@ -399,19 +391,16 @@ paths:
           in: path
           description: Municipality ID
           required: true
-          schema:
-            type: string
+          schema: { type: string }
           example: 2281
         - name: userId
           in: path
           description: User ID
           required: true
-          schema:
-            type: string
+          schema: { type: string }
           example: joe01doe
       responses:
-        "200":
-          description: OK
+        "200": { description: OK }
         "404":
           description: Not Found
           content:
@@ -438,10 +427,10 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/Problem"
-  /{municipalityId}/history/users/{userId}/messages/{messageId}:
+
+  "/{municipalityId}/history/users/{userId}/messages/{messageId}":
     get:
-      tags:
-        - History Resources
+      tags: ["History Resources"]
       summary: Get messages sent by user
       operationId: getUserMessage
       parameters:
@@ -449,26 +438,22 @@ paths:
           in: path
           description: Municipality ID
           required: true
-          schema:
-            type: string
+          schema: { type: string }
           example: 2281
         - name: userId
           in: path
           description: User ID
           required: true
-          schema:
-            type: string
+          schema: { type: string }
           example: joe01doe
         - name: messageId
           in: path
           description: Message ID
           required: true
-          schema:
-            type: string
+          schema: { type: string }
           example: 123456
       responses:
-        "200":
-          description: OK
+        "200": { description: OK }
         "404":
           description: Not Found
           content:
@@ -495,10 +480,10 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/Problem"
-  /{municipalityId}/history/messages/{messageId}:
+
+  "/{municipalityId}/history/messages/{messageId}":
     get:
-      tags:
-        - History Resources
+      tags: ["History Resources"]
       summary: Get message by ID
       operationId: getMessageById
       parameters:
@@ -506,19 +491,16 @@ paths:
           in: path
           description: Municipality ID
           required: true
-          schema:
-            type: string
+          schema: { type: string }
           example: 2281
         - name: messageId
           in: path
           description: Message ID
           required: true
-          schema:
-            type: string
+          schema: { type: string }
           example: 123456
       responses:
-        "200":
-          description: OK
+        "200": { description: OK }
         "404":
           description: Not Found
           content:
@@ -545,10 +527,10 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/Problem"
-  /{municipalityId}/attachments/{attachmentId}:
+
+  "/{municipalityId}/attachments/{attachmentId}":
     get:
-      tags:
-        - Attachment Resources
+      tags: ["Attachment Resources"]
       summary: Stream attachment by attachmentId
       operationId: streamAttachment
       parameters:
@@ -556,15 +538,13 @@ paths:
           in: path
           description: Municipality ID
           required: true
-          schema:
-            type: string
+          schema: { type: string }
           example: 2281
         - name: attachmentId
           in: path
           description: Attachment ID
           required: true
-          schema:
-            type: string
+          schema: { type: string }
           example: 123456
       responses:
         "400":
@@ -587,31 +567,29 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/Problem"
-  /{municipalityId}/attachments/messages/{messageId}:
+
+  "/{municipalityId}/attachments/messages/{messageId}":
     get:
-      tags:
-        - Attachment Resources
-      summary: "Get the name and id of attachments by messageId, the actual attachment\
-        \ can be streamed using the attachmentId"
+      tags: ["Attachment Resources"]
+      summary: >-
+        Get the name and id of attachments by messageId, the actual attachment
+        can be streamed using the attachmentId
       operationId: getAttachmentsByMessageId
       parameters:
         - name: municipalityId
           in: path
           description: Municipality ID
           required: true
-          schema:
-            type: string
+          schema: { type: string }
           example: 2281
         - name: messageId
           in: path
           description: Message ID
           required: true
-          schema:
-            type: string
+          schema: { type: string }
           example: 123456
       responses:
-        "200":
-          description: OK
+        "200": { description: OK }
         "404":
           description: Not Found
           content:
@@ -638,10 +616,10 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/Problem"
-  /api-docs:
+
+  "/api-docs":
     get:
-      tags:
-        - API
+      tags: ["API"]
       summary: OpenAPI
       operationId: getApiDocs
       responses:
@@ -654,44 +632,26 @@ paths:
       x-auth-type: None
       x-throttling-tier: Unlimited
       x-wso2-mutual-ssl: Optional
+
 components:
   schemas:
-    PrecheckRequest:
-      required:
-        - recipients
-      type: object
-      properties:
-        recipients:
-          minItems: 1
-          type: array
-          description: List of recipients represented by their partyId. Each partyId
-            is a unique identifier for a recipient and must be provided as a valid
-            UUID string.
-          items:
-            minLength: 1
-            type: string
-            description: Recipient partyId (UUID).
-            example: 550e8400-e29b-41d4-a716-446655440000
-      description: Precheck request model
     Problem:
       type: object
       properties:
-        instance:
-          type: string
-          format: uri
-        type:
-          type: string
-          format: uri
+        title: { type: string }
+        detail: { type: string }
+        instance: { type: string, format: uri }
+        type: { type: string, format: uri }
         parameters:
           type: object
-          additionalProperties:
-            type: object
+          additionalProperties: { type: object }
         status:
           $ref: "#/components/schemas/StatusType"
         detail:
           type: string
         title:
           type: string
+
     StatusType:
       type: object
       properties:
@@ -700,63 +660,45 @@ components:
         statusCode:
           type: integer
           format: int32
+
     ConstraintViolationProblem:
       type: object
       properties:
-        cause:
-          $ref: "#/components/schemas/ThrowableProblem"
+        cause: { $ref: "#/components/schemas/ThrowableProblem" }
         stackTrace:
           type: array
           items:
             $ref: "#/components/schemas/ConstraintViolationProblemStackTraceInner"
-        type:
-          type: string
-          format: uri
-        status:
-          $ref: "#/components/schemas/StatusType"
+        type: { type: string, format: uri }
+        status: { $ref: "#/components/schemas/StatusType" }
         violations:
           type: array
-          items:
-            $ref: "#/components/schemas/Violation"
-        title:
-          type: string
-        message:
-          type: string
-        instance:
-          type: string
-          format: uri
+          items: { $ref: "#/components/schemas/Violation" }
+        title: { type: string }
+        message: { type: string }
+        instance: { type: string, format: uri }
         parameters:
           type: object
-          additionalProperties:
-            type: object
-        detail:
-          type: string
+          additionalProperties: { type: object }
+        detail: { type: string }
         suppressed:
           type: array
           items:
             $ref: "#/components/schemas/ConstraintViolationProblemSuppressedInner"
-        localizedMessage:
-          type: string
+        localizedMessage: { type: string }
+
     ConstraintViolationProblemStackTraceInner:
       type: object
       properties:
-        classLoaderName:
-          type: string
-        moduleName:
-          type: string
-        moduleVersion:
-          type: string
-        methodName:
-          type: string
-        fileName:
-          type: string
-        lineNumber:
-          type: integer
-          format: int32
-        className:
-          type: string
-        nativeMethod:
-          type: boolean
+        classLoaderName: { type: string }
+        moduleName: { type: string }
+        moduleVersion: { type: string }
+        methodName: { type: string }
+        fileName: { type: string }
+        lineNumber: { type: integer, format: int32 }
+        className: { type: string }
+        nativeMethod: { type: boolean }
+
     ConstraintViolationProblemSuppressedInner:
       type: object
       properties:
@@ -764,50 +706,72 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/ConstraintViolationProblemStackTraceInner"
-        message:
-          type: string
-        localizedMessage:
-          type: string
+        message: { type: string }
+        localizedMessage: { type: string }
+
     ThrowableProblem:
       type: object
       properties:
-        cause:
-          $ref: "#/components/schemas/ThrowableProblem"
+        cause: { $ref: "#/components/schemas/ThrowableProblem" }
         stackTrace:
           type: array
           items:
             $ref: "#/components/schemas/ConstraintViolationProblemStackTraceInner"
-        message:
-          type: string
-        instance:
-          type: string
-          format: uri
-        type:
-          type: string
-          format: uri
+        message: { type: string }
+        instance: { type: string, format: uri }
+        type: { type: string, format: uri }
         parameters:
           type: object
-          additionalProperties:
-            type: object
-        status:
-          $ref: "#/components/schemas/StatusType"
-        title:
-          type: string
-        detail:
-          type: string
+          additionalProperties: { type: object }
+        status: { $ref: "#/components/schemas/StatusType" }
+        title: { type: string }
+        detail: { type: string }
         suppressed:
           type: array
           items:
             $ref: "#/components/schemas/ConstraintViolationProblemSuppressedInner"
-        localizedMessage:
-          type: string
+        localizedMessage: { type: string }
+
     Violation:
       type: object
       properties:
-        field:
+        field: { type: string }
+        message: { type: string }
+
+    DeliveryMethod:
+      type: string
+      description: Possible delivery methods
+      enum: ["DIGITAL_MAIL", "SNAIL_MAIL", "DELIVERY_NOT_POSSIBLE"]
+
+    PrecheckResponse:
+      type: object
+      properties:
+        recipients:
+          type: array
+          description: Per-recipient result
+          items:
+            $ref: "#/components/schemas/RecipientPrecheck"
+      description: Result of precheck for uploaded recipients
+
+    RecipientPrecheck:
+      type: object
+      properties:
+        personalIdentityNumber:
           type: string
-        message:
+          description: Personal identity number of the recipient
+          example: "19111111-1111"
+        partyId:
           type: string
+          description: Party ID of the recipient
+          example: da03b33e-9de2-45ac-8291-31a88de59410
+        deliveryMethod:
+          $ref: "#/components/schemas/DeliveryMethod"
+        reason:
+          type: string
+          description: Reason when delivery method isn't available or an upstream lookup failed
+          example: Person not found
+      description: Per-recipient delivery capability
+
     SmsRecipient:
       type: object
       properties:
@@ -817,13 +781,12 @@ components:
           example: 6d0773d6-3e7f-4552-81bc-f0007af95adf
         phoneNumber:
           type: string
-          description: "Phone number of the recipient, used for SMS notifications"
+          description: Phone number of the recipient, used for SMS notifications
           example: "+46701234567"
       description: SMS recipient model
+
     SmsRequest:
-      required:
-        - message
-        - recipients
+      required: ["message", "recipients"]
       type: object
       properties:
         message:
@@ -834,12 +797,11 @@ components:
         recipients:
           minItems: 1
           type: array
-          items:
-            $ref: "#/components/schemas/SmsRecipient"
+          items: { $ref: "#/components/schemas/SmsRecipient" }
       description: SMS request model
+
     DigitalRegisteredLetterRequest:
-      required:
-        - subject
+      required: ["subject"]
       type: object
       properties:
         partyId:
@@ -852,14 +814,10 @@ components:
           description: The subject of the letter
           example: This is the subject of the letter
       description: Digital registered letter request as a JSON string
+
     Address:
       required:
-        - city
-        - country
-        - firstName
-        - lastName
-        - street
-        - zipCode
+        ["city", "country", "firstName", "lastName", "street", "zipCode"]
       type: object
       properties:
         firstName:
@@ -901,6 +859,7 @@ components:
           description: Country
           example: Sweden
       description: Address model
+
     LetterRequest:
       required:
         - subject
@@ -921,16 +880,14 @@ components:
           example: text/plain
         recipients:
           type: array
-          items:
-            $ref: "#/components/schemas/Recipient"
+          items: { $ref: "#/components/schemas/Recipient" }
         addresses:
           type: array
-          items:
-            $ref: "#/components/schemas/Address"
+          items: { $ref: "#/components/schemas/Address" }
       description: Letter request as a JSON string
+
     Recipient:
-      required:
-        - deliveryMethod
+      required: ["deliveryMethod"]
       type: object
       properties:
         partyId:
@@ -941,10 +898,7 @@ components:
           type: string
           description: Delivery method for the recipient
           example: DIGITAL_MAIL
-          enum:
-            - DIGITAL_MAIL
-            - SNAIL_MAIL
-            - DELIVERY_NOT_POSSIBLE
+          enum: ["DIGITAL_MAIL", "SNAIL_MAIL", "DELIVERY_NOT_POSSIBLE"]
         address:
           $ref: "#/components/schemas/Address"
       description: Recipient model

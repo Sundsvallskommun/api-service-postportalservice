@@ -151,9 +151,4 @@ class MessagingIntegrationTest {
 		verify(messagingClientMock).sendSnailMail(any(), any(), any());
 	}
 
-	@Test
-	void precheckMailBoxes() {
-		assertThat(messagingIntegration.precheckMailBoxes(MUNICIPALITY_ID)).isTrue();
-	}
-
 }
