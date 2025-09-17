@@ -8,12 +8,10 @@ import static org.springframework.http.MediaType.MULTIPART_FORM_DATA;
 
 import java.io.IOException;
 import org.junit.jupiter.api.Test;
-import org.springframework.test.context.ActiveProfiles;
 import se.sundsvall.dept44.test.AbstractAppTest;
 import se.sundsvall.dept44.test.annotation.wiremock.WireMockAppTestSuite;
 import se.sundsvall.postportalservice.Application;
 
-@ActiveProfiles("it")
 @WireMockAppTestSuite(files = "classpath:/PrecheckIT/", classes = Application.class)
 class PrecheckIT extends AbstractAppTest {
 
