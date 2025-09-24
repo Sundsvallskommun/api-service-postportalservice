@@ -4,7 +4,6 @@ import java.util.List;
 import se.sundsvall.postportalservice.api.model.Address;
 import se.sundsvall.postportalservice.api.model.DigitalRegisteredLetterRequest;
 import se.sundsvall.postportalservice.api.model.LetterRequest;
-import se.sundsvall.postportalservice.api.model.PrecheckRequest;
 import se.sundsvall.postportalservice.api.model.Recipient;
 import se.sundsvall.postportalservice.api.model.SmsRecipient;
 import se.sundsvall.postportalservice.api.model.SmsRequest;
@@ -61,10 +60,4 @@ public final class TestDataFactory {
 			.withContentType("text/plain")
 			.withAddresses(List.of(createValidAddress()));
 	}
-
-	public static PrecheckRequest createValidPrecheckRequest() {
-		return PrecheckRequest.create()
-			.withRecipients(List.of("6d0773d6-3e7f-4552-81bc-f0007af95adf"));
-	}
-
 }

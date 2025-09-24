@@ -4,12 +4,14 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static se.sundsvall.postportalservice.integration.messaging.configuration.MessagingConfiguration.CLIENT_ID;
 
 import generated.se.sundsvall.messaging.DigitalMailRequest;
+import generated.se.sundsvall.messaging.Mailbox;
 import generated.se.sundsvall.messaging.MessageBatchResult;
 import generated.se.sundsvall.messaging.MessageResult;
 import generated.se.sundsvall.messaging.SmsBatchRequest;
 import generated.se.sundsvall.messaging.SmsRequest;
 import generated.se.sundsvall.messaging.SnailmailRequest;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import java.util.List;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -60,10 +62,10 @@ public interface MessagingClient {
 		@PathVariable final String municipalityId,
 		@PathVariable final String batchId);
 
-	// TODO: Add the request body when implemented in messaging, also add the return type.
 	@PostMapping(path = "/{municipalityId}/{organizationNumber}/mailboxes", consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
-	void precheckMailboxes(
+	List<Mailbox> precheckMailboxes(
 		@PathVariable final String municipalityId,
-		@PathVariable final String organizationNumber);
+		@PathVariable final String organizationNumber,
+		@RequestBody List<String> partyIds);
 
 }

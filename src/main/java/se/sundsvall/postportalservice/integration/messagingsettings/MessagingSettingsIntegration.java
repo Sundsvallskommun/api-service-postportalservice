@@ -25,4 +25,9 @@ public class MessagingSettingsIntegration {
 		return messagingSettingsClient.getSenderInfo(municipalityId, departmentId)
 			.orElseThrow(() -> Problem.valueOf(BAD_GATEWAY, "Found no sender info for departmentId " + departmentId));
 	}
+
+	public Optional<String> getOrganizationNumber(final String municipalityId, final String departmentId) {
+		return messagingSettingsClient.getSenderInfo(municipalityId, departmentId)
+			.map(SenderInfoResponse::getOrganizationNumber);
+	}
 }

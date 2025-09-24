@@ -5,8 +5,10 @@ import static se.sundsvall.postportalservice.integration.messaging.MessagingMapp
 import static se.sundsvall.postportalservice.integration.messaging.MessagingMapper.toSmsRequest;
 import static se.sundsvall.postportalservice.integration.messaging.MessagingMapper.toSnailmailRequest;
 
+import generated.se.sundsvall.messaging.Mailbox;
 import generated.se.sundsvall.messaging.MessageBatchResult;
 import generated.se.sundsvall.messaging.MessageResult;
+import java.util.List;
 import org.springframework.stereotype.Component;
 import se.sundsvall.dept44.support.Identifier;
 import se.sundsvall.postportalservice.integration.db.MessageEntity;
@@ -61,11 +63,8 @@ public class MessagingIntegration {
 		return true;
 	}
 
-	public boolean precheckMailBoxes(final String municipalityId) {
-		// Used to precheck digital-mailboxes.
-		// TODO: When messaging exposes the new precheck endpoint, implement the mapping and the call to messaging. The return
-		// value should include which recipients that have an eligible digital-mailbox.
-		return true;
+	public List<Mailbox> precheckMailboxes(final String municipalityId, final String organizationNumber, final List<String> partyIds) {
+		return client.precheckMailboxes(municipalityId, organizationNumber, partyIds);
 	}
 
 	String getIdentifierHeaderValue(final String userName) {
