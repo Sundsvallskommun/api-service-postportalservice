@@ -1,8 +1,12 @@
 package se.sundsvall.postportalservice.api;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 import static org.springframework.http.HttpStatus.CREATED;
+import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.http.MediaType.APPLICATION_PDF;
 import static org.springframework.http.MediaType.MULTIPART_FORM_DATA;
 import static org.springframework.web.reactive.function.BodyInserters.fromMultipartData;
@@ -13,6 +17,8 @@ import static se.sundsvall.postportalservice.TestDataFactory.createValidLetterRe
 import static se.sundsvall.postportalservice.TestDataFactory.createValidSmsRequest;
 
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
@@ -21,6 +27,9 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import se.sundsvall.postportalservice.Application;
+import se.sundsvall.postportalservice.api.model.Attachments;
+import se.sundsvall.postportalservice.api.model.DigitalRegisteredLetterRequest;
+import se.sundsvall.postportalservice.api.model.LetterRequest;
 import se.sundsvall.postportalservice.service.MessageService;
 
 @SpringBootTest(classes = Application.class, webEnvironment = RANDOM_PORT)
@@ -29,6 +38,15 @@ class MessageResourceTest {
 
 	@MockitoBean
 	private MessageService messageServiceMock;
+
+	@Captor
+	private ArgumentCaptor<LetterRequest> letterRequestCaptor;
+
+	@Captor
+	private ArgumentCaptor<DigitalRegisteredLetterRequest> digitalRegisteredLetterRequestCaptor;
+
+	@Captor
+	private ArgumentCaptor<Attachments> attachmentsArgumentCaptor;
 
 	@Autowired
 	private WebTestClient webTestClient;
@@ -39,8 +57,12 @@ class MessageResourceTest {
 		final var messageId = "12345";
 
 		final var multipartBodyBuilder = new MultipartBodyBuilder();
-		multipartBodyBuilder.part("request", createValidLetterRequest());
-		multipartBodyBuilder.part("attachments", "").filename("test123.pdf").contentType(APPLICATION_PDF);
+		final var letterRequest = createValidLetterRequest();
+
+		multipartBodyBuilder.part("request", letterRequest);
+		multipartBodyBuilder.part("attachments", "mockFile").filename("test123.pdf").contentType(APPLICATION_PDF);
+
+		when(messageServiceMock.processLetterRequest(eq(MUNICIPALITY_ID), letterRequestCaptor.capture(), attachmentsArgumentCaptor.capture())).thenReturn("messageId");
 
 		webTestClient.post()
 			.uri(uriBuilder -> uriBuilder.replacePath("/{municipalityId}/messages/letter")
@@ -50,6 +72,17 @@ class MessageResourceTest {
 			.body(fromMultipartData(multipartBodyBuilder.build()))
 			.exchange()
 			.expectStatus().isEqualTo(CREATED);
+
+		var capturedRequest = letterRequestCaptor.getValue();
+		assertThat(capturedRequest).isEqualTo(letterRequest);
+		var capturedAttachments = attachmentsArgumentCaptor.getValue();
+		assertThat(capturedAttachments.getFiles()).allSatisfy(file -> {
+			assertThat(file.getOriginalFilename()).isEqualTo("test123.pdf");
+			assertThat(file.getContentType()).isEqualTo(APPLICATION_PDF.toString());
+		});
+
+		verify(messageServiceMock).processLetterRequest(MUNICIPALITY_ID, capturedRequest, capturedAttachments);
+
 	}
 
 	@Test
@@ -65,24 +98,30 @@ class MessageResourceTest {
 	@Test
 	void sendDigitalRegisteredLetter_OK() {
 		final var multipartBodyBuilder = new MultipartBodyBuilder();
-		multipartBodyBuilder.part("request", createValidDigitalRegisteredLetterRequest());
-		multipartBodyBuilder.part("attachments", "").filename("test123.pdf").contentType(APPLICATION_PDF);
+		multipartBodyBuilder.part("request", createValidDigitalRegisteredLetterRequest(), APPLICATION_JSON);
+		multipartBodyBuilder.part("attachments", "mockFile").filename("test123.pdf").contentType(APPLICATION_PDF);
 
 		webTestClient.post()
 			.uri(uriBuilder -> uriBuilder.replacePath("/{municipalityId}/messages/registered-letter")
 				.build(MUNICIPALITY_ID))
 			.contentType(MULTIPART_FORM_DATA)
+			.header("X-Sent-By", "type=adAccount; joe01doe")
 			.body(fromMultipartData(multipartBodyBuilder.build()))
 			.exchange()
-			.expectStatus().isEqualTo(HttpStatus.NOT_IMPLEMENTED);
+			.expectStatus().isEqualTo(CREATED);
 	}
 
 	@Test
 	void sendDigitalRegisteredLetter_BadRequest() {
+		final var multipartBodyBuilder = new MultipartBodyBuilder();
+		multipartBodyBuilder.part("request", createValidDigitalRegisteredLetterRequest(), APPLICATION_JSON);
+		multipartBodyBuilder.part("attachments", "mockFile").filename("test123.pdf").contentType(APPLICATION_PDF);
+
 		webTestClient.post()
 			.uri(uriBuilder -> uriBuilder.replacePath("/{municipalityId}/messages/registered-letter")
 				.build(INVALID_MUNICIPALITY_ID))
-			.bodyValue(createValidDigitalRegisteredLetterRequest())
+			.contentType(MULTIPART_FORM_DATA)
+			.body(fromMultipartData(multipartBodyBuilder.build()))
 			.exchange()
 			.expectStatus().isEqualTo(HttpStatus.BAD_REQUEST);
 	}

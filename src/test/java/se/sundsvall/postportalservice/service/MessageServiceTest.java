@@ -3,12 +3,16 @@ package se.sundsvall.postportalservice.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
+import static org.zalando.problem.Status.BAD_GATEWAY;
 import static se.sundsvall.postportalservice.TestDataFactory.MUNICIPALITY_ID;
 
 import generated.se.sundsvall.employee.PortalPersonData;
@@ -23,6 +27,9 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Answers;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -31,7 +38,10 @@ import org.springframework.web.multipart.MultipartFile;
 import org.zalando.problem.Problem;
 import se.sundsvall.dept44.support.Identifier;
 import se.sundsvall.postportalservice.TestDataFactory;
+import se.sundsvall.postportalservice.api.model.Address;
 import se.sundsvall.postportalservice.api.model.Attachments;
+import se.sundsvall.postportalservice.api.model.Recipient;
+import se.sundsvall.postportalservice.api.model.SmsRecipient;
 import se.sundsvall.postportalservice.integration.db.AttachmentEntity;
 import se.sundsvall.postportalservice.integration.db.DepartmentEntity;
 import se.sundsvall.postportalservice.integration.db.MessageEntity;
@@ -42,13 +52,17 @@ import se.sundsvall.postportalservice.integration.db.converter.MessageType;
 import se.sundsvall.postportalservice.integration.db.dao.DepartmentRepository;
 import se.sundsvall.postportalservice.integration.db.dao.MessageRepository;
 import se.sundsvall.postportalservice.integration.db.dao.UserRepository;
+import se.sundsvall.postportalservice.integration.digitalregisteredletter.DigitalRegisteredLetterIntegration;
 import se.sundsvall.postportalservice.integration.employee.EmployeeIntegration;
 import se.sundsvall.postportalservice.integration.messaging.MessagingIntegration;
 import se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration;
 import se.sundsvall.postportalservice.service.mapper.AttachmentMapper;
+import se.sundsvall.postportalservice.service.mapper.EntityMapper;
 
 @ExtendWith(MockitoExtension.class)
 class MessageServiceTest {
+
+	private static final String USERNAME = "username";
 
 	@Mock
 	private MessagingIntegration messagingIntegrationMock;
@@ -62,6 +76,9 @@ class MessageServiceTest {
 	@Mock
 	private AttachmentMapper attachmentMapperMock;
 
+	@Mock(answer = Answers.CALLS_REAL_METHODS)
+	private EntityMapper entityMapperMock;
+
 	@Mock
 	private UserRepository userRepositoryMock;
 
@@ -71,6 +88,12 @@ class MessageServiceTest {
 	@Mock
 	private MessagingSettingsIntegration messagingSettingsIntegrationMock;
 
+	@Mock
+	private DigitalRegisteredLetterIntegration digitalRegisteredLetterIntegrationMock;
+
+	@Captor
+	private ArgumentCaptor<MessageEntity> messageEntityCaptor;
+
 	@InjectMocks
 	private MessageService messageService;
 
@@ -78,7 +101,7 @@ class MessageServiceTest {
 	void setup() {
 		var identifier = Identifier.create()
 			.withType(Identifier.Type.AD_ACCOUNT)
-			.withValue("username")
+			.withValue(USERNAME)
 			.withTypeString("AD_ACCOUNT");
 		Identifier.set(identifier);
 	}
@@ -86,7 +109,212 @@ class MessageServiceTest {
 	@AfterEach
 	void tearDown() {
 		Identifier.remove();
-		verifyNoMoreInteractions(messagingIntegrationMock, employeeIntegrationMock, departmentRepositoryMock, userRepositoryMock, messageRepositoryMock);
+		verifyNoMoreInteractions(attachmentMapperMock, entityMapperMock,
+			messagingIntegrationMock, employeeIntegrationMock,
+			departmentRepositoryMock, userRepositoryMock,
+			messageRepositoryMock, digitalRegisteredLetterIntegrationMock);
+	}
+
+	/**
+	 * Employee integration returns empty optional, we expect a Problem (502 Bad Gateway) to be thrown and the process to
+	 * stop.
+	 */
+	@Test
+	void processDigitalRegisteredLetterRequest_employeeNotFound() throws Exception {
+		var request = TestDataFactory.createValidDigitalRegisteredLetterRequest();
+		var attachments = TestDataFactory.createValidAttachments(2);
+
+		when(employeeIntegrationMock.getPortalPersonData(MUNICIPALITY_ID, USERNAME)).thenReturn(Optional.empty());
+
+		assertThatThrownBy(() -> messageService.processDigitalRegisteredLetterRequest(MUNICIPALITY_ID, request, attachments))
+			.isInstanceOf(Problem.class)
+			.hasMessage("Bad Gateway: Failed to retrieve employee data for user [%s]".formatted(USERNAME));
+
+		verify(employeeIntegrationMock).getPortalPersonData(MUNICIPALITY_ID, USERNAME);
+		verifyNoMoreInteractions(employeeIntegrationMock);
+		verifyNoInteractions(messagingIntegrationMock, departmentRepositoryMock, userRepositoryMock, messageRepositoryMock);
+	}
+
+	/**
+	 * Employee integration returns invalid orgTree. We expect the EmployeeUtil to return an empty optional, which results
+	 * in a Problem (500 Internal Server Error) to be thrown and we expect the process to stop.
+	 */
+	@Test
+	void processDigitalRegisteredLetterRequest_invalidOrgTree() throws Exception {
+		var request = TestDataFactory.createValidDigitalRegisteredLetterRequest();
+		var attachments = TestDataFactory.createValidAttachments(2);
+		var personData = new PortalPersonData()
+			.orgTree("invalid-org-tree-format");
+
+		when(employeeIntegrationMock.getPortalPersonData(MUNICIPALITY_ID, USERNAME)).thenReturn(Optional.of(personData));
+
+		assertThatThrownBy(() -> messageService.processDigitalRegisteredLetterRequest(MUNICIPALITY_ID, request, attachments))
+			.isInstanceOf(Problem.class)
+			.hasMessage("Internal Server Error: Failed to parse organization from employee data");
+
+		verify(employeeIntegrationMock).getPortalPersonData(MUNICIPALITY_ID, USERNAME);
+		verifyNoMoreInteractions(employeeIntegrationMock);
+		verifyNoInteractions(messagingIntegrationMock, departmentRepositoryMock, userRepositoryMock, messageRepositoryMock);
+	}
+
+	/**
+	 * Messaging settings integration throws an exception, we expect a Problem (502 Bad Gateway) to be thrown and the
+	 * process to stop.
+	 */
+	@Test
+	void processDigitalRegisteredLetterRequest_messagingSettingsThrows() throws Exception {
+		var request = TestDataFactory.createValidDigitalRegisteredLetterRequest();
+		var attachments = TestDataFactory.createValidAttachments(2);
+
+		happyCaseStubEmployee();
+		when(messagingSettingsIntegrationMock.getSenderInfo(eq(MUNICIPALITY_ID), any()))
+			.thenThrow(Problem.valueOf(BAD_GATEWAY, "Found no sender info for departmentId"));
+
+		assertThatThrownBy(() -> messageService.processDigitalRegisteredLetterRequest(MUNICIPALITY_ID, request, attachments))
+			.isInstanceOf(Problem.class)
+			.hasMessage("Bad Gateway: Found no sender info for departmentId");
+
+		verify(employeeIntegrationMock).getPortalPersonData(MUNICIPALITY_ID, USERNAME);
+		verify(messagingSettingsIntegrationMock).getSenderInfo(eq(MUNICIPALITY_ID), any());
+		verifyNoInteractions(messagingIntegrationMock, departmentRepositoryMock, userRepositoryMock, messageRepositoryMock);
+	}
+
+	/**
+	 * If the DigitalRegisteredLetter integration throws an exception. We expect the exception to be swallowed and the
+	 * recipient to be marked as FAILED with the exception message as status detail. The process should continue and the
+	 * message entity should
+	 * be saved with the recipient marked as FAILED.
+	 */
+	@Test
+	void processDigitalRegisteredLetterRequest_digitalRegisteredLetterThrows() throws Exception {
+		var request = TestDataFactory.createValidDigitalRegisteredLetterRequest();
+		var attachments = TestDataFactory.createValidAttachments(2);
+		var attachmentEntities = List.of(new AttachmentEntity(), new AttachmentEntity());
+
+		happyCaseStubEmployee();
+		happyCaseStubMessagingSettings();
+		when(messageRepositoryMock.save(any())).thenAnswer(invocation -> invocation.getArgument(0, MessageEntity.class).withId("messageId"));
+		doAnswer(inv -> {
+			var recipientEntity = inv.getArgument(1, RecipientEntity.class);
+			recipientEntity.setStatus("FAILED");
+			recipientEntity.setStatusDetail("Something when wrong");
+			return null;
+		}).when(digitalRegisteredLetterIntegrationMock).sendLetter(any(MessageEntity.class), any(RecipientEntity.class));
+		when(userRepositoryMock.findByName(USERNAME)).thenReturn(Optional.empty());
+		when(departmentRepositoryMock.findByOrganizationId("organizationId")).thenReturn(Optional.empty());
+		when(attachmentMapperMock.toAttachmentEntities(attachments)).thenReturn(attachmentEntities);
+
+		var result = messageService.processDigitalRegisteredLetterRequest(MUNICIPALITY_ID, request, attachments);
+
+		assertThat(result).isNotNull().isEqualTo("messageId");
+
+		verify(employeeIntegrationMock).getPortalPersonData(MUNICIPALITY_ID, USERNAME);
+		verify(messagingSettingsIntegrationMock).getSenderInfo(eq(MUNICIPALITY_ID), any());
+		verify(userRepositoryMock).findByName(USERNAME);
+		verify(departmentRepositoryMock).findByOrganizationId("organizationId");
+		verify(digitalRegisteredLetterIntegrationMock).sendLetter(any(), any());
+		verify(messageRepositoryMock).save(messageEntityCaptor.capture());
+		var messageEntity = messageEntityCaptor.getValue();
+		assertThat(messageEntity).isNotNull();
+		assertThat(messageEntity.getId()).isEqualTo("messageId");
+		assertThat(messageEntity.getAttachments()).isEqualTo(attachmentEntities);
+		assertThat(messageEntity.getDepartment()).isNotNull().isInstanceOf(DepartmentEntity.class).satisfies(departmentEntity -> {
+			// Asserts that a new department was created with the correct values since none existed previously
+			assertThat(departmentEntity.getId()).isNull();
+			assertThat(departmentEntity.getName()).isEqualTo("departmentName");
+			assertThat(departmentEntity.getOrganizationId()).isEqualTo("organizationId");
+		});
+		assertThat(messageEntity.getUser()).isNotNull().isInstanceOf(UserEntity.class).satisfies(userEntity -> {
+			// Asserts that a new user was created with the correct values since none existed previously
+			assertThat(userEntity.getId()).isNull();
+			assertThat(userEntity.getName()).isEqualTo(USERNAME);
+		});
+		assertThat(messageEntity.getRecipients().getFirst()).isNotNull().isInstanceOf(RecipientEntity.class).satisfies(recipientEntity -> {
+			assertThat(recipientEntity.getPartyId()).isEqualTo(request.getPartyId());
+			assertThat(recipientEntity.getMessageType()).isEqualTo(MessageType.DIGITAL_REGISTERED_LETTER);
+			assertThat(recipientEntity.getStatus()).isEqualTo("FAILED");
+			assertThat(recipientEntity.getStatusDetail()).isEqualTo("Something when wrong");
+			assertThat(recipientEntity.getExternalId()).isNull();
+		});
+
+		verifyNoInteractions(messagingIntegrationMock);
+	}
+
+	/**
+	 * Happy case where everything works as expected.
+	 */
+	@Test
+	void processDigitalRegisteredLetterRequest_happyCase() throws Exception {
+		var request = TestDataFactory.createValidDigitalRegisteredLetterRequest();
+		var attachments = TestDataFactory.createValidAttachments(2);
+		var attachmentEntities = List.of(new AttachmentEntity(), new AttachmentEntity());
+		var userEntity = new UserEntity().withName(USERNAME).withId("userId");
+		var departmentEntity = new DepartmentEntity().withName("departmentName").withOrganizationId("organizationId").withId("departmentId");
+
+		happyCaseStubEmployee();
+		happyCaseStubMessagingSettings();
+		when(messageRepositoryMock.save(any())).thenAnswer(invocation -> invocation.getArgument(0, MessageEntity.class).withId("messageId"));
+		doAnswer(inv -> {
+			var recipientEntity = inv.getArgument(1, RecipientEntity.class);
+			recipientEntity.setStatus("SENT");
+			recipientEntity.setExternalId("229a3e3e-17ae-423a-9a14-671b5b1bbd17");
+			return null;
+		}).when(digitalRegisteredLetterIntegrationMock).sendLetter(any(MessageEntity.class), any(RecipientEntity.class));
+		when(userRepositoryMock.findByName(USERNAME)).thenReturn(Optional.of(userEntity));
+		when(departmentRepositoryMock.findByOrganizationId("organizationId")).thenReturn(Optional.of(departmentEntity));
+		when(attachmentMapperMock.toAttachmentEntities(attachments)).thenReturn(attachmentEntities);
+
+		var result = messageService.processDigitalRegisteredLetterRequest(MUNICIPALITY_ID, request, attachments);
+
+		assertThat(result).isNotNull().isEqualTo("messageId");
+
+		verify(employeeIntegrationMock).getPortalPersonData(MUNICIPALITY_ID, USERNAME);
+		verify(messagingSettingsIntegrationMock).getSenderInfo(eq(MUNICIPALITY_ID), any());
+		verify(userRepositoryMock).findByName(USERNAME);
+		verify(departmentRepositoryMock).findByOrganizationId("organizationId");
+		verify(digitalRegisteredLetterIntegrationMock).sendLetter(any(), any());
+		verify(messageRepositoryMock).save(messageEntityCaptor.capture());
+		var messageEntity = messageEntityCaptor.getValue();
+		assertThat(messageEntity).isNotNull();
+		assertThat(messageEntity.getId()).isEqualTo("messageId");
+		assertThat(messageEntity.getAttachments()).isEqualTo(attachmentEntities);
+		assertThat(messageEntity.getDepartment()).isNotNull().isInstanceOf(DepartmentEntity.class).satisfies(entity -> {
+			// Asserts that a new department was created with the correct values since none existed previously
+			assertThat(departmentEntity.getId()).isEqualTo("departmentId");
+			assertThat(departmentEntity.getName()).isEqualTo("departmentName");
+			assertThat(departmentEntity.getOrganizationId()).isEqualTo("organizationId");
+		});
+		assertThat(messageEntity.getUser()).isNotNull().isInstanceOf(UserEntity.class).satisfies(entity -> {
+			// Asserts that a new user was created with the correct values since none existed previously
+			assertThat(userEntity.getId()).isEqualTo("userId");
+			assertThat(userEntity.getName()).isEqualTo(USERNAME);
+		});
+		assertThat(messageEntity.getRecipients().getFirst()).isNotNull().isInstanceOf(RecipientEntity.class).satisfies(recipientEntity -> {
+			assertThat(recipientEntity.getPartyId()).isEqualTo(request.getPartyId());
+			assertThat(recipientEntity.getMessageType()).isEqualTo(MessageType.DIGITAL_REGISTERED_LETTER);
+			assertThat(recipientEntity.getStatus()).isEqualTo("SENT");
+			assertThat(recipientEntity.getExternalId()).isEqualTo("229a3e3e-17ae-423a-9a14-671b5b1bbd17");
+			assertThat(recipientEntity.getStatusDetail()).isNull();
+		});
+
+		verifyNoInteractions(messagingIntegrationMock);
+	}
+
+	private void happyCaseStubMessagingSettings() {
+		when(messagingSettingsIntegrationMock.getSenderInfo(any(), any()))
+			.thenReturn(new SenderInfoResponse()
+				.supportText("supportText")
+				.contactInformationUrl("contactInformationUrl")
+				.contactInformationEmail("contactInformationEmail")
+				.contactInformationPhoneNumber("contactInformationPhoneNumber")
+				.organizationNumber("123455678"));
+	}
+
+	private void happyCaseStubEmployee() {
+		var personData = new PortalPersonData()
+			.orgTree("2|organizationId|departmentName¤3|1234|Test Avdelningar¤4|12345|Test Avdelningar Digital¤5|123456|Test Avdelningar Digitalisering¤6|1234567|Test Avdelning Digitalisering");
+		when(employeeIntegrationMock.getPortalPersonData(any(), any()))
+			.thenReturn(Optional.of(personData));
 	}
 
 	@Test
@@ -98,8 +326,8 @@ class MessageServiceTest {
 		var sentBy = new MessageService.SentBy("username", "organizationId", "departmentName");
 		var userEntity = new UserEntity().withName("username");
 		var departmentEntity = new DepartmentEntity().withName("departmentName").withOrganizationId("organizationId");
-		var messageEntity = new MessageEntity().withId("adc63e5c-b92f-4c75-b14f-819473cef5b6");
 		var attachmentEntity = new AttachmentEntity().withFileName("filename").withContentType("contentType").withContent(null);
+		var messageId = "adc63e5c-b92f-4c75-b14f-819473cef5b6";
 
 		when(attachmentMapperMock.toAttachmentEntities(attachments)).thenReturn(List.of(attachmentEntity));
 		when(messagingSettingsIntegrationMock.getSenderInfo(MUNICIPALITY_ID, departmentEntity.getOrganizationId()))
@@ -113,12 +341,14 @@ class MessageServiceTest {
 		doReturn(userEntity).when(spy).getOrCreateUser(sentBy.userName());
 		doReturn(departmentEntity).when(spy).getOrCreateDepartment(sentBy);
 		doReturn(new CompletableFuture<>()).when(spy).processRecipients(any());
-		when(messageRepositoryMock.save(any())).thenReturn(messageEntity);
+		when(messageRepositoryMock.save(any())).thenAnswer(invocation -> invocation.getArgument(0, MessageEntity.class).withId(messageId));
 
 		var result = spy.processLetterRequest(MUNICIPALITY_ID, letterRequest, attachments);
 
-		assertThat(result).isEqualTo(messageEntity.getId());
+		assertThat(result).isEqualTo(messageId);
 		verify(attachmentMapperMock).toAttachmentEntities(attachments);
+		verify(entityMapperMock).toRecipientEntity(any(Address.class));
+		verify(entityMapperMock).toRecipientEntity(any(Recipient.class));
 		verify(spy).getSentBy(MUNICIPALITY_ID);
 		verify(spy).getOrCreateUser(sentBy.userName());
 		verify(spy).getOrCreateDepartment(sentBy);
@@ -133,8 +363,7 @@ class MessageServiceTest {
 		var sentBy = new MessageService.SentBy("username", "organizationId", "departmentName");
 		var userEntity = new UserEntity().withName("username");
 		var departmentEntity = new DepartmentEntity().withName("departmentName").withOrganizationId("organizationId");
-
-		var messageEntity = new MessageEntity().withId("adc63e5c-b92f-4c75-b14f-819473cef5b6");
+		var messageId = "adc63e5c-b92f-4c75-b14f-819473cef5b6";
 
 		when(messagingSettingsIntegrationMock.getSenderInfo(MUNICIPALITY_ID, departmentEntity.getOrganizationId()))
 			.thenReturn(new SenderInfoResponse().smsSender("Avsändare"));
@@ -142,11 +371,12 @@ class MessageServiceTest {
 		doReturn(userEntity).when(spy).getOrCreateUser(sentBy.userName());
 		doReturn(departmentEntity).when(spy).getOrCreateDepartment(sentBy);
 		doReturn(new CompletableFuture<>()).when(spy).processRecipients(any());
-		when(messageRepositoryMock.save(any())).thenReturn(messageEntity);
+		when(messageRepositoryMock.save(any())).thenAnswer(invocation -> invocation.getArgument(0, MessageEntity.class).withId(messageId));
 
 		var result = spy.processSmsRequest(MUNICIPALITY_ID, smsRequest);
 
-		assertThat(result).isEqualTo(messageEntity.getId());
+		assertThat(result).isEqualTo(messageId);
+		verify(entityMapperMock).toRecipientEntity(any(SmsRecipient.class));
 		verify(spy).getSentBy(MUNICIPALITY_ID);
 		verify(spy).getOrCreateUser(sentBy.userName());
 		verify(spy).getOrCreateDepartment(sentBy);
@@ -271,13 +501,13 @@ class MessageServiceTest {
 
 	@Test
 	void sendMessageToRecipient_unsupportedMessageType() {
-		var recipient1 = new RecipientEntity().withFirstName("john").withMessageType(MessageType.WEB_MESSAGE);
+		var recipient1 = new RecipientEntity().withFirstName("john").withMessageType(MessageType.LETTER);
 		var messageEntity = MessageEntity.create().withRecipients(List.of(recipient1));
 
 		messageService.sendMessageToRecipient(messageEntity, recipient1);
 
-		assertThat(recipient1.getMessageStatus()).isEqualTo(MessageStatus.FAILED);
-		assertThat(recipient1.getStatusDetail()).isEqualTo("Unsupported message type: WEB_MESSAGE");
+		assertThat(recipient1.getStatus()).isEqualTo("FAILED");
+		assertThat(recipient1.getStatusDetail()).isEqualTo("Unsupported message type: LETTER");
 	}
 
 	@Test
@@ -297,8 +527,8 @@ class MessageServiceTest {
 		var completableFuture = spy.sendSmsToRecipient(messageEntity, recipient1);
 
 		completableFuture.join();
-		assertThat(recipient1.getMessageStatus()).isEqualTo(MessageStatus.SENT);
-		assertThat(recipient1.getMessagingId()).isEqualTo(uuid.toString());
+		assertThat(recipient1.getStatus()).isEqualTo(MessageStatus.SENT.toString());
+		assertThat(recipient1.getExternalId()).isEqualTo(uuid.toString());
 		verify(messagingIntegrationMock).sendSms(messageEntity, recipient1);
 	}
 
@@ -313,7 +543,7 @@ class MessageServiceTest {
 		var completableFuture = spy.sendSmsToRecipient(messageEntity, recipient1);
 
 		completableFuture.join();
-		assertThat(recipient1.getMessageStatus()).isEqualTo(MessageStatus.FAILED);
+		assertThat(recipient1.getStatus()).isEqualTo(MessageStatus.FAILED.toString());
 		assertThat(recipient1.getStatusDetail()).isEqualTo("java.lang.RuntimeException: Simulated exception");
 		verify(messagingIntegrationMock).sendSms(messageEntity, recipient1);
 	}

@@ -1,18 +1,21 @@
 package se.sundsvall.postportalservice.integration.digitalregisteredletter;
 
-import static se.sundsvall.postportalservice.integration.digitalregisteredletter.DigitalRegisteredLetterMapper.toEligibilityRequest;
+import static se.sundsvall.postportalservice.service.util.IdentifierUtil.getIdentifierHeaderValue;
 
 import java.util.List;
 import org.springframework.stereotype.Component;
-import se.sundsvall.postportalservice.api.model.DigitalRegisteredLetterRequest;
+import se.sundsvall.postportalservice.integration.db.MessageEntity;
+import se.sundsvall.postportalservice.integration.db.RecipientEntity;
 
 @Component
 public class DigitalRegisteredLetterIntegration {
 
 	private final DigitalRegisteredLetterClient client;
+	private final DigitalRegisteredLetterMapper mapper;
 
-	public DigitalRegisteredLetterIntegration(final DigitalRegisteredLetterClient client) {
+	public DigitalRegisteredLetterIntegration(final DigitalRegisteredLetterClient client, final DigitalRegisteredLetterMapper mapper) {
 		this.client = client;
+		this.mapper = mapper;
 	}
 
 	/**
@@ -23,7 +26,7 @@ public class DigitalRegisteredLetterIntegration {
 	 * @return                a list of eligible partyIds
 	 */
 	public List<String> checkKivraEligibility(final String municipalityId, final List<String> partyIds) {
-		final var request = toEligibilityRequest(partyIds);
+		final var request = mapper.toEligibilityRequest(partyIds);
 		return client.checkKivraEligibility(municipalityId, request);
 	}
 
@@ -39,9 +42,20 @@ public class DigitalRegisteredLetterIntegration {
 		return true;
 	}
 
-	public boolean sendLetter(final String municipalityId, final DigitalRegisteredLetterRequest request) {
-		// TODO: map the request to match the expected format in the DigitalRegisteredLetterClient
-		return true;
+	public void sendLetter(final MessageEntity messageEntity, final RecipientEntity recipientEntity) {
+		try {
+			final var request = mapper.toLetterRequest(messageEntity, recipientEntity);
+			final var multipartFiles = mapper.toMultipartFiles(messageEntity.getAttachments());
+			final var letter = client.sendLetter(getIdentifierHeaderValue(messageEntity.getUser().getName()),
+				messageEntity.getMunicipalityId(),
+				request,
+				multipartFiles);
+			recipientEntity.setExternalId(letter.getId());
+			recipientEntity.setStatus(letter.getStatus());
+		} catch (Exception e) {
+			recipientEntity.setStatus("FAILED");
+			recipientEntity.setStatusDetail(e.getMessage());
+		}
 	}
 
 }

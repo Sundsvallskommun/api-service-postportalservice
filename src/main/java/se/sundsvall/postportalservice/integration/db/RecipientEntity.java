@@ -10,7 +10,6 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import java.time.OffsetDateTime;
 import java.util.Objects;
-import se.sundsvall.postportalservice.integration.db.converter.MessageStatus;
 import se.sundsvall.postportalservice.integration.db.converter.MessageType;
 
 @Entity
@@ -57,8 +56,8 @@ public class RecipientEntity {
 	@Column(name = "country", columnDefinition = "VARCHAR(100)")
 	private String country;
 
-	@Column(name = "status", columnDefinition = "VARCHAR(50)")
-	private MessageStatus messageStatus;
+	@Column(name = "status", columnDefinition = "VARCHAR(80)")
+	private String status;
 
 	@Column(name = "type", columnDefinition = "VARCHAR(50)")
 	private MessageType messageType;
@@ -66,8 +65,9 @@ public class RecipientEntity {
 	@Column(name = "status_detail", columnDefinition = "TEXT")
 	private String statusDetail;
 
-	@Column(name = "messaging_id", columnDefinition = "VARCHAR(36)")
-	private String messagingId;
+	// External ID refers to the id provided by other services e.g. Messaging/DigitalRegisteredLetter
+	@Column(name = "external_id", columnDefinition = "VARCHAR(36)")
+	private String externalId;
 
 	@Column(name = "created", columnDefinition = "DATETIME")
 	private OffsetDateTime created;
@@ -81,30 +81,30 @@ public class RecipientEntity {
 		return new RecipientEntity();
 	}
 
-	public MessageStatus getMessageStatus() {
-		return messageStatus;
+	public String getStatus() {
+		return status;
 	}
 
-	public void setMessageStatus(MessageStatus messageStatus) {
-		this.messageStatus = messageStatus;
-	}
-
-	public RecipientEntity withMessageStatus(MessageStatus messageStatus) {
-		this.messageStatus = messageStatus;
+	public RecipientEntity withStatus(String status) {
+		this.status = status;
 		return this;
 	}
 
-	public String getMessagingId() {
-		return messagingId;
+	public void setStatus(String status) {
+		this.status = status;
 	}
 
-	public void setMessagingId(String messagingId) {
-		this.messagingId = messagingId;
+	public String getExternalId() {
+		return externalId;
 	}
 
-	public RecipientEntity withMessagingId(String messagingId) {
-		this.messagingId = messagingId;
+	public RecipientEntity withExternalId(String externalId) {
+		this.externalId = externalId;
 		return this;
+	}
+
+	public void setExternalId(String externalId) {
+		this.externalId = externalId;
 	}
 
 	public MessageType getMessageType() {
@@ -317,10 +317,10 @@ public class RecipientEntity {
 			", zipCode='" + zipCode + '\'' +
 			", city='" + city + '\'' +
 			", country='" + country + '\'' +
-			", messageStatus=" + messageStatus +
+			", status='" + status + '\'' +
 			", messageType=" + messageType +
 			", statusDetail='" + statusDetail + '\'' +
-			", messagingId='" + messagingId + '\'' +
+			", externalId='" + externalId + '\'' +
 			", created=" + created +
 			'}';
 	}
@@ -332,12 +332,12 @@ public class RecipientEntity {
 		RecipientEntity that = (RecipientEntity) o;
 		return Objects.equals(id, that.id) && Objects.equals(partyId, that.partyId) && Objects.equals(email, that.email) && Objects.equals(phoneNumber, that.phoneNumber) && Objects.equals(firstName,
 			that.firstName) && Objects.equals(lastName, that.lastName) && Objects.equals(streetAddress, that.streetAddress) && Objects.equals(apartmentNumber, that.apartmentNumber) && Objects.equals(careOf, that.careOf)
-			&& Objects.equals(zipCode, that.zipCode) && Objects.equals(city, that.city) && Objects.equals(country, that.country) && messageStatus == that.messageStatus && messageType == that.messageType
-			&& Objects.equals(statusDetail, that.statusDetail) && Objects.equals(messagingId, that.messagingId) && Objects.equals(created, that.created);
+			&& Objects.equals(zipCode, that.zipCode) && Objects.equals(city, that.city) && Objects.equals(country, that.country) && Objects.equals(status, that.status) && messageType == that.messageType
+			&& Objects.equals(statusDetail, that.statusDetail) && Objects.equals(externalId, that.externalId) && Objects.equals(created, that.created);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(id, partyId, email, phoneNumber, firstName, lastName, streetAddress, apartmentNumber, careOf, zipCode, city, country, messageStatus, messageType, statusDetail, messagingId, created);
+		return Objects.hash(id, partyId, email, phoneNumber, firstName, lastName, streetAddress, apartmentNumber, careOf, zipCode, city, country, status, messageType, statusDetail, externalId, created);
 	}
 }

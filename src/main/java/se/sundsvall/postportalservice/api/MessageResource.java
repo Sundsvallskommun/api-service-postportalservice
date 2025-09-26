@@ -3,9 +3,9 @@ package se.sundsvall.postportalservice.api;
 import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
 import static org.springframework.http.MediaType.ALL_VALUE;
 import static org.springframework.http.MediaType.APPLICATION_PROBLEM_JSON_VALUE;
+import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;
 import static org.springframework.http.ResponseEntity.created;
 import static org.springframework.web.util.UriComponentsBuilder.fromPath;
-import static se.sundsvall.postportalservice.service.util.ParseUtil.parseLetterRequest;
 import static se.sundsvall.postportalservice.service.util.ValidationUtil.validate;
 
 import generated.se.sundsvall.messaging.ConstraintViolationProblem;
@@ -17,7 +17,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.List;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -36,6 +35,7 @@ import se.sundsvall.postportalservice.api.model.DigitalRegisteredLetterRequest;
 import se.sundsvall.postportalservice.api.model.LetterRequest;
 import se.sundsvall.postportalservice.api.model.SmsRequest;
 import se.sundsvall.postportalservice.api.validation.ValidIdentifier;
+import se.sundsvall.postportalservice.api.validation.ValidPdf;
 import se.sundsvall.postportalservice.service.MessageService;
 
 @Validated
@@ -62,18 +62,15 @@ class MessageResource {
 	ResponseEntity<Void> sendLetter(
 		@RequestHeader(value = Identifier.HEADER_NAME) @ValidIdentifier final String xSentBy,
 		@Parameter(name = "municipalityId", description = "Municipality ID", example = "2281") @ValidMunicipalityId @PathVariable final String municipalityId,
-		@RequestPart(name = "request") @Schema(description = "Letter request as a JSON string", implementation = LetterRequest.class) final String request,
+		@RequestPart(name = "request") @Valid final LetterRequest request,
 		@RequestPart(name = "attachments") final List<MultipartFile> files) {
 		Identifier.set(Identifier.parse(xSentBy));
-
-		var letterRequest = parseLetterRequest(request);
-		validate(letterRequest);
 
 		var attachments = Attachments.create()
 			.withFiles(files);
 		validate(attachments);
 
-		final var messageId = messageService.processLetterRequest(municipalityId, letterRequest, attachments);
+		final var messageId = messageService.processLetterRequest(municipalityId, request, attachments);
 
 		return created(fromPath("/{municipalityId}/history/messages/{messageId}")
 			.buildAndExpand(municipalityId, messageId).toUri())
@@ -84,15 +81,24 @@ class MessageResource {
 	@Operation(summary = "Send a digital registered letter.", responses = {
 		@ApiResponse(responseCode = "200", description = "OK", useReturnTypeSchema = true)
 	})
-	@PostMapping(value = "/registered-letter", produces = ALL_VALUE)
+	@PostMapping(value = "/registered-letter", produces = ALL_VALUE, consumes = MULTIPART_FORM_DATA_VALUE)
 	ResponseEntity<Void> sendDigitalRegisteredLetter(
+		@RequestHeader(value = Identifier.HEADER_NAME) @ValidIdentifier final String xSentBy,
 		@Parameter(name = "municipalityId", description = "Municipality ID", example = "2281") @ValidMunicipalityId @PathVariable final String municipalityId,
-		@RequestPart(name = "request") @Schema(description = "Digital registered letter request as a JSON string", implementation = DigitalRegisteredLetterRequest.class) final String requestString,
-		@RequestPart(name = "attachments") final List<MultipartFile> files) {
+		@RequestPart(name = "request") @Valid final DigitalRegisteredLetterRequest request,
+		@RequestPart(name = "attachments") @ValidPdf final List<MultipartFile> files) {
+		Identifier.set(Identifier.parse(xSentBy));
 
-		// Should return created and a location header.
-		// /{municipalityId}/history/messages/{messageId}
-		return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
+		var attachments = Attachments.create()
+			.withFiles(files);
+		validate(attachments);
+
+		final var messageId = messageService.processDigitalRegisteredLetterRequest(municipalityId, request, attachments);
+
+		return created(fromPath("/{municipalityId}/history/messages/{messageId}")
+			.buildAndExpand(municipalityId, messageId).toUri())
+			.header(CONTENT_TYPE, ALL_VALUE)
+			.build();
 	}
 
 	@Operation(summary = "Send an SMS", responses = {

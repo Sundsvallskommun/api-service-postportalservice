@@ -3,13 +3,19 @@ package se.sundsvall.postportalservice.service.mapper;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.junit.jupiter.MockitoExtension;
 import se.sundsvall.postportalservice.api.model.Address;
 import se.sundsvall.postportalservice.api.model.Recipient;
 import se.sundsvall.postportalservice.api.model.SmsRecipient;
-import se.sundsvall.postportalservice.integration.db.converter.MessageStatus;
 import se.sundsvall.postportalservice.integration.db.converter.MessageType;
 
+@ExtendWith(MockitoExtension.class)
 class EntityMapperTest {
+
+	@InjectMocks
+	private EntityMapper entityMapper;
 
 	@Test
 	void toRecipientEntity_smsRecipient() {
@@ -17,13 +23,13 @@ class EntityMapperTest {
 			.withPartyId("00000000-0000-0000-0000-000000000001")
 			.withPhoneNumber("+46123456789");
 
-		var result = EntityMapper.toRecipientEntity(smsRecipient);
+		var result = entityMapper.toRecipientEntity(smsRecipient);
 
 		assertThat(result).isNotNull();
 		assertThat(result.getPartyId()).isEqualTo(smsRecipient.getPartyId());
 		assertThat(result.getPhoneNumber()).isEqualTo(smsRecipient.getPhoneNumber());
 		assertThat(result.getMessageType()).isEqualTo(MessageType.SMS);
-		assertThat(result.getMessageStatus()).isEqualTo(MessageStatus.PENDING);
+		assertThat(result.getStatus()).isEqualTo("PENDING");
 	}
 
 	@Test
@@ -32,12 +38,12 @@ class EntityMapperTest {
 			.withPartyId("00000000-0000-0000-0000-000000000001")
 			.withDeliveryMethod(Recipient.DeliveryMethod.DIGITAL_MAIL);
 
-		var result = EntityMapper.toRecipientEntity(recipient);
+		var result = entityMapper.toRecipientEntity(recipient);
 
 		assertThat(result).isNotNull();
 		assertThat(result.getPartyId()).isEqualTo(recipient.getPartyId());
 		assertThat(result.getMessageType()).isEqualTo(MessageType.DIGITAL_MAIL);
-		assertThat(result.getMessageStatus()).isEqualTo(MessageStatus.PENDING);
+		assertThat(result.getStatus()).isEqualTo("PENDING");
 		assertThat(result.getFirstName()).isNull();
 		assertThat(result.getLastName()).isNull();
 		assertThat(result.getStreetAddress()).isNull();
@@ -64,12 +70,12 @@ class EntityMapperTest {
 			.withAddress(address)
 			.withDeliveryMethod(Recipient.DeliveryMethod.SNAIL_MAIL);
 
-		var result = EntityMapper.toRecipientEntity(recipient);
+		var result = entityMapper.toRecipientEntity(recipient);
 
 		assertThat(result).isNotNull();
 		assertThat(result.getPartyId()).isEqualTo(recipient.getPartyId());
 		assertThat(result.getMessageType()).isEqualTo(MessageType.SNAIL_MAIL);
-		assertThat(result.getMessageStatus()).isEqualTo(MessageStatus.PENDING);
+		assertThat(result.getStatus()).isEqualTo("PENDING");
 		assertThat(result.getFirstName()).isEqualTo(address.getFirstName());
 		assertThat(result.getLastName()).isEqualTo(address.getLastName());
 		assertThat(result.getStreetAddress()).isEqualTo(address.getStreet());

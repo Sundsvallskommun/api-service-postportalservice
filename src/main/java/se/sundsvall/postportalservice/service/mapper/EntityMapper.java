@@ -1,28 +1,28 @@
 package se.sundsvall.postportalservice.service.mapper;
 
-import static se.sundsvall.postportalservice.integration.db.converter.MessageStatus.PENDING;
-
 import java.util.Optional;
+import org.springframework.stereotype.Component;
 import se.sundsvall.postportalservice.api.model.Address;
 import se.sundsvall.postportalservice.api.model.Recipient;
 import se.sundsvall.postportalservice.api.model.SmsRecipient;
 import se.sundsvall.postportalservice.integration.db.RecipientEntity;
 import se.sundsvall.postportalservice.integration.db.converter.MessageType;
 
-public final class EntityMapper {
+@Component
+public class EntityMapper {
 
-	private EntityMapper() {}
+	public EntityMapper() {}
 
-	public static RecipientEntity toRecipientEntity(final SmsRecipient smsRecipient) {
+	public RecipientEntity toRecipientEntity(final SmsRecipient smsRecipient) {
 		return Optional.ofNullable(smsRecipient).map(recipient -> RecipientEntity.create()
 			.withMessageType(MessageType.SMS)
-			.withMessageStatus(PENDING)
+			.withStatus("PENDING")
 			.withPartyId(recipient.getPartyId())
 			.withPhoneNumber(recipient.getPhoneNumber()))
 			.orElse(null);
 	}
 
-	public static RecipientEntity toRecipientEntity(final Recipient recipient) {
+	public RecipientEntity toRecipientEntity(final Recipient recipient) {
 		if (recipient == null) {
 			return null;
 		}
@@ -48,11 +48,11 @@ public final class EntityMapper {
 
 		return recipientEntity
 			.withMessageType(messageType)
-			.withMessageStatus(PENDING)
+			.withStatus("PENDING")
 			.withPartyId(recipient.getPartyId());
 	}
 
-	public static RecipientEntity toRecipientEntity(final Address address) {
+	public RecipientEntity toRecipientEntity(final Address address) {
 		return Optional.ofNullable(address).map(address1 -> RecipientEntity.create()
 			.withCountry(address1.getCountry())
 			.withCity(address1.getCity())
@@ -63,7 +63,7 @@ public final class EntityMapper {
 			.withApartmentNumber(address1.getApartmentNumber())
 			.withCareOf(address1.getCareOf())
 			.withMessageType(MessageType.SNAIL_MAIL)
-			.withMessageStatus(PENDING))
+			.withStatus("PENDING"))
 			.orElse(null);
 
 	}

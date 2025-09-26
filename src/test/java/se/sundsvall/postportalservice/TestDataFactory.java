@@ -1,13 +1,20 @@
 package se.sundsvall.postportalservice;
 
+import static org.springframework.http.MediaType.TEXT_PLAIN_VALUE;
+
+import java.util.ArrayList;
 import java.util.List;
+import org.mariadb.jdbc.MariaDbBlob;
+import org.springframework.web.multipart.MultipartFile;
 import se.sundsvall.postportalservice.api.model.Address;
+import se.sundsvall.postportalservice.api.model.Attachments;
 import se.sundsvall.postportalservice.api.model.DigitalRegisteredLetterRequest;
 import se.sundsvall.postportalservice.api.model.LetterRequest;
 import se.sundsvall.postportalservice.api.model.PrecheckRequest;
 import se.sundsvall.postportalservice.api.model.Recipient;
 import se.sundsvall.postportalservice.api.model.SmsRecipient;
 import se.sundsvall.postportalservice.api.model.SmsRequest;
+import se.sundsvall.postportalservice.integration.digitalregisteredletter.AttachmentMultipartFile;
 
 public final class TestDataFactory {
 
@@ -43,6 +50,8 @@ public final class TestDataFactory {
 
 	public static DigitalRegisteredLetterRequest createValidDigitalRegisteredLetterRequest() {
 		return DigitalRegisteredLetterRequest.create()
+			.withContentType(TEXT_PLAIN_VALUE)
+			.withBody("This is the body of the letter")
 			.withSubject("Test Subject")
 			.withPartyId("6d0773d6-3e7f-4552-81bc-f0007af95adf");
 	}
@@ -67,4 +76,19 @@ public final class TestDataFactory {
 			.withRecipients(List.of("6d0773d6-3e7f-4552-81bc-f0007af95adf"));
 	}
 
+	public static Attachments createValidAttachments(int numberOfAttachments) throws Exception {
+		var fileName = "test%s.pdf";
+		var contentType = "application/pdf";
+		var content = "Dummy PDF content".getBytes();
+		var blob = new MariaDbBlob(content);
+
+		List<MultipartFile> files = new ArrayList<>();
+		for (int i = 1; i <= numberOfAttachments; i++) {
+			final var attachment = new AttachmentMultipartFile(fileName.formatted(i), contentType, blob);
+			files.add(attachment);
+		}
+
+		return Attachments.create()
+			.withFiles(files);
+	}
 }

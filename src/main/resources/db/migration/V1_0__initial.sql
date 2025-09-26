@@ -13,6 +13,7 @@ CREATE TABLE department
 (
     id                               VARCHAR(36)  NOT NULL,
     name                             VARCHAR(100) NULL,
+    organization_number              VARCHAR(12)  NULL,
     organization_id                  VARCHAR(12)  NULL,
     support_text                     VARCHAR(255) NULL,
     contact_information_url          VARCHAR(255) NULL,
@@ -53,7 +54,7 @@ CREATE TABLE recipient
     status           VARCHAR(50)  NULL,
     type             VARCHAR(50)  NULL,
     status_detail    TEXT         NULL,
-    messaging_id     VARCHAR(36)  NULL,
+    external_id      VARCHAR(36)  NULL,
     created          datetime     NULL,
     message_id       VARCHAR(36)  NULL,
     CONSTRAINT pk_recipient PRIMARY KEY (id)

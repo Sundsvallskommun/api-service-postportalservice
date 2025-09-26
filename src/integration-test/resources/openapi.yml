@@ -7,7 +7,7 @@ info:
     url: https://opensource.org/licenses/MIT
   version: "1.0"
 servers:
-  - url: http://localhost:52930
+  - url: http://localhost:55498
     description: Generated server url
 paths:
   /{municipalityId}/precheck:
@@ -109,6 +109,11 @@ paths:
       summary: Send a digital registered letter.
       operationId: sendDigitalRegisteredLetter
       parameters:
+        - name: X-Sent-By
+          in: header
+          required: true
+          schema:
+            type: string
         - name: municipalityId
           in: path
           description: Municipality ID
@@ -118,7 +123,7 @@ paths:
           example: 2281
       requestBody:
         content:
-          application/json:
+          multipart/form-data:
             schema:
               required:
                 - attachments
@@ -695,11 +700,11 @@ components:
     StatusType:
       type: object
       properties:
-        reasonPhrase:
-          type: string
         statusCode:
           type: integer
           format: int32
+        reasonPhrase:
+          type: string
     ConstraintViolationProblem:
       type: object
       properties:
@@ -791,9 +796,9 @@ components:
             type: object
         status:
           $ref: "#/components/schemas/StatusType"
-        title:
-          type: string
         detail:
+          type: string
+        title:
           type: string
         suppressed:
           type: array
@@ -839,9 +844,19 @@ components:
       description: SMS request model
     DigitalRegisteredLetterRequest:
       required:
+        - body
         - subject
       type: object
       properties:
+        body:
+          minLength: 1
+          type: string
+          description: The body of the letter in HTML format
+          example: <h1>This is the body of the letter</h1>
+        contentType:
+          type: string
+          description: The content type of the body
+          example: text/html
         partyId:
           type: string
           description: The party id of the recipient
@@ -851,7 +866,7 @@ components:
           type: string
           description: The subject of the letter
           example: This is the subject of the letter
-      description: Digital registered letter request as a JSON string
+      description: Digital registered letter request model
     Address:
       required:
         - city
@@ -927,7 +942,7 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/Address"
-      description: Letter request as a JSON string
+      description: Letter request model
     Recipient:
       required:
         - deliveryMethod
@@ -949,3 +964,4 @@ components:
           $ref: "#/components/schemas/Address"
       description: Recipient model
   securitySchemes: { }
+

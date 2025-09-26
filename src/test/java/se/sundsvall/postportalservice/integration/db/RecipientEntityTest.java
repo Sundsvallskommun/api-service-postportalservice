@@ -15,13 +15,12 @@ import java.time.OffsetDateTime;
 import java.util.Random;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import se.sundsvall.postportalservice.integration.db.converter.MessageStatus;
 import se.sundsvall.postportalservice.integration.db.converter.MessageType;
 
 class RecipientEntityTest {
 
 	private static final String ID = "id";
-	private static final String MESSAGING_ID = "messagingId";
+	private static final String EXTERNAL_ID = "externalId";
 	private static final String PARTY_ID = "partyId";
 	private static final String EMAIL = "email";
 	private static final String PHONE_NUMBER = "phoneNumber";
@@ -34,8 +33,8 @@ class RecipientEntityTest {
 	private static final String CITY = "city";
 	private static final String COUNTRY = "country";
 	private static final String STATUS_DETAIL = "statusDetail";
+	private static final String MESSAGE_STATUS = "SENT";
 	private static final MessageType MESSAGE_TYPE = MessageType.SNAIL_MAIL;
-	private static final MessageStatus MESSAGE_STATUS = MessageStatus.SENT;
 	private static final OffsetDateTime CREATED = now();
 
 	@BeforeAll
@@ -71,8 +70,8 @@ class RecipientEntityTest {
 			.withCreated(CREATED)
 			.withStatusDetail(STATUS_DETAIL)
 			.withMessageType(MESSAGE_TYPE)
-			.withMessageStatus(MESSAGE_STATUS)
-			.withMessagingId(MESSAGING_ID);
+			.withStatus(MESSAGE_STATUS)
+			.withExternalId(EXTERNAL_ID);
 
 		assertThat(recipientEntity.getId()).isEqualTo(ID);
 		assertThat(recipientEntity.getPartyId()).isEqualTo(PARTY_ID);
@@ -89,8 +88,8 @@ class RecipientEntityTest {
 		assertThat(recipientEntity.getCreated()).isEqualTo(CREATED);
 		assertThat(recipientEntity.getStatusDetail()).isEqualTo(STATUS_DETAIL);
 		assertThat(recipientEntity.getMessageType()).isEqualTo(MESSAGE_TYPE);
-		assertThat(recipientEntity.getMessageStatus()).isEqualTo(MESSAGE_STATUS);
-		assertThat(recipientEntity.getMessagingId()).isEqualTo(MESSAGING_ID);
+		assertThat(recipientEntity.getStatus()).isEqualTo(MESSAGE_STATUS);
+		assertThat(recipientEntity.getExternalId()).isEqualTo(EXTERNAL_ID);
 		assertThat(recipientEntity).hasNoNullFieldsOrProperties();
 	}
 
@@ -113,8 +112,8 @@ class RecipientEntityTest {
 		recipientEntity.setCreated(CREATED);
 		recipientEntity.setStatusDetail(STATUS_DETAIL);
 		recipientEntity.setMessageType(MESSAGE_TYPE);
-		recipientEntity.setMessageStatus(MESSAGE_STATUS);
-		recipientEntity.setMessagingId(MESSAGING_ID);
+		recipientEntity.setStatus(MESSAGE_STATUS);
+		recipientEntity.setExternalId(EXTERNAL_ID);
 
 		assertThat(recipientEntity.getId()).isEqualTo(ID);
 		assertThat(recipientEntity.getPartyId()).isEqualTo(PARTY_ID);
@@ -131,8 +130,8 @@ class RecipientEntityTest {
 		assertThat(recipientEntity.getCreated()).isEqualTo(CREATED);
 		assertThat(recipientEntity.getStatusDetail()).isEqualTo(STATUS_DETAIL);
 		assertThat(recipientEntity.getMessageType()).isEqualTo(MESSAGE_TYPE);
-		assertThat(recipientEntity.getMessageStatus()).isEqualTo(MESSAGE_STATUS);
-		assertThat(recipientEntity.getMessagingId()).isEqualTo(MESSAGING_ID);
+		assertThat(recipientEntity.getStatus()).isEqualTo(MESSAGE_STATUS);
+		assertThat(recipientEntity.getExternalId()).isEqualTo(EXTERNAL_ID);
 		assertThat(recipientEntity).hasNoNullFieldsOrProperties();
 	}
 

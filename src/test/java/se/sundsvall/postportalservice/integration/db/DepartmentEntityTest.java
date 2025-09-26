@@ -15,6 +15,7 @@ class DepartmentEntityTest {
 
 	private static final String ID = "123e4567-e89b-12d3-a456-426614174000";
 	private static final String NAME = "name";
+	private static final String ORGANIZATION_NUMBER = "1234567890";
 	private static final String ORGANIZATION_ID = "1234567890";
 	private static final String SUPPORT_TEXT = "supportText";
 	private static final String CONTACT_INFORMATION_URL = "contactInformationUrl";
@@ -36,6 +37,7 @@ class DepartmentEntityTest {
 		final var departmentEntity = DepartmentEntity.create()
 			.withId(ID)
 			.withName(NAME)
+			.withOrganizationNumber(ORGANIZATION_NUMBER)
 			.withOrganizationId(ORGANIZATION_ID)
 			.withSupportText(SUPPORT_TEXT)
 			.withContactInformationUrl(CONTACT_INFORMATION_URL)
@@ -44,6 +46,7 @@ class DepartmentEntityTest {
 
 		assertThat(departmentEntity.getId()).isEqualTo(ID);
 		assertThat(departmentEntity.getName()).isEqualTo(NAME);
+		assertThat(departmentEntity.getOrganizationNumber()).isEqualTo(ORGANIZATION_NUMBER);
 		assertThat(departmentEntity.getOrganizationId()).isEqualTo(ORGANIZATION_ID);
 		assertThat(departmentEntity.getSupportText()).isEqualTo(SUPPORT_TEXT);
 		assertThat(departmentEntity.getContactInformationUrl()).isEqualTo(CONTACT_INFORMATION_URL);
@@ -57,6 +60,7 @@ class DepartmentEntityTest {
 		final var departmentEntity = new DepartmentEntity();
 		departmentEntity.setId(ID);
 		departmentEntity.setName(NAME);
+		departmentEntity.setOrganizationNumber(ORGANIZATION_NUMBER);
 		departmentEntity.setOrganizationId(ORGANIZATION_ID);
 		departmentEntity.setSupportText(SUPPORT_TEXT);
 		departmentEntity.setContactInformationUrl(CONTACT_INFORMATION_URL);
@@ -65,6 +69,7 @@ class DepartmentEntityTest {
 
 		assertThat(departmentEntity.getId()).isEqualTo(ID);
 		assertThat(departmentEntity.getName()).isEqualTo(NAME);
+		assertThat(departmentEntity.getOrganizationNumber()).isEqualTo(ORGANIZATION_NUMBER);
 		assertThat(departmentEntity.getOrganizationId()).isEqualTo(ORGANIZATION_ID);
 		assertThat(departmentEntity.getSupportText()).isEqualTo(SUPPORT_TEXT);
 		assertThat(departmentEntity.getContactInformationUrl()).isEqualTo(CONTACT_INFORMATION_URL);
