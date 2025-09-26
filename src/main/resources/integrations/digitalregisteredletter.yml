@@ -5,9 +5,9 @@ info:
   license:
     name: MIT License
     url: https://opensource.org/licenses/MIT
-  version: "1.0"
+  version: "2.1"
 servers:
-  - url: http://localhost:53535
+  - url: http://localhost:8080
     description: Generated server url
 tags:
   - name: Scheduler Resource
@@ -52,7 +52,9 @@ paths:
       tags:
         - Letter Resource
       summary: Get all letters
-      description: Retrieves all letters for a municipality
+      description: "Retrieves all letters for a municipality. Response is possible\
+        \ to filter by any combination of department id, username, earliest and latest\
+        \ created date."
       operationId: getLetters
       parameters:
         - name: municipalityId
@@ -60,6 +62,47 @@ paths:
           required: true
           schema:
             type: string
+        - name: orgId
+          in: query
+          description: Optional filter for matching organization id
+          required: false
+          schema:
+            type: integer
+            description: Optional filter for matching organization id
+            format: int32
+            example: 44
+          example: 44
+        - name: username
+          in: query
+          description: Optional filter for matching username
+          required: false
+          schema:
+            type: string
+            description: Optional filter for matching username
+            example: joe01doe
+          example: joe01doe
+        - name: createdEarliest
+          in: query
+          description: Optional filter with format YYYY-MM-DD for matching earliest date
+            when letter was sent
+          required: false
+          schema:
+            type: string
+            description: Optional filter with format YYYY-MM-DD for matching earliest
+              date when letter was sent
+            format: date-time
+          example: 2025-08-18
+        - name: createdLatest
+          in: query
+          description: Optional filter with format YYYY-MM-DD for matching latest date
+            when letter was sent
+          required: false
+          schema:
+            type: string
+            description: Optional filter with format YYYY-MM-DD for matching latest date
+              when letter was sent
+            format: date-time
+          example: 2025-09-18
         - name: page
           in: query
           description: Zero-based page index (0..N)
@@ -277,18 +320,18 @@ components:
             type: object
         status:
           $ref: "#/components/schemas/StatusType"
-        title:
-          type: string
         detail:
+          type: string
+        title:
           type: string
     StatusType:
       type: object
       properties:
+        reasonPhrase:
+          type: string
         statusCode:
           type: integer
           format: int32
-        reasonPhrase:
-          type: string
     ConstraintViolationProblem:
       type: object
       properties:
@@ -412,9 +455,9 @@ components:
             type: object
         status:
           $ref: "#/components/schemas/StatusType"
-        title:
-          type: string
         detail:
+          type: string
+        title:
           type: string
         suppressed:
           type: array
@@ -460,6 +503,7 @@ components:
       required:
         - body
         - contentType
+        - organization
         - partyId
         - subject
         - supportInfo
@@ -476,6 +520,8 @@ components:
           example: Important Notification
         supportInfo:
           $ref: "#/components/schemas/SupportInfo"
+        organization:
+          $ref: "#/components/schemas/Organization"
         contentType:
           type: string
           description: "Content type of the letter body, e.g., 'text/plain' or 'text/html'"
@@ -486,6 +532,23 @@ components:
           description: Body of the letter
           example: This is the content of the letter. Plain-text body
       description: LetterRequest as a JSON string
+    Organization:
+      required:
+        - name
+        - number
+      type: object
+      properties:
+        number:
+          type: integer
+          description: Unique id for the organization
+          format: int32
+          example: 44
+        name:
+          minLength: 1
+          type: string
+          description: Readable name for the organization
+          example: Department 44
+      description: Information regarding the organizational unit sending the letter
     SupportInfo:
       required:
         - contactInformationEmail

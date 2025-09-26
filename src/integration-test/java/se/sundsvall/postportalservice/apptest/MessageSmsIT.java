@@ -6,8 +6,8 @@ import static org.springframework.http.HttpHeaders.LOCATION;
 import static org.springframework.http.HttpMethod.POST;
 import static org.springframework.http.HttpStatus.BAD_GATEWAY;
 import static org.springframework.http.HttpStatus.CREATED;
-import static se.sundsvall.postportalservice.integration.db.converter.MessageStatus.FAILED;
-import static se.sundsvall.postportalservice.integration.db.converter.MessageStatus.SENT;
+import static se.sundsvall.postportalservice.Constants.FAILED;
+import static se.sundsvall.postportalservice.Constants.SENT;
 import static se.sundsvall.postportalservice.integration.db.converter.MessageType.SMS;
 
 import java.time.Duration;
@@ -54,7 +54,7 @@ class MessageSmsIT extends AbstractAppTest {
 				var message = messageRepository.findById(messageId).orElseThrow();
 				assertThat(message.getRecipients()).hasSize(1);
 				assertThat(message.getRecipients())
-					.allSatisfy(r -> assertThat(r.getMessageStatus()).isEqualTo(SENT));
+					.allSatisfy(r -> assertThat(r.getStatus()).isEqualTo(SENT));
 			});
 
 	}
@@ -82,7 +82,7 @@ class MessageSmsIT extends AbstractAppTest {
 				final var messageEntity = messageRepository.findById(messageId).orElseThrow();
 				assertThat(messageEntity.getRecipients()).hasSize(3);
 				assertThat(messageEntity.getRecipients()).allSatisfy(recipient -> {
-					assertThat(recipient.getMessageStatus()).isEqualTo(SENT);
+					assertThat(recipient.getStatus()).isEqualTo(SENT);
 					assertThat(recipient.getMessageType()).isEqualTo(SMS);
 				});
 			});
@@ -112,7 +112,7 @@ class MessageSmsIT extends AbstractAppTest {
 				final var messageEntity = messageRepository.findById(messageId).orElseThrow();
 				assertThat(messageEntity.getRecipients()).hasSize(1);
 				assertThat(messageEntity.getRecipients()).allSatisfy(recipient -> {
-					assertThat(recipient.getMessageStatus()).isEqualTo(FAILED);
+					assertThat(recipient.getStatus()).isEqualTo(FAILED);
 					assertThat(recipient.getMessageType()).isEqualTo(SMS);
 				});
 			});
@@ -142,7 +142,7 @@ class MessageSmsIT extends AbstractAppTest {
 				final var messageEntity = messageRepository.findById(messageId).orElseThrow();
 				assertThat(messageEntity.getRecipients()).hasSize(3);
 				assertThat(messageEntity.getRecipients()).allSatisfy(recipient -> {
-					assertThat(recipient.getMessageStatus()).isEqualTo(FAILED);
+					assertThat(recipient.getStatus()).isEqualTo(FAILED);
 					assertThat(recipient.getMessageType()).isEqualTo(SMS);
 				});
 			});
@@ -172,10 +172,10 @@ class MessageSmsIT extends AbstractAppTest {
 				final var messageEntity = messageRepository.findById(messageId).orElseThrow();
 				assertThat(messageEntity.getRecipients()).hasSize(3);
 				assertThat(messageEntity.getRecipients())
-					.filteredOn(recipient -> recipient.getMessageStatus().equals(SENT))
+					.filteredOn(recipient -> recipient.getStatus().equals(SENT))
 					.hasSize(1);
 				assertThat(messageEntity.getRecipients())
-					.filteredOn(recipient -> recipient.getMessageStatus().equals(FAILED))
+					.filteredOn(recipient -> recipient.getStatus().equals(FAILED))
 					.hasSize(2);
 			});
 

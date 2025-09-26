@@ -20,6 +20,11 @@ public class DepartmentEntity {
 	@Column(name = "name", columnDefinition = "VARCHAR(100)")
 	private String name;
 
+	// Organization number refers to the official organization number.
+	@Column(name = "organization_number", columnDefinition = "VARCHAR(12)")
+	private String organizationNumber;
+
+	// Organization ID refers to the ID from the Employee API
 	@Column(name = "organization_id", columnDefinition = "VARCHAR(12)")
 	private String organizationId;
 
@@ -37,6 +42,19 @@ public class DepartmentEntity {
 
 	public static DepartmentEntity create() {
 		return new DepartmentEntity();
+	}
+
+	public String getOrganizationNumber() {
+		return organizationNumber;
+	}
+
+	public DepartmentEntity withOrganizationNumber(String organizationNumber) {
+		this.organizationNumber = organizationNumber;
+		return this;
+	}
+
+	public void setOrganizationNumber(String organizationNumber) {
+		this.organizationNumber = organizationNumber;
 	}
 
 	public String getId() {
@@ -135,6 +153,7 @@ public class DepartmentEntity {
 		return "DepartmentEntity{" +
 			"id='" + id + '\'' +
 			", name='" + name + '\'' +
+			", organizationNumber='" + organizationNumber + '\'' +
 			", organizationId='" + organizationId + '\'' +
 			", supportText='" + supportText + '\'' +
 			", contactInformationUrl='" + contactInformationUrl + '\'' +
@@ -148,12 +167,13 @@ public class DepartmentEntity {
 		if (o == null || getClass() != o.getClass())
 			return false;
 		DepartmentEntity that = (DepartmentEntity) o;
-		return Objects.equals(id, that.id) && Objects.equals(name, that.name) && Objects.equals(organizationId, that.organizationId) && Objects.equals(supportText, that.supportText) && Objects.equals(
-			contactInformationUrl, that.contactInformationUrl) && Objects.equals(contactInformationPhoneNumber, that.contactInformationPhoneNumber) && Objects.equals(contactInformationEmail, that.contactInformationEmail);
+		return Objects.equals(id, that.id) && Objects.equals(name, that.name) && Objects.equals(organizationNumber, that.organizationNumber) && Objects.equals(organizationId, that.organizationId)
+			&& Objects.equals(supportText, that.supportText) && Objects.equals(contactInformationUrl, that.contactInformationUrl) && Objects.equals(contactInformationPhoneNumber, that.contactInformationPhoneNumber)
+			&& Objects.equals(contactInformationEmail, that.contactInformationEmail);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(id, name, organizationId, supportText, contactInformationUrl, contactInformationPhoneNumber, contactInformationEmail);
+		return Objects.hash(id, name, organizationNumber, organizationId, supportText, contactInformationUrl, contactInformationPhoneNumber, contactInformationEmail);
 	}
 }

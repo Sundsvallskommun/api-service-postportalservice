@@ -6,7 +6,7 @@ import static org.springframework.http.HttpHeaders.LOCATION;
 import static org.springframework.http.HttpMethod.POST;
 import static org.springframework.http.HttpStatus.CREATED;
 import static org.springframework.http.MediaType.MULTIPART_FORM_DATA;
-import static se.sundsvall.postportalservice.integration.db.converter.MessageStatus.SENT;
+import static se.sundsvall.postportalservice.Constants.SENT;
 import static se.sundsvall.postportalservice.integration.db.converter.MessageType.DIGITAL_MAIL;
 import static se.sundsvall.postportalservice.integration.db.converter.MessageType.SNAIL_MAIL;
 
@@ -59,7 +59,7 @@ class MessageLetterIT extends AbstractAppTest {
 				assertThat(message.getRecipients()).hasSize(1);
 				assertThat(message.getRecipients())
 					.allSatisfy(recipientEntity -> {
-						assertThat(recipientEntity.getMessageStatus()).isEqualTo(SENT);
+						assertThat(recipientEntity.getStatus()).isEqualTo(SENT);
 						assertThat(recipientEntity.getMessageType()).isEqualTo(DIGITAL_MAIL);
 					});
 			});
@@ -91,7 +91,7 @@ class MessageLetterIT extends AbstractAppTest {
 				assertThat(message.getRecipients()).hasSize(1);
 				assertThat(message.getRecipients())
 					.allSatisfy(recipientEntity -> {
-						assertThat(recipientEntity.getMessageStatus()).isEqualTo(SENT);
+						assertThat(recipientEntity.getStatus()).isEqualTo(SENT);
 						assertThat(recipientEntity.getMessageType()).isEqualTo(SNAIL_MAIL);
 					});
 			});
@@ -126,7 +126,7 @@ class MessageLetterIT extends AbstractAppTest {
 					.extracting(RecipientEntity::getMessageType)
 					.containsExactlyInAnyOrder(MessageType.SNAIL_MAIL, DIGITAL_MAIL);
 				assertThat(message.getRecipients())
-					.allSatisfy(recipientEntity -> assertThat(recipientEntity.getMessageStatus()).isEqualTo(SENT));
+					.allSatisfy(recipientEntity -> assertThat(recipientEntity.getStatus()).isEqualTo(SENT));
 			});
 	}
 
@@ -155,7 +155,7 @@ class MessageLetterIT extends AbstractAppTest {
 				var message = messageRepository.findById(messageId).orElseThrow();
 				assertThat(message.getRecipients()).hasSize(1);
 				assertThat(message.getRecipients())
-					.allSatisfy(recipientEntity -> assertThat(recipientEntity.getMessageStatus()).isEqualTo(SENT));
+					.allSatisfy(recipientEntity -> assertThat(recipientEntity.getStatus()).isEqualTo(SENT));
 			});
 	}
 
