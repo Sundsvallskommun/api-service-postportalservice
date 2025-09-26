@@ -1,6 +1,7 @@
 package se.sundsvall.postportalservice.service.mapper;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static se.sundsvall.postportalservice.Constants.PENDING;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -29,7 +30,7 @@ class EntityMapperTest {
 		assertThat(result.getPartyId()).isEqualTo(smsRecipient.getPartyId());
 		assertThat(result.getPhoneNumber()).isEqualTo(smsRecipient.getPhoneNumber());
 		assertThat(result.getMessageType()).isEqualTo(MessageType.SMS);
-		assertThat(result.getStatus()).isEqualTo("PENDING");
+		assertThat(result.getStatus()).isEqualTo(PENDING);
 	}
 
 	@Test
@@ -43,7 +44,7 @@ class EntityMapperTest {
 		assertThat(result).isNotNull();
 		assertThat(result.getPartyId()).isEqualTo(recipient.getPartyId());
 		assertThat(result.getMessageType()).isEqualTo(MessageType.DIGITAL_MAIL);
-		assertThat(result.getStatus()).isEqualTo("PENDING");
+		assertThat(result.getStatus()).isEqualTo(PENDING);
 		assertThat(result.getFirstName()).isNull();
 		assertThat(result.getLastName()).isNull();
 		assertThat(result.getStreetAddress()).isNull();
@@ -75,7 +76,7 @@ class EntityMapperTest {
 		assertThat(result).isNotNull();
 		assertThat(result.getPartyId()).isEqualTo(recipient.getPartyId());
 		assertThat(result.getMessageType()).isEqualTo(MessageType.SNAIL_MAIL);
-		assertThat(result.getStatus()).isEqualTo("PENDING");
+		assertThat(result.getStatus()).isEqualTo(PENDING);
 		assertThat(result.getFirstName()).isEqualTo(address.getFirstName());
 		assertThat(result.getLastName()).isEqualTo(address.getLastName());
 		assertThat(result.getStreetAddress()).isEqualTo(address.getStreet());

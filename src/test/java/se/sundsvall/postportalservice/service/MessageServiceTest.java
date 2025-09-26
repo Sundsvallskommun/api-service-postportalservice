@@ -13,6 +13,8 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static org.zalando.problem.Status.BAD_GATEWAY;
+import static se.sundsvall.postportalservice.Constants.FAILED;
+import static se.sundsvall.postportalservice.Constants.SENT;
 import static se.sundsvall.postportalservice.TestDataFactory.MUNICIPALITY_ID;
 
 import generated.se.sundsvall.employee.PortalPersonData;
@@ -196,7 +198,7 @@ class MessageServiceTest {
 		when(messageRepositoryMock.save(any())).thenAnswer(invocation -> invocation.getArgument(0, MessageEntity.class).withId("messageId"));
 		doAnswer(inv -> {
 			var recipientEntity = inv.getArgument(1, RecipientEntity.class);
-			recipientEntity.setStatus("FAILED");
+			recipientEntity.setStatus(FAILED);
 			recipientEntity.setStatusDetail("Something when wrong");
 			return null;
 		}).when(digitalRegisteredLetterIntegrationMock).sendLetter(any(MessageEntity.class), any(RecipientEntity.class));
@@ -232,7 +234,7 @@ class MessageServiceTest {
 		assertThat(messageEntity.getRecipients().getFirst()).isNotNull().isInstanceOf(RecipientEntity.class).satisfies(recipientEntity -> {
 			assertThat(recipientEntity.getPartyId()).isEqualTo(request.getPartyId());
 			assertThat(recipientEntity.getMessageType()).isEqualTo(MessageType.DIGITAL_REGISTERED_LETTER);
-			assertThat(recipientEntity.getStatus()).isEqualTo("FAILED");
+			assertThat(recipientEntity.getStatus()).isEqualTo(FAILED);
 			assertThat(recipientEntity.getStatusDetail()).isEqualTo("Something when wrong");
 			assertThat(recipientEntity.getExternalId()).isNull();
 		});
@@ -256,7 +258,7 @@ class MessageServiceTest {
 		when(messageRepositoryMock.save(any())).thenAnswer(invocation -> invocation.getArgument(0, MessageEntity.class).withId("messageId"));
 		doAnswer(inv -> {
 			var recipientEntity = inv.getArgument(1, RecipientEntity.class);
-			recipientEntity.setStatus("SENT");
+			recipientEntity.setStatus(SENT);
 			recipientEntity.setExternalId("229a3e3e-17ae-423a-9a14-671b5b1bbd17");
 			return null;
 		}).when(digitalRegisteredLetterIntegrationMock).sendLetter(any(MessageEntity.class), any(RecipientEntity.class));
@@ -292,7 +294,7 @@ class MessageServiceTest {
 		assertThat(messageEntity.getRecipients().getFirst()).isNotNull().isInstanceOf(RecipientEntity.class).satisfies(recipientEntity -> {
 			assertThat(recipientEntity.getPartyId()).isEqualTo(request.getPartyId());
 			assertThat(recipientEntity.getMessageType()).isEqualTo(MessageType.DIGITAL_REGISTERED_LETTER);
-			assertThat(recipientEntity.getStatus()).isEqualTo("SENT");
+			assertThat(recipientEntity.getStatus()).isEqualTo(SENT);
 			assertThat(recipientEntity.getExternalId()).isEqualTo("229a3e3e-17ae-423a-9a14-671b5b1bbd17");
 			assertThat(recipientEntity.getStatusDetail()).isNull();
 		});
@@ -506,7 +508,7 @@ class MessageServiceTest {
 
 		messageService.sendMessageToRecipient(messageEntity, recipient1);
 
-		assertThat(recipient1.getStatus()).isEqualTo("FAILED");
+		assertThat(recipient1.getStatus()).isEqualTo(FAILED);
 		assertThat(recipient1.getStatusDetail()).isEqualTo("Unsupported message type: LETTER");
 	}
 

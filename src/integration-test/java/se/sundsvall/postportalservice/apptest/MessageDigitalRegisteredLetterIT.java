@@ -5,6 +5,8 @@ import static org.springframework.http.HttpHeaders.LOCATION;
 import static org.springframework.http.HttpMethod.POST;
 import static org.springframework.http.HttpStatus.CREATED;
 import static org.springframework.http.MediaType.MULTIPART_FORM_DATA;
+import static se.sundsvall.postportalservice.Constants.FAILED;
+import static se.sundsvall.postportalservice.Constants.SENT;
 import static se.sundsvall.postportalservice.integration.db.converter.MessageType.DIGITAL_REGISTERED_LETTER;
 
 import java.io.FileNotFoundException;
@@ -18,7 +20,7 @@ import se.sundsvall.postportalservice.Application;
 import se.sundsvall.postportalservice.integration.db.dao.MessageRepository;
 
 @WireMockAppTestSuite(files = "classpath:/MessageDigitalRegisteredLetterIT/", classes = Application.class)
-public class MessageDigitalRegisteredLetterIT extends AbstractAppTest {
+class MessageDigitalRegisteredLetterIT extends AbstractAppTest {
 
 	private static final String REQUEST_FILE = "request.json";
 	private static final String MUNICIPALITY_ID = "2281";
@@ -49,7 +51,7 @@ public class MessageDigitalRegisteredLetterIT extends AbstractAppTest {
 		assertThat(message.getRecipients()).hasSize(1);
 		assertThat(message.getRecipients())
 			.allSatisfy(recipientEntity -> {
-				assertThat(recipientEntity.getStatus()).isEqualTo("SENT");
+				assertThat(recipientEntity.getStatus()).isEqualTo(SENT);
 				assertThat(recipientEntity.getExternalId()).isEqualTo("drl-external-id-123");
 				assertThat(recipientEntity.getMessageType()).isEqualTo(DIGITAL_REGISTERED_LETTER);
 			});
@@ -77,7 +79,7 @@ public class MessageDigitalRegisteredLetterIT extends AbstractAppTest {
 		assertThat(message.getRecipients()).hasSize(1);
 		assertThat(message.getRecipients())
 			.allSatisfy(recipientEntity -> {
-				assertThat(recipientEntity.getStatus()).isEqualTo("FAILED");
+				assertThat(recipientEntity.getStatus()).isEqualTo(FAILED);
 				assertThat(recipientEntity.getExternalId()).isEqualTo("drl-external-id-123");
 				assertThat(recipientEntity.getMessageType()).isEqualTo(DIGITAL_REGISTERED_LETTER);
 			});

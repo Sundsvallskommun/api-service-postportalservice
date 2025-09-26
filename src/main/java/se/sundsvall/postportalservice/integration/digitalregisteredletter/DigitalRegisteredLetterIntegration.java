@@ -1,5 +1,6 @@
 package se.sundsvall.postportalservice.integration.digitalregisteredletter;
 
+import static se.sundsvall.postportalservice.Constants.FAILED;
 import static se.sundsvall.postportalservice.service.util.IdentifierUtil.getIdentifierHeaderValue;
 
 import java.util.List;
@@ -53,7 +54,7 @@ public class DigitalRegisteredLetterIntegration {
 			recipientEntity.setExternalId(letter.getId());
 			recipientEntity.setStatus(letter.getStatus());
 		} catch (Exception e) {
-			recipientEntity.setStatus("FAILED");
+			recipientEntity.setStatus(FAILED);
 			recipientEntity.setStatusDetail(e.getMessage());
 		}
 	}

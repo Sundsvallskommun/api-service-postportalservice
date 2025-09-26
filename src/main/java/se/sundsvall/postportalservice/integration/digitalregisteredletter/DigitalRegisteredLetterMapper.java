@@ -8,6 +8,7 @@ import generated.se.sundsvall.digitalregisteredletter.EligibilityRequest;
 import generated.se.sundsvall.digitalregisteredletter.LetterRequest;
 import generated.se.sundsvall.digitalregisteredletter.Organization;
 import generated.se.sundsvall.digitalregisteredletter.SupportInfo;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.stereotype.Component;
@@ -66,7 +67,7 @@ public class DigitalRegisteredLetterMapper {
 			.orElse(null);
 	}
 
-	public MultipartFile createMultipartFile(final AttachmentEntity attachmentEntity) throws Exception {
+	public MultipartFile createMultipartFile(final AttachmentEntity attachmentEntity) throws SQLException {
 		return new AttachmentMultipartFile(attachmentEntity.getFileName(), attachmentEntity.getContentType(), attachmentEntity.getContent());
 	}
 
