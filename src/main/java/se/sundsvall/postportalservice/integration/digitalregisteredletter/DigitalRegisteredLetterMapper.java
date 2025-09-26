@@ -20,10 +20,6 @@ import se.sundsvall.postportalservice.integration.db.RecipientEntity;
 @Component
 public class DigitalRegisteredLetterMapper {
 
-	public DigitalRegisteredLetterMapper() {
-
-	}
-
 	public EligibilityRequest toEligibilityRequest(final List<String> partyIds) {
 		return new EligibilityRequest().partyIds(partyIds);
 	}

@@ -4,6 +4,8 @@ import static java.util.Collections.emptyList;
 import static java.util.concurrent.CompletableFuture.supplyAsync;
 import static org.zalando.problem.Status.BAD_GATEWAY;
 import static org.zalando.problem.Status.INTERNAL_SERVER_ERROR;
+import static se.sundsvall.postportalservice.Constants.FAILED;
+import static se.sundsvall.postportalservice.Constants.PENDING;
 import static se.sundsvall.postportalservice.integration.db.converter.MessageType.DIGITAL_REGISTERED_LETTER;
 import static se.sundsvall.postportalservice.integration.db.converter.MessageType.LETTER;
 import static se.sundsvall.postportalservice.integration.db.converter.MessageType.SMS;
@@ -101,7 +103,7 @@ public class MessageService {
 
 		var recipient = new RecipientEntity()
 			.withPartyId(request.getPartyId())
-			.withStatus("PENDING")
+			.withStatus(PENDING)
 			.withMessageType(DIGITAL_REGISTERED_LETTER);
 
 		var attachmentEntities = attachmentMapper.toAttachmentEntities(attachments);
@@ -230,7 +232,7 @@ public class MessageService {
 			case DIGITAL_MAIL -> sendDigitalMailToRecipient(messageEntity, recipientEntity);
 			case SNAIL_MAIL -> sendSnailMailToRecipient(messageEntity, recipientEntity);
 			default -> {
-				recipientEntity.setStatus("FAILED");
+				recipientEntity.setStatus(FAILED);
 				recipientEntity.setStatusDetail("Unsupported message type: " + recipientEntity.getMessageType());
 				yield CompletableFuture.completedFuture(null);
 			}
@@ -241,7 +243,7 @@ public class MessageService {
 		return supplyAsync(() -> messagingIntegration.sendSms(messageEntity, recipientEntity))
 			.thenAccept(messageResult -> updateRecipient(messageResult, recipientEntity))
 			.exceptionally(throwable -> {
-				recipientEntity.setStatus("FAILED");
+				recipientEntity.setStatus(FAILED);
 				recipientEntity.setStatusDetail(throwable.getMessage());
 				return null;
 			});
@@ -254,7 +256,7 @@ public class MessageService {
 				updateRecipient(messageResult, recipientEntity);
 			})
 			.exceptionally(throwable -> {
-				recipientEntity.setStatus("FAILED");
+				recipientEntity.setStatus(FAILED);
 				recipientEntity.setStatusDetail(throwable.getMessage());
 				return null;
 			});
@@ -264,7 +266,7 @@ public class MessageService {
 		return supplyAsync(() -> messagingIntegration.sendSnailMail(messageEntity, recipientEntity))
 			.thenAccept(messageResult -> updateRecipient(messageResult, recipientEntity))
 			.exceptionally(throwable -> {
-				recipientEntity.setStatus("FAILED");
+				recipientEntity.setStatus(FAILED);
 				recipientEntity.setStatusDetail(throwable.getMessage());
 				return null;
 			});

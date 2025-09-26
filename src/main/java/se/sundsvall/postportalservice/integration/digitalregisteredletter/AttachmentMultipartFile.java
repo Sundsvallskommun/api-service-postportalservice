@@ -7,6 +7,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Blob;
+import java.sql.SQLException;
 import org.springframework.web.multipart.MultipartFile;
 
 public class AttachmentMultipartFile implements MultipartFile {
@@ -15,7 +16,7 @@ public class AttachmentMultipartFile implements MultipartFile {
 	private final String contentType;
 	private final byte[] content;
 
-	public AttachmentMultipartFile(String name, String contentType, Blob blob) throws Exception {
+	public AttachmentMultipartFile(String name, String contentType, Blob blob) throws SQLException {
 		this.name = name;
 		this.contentType = contentType;
 		this.content = blob.getBytes(1, (int) blob.length());

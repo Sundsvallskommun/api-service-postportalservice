@@ -25,7 +25,9 @@ import se.sundsvall.postportalservice.service.util.BlobUtil;
 
 public final class MessagingMapper {
 
-	private MessagingMapper() {}
+	private MessagingMapper() {
+
+	}
 
 	public static SmsRequest toSmsRequest(final MessageEntity messageEntity, final RecipientEntity recipientEntity) {
 		if (anyNull(messageEntity, recipientEntity)) {

@@ -1,5 +1,7 @@
 package se.sundsvall.postportalservice.service.mapper;
 
+import static se.sundsvall.postportalservice.Constants.PENDING;
+
 import java.util.Optional;
 import org.springframework.stereotype.Component;
 import se.sundsvall.postportalservice.api.model.Address;
@@ -11,12 +13,10 @@ import se.sundsvall.postportalservice.integration.db.converter.MessageType;
 @Component
 public class EntityMapper {
 
-	public EntityMapper() {}
-
 	public RecipientEntity toRecipientEntity(final SmsRecipient smsRecipient) {
 		return Optional.ofNullable(smsRecipient).map(recipient -> RecipientEntity.create()
 			.withMessageType(MessageType.SMS)
-			.withStatus("PENDING")
+			.withStatus(PENDING)
 			.withPartyId(recipient.getPartyId())
 			.withPhoneNumber(recipient.getPhoneNumber()))
 			.orElse(null);
@@ -48,7 +48,7 @@ public class EntityMapper {
 
 		return recipientEntity
 			.withMessageType(messageType)
-			.withStatus("PENDING")
+			.withStatus(PENDING)
 			.withPartyId(recipient.getPartyId());
 	}
 
@@ -63,7 +63,7 @@ public class EntityMapper {
 			.withApartmentNumber(address1.getApartmentNumber())
 			.withCareOf(address1.getCareOf())
 			.withMessageType(MessageType.SNAIL_MAIL)
-			.withStatus("PENDING"))
+			.withStatus(PENDING))
 			.orElse(null);
 
 	}
