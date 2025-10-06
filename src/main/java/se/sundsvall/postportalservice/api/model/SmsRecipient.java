@@ -12,7 +12,7 @@ public class SmsRecipient {
 	@ValidUuid
 	private String partyId;
 
-	@Schema(description = "Phone number of the recipient, used for SMS notifications", example = "+46701234567")
+	@Schema(description = "Phone number of the recipient, used for SMS notifications", example = "+46701740605")
 	@ValidMSISDN
 	private String phoneNumber;
 

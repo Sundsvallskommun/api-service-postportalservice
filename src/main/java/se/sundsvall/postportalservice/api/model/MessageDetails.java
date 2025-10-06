@@ -185,7 +185,7 @@ public class MessageDetails {
 		@Schema(description = "The recipients party ID", accessMode = Schema.AccessMode.READ_ONLY, example = "1234567890")
 		private String partyId;
 
-		@Schema(description = "Mobile number", accessMode = Schema.AccessMode.READ_ONLY, example = "+46701234567")
+		@Schema(description = "Mobile number", accessMode = Schema.AccessMode.READ_ONLY, example = "+46701740605")
 		private String mobileNumber;
 
 		@Schema(description = "Street address", accessMode = Schema.AccessMode.READ_ONLY, example = "Main Street 5")

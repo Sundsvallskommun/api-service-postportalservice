@@ -713,7 +713,7 @@ components:
         phoneNumber:
           type: string
           description: "Phone number of the recipient, used for SMS notifications"
-          example: "+46701234567"
+          example: "+46701740605"
       description: SMS recipient model
     SmsRequest:
       required:

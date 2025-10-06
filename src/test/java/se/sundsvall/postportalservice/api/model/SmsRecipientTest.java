@@ -17,7 +17,7 @@ import org.junit.jupiter.api.Test;
 class SmsRecipientTest {
 
 	private final String partyId = "6d0773d6-3e7f-4552-81bc-f0007af95adf";
-	private final String phoneNumber = "+46701234567";
+	private final String phoneNumber = "+46701740605";
 
 	private final Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
 
@@ -62,7 +62,7 @@ class SmsRecipientTest {
 			.extracting(violation -> violation.getPropertyPath().toString(), ConstraintViolation::getMessage)
 			.containsExactlyInAnyOrder(
 				tuple("partyId", "not a valid UUID"),
-				tuple("phoneNumber", "must be a valid MSISDN (example: +46701234567). Regular expression: ^\\+[1-9][\\d]{3,14}$"));
+				tuple("phoneNumber", "must be a valid MSISDN (example: +46701740605). Regular expression: ^\\+[1-9][\\d]{3,14}$"));
 		assertThat(smsRecipient).hasAllNullFieldsOrProperties();
 	}
 
