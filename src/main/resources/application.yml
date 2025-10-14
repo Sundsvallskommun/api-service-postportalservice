@@ -36,7 +36,8 @@ openapi:
   title: Postportalservice
   name: postportalservice
   version: '@project.version@'
-
+logging:
+  config: classpath:/custom-logback.xml
 resilience4j:
   circuitbreaker:
     instances:

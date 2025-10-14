@@ -1,9 +1,11 @@
 package se.sundsvall.postportalservice.service.util;
 
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Semaphore;
 import java.util.function.Supplier;
+import org.slf4j.MDC;
 
 public final class SemaphoreUtil {
 
@@ -24,8 +26,31 @@ public final class SemaphoreUtil {
 	 * @return           A CompletableFuture representing the result of the task.
 	 */
 	public static <T> CompletableFuture<T> withPermit(final Supplier<CompletableFuture<T>> task, final Semaphore semaphore, final Executor executor) {
-		return CompletableFuture.runAsync(semaphore::acquireUninterruptibly, executor)
-			.thenCompose(ignored -> task.get())
-			.whenComplete((type, throwable) -> semaphore.release());
+
+		final var contextMap = MDC.getCopyOfContextMap();
+
+		return CompletableFuture.runAsync(() -> {
+			setMdc(contextMap);
+			semaphore.acquireUninterruptibly();
+		}, executor)
+			.thenCompose(ignored -> {
+				setMdc(contextMap);
+				return task.get();
+			})
+			.whenComplete((res, ex) -> {
+				try {
+					semaphore.release();
+				} finally {
+					MDC.clear();
+				}
+			});
+	}
+
+	private static void setMdc(Map<String, String> contextMap) {
+		if (contextMap == null) {
+			MDC.clear();
+		} else {
+			MDC.setContextMap(contextMap);
+		}
 	}
 }

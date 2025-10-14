@@ -13,6 +13,7 @@ import java.util.List;
 import org.springframework.stereotype.Component;
 import se.sundsvall.postportalservice.integration.db.MessageEntity;
 import se.sundsvall.postportalservice.integration.db.RecipientEntity;
+import se.sundsvall.postportalservice.service.util.RecipientId;
 
 @Component
 public class MessagingIntegration {
@@ -33,6 +34,7 @@ public class MessagingIntegration {
 	}
 
 	public MessageResult sendSnailMail(final MessageEntity messageEntity, final RecipientEntity recipientEntity) {
+		RecipientId.init(recipientEntity.getId());
 		var snailmailRequest = toSnailmailRequest(messageEntity, recipientEntity);
 
 		return client.sendSnailMail(getIdentifierHeaderValue(messageEntity.getUser().getName()),
@@ -47,6 +49,7 @@ public class MessagingIntegration {
 	}
 
 	public MessageResult sendSms(final MessageEntity messageEntity, final RecipientEntity recipientEntity) {
+		RecipientId.init(recipientEntity.getId());
 		var smsRequest = toSmsRequest(messageEntity, recipientEntity);
 
 		return client.sendSms(getIdentifierHeaderValue(messageEntity.getUser().getName()),
