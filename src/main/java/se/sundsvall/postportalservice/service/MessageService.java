@@ -158,7 +158,9 @@ public class MessageService {
 	}
 
 	/**
-	 * Maps an incoming SmsRequest to a MessageEntity. Persists the MessageEntity and its associated entities to the database. Sends a message to each recipient asynchronously. Returns the MessageEntity ID that can be used to read the message.
+	 * Maps an incoming SmsRequest to a MessageEntity. Persists the MessageEntity and its associated entities to the
+	 * database. Sends a message to each recipient asynchronously. Returns the MessageEntity ID that can be used to read the
+	 * message.
 	 */
 	public String processSmsRequest(final String municipalityId, final SmsRequest smsRequest) {
 		var message = createMessageEntity(municipalityId);

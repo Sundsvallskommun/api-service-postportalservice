@@ -24,9 +24,9 @@ public class DigitalRegisteredLetterIntegration {
 	/**
 	 * Takes a list of partyIds and checks their Kivra eligibility, returning a list of eligible partyIds.
 	 *
-	 * @param municipalityId the municipality id
-	 * @param partyIds the party ids to check
-	 * @return a list of eligible partyIds
+	 * @param  municipalityId the municipality id
+	 * @param  partyIds       the party ids to check
+	 * @return                a list of eligible partyIds
 	 */
 	public List<String> checkKivraEligibility(final String municipalityId, final List<String> partyIds) {
 		final var request = mapper.toEligibilityRequest(partyIds);
