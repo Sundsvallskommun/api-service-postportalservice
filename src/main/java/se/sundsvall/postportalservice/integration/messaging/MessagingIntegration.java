@@ -25,6 +25,7 @@ public class MessagingIntegration {
 	}
 
 	public MessageBatchResult sendDigitalMail(final MessageEntity messageEntity, final RecipientEntity recipientEntity) {
+		RecipientId.init(recipientEntity.getId());
 		var digitalMailRequest = toDigitalMailRequest(messageEntity, recipientEntity.getPartyId());
 
 		return client.sendDigitalMail(getIdentifierHeaderValue(messageEntity.getUser().getName()),

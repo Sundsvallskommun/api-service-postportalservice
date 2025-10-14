@@ -180,7 +180,7 @@ public class MessageService {
 	}
 
 	CompletableFuture<Void> processRecipients(final MessageEntity messageEntity) {
-		LOG.info("Starting to process {} recipients for message with id {}", messageEntity.getRecipients().size(), messageEntity.getId());
+		LOG.info("Starting to process recipients for message with id {}", messageEntity.getId());
 		var futures = Optional.ofNullable(messageEntity.getRecipients()).orElse(emptyList()).stream()
 			.filter(recipientEntity -> !"UNDELIVERABLE".equalsIgnoreCase(recipientEntity.getStatus()))
 			.map(recipientEntity -> withPermit(() -> sendMessageToRecipient(messageEntity, recipientEntity), permits, executor))
@@ -250,11 +250,13 @@ public class MessageService {
 				LOG.info("Digital mail sent to recipient with id {}", recipientEntity.getId());
 				var messageResult = messageBatchResult.getMessages().getFirst();
 				updateRecipient(messageResult, recipientEntity);
+				RecipientId.reset();
 			})
 			.exceptionally(throwable -> {
 				LOG.error("Failed to send digital mail to recipient with id {}", recipientEntity.getId(), throwable);
 				recipientEntity.setStatus(FAILED);
 				recipientEntity.setStatusDetail(throwable.getMessage());
+				RecipientId.reset();
 				return null;
 			});
 	}
