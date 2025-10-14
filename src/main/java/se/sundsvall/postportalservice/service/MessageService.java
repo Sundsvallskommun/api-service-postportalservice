@@ -15,7 +15,6 @@ import generated.se.sundsvall.messaging.DeliveryResult;
 import generated.se.sundsvall.messaging.MessageResult;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -66,7 +65,6 @@ public class MessageService {
 	private final DepartmentRepository departmentRepository;
 	private final UserRepository userRepository;
 	private final MessageRepository messageRepository;
-	private static final ThreadLocal<Map<String, String>> CONTEXT_MAP = new ThreadLocal<>();
 
 	public MessageService(
 		final DigitalRegisteredLetterIntegration digitalRegisteredLetterIntegration,
@@ -92,7 +90,6 @@ public class MessageService {
 	}
 
 	public String processDigitalRegisteredLetterRequest(final String municipalityId, final DigitalRegisteredLetterRequest request, final List<MultipartFile> attachments) {
-		CONTEXT_MAP.set(MDC.getCopyOfContextMap());
 		var message = createMessageEntity(municipalityId);
 		message.setBody(request.getBody());
 		message.setContentType(request.getContentType());
@@ -115,7 +112,6 @@ public class MessageService {
 	}
 
 	public String processCsvLetterRequest(final String municipalityId, final LetterCsvRequest request, final MultipartFile csvFile, final List<MultipartFile> attachments) {
-		CONTEXT_MAP.set(MDC.getCopyOfContextMap());
 		var legalIds = parseCsvToLegalIds(csvFile);
 		var message = createMessageEntity(municipalityId);
 		message.setSubject(request.getSubject());
@@ -135,7 +131,6 @@ public class MessageService {
 	}
 
 	public String processLetterRequest(final String municipalityId, final LetterRequest letterRequest, final List<MultipartFile> attachments) {
-		CONTEXT_MAP.set(MDC.getCopyOfContextMap());
 		var message = createMessageEntity(municipalityId);
 		message.setBody(letterRequest.getBody());
 		message.setContentType(letterRequest.getContentType());
@@ -163,12 +158,9 @@ public class MessageService {
 	}
 
 	/**
-	 * Maps an incoming SmsRequest to a MessageEntity. Persists the MessageEntity and its associated entities to the
-	 * database. Sends a message to each recipient asynchronously. Returns the MessageEntity ID that can be used to read the
-	 * message.
+	 * Maps an incoming SmsRequest to a MessageEntity. Persists the MessageEntity and its associated entities to the database. Sends a message to each recipient asynchronously. Returns the MessageEntity ID that can be used to read the message.
 	 */
 	public String processSmsRequest(final String municipalityId, final SmsRequest smsRequest) {
-		CONTEXT_MAP.set(MDC.getCopyOfContextMap());
 		var message = createMessageEntity(municipalityId);
 		message.setBody(smsRequest.getMessage());
 		message.setMessageType(SMS);
@@ -224,12 +216,13 @@ public class MessageService {
 
 	CompletableFuture<Void> sendSmsToRecipient(final MessageEntity messageEntity, final RecipientEntity recipientEntity) {
 		LOG.info("Sending SMS to recipient with id {}", recipientEntity.getId());
+		var contextMap = MDC.getCopyOfContextMap();
 		return supplyAsync(() -> {
-			MDC.setContextMap(CONTEXT_MAP.get());
+			MDC.setContextMap(contextMap);
 			return messagingIntegration.sendSms(messageEntity, recipientEntity);
 		})
 			.thenAccept(messageResult -> {
-				MDC.setContextMap(CONTEXT_MAP.get());
+				MDC.setContextMap(contextMap);
 				LOG.info("SMS sent to recipient with id {}", recipientEntity.getId());
 				updateRecipient(messageResult, recipientEntity);
 				RecipientId.reset();
@@ -245,12 +238,13 @@ public class MessageService {
 
 	CompletableFuture<Void> sendDigitalMailToRecipient(final MessageEntity messageEntity, final RecipientEntity recipientEntity) {
 		LOG.info("Sending digital mail to recipient with id {}", recipientEntity.getId());
+		var contextMap = MDC.getCopyOfContextMap();
 		return supplyAsync(() -> {
-			MDC.setContextMap(CONTEXT_MAP.get());
+			MDC.setContextMap(contextMap);
 			return messagingIntegration.sendDigitalMail(messageEntity, recipientEntity);
 		})
 			.thenAccept(messageBatchResult -> {
-				MDC.setContextMap(CONTEXT_MAP.get());
+				MDC.setContextMap(contextMap);
 				LOG.info("Digital mail sent to recipient with id {}", recipientEntity.getId());
 				var messageResult = messageBatchResult.getMessages().getFirst();
 				updateRecipient(messageResult, recipientEntity);
@@ -265,12 +259,13 @@ public class MessageService {
 
 	CompletableFuture<Void> sendSnailMailToRecipient(final MessageEntity messageEntity, final RecipientEntity recipientEntity) {
 		LOG.info("Sending snail mail to recipient with id {}", recipientEntity.getId());
+		var contextMap = MDC.getCopyOfContextMap();
 		return supplyAsync(() -> {
-			MDC.setContextMap(CONTEXT_MAP.get());
+			MDC.setContextMap(contextMap);
 			return messagingIntegration.sendSnailMail(messageEntity, recipientEntity);
 		})
 			.thenAccept(messageResult -> {
-				MDC.setContextMap(CONTEXT_MAP.get());
+				MDC.setContextMap(contextMap);
 				LOG.info("Snail mail sent to recipient with id {}", recipientEntity.getId());
 				updateRecipient(messageResult, recipientEntity);
 				RecipientId.reset();

@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration debug="true" scan="false" scanPeriod="60 seconds">
 	<include resource="logback-spring.xml" />
-	<property name="CONSOLE_LOG_PATTERN" value="%date{ISO8601} [%t]%replace( x-request-id: %X{x-request-id}){'x-request-id:\s*(null)?\s*$',''}%replace( x-recipient-id: %X{x-recipient-id}){'x-recipient-id:\s*(null)?\s*$',''} %5p %-40.40logger{39} %m%n%xEx" />
+	<property name="CONSOLE_LOG_PATTERN"
+	  value="%date{ISO8601} [%t]   %replace( x-request-id: %X{x-request-id}){'x-request-id:\s*(null)?\s*$',''}   %replace( x-recipient-id: %X{x-recipient-id}){'x-recipient-id:\s*(null)?\s*$',''}   %5p %-40.40logger{39} %m%n%xEx" />
 </configuration>
+

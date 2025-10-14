@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 import se.sundsvall.postportalservice.api.model.SigningInformation;
 import se.sundsvall.postportalservice.integration.db.MessageEntity;
 import se.sundsvall.postportalservice.integration.db.RecipientEntity;
+import se.sundsvall.postportalservice.service.util.RecipientId;
 
 @Component
 public class DigitalRegisteredLetterIntegration {
@@ -23,9 +24,9 @@ public class DigitalRegisteredLetterIntegration {
 	/**
 	 * Takes a list of partyIds and checks their Kivra eligibility, returning a list of eligible partyIds.
 	 *
-	 * @param  municipalityId the municipality id
-	 * @param  partyIds       the party ids to check
-	 * @return                a list of eligible partyIds
+	 * @param municipalityId the municipality id
+	 * @param partyIds the party ids to check
+	 * @return a list of eligible partyIds
 	 */
 	public List<String> checkKivraEligibility(final String municipalityId, final List<String> partyIds) {
 		final var request = mapper.toEligibilityRequest(partyIds);
@@ -50,6 +51,7 @@ public class DigitalRegisteredLetterIntegration {
 	}
 
 	public void sendLetter(final MessageEntity messageEntity, final RecipientEntity recipientEntity) {
+		RecipientId.init(recipientEntity.getId());
 		try {
 			final var request = mapper.toLetterRequest(messageEntity, recipientEntity);
 			final var multipartFiles = mapper.toMultipartFiles(messageEntity.getAttachments());
