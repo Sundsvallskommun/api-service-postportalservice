@@ -1,6 +1,7 @@
 package se.sundsvall.postportalservice.integration.digitalregisteredletter.configuration;
 
 import org.springframework.cloud.openfeign.FeignBuilderCustomizer;
+import org.springframework.cloud.openfeign.support.JsonFormWriter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
@@ -20,5 +21,11 @@ public class DigitalRegisteredLetterConfiguration {
 			.withRequestTimeoutsInSeconds(properties.connectTimeout(), properties.readTimeout())
 			.withRetryableOAuth2InterceptorForClientRegistration(clientRegistrationRepository.findByRegistrationId(CLIENT_ID))
 			.composeCustomizersToOne();
+	}
+
+	@Bean
+	JsonFormWriter jsonFormWriter() {
+		// Needed for Feign to handle json objects sent as @RequestPart correctly
+		return new JsonFormWriter();
 	}
 }
