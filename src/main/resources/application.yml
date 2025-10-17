@@ -5,7 +5,7 @@ spring:
   application:
     name: api-service-postportalservice
   flyway:
-    enabled: true
+    enabled: false
   cache:
     cache-names: portalPersonDataCache
     caffeine:
