@@ -17,6 +17,7 @@ import org.junit.jupiter.api.Test;
 
 class MessageTest {
 
+	private static final int NUMBER_OF_RECPIPIENTS = 123;
 	private static final String MESSAGE_ID = "messageId";
 	private static final String SUBJECT = "subject";
 	private static final String TYPE = "type";
@@ -42,6 +43,7 @@ class MessageTest {
 	void getterAndSetterTest() {
 		final var bean = new Message();
 		bean.setMessageId(MESSAGE_ID);
+		bean.setNumberOfRecipients(NUMBER_OF_RECPIPIENTS);
 		bean.setSentAt(SENT_AT);
 		bean.setSigningStatus(SIGNING_STATUS);
 		bean.setSubject(SUBJECT);
@@ -54,6 +56,7 @@ class MessageTest {
 	void builderPatternTest() {
 		final var bean = new Message()
 			.withMessageId(MESSAGE_ID)
+			.withNumberOfRecipients(NUMBER_OF_RECPIPIENTS)
 			.withSentAt(SENT_AT)
 			.withSigningStatus(SIGNING_STATUS)
 			.withSubject(SUBJECT)
@@ -65,6 +68,7 @@ class MessageTest {
 	private void assertBean(final Message bean) {
 		assertThat(bean).hasNoNullFieldsOrProperties();
 		assertThat(bean.getMessageId()).isEqualTo(MESSAGE_ID);
+		assertThat(bean.getNumberOfRecipients()).isEqualTo(NUMBER_OF_RECPIPIENTS);
 		assertThat(bean.getSentAt()).isEqualTo(SENT_AT);
 		assertThat(bean.getSigningStatus()).isEqualTo(SIGNING_STATUS);
 		assertThat(bean.getSubject()).isEqualTo(SUBJECT);
