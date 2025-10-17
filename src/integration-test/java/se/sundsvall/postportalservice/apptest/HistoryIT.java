@@ -51,7 +51,7 @@ class HistoryIT extends AbstractAppTest {
 	}
 
 	@Test
-	void test04_getUserMessagesWhenDigitalRegisteredMailIsPresent() {
+	void test04_getUserMessagesWhenDigitalRegisteredLetterIsPresent() {
 		setupCall()
 			.withServicePath("/2281/history/users/user2/messages")
 			.withHttpMethod(GET)

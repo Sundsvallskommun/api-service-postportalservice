@@ -19,15 +19,18 @@ class HistoryMapperTest {
 	@Test
 	void toMessageList() {
 		// Setup
+		final var created = OffsetDateTime.now();
 		final var id = "id";
 		final var messageType = DIGITAL_MAIL;
+		final var recipients = List.of(RecipientEntity.create(), RecipientEntity.create(), RecipientEntity.create());
 		final var subject = "subject";
-		final var created = OffsetDateTime.now();
+
 		final var messageEntity = MessageEntity.create()
+			.withCreated(created)
 			.withId(id)
 			.withMessageType(messageType)
-			.withSubject(subject)
-			.withCreated(created);
+			.withRecipients(recipients)
+			.withSubject(subject);
 
 		// Act
 		final var result = HISTORY_MAPPER.toMessageList(List.of(messageEntity));
@@ -36,6 +39,7 @@ class HistoryMapperTest {
 		assertThat(result).hasSize(1).satisfiesExactly(message -> {
 			assertThat(message).hasNoNullFieldsOrPropertiesExcept("signingStatus");
 			assertThat(message.getMessageId()).isEqualTo(id);
+			assertThat(message.getNumberOfRecipients()).isEqualTo(recipients.size());
 			assertThat(message.getSentAt()).isEqualTo(created.toLocalDateTime());
 			assertThat(message.getSubject()).isEqualTo(subject);
 			assertThat(message.getType()).isEqualTo(messageType.name());
@@ -45,15 +49,18 @@ class HistoryMapperTest {
 	@Test
 	void toMessageListWhenSourceContainsNull() {
 		// Setup
+		final var created = OffsetDateTime.now();
 		final var id = "id";
 		final var messageType = DIGITAL_MAIL;
+		final var recipients = List.of(RecipientEntity.create());
 		final var subject = "subject";
-		final var created = OffsetDateTime.now();
+
 		final var messageEntity = MessageEntity.create()
+			.withCreated(created)
 			.withId(id)
 			.withMessageType(messageType)
 			.withSubject(subject)
-			.withCreated(created);
+			.withRecipients(recipients);
 
 		final var entities = new ArrayList<>(List.of(messageEntity));
 		entities.addFirst(null);
@@ -65,6 +72,7 @@ class HistoryMapperTest {
 		assertThat(result).hasSize(1).satisfiesExactly(message -> {
 			assertThat(message).hasNoNullFieldsOrPropertiesExcept("signingStatus");
 			assertThat(message.getMessageId()).isEqualTo(id);
+			assertThat(message.getNumberOfRecipients()).isEqualTo(recipients.size());
 			assertThat(message.getSentAt()).isEqualTo(created.toLocalDateTime());
 			assertThat(message.getSubject()).isEqualTo(subject);
 			assertThat(message.getType()).isEqualTo(messageType.name());
@@ -79,15 +87,18 @@ class HistoryMapperTest {
 	@Test
 	void toMessage() {
 		// Setup
+		final var created = OffsetDateTime.now();
 		final var id = "id";
 		final var messageType = DIGITAL_MAIL;
+		final var recipients = List.of(RecipientEntity.create(), RecipientEntity.create());
 		final var subject = "subject";
-		final var created = OffsetDateTime.now();
+
 		final var messageEntity = MessageEntity.create()
+			.withCreated(created)
 			.withId(id)
 			.withMessageType(messageType)
-			.withSubject(subject)
-			.withCreated(created);
+			.withRecipients(recipients)
+			.withSubject(subject);
 
 		// Act
 		final var result = HISTORY_MAPPER.toMessage(messageEntity);
@@ -95,6 +106,7 @@ class HistoryMapperTest {
 		// Assert
 		assertThat(result).isNotNull().hasNoNullFieldsOrPropertiesExcept("signingStatus");
 		assertThat(result.getMessageId()).isEqualTo(id);
+		assertThat(result.getNumberOfRecipients()).isEqualTo(recipients.size());
 		assertThat(result.getSentAt()).isEqualTo(created.toLocalDateTime());
 		assertThat(result.getSubject()).isEqualTo(subject);
 		assertThat(result.getType()).isEqualTo(messageType.name());
@@ -109,7 +121,9 @@ class HistoryMapperTest {
 		final var result = HISTORY_MAPPER.toMessage(messageEntity);
 
 		// Assert
-		assertThat(result).isNotNull().hasAllNullFieldsOrProperties();
+		assertThat(result).isNotNull()
+			.hasAllNullFieldsOrPropertiesExcept("numberOfRecipients")
+			.extracting("numberOfRecipients").isEqualTo(0);
 	}
 
 	@Test

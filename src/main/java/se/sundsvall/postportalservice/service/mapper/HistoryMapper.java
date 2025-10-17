@@ -31,6 +31,7 @@ public class HistoryMapper {
 		return ofNullable(nullableMessageEntity)
 			.map(messageEntity -> Message.create()
 				.withMessageId(messageEntity.getId())
+				.withNumberOfRecipients(ofNullable(messageEntity.getRecipients()).map(List::size).orElse(0))
 				.withType(ofNullable(messageEntity.getMessageType()).map(MessageType::name).orElse(null))
 				.withSubject(messageEntity.getSubject())
 				.withSentAt(ofNullable(messageEntity.getCreated()).map(OffsetDateTime::toLocalDateTime).orElse(null)))
