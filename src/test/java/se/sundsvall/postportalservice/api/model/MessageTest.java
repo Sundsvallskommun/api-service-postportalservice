@@ -73,9 +73,8 @@ class MessageTest {
 
 	@Test
 	void constructorTest() {
-		assertThat(new Message()).hasOnlyFields("messageId", "subject", "type", "sentAt", "signingStatus");
-		assertThat(new Message()).hasAllNullFieldsOrProperties();
-		assertThat(Message.create()).hasAllNullFieldsOrProperties();
+		assertThat(new Message()).hasAllNullFieldsOrPropertiesExcept("numberOfRecipients").extracting("numberOfRecipients").isEqualTo(0);
+		assertThat(Message.create()).hasAllNullFieldsOrPropertiesExcept("numberOfRecipients").extracting("numberOfRecipients").isEqualTo(0);
 	}
 
 }

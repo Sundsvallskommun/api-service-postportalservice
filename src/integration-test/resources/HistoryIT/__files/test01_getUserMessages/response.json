@@ -3,25 +3,29 @@
 		{
 			"messageId": "4972e098-21b8-4fda-9a0b-4d1b1377f7e4",
 			"type": "LETTER",
-			"sentAt": "2025-08-05T10:00:00"
+			"sentAt": "2025-08-05T10:00:00",
+			"numberOfRecipients": 35
 		},
 		{
 			"messageId": "5ab7aa30-b7fc-404a-89a3-f30fa5667979",
 			"subject": "This is the subject",
 			"type": "LETTER",
-			"sentAt": "2025-09-06T11:00:00"
+			"sentAt": "2025-09-06T11:00:00",
+			"numberOfRecipients": 3
 		},
 		{
 			"messageId": "ab4cdf50-b854-48f8-a061-1e89f9792c9a",
 			"subject": "This is the subject",
 			"type": "LETTER",
-			"sentAt": "2025-09-05T10:00:00"
+			"sentAt": "2025-09-05T10:00:00",
+			"numberOfRecipients": 3
 		},
 		{
 			"messageId": "b2cd4957-228f-46f0-a263-d4eae2eb5f52",
 			"subject": "This is the subject",
 			"type": "LETTER",
-			"sentAt": "2025-09-09T14:00:00"
+			"sentAt": "2025-09-09T14:00:00",
+			"numberOfRecipients": 3
 		}
 	],
 	"_meta": {
