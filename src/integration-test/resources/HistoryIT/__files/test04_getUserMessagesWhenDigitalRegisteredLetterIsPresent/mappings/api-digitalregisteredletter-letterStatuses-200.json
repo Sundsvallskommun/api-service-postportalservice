@@ -26,6 +26,6 @@
 		"headers": {
 			"Content-Type": "application/json"
 		},
-		"bodyFileName": "test04_getUserMessagesWhenDigitalRegisteredMailIsPresent/responses/api-digitalregisteredletter-letterStatuses.json"
+		"bodyFileName": "test04_getUserMessagesWhenDigitalRegisteredLetterIsPresent/responses/api-digitalregisteredletter-letterStatuses.json"
 	}
 }

@@ -4,7 +4,8 @@
 			"messageId": "11d7486b-5da0-4e73-92ec-7d77a3660f55",
 			"subject": "This is the subject",
 			"type": "LETTER",
-			"sentAt": "2025-09-08T13:00:00"
+			"sentAt": "2025-09-08T13:00:00",
+			"numberOfRecipients": 3
 		},
 		{
 			"messageId": "1decdead-52b8-42d9-aa62-5ef08c4a701e",
@@ -14,12 +15,14 @@
 			"signingStatus": {
 				"letterState": "SIGNED",
 				"signingProcessState": "COMPLETED"
-			}
+			},
+			"numberOfRecipients": 1
 		},
 		{
 			"messageId": "a8fec1ef-950f-4735-9c49-1a641043cdbb",
 			"type": "LETTER",
-			"sentAt": "2025-08-06T12:00:00"
+			"sentAt": "2025-08-06T12:00:00",
+			"numberOfRecipients": 35
 		}
 	],
 	"_meta": {
