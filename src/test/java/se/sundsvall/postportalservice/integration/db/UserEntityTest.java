@@ -14,7 +14,7 @@ import org.junit.jupiter.api.Test;
 class UserEntityTest {
 
 	private static final String ID = "123e4567-e89b-12d3-a456-426614174000";
-	private static final String NAME = "name";
+	private static final String USERNAME = "username";
 
 	@Test
 	void testBean() {
@@ -30,16 +30,29 @@ class UserEntityTest {
 	void testGettersAndSetters() {
 		final var userEntity = new UserEntity();
 		userEntity.setId(ID);
-		userEntity.setName(NAME);
+		userEntity.setUsername(USERNAME);
 
+		assertBean(userEntity);
+	}
+
+	@Test
+	void testBuilderPattern() {
+		final var userEntity = UserEntity.create()
+			.withId(ID)
+			.withUsername(USERNAME);
+
+		assertBean(userEntity);
+	}
+
+	private static void assertBean(final UserEntity userEntity) {
 		assertThat(userEntity.getId()).isEqualTo(ID);
-		assertThat(userEntity.getName()).isEqualTo(NAME);
+		assertThat(userEntity.getUsername()).isEqualTo(USERNAME);
 		assertThat(userEntity).hasNoNullFieldsOrProperties();
 	}
 
 	@Test
-	void constructorTest() {
-		final var userEntity = new UserEntity();
-		assertThat(userEntity).hasAllNullFieldsOrProperties();
+	void testEmptyBean() {
+		assertThat(new UserEntity()).hasAllNullFieldsOrProperties();
+		assertThat(UserEntity.create()).hasAllNullFieldsOrProperties();
 	}
 }

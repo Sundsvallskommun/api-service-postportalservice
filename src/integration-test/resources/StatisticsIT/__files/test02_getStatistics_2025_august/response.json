@@ -1,18 +1,18 @@
 [
 	{
-		"id": "department1",
-		"name": "Miljöförvaltningen",
-		"snailMail": 25,
-		"digitalMail": 5,
-		"sms": 5,
-		"digitalRegisteredLetter": 0
-	},
-	{
-		"id": "department2",
+		"id": "7b137896-cc1d-479b-bf2f-fc663eb8b943",
 		"name": "Socialförvaltningen",
 		"snailMail": 0,
 		"digitalMail": 20,
 		"sms": 5,
 		"digitalRegisteredLetter": 10
+	},
+	{
+		"id": "9a8b6e67-6007-4379-a717-cca245448400",
+		"name": "Miljöförvaltningen",
+		"snailMail": 25,
+		"digitalMail": 5,
+		"sms": 5,
+		"digitalRegisteredLetter": 0
 	}
 ]

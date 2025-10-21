@@ -48,6 +48,7 @@ target/
 
 # Local environment
 .env
+application-default.*
 
 # Spring
 application-default.properties

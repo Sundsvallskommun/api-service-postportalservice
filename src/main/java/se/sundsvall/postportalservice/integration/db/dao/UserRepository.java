@@ -7,6 +7,5 @@ import se.sundsvall.postportalservice.integration.db.UserEntity;
 
 @Repository
 public interface UserRepository extends JpaRepository<UserEntity, String> {
-
-	Optional<UserEntity> findByName(String name);
+	Optional<UserEntity> findByUsernameIgnoreCase(String username);
 }

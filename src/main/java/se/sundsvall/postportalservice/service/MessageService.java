@@ -1,6 +1,7 @@
 package se.sundsvall.postportalservice.service;
 
 import static java.util.Collections.emptyList;
+import static java.util.Optional.ofNullable;
 import static java.util.concurrent.CompletableFuture.supplyAsync;
 import static se.sundsvall.postportalservice.Constants.FAILED;
 import static se.sundsvall.postportalservice.Constants.PENDING;
@@ -16,7 +17,6 @@ import generated.se.sundsvall.messaging.MessageResult;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -90,19 +90,19 @@ public class MessageService {
 	}
 
 	public String processDigitalRegisteredLetterRequest(final String municipalityId, final DigitalRegisteredLetterRequest request, final List<MultipartFile> attachments) {
-		var message = createMessageEntity(municipalityId);
+		final var message = createMessageEntity(municipalityId);
 		message.setBody(request.getBody());
 		message.setContentType(request.getContentType());
 		message.setSubject(request.getSubject());
 		message.setMessageType(DIGITAL_REGISTERED_LETTER);
 
-		var recipient = new RecipientEntity()
+		final var recipient = RecipientEntity.create()
 			.withPartyId(request.getPartyId())
 			.withStatus(PENDING)
 			.withMessageType(DIGITAL_REGISTERED_LETTER);
 		message.setRecipients(List.of(recipient));
 
-		var attachmentEntities = attachmentMapper.toAttachmentEntities(attachments);
+		final var attachmentEntities = attachmentMapper.toAttachmentEntities(attachments);
 		message.setAttachments(attachmentEntities);
 
 		digitalRegisteredLetterIntegration.sendLetter(message, recipient);
@@ -112,16 +112,16 @@ public class MessageService {
 	}
 
 	public String processCsvLetterRequest(final String municipalityId, final LetterCsvRequest request, final MultipartFile csvFile, final List<MultipartFile> attachments) {
-		var legalIds = parseCsvToLegalIds(csvFile);
-		var message = createMessageEntity(municipalityId);
+		final var legalIds = parseCsvToLegalIds(csvFile);
+		final var message = createMessageEntity(municipalityId);
 		message.setSubject(request.getSubject());
 		message.setContentType(request.getContentType());
 		message.setBody(request.getBody());
 		message.setMessageType(LETTER);
 
-		var recipientEntities = precheckService.precheckLegalIds(municipalityId, legalIds);
+		final var recipientEntities = precheckService.precheckLegalIds(municipalityId, legalIds);
 		message.setRecipients(recipientEntities);
-		var attachmentEntities = attachmentMapper.toAttachmentEntities(attachments);
+		final var attachmentEntities = attachmentMapper.toAttachmentEntities(attachments);
 		message.setAttachments(attachmentEntities);
 
 		messageRepository.save(message);
@@ -131,24 +131,24 @@ public class MessageService {
 	}
 
 	public String processLetterRequest(final String municipalityId, final LetterRequest letterRequest, final List<MultipartFile> attachments) {
-		var message = createMessageEntity(municipalityId);
+		final var message = createMessageEntity(municipalityId);
 		message.setBody(letterRequest.getBody());
 		message.setContentType(letterRequest.getContentType());
 		message.setSubject(letterRequest.getSubject());
 		message.setMessageType(LETTER);
 
-		var recipientEntities = Optional.ofNullable(letterRequest.getRecipients()).orElse(emptyList()).stream()
+		final var recipientEntities = ofNullable(letterRequest.getRecipients()).orElse(emptyList()).stream()
 			.map(entityMapper::toRecipientEntity)
 			.filter(Objects::nonNull);
 
-		var addressRecipients = Optional.ofNullable(letterRequest.getAddresses()).orElse(emptyList()).stream()
+		final var addressRecipients = ofNullable(letterRequest.getAddresses()).orElse(emptyList()).stream()
 			.map(entityMapper::toRecipientEntity)
 			.filter(Objects::nonNull);
 
-		var recipients = Stream.concat(recipientEntities, addressRecipients).toList();
+		final var recipients = Stream.concat(recipientEntities, addressRecipients).toList();
 		message.setRecipients(recipients);
 
-		var attachmentEntities = attachmentMapper.toAttachmentEntities(attachments);
+		final var attachmentEntities = attachmentMapper.toAttachmentEntities(attachments);
 		message.setAttachments(attachmentEntities);
 
 		messageRepository.save(message);
@@ -163,11 +163,11 @@ public class MessageService {
 	 * message.
 	 */
 	public String processSmsRequest(final String municipalityId, final SmsRequest smsRequest) {
-		var message = createMessageEntity(municipalityId);
+		final var message = createMessageEntity(municipalityId);
 		message.setBody(smsRequest.getMessage());
 		message.setMessageType(SMS);
 
-		var recipients = smsRequest.getRecipients().stream()
+		final var recipients = smsRequest.getRecipients().stream()
 			.map(entityMapper::toRecipientEntity)
 			.filter(Objects::nonNull)
 			.toList();
@@ -181,14 +181,14 @@ public class MessageService {
 
 	CompletableFuture<Void> processRecipients(final MessageEntity messageEntity) {
 		LOG.info("Starting to process recipients for message with id {}", messageEntity.getId());
-		var futures = Optional.ofNullable(messageEntity.getRecipients()).orElse(emptyList()).stream()
+		final var futures = ofNullable(messageEntity.getRecipients()).orElse(emptyList()).stream()
 			.filter(recipientEntity -> !"UNDELIVERABLE".equalsIgnoreCase(recipientEntity.getStatus()))
 			.map(recipientEntity -> withPermit(() -> sendMessageToRecipient(messageEntity, recipientEntity), permits, executor))
 			.toArray(CompletableFuture[]::new);
 
 		return CompletableFuture.allOf(futures)
 			.handle((v, throwable) -> {
-				var triggerSnailmailBatch = messageEntity.getRecipients().stream()
+				final var triggerSnailmailBatch = messageEntity.getRecipients().stream()
 					.anyMatch(recipientEntity -> recipientEntity.getMessageType() == SNAIL_MAIL);
 				if (triggerSnailmailBatch) {
 					LOG.info("Triggering snail mail batch processing for message with id {}", messageEntity.getId());
@@ -218,7 +218,7 @@ public class MessageService {
 
 	CompletableFuture<Void> sendSmsToRecipient(final MessageEntity messageEntity, final RecipientEntity recipientEntity) {
 		LOG.info("Sending SMS to recipient with id {}", recipientEntity.getId());
-		var contextMap = MDC.getCopyOfContextMap();
+		final var contextMap = MDC.getCopyOfContextMap();
 		return supplyAsync(() -> {
 			MDC.setContextMap(contextMap);
 			return messagingIntegration.sendSms(messageEntity, recipientEntity);
@@ -240,7 +240,7 @@ public class MessageService {
 
 	CompletableFuture<Void> sendDigitalMailToRecipient(final MessageEntity messageEntity, final RecipientEntity recipientEntity) {
 		LOG.info("Sending digital mail to recipient with id {}", recipientEntity.getId());
-		var contextMap = MDC.getCopyOfContextMap();
+		final var contextMap = MDC.getCopyOfContextMap();
 		return supplyAsync(() -> {
 			MDC.setContextMap(contextMap);
 			return messagingIntegration.sendDigitalMail(messageEntity, recipientEntity);
@@ -248,7 +248,7 @@ public class MessageService {
 			.thenAccept(messageBatchResult -> {
 				MDC.setContextMap(contextMap);
 				LOG.info("Digital mail sent to recipient with id {}", recipientEntity.getId());
-				var messageResult = messageBatchResult.getMessages().getFirst();
+				final var messageResult = messageBatchResult.getMessages().getFirst();
 				updateRecipient(messageResult, recipientEntity);
 				RecipientId.reset();
 			})
@@ -263,7 +263,7 @@ public class MessageService {
 
 	CompletableFuture<Void> sendSnailMailToRecipient(final MessageEntity messageEntity, final RecipientEntity recipientEntity) {
 		LOG.info("Sending snail mail to recipient with id {}", recipientEntity.getId());
-		var contextMap = MDC.getCopyOfContextMap();
+		final var contextMap = MDC.getCopyOfContextMap();
 		return supplyAsync(() -> {
 			MDC.setContextMap(contextMap);
 			return messagingIntegration.sendSnailMail(messageEntity, recipientEntity);
@@ -287,12 +287,12 @@ public class MessageService {
 		if (messageResult == null) {
 			return;
 		}
-		var messageId = messageResult.getMessageId();
-		var deliveryResult = Optional.ofNullable(messageResult.getDeliveries()).stream()
+		final var messageId = messageResult.getMessageId();
+		final var deliveryResult = ofNullable(messageResult.getDeliveries()).stream()
 			.flatMap(Collection::stream)
 			.findFirst()
 			.orElse(null);
-		var status = Optional.ofNullable(deliveryResult)
+		final var status = ofNullable(deliveryResult)
 			.map(DeliveryResult::getStatus)
 			.orElse(generated.se.sundsvall.messaging.MessageStatus.FAILED);
 
@@ -302,9 +302,9 @@ public class MessageService {
 	}
 
 	UserEntity getOrCreateUser(final String userName) {
-		return userRepository.findByName(userName)
+		return userRepository.findByUsernameIgnoreCase(userName)
 			.orElseGet(() -> UserEntity.create()
-				.withName(userName));
+				.withUsername(userName));
 	}
 
 	DepartmentEntity getOrCreateDepartment(final EmployeeService.SentBy sentBy) {
@@ -315,11 +315,11 @@ public class MessageService {
 	}
 
 	private MessageEntity createMessageEntity(final String municipalityId) {
-		var sentBy = employeeService.getSentBy(municipalityId);
+		final var sentBy = employeeService.getSentBy(municipalityId);
 
-		var senderInfo = messagingSettingsIntegration.getSenderInfo(municipalityId, sentBy.departmentId());
-		var user = getOrCreateUser(sentBy.userName());
-		var department = getOrCreateDepartment(sentBy)
+		final var senderInfo = messagingSettingsIntegration.getSenderInfo(municipalityId, sentBy.departmentId());
+		final var user = getOrCreateUser(sentBy.userName());
+		final var department = getOrCreateDepartment(sentBy)
 			.withFolderName(senderInfo.getFolderName())
 			.withOrganizationNumber(senderInfo.getOrganizationNumber())
 			.withSupportText(senderInfo.getSupportText())

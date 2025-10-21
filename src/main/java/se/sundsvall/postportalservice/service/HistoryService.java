@@ -31,8 +31,8 @@ public class HistoryService {
 		this.historyMapper = historyMapper;
 	}
 
-	public Messages getUserMessages(final String municipalityId, final String userId, final Pageable pageable) {
-		final var page = messageRepository.findAllByMunicipalityIdAndUser_Id(municipalityId, userId, pageable);
+	public Messages getUserMessages(final String municipalityId, final String username, final Pageable pageable) {
+		final var page = messageRepository.findAllByMunicipalityIdAndUserUsernameIgnoreCase(municipalityId, username, pageable);
 		final var messages = historyMapper.toMessageList(page.getContent());
 
 		decorateWithSigningInformation(municipalityId, messages);
@@ -57,10 +57,10 @@ public class HistoryService {
 				.ifPresent(message -> message.setSigningStatus(historyMapper.toSigningStatus(letterStatus))));
 	}
 
-	public MessageDetails getMessageDetails(final String municipalityId, final String userId, final String messageId) {
-		return messageRepository.findByMunicipalityIdAndIdAndUser_Id(municipalityId, messageId, userId)
+	public MessageDetails getMessageDetails(final String municipalityId, final String username, final String messageId) {
+		return messageRepository.findByMunicipalityIdAndIdAndUserUsernameIgnoreCase(municipalityId, messageId, username)
 			.map(historyMapper::toMessageDetails)
-			.orElseThrow(() -> Problem.valueOf(NOT_FOUND, "Message with id '%s' and municipalityId '%s' for user with id '%s' not found".formatted(messageId, municipalityId, userId)));
+			.orElseThrow(() -> Problem.valueOf(NOT_FOUND, "Message with id '%s' and municipalityId '%s' for user with username '%s' not found".formatted(messageId, municipalityId, username)));
 	}
 
 	public SigningInformation getSigningInformation(final String municipalityId, final String messageId) {

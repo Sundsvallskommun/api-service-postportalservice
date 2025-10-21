@@ -55,7 +55,7 @@
 
     create table user (
         id VARCHAR(36) not null,
-        name VARCHAR(100),
+        username VARCHAR(100),
         primary key (id)
     ) engine=InnoDB;
 
@@ -80,6 +80,9 @@
     create index IDX_RECIPIENT_MESSAGE_TYPE 
        on recipient (type);
 
+    create index IDX_USER_USERNAME 
+       on user (username);
+       
     alter table if exists attachment 
        add constraint FK_ATTACHMENT_MESSAGE 
        foreign key (message_id) 

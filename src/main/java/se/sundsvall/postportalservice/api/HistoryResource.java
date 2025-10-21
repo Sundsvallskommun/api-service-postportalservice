@@ -50,9 +50,9 @@ class HistoryResource {
 	@GetMapping(value = "/users/{userId}/messages", produces = APPLICATION_JSON_VALUE)
 	ResponseEntity<Messages> getUserMessages(
 		@Parameter(name = "municipalityId", description = "Municipality ID", example = "2281") @ValidMunicipalityId @PathVariable final String municipalityId,
-		@Parameter(name = "userId", description = "User ID", example = "joe01doe") @PathVariable final String userId, final Pageable pageable) {
+		@Parameter(name = "userId", description = "Username for user to fetch messages for", example = "joe01doe") @PathVariable("userId") final String username, final Pageable pageable) {
 
-		return ok(historyService.getUserMessages(municipalityId, userId, pageable));
+		return ok(historyService.getUserMessages(municipalityId, username, pageable));
 	}
 
 	@Operation(summary = "Get messages details", responses = {
@@ -62,10 +62,10 @@ class HistoryResource {
 	@GetMapping(value = "/users/{userId}/messages/{messageId}", produces = APPLICATION_JSON_VALUE)
 	ResponseEntity<MessageDetails> getMessageDetails(
 		@Parameter(name = "municipalityId", description = "Municipality ID", example = "2281") @ValidMunicipalityId @PathVariable final String municipalityId,
-		@Parameter(name = "userId", description = "User ID", example = "joe01doe") @PathVariable final String userId,
+		@Parameter(name = "userId", description = "Username for the user who sent the message", example = "joe01doe") @PathVariable("userId") final String username,
 		@Parameter(name = "messageId", description = "Message ID", example = "9ce333ec-a473-438b-8406-a71e957dc107") @PathVariable @ValidUuid final String messageId) {
 
-		return ok(historyService.getMessageDetails(municipalityId, userId, messageId));
+		return ok(historyService.getMessageDetails(municipalityId, username, messageId));
 	}
 
 	@GetMapping(value = "/messages/{messageId}/signinginfo", produces = APPLICATION_JSON_VALUE)

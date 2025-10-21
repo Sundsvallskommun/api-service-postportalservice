@@ -414,7 +414,7 @@ paths:
         example: 2281
       - name: userId
         in: path
-        description: User ID
+        description: Username for user to fetch messages for
         required: true
         schema:
           type: string
@@ -473,7 +473,7 @@ paths:
         example: 2281
       - name: userId
         in: path
-        description: User ID
+        description: Username for the user who sent the message
         required: true
         schema:
           type: string

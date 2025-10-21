@@ -71,7 +71,7 @@ class MessagingIntegrationTest {
 			.withName("Jönssonligan")
 			.withOrganizationId("123");
 		var userEntity = UserEntity.create()
-			.withName("John Wick");
+			.withUsername("John Wick");
 		var attachmentEntity = AttachmentEntity.create()
 			.withContent(blob)
 			.withFileName("fileName.pdf")
@@ -113,7 +113,7 @@ class MessagingIntegrationTest {
 		var messageEntity = MessageEntity.create()
 			.withMunicipalityId(MUNICIPALITY_ID)
 			.withDepartment(DepartmentEntity.create().withName("Jönssonligan").withOrganizationId("123"))
-			.withUser(UserEntity.create().withName("John Wick"))
+			.withUser(UserEntity.create().withUsername("John Wick"))
 			.withRecipients(List.of(recipientEntity))
 			.withBody("This is a text message")
 			.withDisplayName("Sundsvalls Kommun");
@@ -145,7 +145,7 @@ class MessagingIntegrationTest {
 			.withId(batchId)
 			.withMunicipalityId(MUNICIPALITY_ID)
 			.withDepartment(DepartmentEntity.create().withName("Jönssonligan").withOrganizationId("123"))
-			.withUser(UserEntity.create().withName("John Wick"))
+			.withUser(UserEntity.create().withUsername("John Wick"))
 			.withRecipients(List.of(recipientEntity))
 			.withBody("This is a text message")
 			.withDisplayName("Sundsvalls Kommun");

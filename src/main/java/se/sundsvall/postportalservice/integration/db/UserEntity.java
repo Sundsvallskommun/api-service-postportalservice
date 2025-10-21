@@ -5,11 +5,14 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import java.util.Objects;
 
 @Entity
-@Table(name = "user")
+@Table(name = "user", indexes = {
+	@Index(name = "IDX_USER_USERNAME", columnList = "username")
+})
 public class UserEntity {
 
 	@Id
@@ -17,8 +20,8 @@ public class UserEntity {
 	@Column(name = "id", columnDefinition = "VARCHAR(36)")
 	private String id;
 
-	@Column(name = "name", columnDefinition = "VARCHAR(100)")
-	private String name;
+	@Column(name = "username", columnDefinition = "VARCHAR(100)")
+	private String username;
 
 	public static UserEntity create() {
 		return new UserEntity();
@@ -37,16 +40,16 @@ public class UserEntity {
 		return this;
 	}
 
-	public String getName() {
-		return name;
+	public String getUsername() {
+		return username;
 	}
 
-	public void setName(String name) {
-		this.name = name;
+	public void setUsername(String username) {
+		this.username = username;
 	}
 
-	public UserEntity withName(String name) {
-		this.name = name;
+	public UserEntity withUsername(String username) {
+		this.username = username;
 		return this;
 	}
 
@@ -54,20 +57,21 @@ public class UserEntity {
 	public String toString() {
 		return "UserEntity{" +
 			"id='" + id + '\'' +
-			", name='" + name + '\'' +
+			", username='" + username + '\'' +
 			'}';
 	}
 
 	@Override
 	public boolean equals(Object o) {
-		if (o == null || getClass() != o.getClass())
+		if (o == null || getClass() != o.getClass()) {
 			return false;
-		UserEntity that = (UserEntity) o;
-		return Objects.equals(id, that.id) && Objects.equals(name, that.name);
+		}
+		final var that = (UserEntity) o;
+		return Objects.equals(id, that.id) && Objects.equals(username, that.username);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(id, name);
+		return Objects.hash(id, username);
 	}
 }

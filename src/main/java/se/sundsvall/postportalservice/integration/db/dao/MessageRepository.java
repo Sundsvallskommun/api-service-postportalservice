@@ -10,11 +10,9 @@ import se.sundsvall.postportalservice.integration.db.converter.MessageType;
 
 @Repository
 public interface MessageRepository extends JpaRepository<MessageEntity, String> {
+	Page<MessageEntity> findAllByMunicipalityIdAndUserUsernameIgnoreCase(final String municipalityId, final String username, final Pageable pageable);
 
-	Page<MessageEntity> findAllByMunicipalityIdAndUser_Id(final String municipalityId, final String userId, final Pageable pageable);
-
-	Optional<MessageEntity> findByMunicipalityIdAndIdAndUser_Id(final String municipalityId, final String messageId, final String userId);
+	Optional<MessageEntity> findByMunicipalityIdAndIdAndUserUsernameIgnoreCase(final String municipalityId, final String messageId, final String username);
 
 	Optional<MessageEntity> findByIdAndMessageType(final String messageId, final MessageType messageType);
-
 }
