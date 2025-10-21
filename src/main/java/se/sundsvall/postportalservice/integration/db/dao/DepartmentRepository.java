@@ -7,6 +7,5 @@ import se.sundsvall.postportalservice.integration.db.DepartmentEntity;
 
 @Repository
 public interface DepartmentRepository extends JpaRepository<DepartmentEntity, String> {
-
 	Optional<DepartmentEntity> findByOrganizationId(String organizationId);
 }

@@ -67,7 +67,7 @@ public class DigitalRegisteredLetterIntegration {
 		try {
 			final var request = mapper.toLetterRequest(messageEntity, recipientEntity);
 			final var multipartFiles = mapper.toMultipartFiles(messageEntity.getAttachments());
-			final var letter = client.sendLetter(getIdentifierHeaderValue(messageEntity.getUser().getName()),
+			final var letter = client.sendLetter(getIdentifierHeaderValue(messageEntity.getUser().getUsername()),
 				messageEntity.getMunicipalityId(),
 				request,
 				multipartFiles);

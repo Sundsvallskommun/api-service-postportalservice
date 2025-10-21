@@ -6,5 +6,4 @@ import se.sundsvall.postportalservice.integration.db.AttachmentEntity;
 
 @Repository
 public interface AttachmentRepository extends JpaRepository<AttachmentEntity, String> {
-
 }

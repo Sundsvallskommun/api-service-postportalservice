@@ -65,7 +65,7 @@ class HistoryServiceTest {
 	@ParameterizedTest
 	@EnumSource(value = MessageType.class, mode = EXCLUDE, names = "DIGITAL_REGISTERED_LETTER")
 	void getUserMessages_noDigitalRegisteredLettersCommunication(MessageType messageType) {
-		final var userId = "userId";
+		final var username = "username";
 		final var messageEntity = MessageEntity.create()
 			.withCreated(OffsetDateTime.now())
 			.withSubject("subject")
@@ -73,7 +73,7 @@ class HistoryServiceTest {
 			.withId("id");
 		final var messageEntities = List.of(messageEntity);
 
-		when(messageRepositoryMock.findAllByMunicipalityIdAndUser_Id(eq(MUNICIPALITY_ID), eq(userId), any(Pageable.class))).thenReturn(pageMock);
+		when(messageRepositoryMock.findAllByMunicipalityIdAndUserUsernameIgnoreCase(eq(MUNICIPALITY_ID), eq(username), any(Pageable.class))).thenReturn(pageMock);
 		when(pageMock.getContent()).thenReturn(messageEntities);
 		when(pageMock.getSort()).thenReturn(Sort.unsorted());
 		when(pageMock.getSize()).thenReturn(1);
@@ -82,7 +82,7 @@ class HistoryServiceTest {
 		when(pageMock.getTotalElements()).thenReturn(1L);
 		when(pageMock.getTotalPages()).thenReturn(1);
 
-		final var messages = historyService.getUserMessages(MUNICIPALITY_ID, userId, Pageable.unpaged());
+		final var messages = historyService.getUserMessages(MUNICIPALITY_ID, username, Pageable.unpaged());
 
 		assertThat(messages).isNotNull().satisfies(messages1 -> {
 			assertThat(messages1.getMessages()).allSatisfy(message -> {
@@ -100,7 +100,7 @@ class HistoryServiceTest {
 				assertThat(metaData.getTotalPages()).isEqualTo(1);
 			});
 		});
-		verify(messageRepositoryMock).findAllByMunicipalityIdAndUser_Id(eq(MUNICIPALITY_ID), eq(userId), any(Pageable.class));
+		verify(messageRepositoryMock).findAllByMunicipalityIdAndUserUsernameIgnoreCase(eq(MUNICIPALITY_ID), eq(username), any(Pageable.class));
 		verify(digitalRegisteredLetterIntegrationMock).getLetterStatuses(MUNICIPALITY_ID, emptyList());
 		verify(historyMapperMock).toMessageList(messageEntities);
 		verify(historyMapperMock).toMessage(messageEntity);
@@ -109,7 +109,7 @@ class HistoryServiceTest {
 
 	@Test
 	void getUserMessages_digitalRegisteredLettersCommunicationWithMatchingLetterStatus() {
-		final var userId = "userId";
+		final var username = "username";
 		final var messageId = "messageId";
 		final var letterState = "letterState";
 		final var signingProcessState = "signingProcessState";
@@ -126,7 +126,7 @@ class HistoryServiceTest {
 			.withLetterState(letterState)
 			.withSigningProcessState(signingProcessState);
 
-		when(messageRepositoryMock.findAllByMunicipalityIdAndUser_Id(eq(MUNICIPALITY_ID), eq(userId), any(Pageable.class))).thenReturn(pageMock);
+		when(messageRepositoryMock.findAllByMunicipalityIdAndUserUsernameIgnoreCase(eq(MUNICIPALITY_ID), eq(username), any(Pageable.class))).thenReturn(pageMock);
 		when(digitalRegisteredLetterIntegrationMock.getLetterStatuses(MUNICIPALITY_ID, List.of(messageId))).thenReturn(List.of(letterStatus));
 		when(historyMapperMock.toSigningStatus(letterStatus)).thenReturn(signingStatus);
 
@@ -138,7 +138,7 @@ class HistoryServiceTest {
 		when(pageMock.getTotalElements()).thenReturn(1L);
 		when(pageMock.getTotalPages()).thenReturn(1);
 
-		final var messages = historyService.getUserMessages(MUNICIPALITY_ID, userId, Pageable.unpaged());
+		final var messages = historyService.getUserMessages(MUNICIPALITY_ID, username, Pageable.unpaged());
 
 		assertThat(messages).isNotNull().satisfies(messages1 -> {
 			assertThat(messages1.getMessages()).allSatisfy(message -> {
@@ -159,7 +159,7 @@ class HistoryServiceTest {
 				assertThat(metaData.getTotalPages()).isEqualTo(1);
 			});
 		});
-		verify(messageRepositoryMock).findAllByMunicipalityIdAndUser_Id(eq(MUNICIPALITY_ID), eq(userId), any(Pageable.class));
+		verify(messageRepositoryMock).findAllByMunicipalityIdAndUserUsernameIgnoreCase(eq(MUNICIPALITY_ID), eq(username), any(Pageable.class));
 		verify(digitalRegisteredLetterIntegrationMock).getLetterStatuses(MUNICIPALITY_ID, List.of(messageId));
 		verify(historyMapperMock).toMessageList(messageEntities);
 		verify(historyMapperMock).toMessage(messageEntity);
@@ -169,7 +169,7 @@ class HistoryServiceTest {
 
 	@Test
 	void getUserMessages_digitalRegisteredLettersCommunicationWithNonMatchingStatus() {
-		final var userId = "userId";
+		final var username = "username";
 		final var messageId = "messageId";
 		final var status = "COMPLETED";
 		final var messageEntity = MessageEntity.create()
@@ -182,7 +182,7 @@ class HistoryServiceTest {
 			.letterId("otherMessageId")
 			.status(status);
 
-		when(messageRepositoryMock.findAllByMunicipalityIdAndUser_Id(eq(MUNICIPALITY_ID), eq(userId), any(Pageable.class))).thenReturn(pageMock);
+		when(messageRepositoryMock.findAllByMunicipalityIdAndUserUsernameIgnoreCase(eq(MUNICIPALITY_ID), eq(username), any(Pageable.class))).thenReturn(pageMock);
 		when(digitalRegisteredLetterIntegrationMock.getLetterStatuses(MUNICIPALITY_ID, List.of(messageId))).thenReturn(List.of(letterStatus));
 		when(pageMock.getContent()).thenReturn(messageEntities);
 		when(pageMock.getSort()).thenReturn(Sort.unsorted());
@@ -192,7 +192,7 @@ class HistoryServiceTest {
 		when(pageMock.getTotalElements()).thenReturn(1L);
 		when(pageMock.getTotalPages()).thenReturn(1);
 
-		final var messages = historyService.getUserMessages(MUNICIPALITY_ID, userId, Pageable.unpaged());
+		final var messages = historyService.getUserMessages(MUNICIPALITY_ID, username, Pageable.unpaged());
 
 		assertThat(messages).isNotNull().satisfies(messages1 -> {
 			assertThat(messages1.getMessages()).allSatisfy(message -> {
@@ -210,7 +210,7 @@ class HistoryServiceTest {
 				assertThat(metaData.getTotalPages()).isEqualTo(1);
 			});
 		});
-		verify(messageRepositoryMock).findAllByMunicipalityIdAndUser_Id(eq(MUNICIPALITY_ID), eq(userId), any(Pageable.class));
+		verify(messageRepositoryMock).findAllByMunicipalityIdAndUserUsernameIgnoreCase(eq(MUNICIPALITY_ID), eq(username), any(Pageable.class));
 		verify(digitalRegisteredLetterIntegrationMock).getLetterStatuses(MUNICIPALITY_ID, List.of(messageId));
 		verify(historyMapperMock).toMessageList(messageEntities);
 		verify(historyMapperMock).toMessage(messageEntity);
@@ -227,7 +227,7 @@ class HistoryServiceTest {
 			.withAttachments(List.of())
 			.withRecipients(List.of());
 
-		when(messageRepositoryMock.findByMunicipalityIdAndIdAndUser_Id(MUNICIPALITY_ID, messageId, userId)).thenReturn(Optional.of(message));
+		when(messageRepositoryMock.findByMunicipalityIdAndIdAndUserUsernameIgnoreCase(MUNICIPALITY_ID, messageId, userId)).thenReturn(Optional.of(message));
 
 		final var result = historyService.getMessageDetails(MUNICIPALITY_ID, userId, messageId);
 
@@ -237,7 +237,7 @@ class HistoryServiceTest {
 			assertThat(messageDetails.getAttachments()).isEmpty();
 			assertThat(messageDetails.getRecipients()).isEmpty();
 		});
-		verify(messageRepositoryMock).findByMunicipalityIdAndIdAndUser_Id(MUNICIPALITY_ID, messageId, userId);
+		verify(messageRepositoryMock).findByMunicipalityIdAndIdAndUserUsernameIgnoreCase(MUNICIPALITY_ID, messageId, userId);
 		verify(historyMapperMock).toMessageDetails(message);
 		verify(historyMapperMock).toAttachmentList(message.getAttachments());
 		verify(historyMapperMock).toRecipientList(message.getRecipients());
@@ -248,13 +248,13 @@ class HistoryServiceTest {
 		final var messageId = "messageId";
 		final var userId = "userId";
 
-		when(messageRepositoryMock.findByMunicipalityIdAndIdAndUser_Id(MUNICIPALITY_ID, messageId, userId)).thenReturn(Optional.empty());
+		when(messageRepositoryMock.findByMunicipalityIdAndIdAndUserUsernameIgnoreCase(MUNICIPALITY_ID, messageId, userId)).thenReturn(Optional.empty());
 
 		assertThatThrownBy(() -> historyService.getMessageDetails(MUNICIPALITY_ID, userId, messageId))
 			.isInstanceOf(Problem.class)
 			.hasMessageContaining("not found");
 
-		verify(messageRepositoryMock).findByMunicipalityIdAndIdAndUser_Id(MUNICIPALITY_ID, messageId, userId);
+		verify(messageRepositoryMock).findByMunicipalityIdAndIdAndUserUsernameIgnoreCase(MUNICIPALITY_ID, messageId, userId);
 	}
 
 	@Test

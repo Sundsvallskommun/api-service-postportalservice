@@ -26,9 +26,9 @@ public class MessagingIntegration {
 
 	public MessageBatchResult sendDigitalMail(final MessageEntity messageEntity, final RecipientEntity recipientEntity) {
 		RecipientId.init(recipientEntity.getId());
-		var digitalMailRequest = toDigitalMailRequest(messageEntity, recipientEntity.getPartyId());
+		final var digitalMailRequest = toDigitalMailRequest(messageEntity, recipientEntity.getPartyId());
 
-		return client.sendDigitalMail(getIdentifierHeaderValue(messageEntity.getUser().getName()),
+		return client.sendDigitalMail(getIdentifierHeaderValue(messageEntity.getUser().getUsername()),
 			ORIGIN,
 			messageEntity.getMunicipalityId(),
 			digitalMailRequest);
@@ -36,9 +36,9 @@ public class MessagingIntegration {
 
 	public MessageResult sendSnailMail(final MessageEntity messageEntity, final RecipientEntity recipientEntity) {
 		RecipientId.init(recipientEntity.getId());
-		var snailmailRequest = toSnailmailRequest(messageEntity, recipientEntity);
+		final var snailmailRequest = toSnailmailRequest(messageEntity, recipientEntity);
 
-		return client.sendSnailMail(getIdentifierHeaderValue(messageEntity.getUser().getName()),
+		return client.sendSnailMail(getIdentifierHeaderValue(messageEntity.getUser().getUsername()),
 			ORIGIN,
 			messageEntity.getMunicipalityId(),
 			snailmailRequest,
@@ -51,9 +51,9 @@ public class MessagingIntegration {
 
 	public MessageResult sendSms(final MessageEntity messageEntity, final RecipientEntity recipientEntity) {
 		RecipientId.init(recipientEntity.getId());
-		var smsRequest = toSmsRequest(messageEntity, recipientEntity);
+		final var smsRequest = toSmsRequest(messageEntity, recipientEntity);
 
-		return client.sendSms(getIdentifierHeaderValue(messageEntity.getUser().getName()),
+		return client.sendSms(getIdentifierHeaderValue(messageEntity.getUser().getUsername()),
 			ORIGIN,
 			messageEntity.getMunicipalityId(),
 			smsRequest);

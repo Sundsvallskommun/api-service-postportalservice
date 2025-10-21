@@ -1,42 +1,42 @@
 [
 	{
-		"digitalMail": 0,
-		"digitalRegisteredLetter": 0,
-		"id": "department1",
-		"name": "Miljöförvaltningen",
-		"sms": 0,
-		"snailMail": 3
-	},
-	{
-		"digitalMail": 2,
-		"digitalRegisteredLetter": 0,
-		"id": "department2",
-		"name": "Socialförvaltningen",
-		"sms": 1,
-		"snailMail": 0
-	},
-	{
-		"digitalMail": 0,
-		"digitalRegisteredLetter": 1,
-		"id": "department3",
-		"name": "IT-avdelningen",
-		"sms": 0,
-		"snailMail": 0
-	},
-	{
-		"digitalMail": 0,
-		"digitalRegisteredLetter": 0,
-		"id": "department4",
+		"id": "0072f95f-c1fa-426a-87e9-adb8e0112bf1",
 		"name": "HR-avdelningen",
+		"snailMail": 0,
+		"digitalMail": 0,
 		"sms": 3,
-		"snailMail": 0
+		"digitalRegisteredLetter": 0
 	},
 	{
-		"digitalMail": 1,
-		"digitalRegisteredLetter": 0,
-		"id": "department5",
-		"name": "Kulturförvaltningen",
+		"id": "7b137896-cc1d-479b-bf2f-fc663eb8b943",
+		"name": "Socialförvaltningen",
+		"snailMail": 0,
+		"digitalMail": 2,
 		"sms": 1,
-		"snailMail": 1
+		"digitalRegisteredLetter": 0
+	},
+	{
+		"id": "9a8b6e67-6007-4379-a717-cca245448400",
+		"name": "Miljöförvaltningen",
+		"snailMail": 3,
+		"digitalMail": 0,
+		"sms": 0,
+		"digitalRegisteredLetter": 0
+	},
+	{
+		"id": "e3e146fb-aac9-467c-a19a-c90ee82caed4",
+		"name": "IT-avdelningen",
+		"snailMail": 0,
+		"digitalMail": 0,
+		"sms": 0,
+		"digitalRegisteredLetter": 1
+	},
+	{
+		"id": "e9c2ebba-4b71-4cc1-bc56-46434f8693cc",
+		"name": "Kulturförvaltningen",
+		"snailMail": 1,
+		"digitalMail": 1,
+		"sms": 1,
+		"digitalRegisteredLetter": 0
 	}
 ]

@@ -1,66 +1,66 @@
 -- Users
-INSERT INTO user (id, name)
-VALUES ('user1', 'Anna'),
-       ('user2', 'Björn');
+INSERT INTO user (id, username)
+VALUES ('4724b00c-1b1a-490d-ae43-9fb6237c6171', 'user1'),
+       ('2a238b85-6023-4cfa-b0c8-aaa556ffa1d6', 'user2');
 
 -- Departments
-INSERT INTO department (id, name)
-VALUES ('department1', 'Miljöförvaltningen'),
-       ('department2', 'Socialförvaltningen'),
-       ('department3', 'IT-avdelningen'),
-       ('department4', 'HR-avdelningen'),
-       ('department5', 'Kulturförvaltningen');
+INSERT INTO department (id, organization_id, name)
+VALUES ('9a8b6e67-6007-4379-a717-cca245448400', '1', 'Miljöförvaltningen'),
+       ('7b137896-cc1d-479b-bf2f-fc663eb8b943', '2', 'Socialförvaltningen'),
+       ('e3e146fb-aac9-467c-a19a-c90ee82caed4', '3', 'IT-avdelningen'),
+       ('0072f95f-c1fa-426a-87e9-adb8e0112bf1', '4', 'HR-avdelningen'),
+       ('e9c2ebba-4b71-4cc1-bc56-46434f8693cc', '5', 'Kulturförvaltningen');
 
 -- ====================================================================
 -- Test data for august 2025
 -- ====================================================================
 -- 3 SNAIL_MAIL
 INSERT INTO message (id, subject, municipality_id, department_id, user_id, message_type, created)
-VALUES ('ab4cdf50-b854-48f8-a061-1e89f9792c9a', 'This is the subject', '2281', 'department1', 'user1', 'LETTER', '2025-09-05 10:00:00');
+VALUES ('ab4cdf50-b854-48f8-a061-1e89f9792c9a', 'This is the subject', '2281', '9a8b6e67-6007-4379-a717-cca245448400', '4724b00c-1b1a-490d-ae43-9fb6237c6171', 'LETTER', '2025-09-05 10:00:00');
 
 INSERT INTO recipient (id, message_id, type, status, created)
-VALUES ('recipient1', 'ab4cdf50-b854-48f8-a061-1e89f9792c9a', 'SNAIL_MAIL', 'SENT', '2025-09-05 10:01:00'),
-       ('recipient2', 'ab4cdf50-b854-48f8-a061-1e89f9792c9a', 'SNAIL_MAIL', 'SENT', '2025-09-05 10:01:00'),
-       ('recipient3', 'ab4cdf50-b854-48f8-a061-1e89f9792c9a', 'SNAIL_MAIL', 'FAILED', '2025-09-05 10:01:00');
+VALUES ('4d9d18a3-1c71-4cbf-872a-666911efc436', 'ab4cdf50-b854-48f8-a061-1e89f9792c9a', 'SNAIL_MAIL', 'SENT', '2025-09-05 10:01:00'),
+       ('338ddf24-6e72-41aa-8bc4-c315419e27c3', 'ab4cdf50-b854-48f8-a061-1e89f9792c9a', 'SNAIL_MAIL', 'SENT', '2025-09-05 10:01:00'),
+       ('4681b799-3bd2-4bf8-aaa0-b442511cbacf', 'ab4cdf50-b854-48f8-a061-1e89f9792c9a', 'SNAIL_MAIL', 'FAILED', '2025-09-05 10:01:00');
 
 -- 2 DIGITAL_MAIL, 1 SMS
 INSERT INTO message (id, subject, municipality_id, department_id, user_id, message_type, created)
-VALUES ('5ab7aa30-b7fc-404a-89a3-f30fa5667979', 'This is the subject', '2281', 'department2', 'user1', 'LETTER', '2025-09-06 11:00:00');
+VALUES ('5ab7aa30-b7fc-404a-89a3-f30fa5667979', 'This is the subject', '2281', '7b137896-cc1d-479b-bf2f-fc663eb8b943', '4724b00c-1b1a-490d-ae43-9fb6237c6171', 'LETTER', '2025-09-06 11:00:00');
 
 INSERT INTO recipient (id, message_id, type, status, created)
-VALUES ('recipient4', '5ab7aa30-b7fc-404a-89a3-f30fa5667979', 'DIGITAL_MAIL', 'SENT', '2025-09-06 11:01:00'),
-       ('recipient5', '5ab7aa30-b7fc-404a-89a3-f30fa5667979', 'DIGITAL_MAIL', 'SENT', '2025-09-06 11:01:00'),
-       ('recipient6', '5ab7aa30-b7fc-404a-89a3-f30fa5667979', 'SMS', 'SENT', '2025-09-06 11:02:00');
+VALUES ('ab9d0337-78fe-48e3-8ab3-9280b449481b', '5ab7aa30-b7fc-404a-89a3-f30fa5667979', 'DIGITAL_MAIL', 'SENT', '2025-09-06 11:01:00'),
+       ('933b5444-d8b7-4396-bee7-db1e624fd6d7', '5ab7aa30-b7fc-404a-89a3-f30fa5667979', 'DIGITAL_MAIL', 'SENT', '2025-09-06 11:01:00'),
+       ('d50df895-a937-4b93-8dfa-eaae086242ef', '5ab7aa30-b7fc-404a-89a3-f30fa5667979', 'SMS', 'SENT', '2025-09-06 11:02:00');
 
 -- 1 DIGITAL_REGISTERED_LETTER
 INSERT INTO message (id, subject, municipality_id, department_id, user_id, message_type, created)
-VALUES ('1decdead-52b8-42d9-aa62-5ef08c4a701e', 'This is the subject', '2281', 'department3', 'user2', 'DIGITAL_REGISTERED_LETTER',
+VALUES ('1decdead-52b8-42d9-aa62-5ef08c4a701e', 'This is the subject', '2281', 'e3e146fb-aac9-467c-a19a-c90ee82caed4', '2a238b85-6023-4cfa-b0c8-aaa556ffa1d6', 'DIGITAL_REGISTERED_LETTER',
         '2025-09-07 12:00:00');
 
 INSERT INTO recipient (id, message_id, type, status, created, external_id)
-VALUES ('recipient7', '1decdead-52b8-42d9-aa62-5ef08c4a701e', 'DIGITAL_REGISTERED_LETTER', 'SENT', '2025-09-07 12:01:00', 'externalId1');
+VALUES ('9454b835-a814-4aa0-8f48-bf9675394155', '1decdead-52b8-42d9-aa62-5ef08c4a701e', 'DIGITAL_REGISTERED_LETTER', 'SENT', '2025-09-07 12:01:00', 'externalId1');
 
 -- 3 SMS
 INSERT INTO message (id, subject, municipality_id, department_id, user_id, message_type, created)
-VALUES ('11d7486b-5da0-4e73-92ec-7d77a3660f55', 'This is the subject', '2281', 'department4', 'user2', 'LETTER', '2025-09-08 13:00:00');
+VALUES ('11d7486b-5da0-4e73-92ec-7d77a3660f55', 'This is the subject', '2281', '0072f95f-c1fa-426a-87e9-adb8e0112bf1', '2a238b85-6023-4cfa-b0c8-aaa556ffa1d6', 'LETTER', '2025-09-08 13:00:00');
 
 INSERT INTO recipient (id, message_id, type, status, created)
-VALUES ('recipient9', '11d7486b-5da0-4e73-92ec-7d77a3660f55', 'SMS', 'SENT', '2025-09-08 13:01:00'),
-       ('recipient10', '11d7486b-5da0-4e73-92ec-7d77a3660f55', 'SMS', 'SENT', '2025-09-08 13:01:00'),
-       ('recipient11', '11d7486b-5da0-4e73-92ec-7d77a3660f55', 'SMS', 'NOT_SENT', '2025-09-08 13:01:00');
+VALUES ('bf983613-543f-46b6-931c-d03a2f66e5f2', '11d7486b-5da0-4e73-92ec-7d77a3660f55', 'SMS', 'SENT', '2025-09-08 13:01:00'),
+       ('95bc68a8-549a-44a2-a36a-9e63ee12b1cc', '11d7486b-5da0-4e73-92ec-7d77a3660f55', 'SMS', 'SENT', '2025-09-08 13:01:00'),
+       ('59a515c3-d980-40b8-92b7-674f0bd135a5', '11d7486b-5da0-4e73-92ec-7d77a3660f55', 'SMS', 'NOT_SENT', '2025-09-08 13:01:00');
 
 -- 1 SNAIL_MAIL, 1 DIGITAL_MAIL, 1 SMS
 INSERT INTO message (id, subject, municipality_id, department_id, user_id, message_type, created)
-VALUES ('b2cd4957-228f-46f0-a263-d4eae2eb5f52', 'This is the subject', '2281', 'department5', 'user1', 'LETTER', '2025-09-09 14:00:00');
+VALUES ('b2cd4957-228f-46f0-a263-d4eae2eb5f52', 'This is the subject', '2281', 'e9c2ebba-4b71-4cc1-bc56-46434f8693cc', '4724b00c-1b1a-490d-ae43-9fb6237c6171', 'LETTER', '2025-09-09 14:00:00');
 
 INSERT INTO attachment(id, file_name, content_type, created, message_id)
-VALUES ('attachment1', 'document.pdf', 'application/pdf', '2025-08-05 10:00:00', 'b2cd4957-228f-46f0-a263-d4eae2eb5f52'),
-       ('attachment2', 'image.png', 'image/png', '2025-08-05 10:00:00', 'b2cd4957-228f-46f0-a263-d4eae2eb5f52');
+VALUES ('5f6757a4-f0c7-43c0-83b1-78cafb5b7291', 'document.pdf', 'application/pdf', '2025-08-05 10:00:00', 'b2cd4957-228f-46f0-a263-d4eae2eb5f52'),
+       ('33706f22-6064-4f96-a8ca-39e9980ccecb', 'image.png', 'image/png', '2025-08-05 10:00:00', 'b2cd4957-228f-46f0-a263-d4eae2eb5f52');
 
 INSERT INTO recipient (id, message_id, type, status, created, phone_number, address, zip_code, city)
-VALUES ('recipient12', 'b2cd4957-228f-46f0-a263-d4eae2eb5f52', 'SNAIL_MAIL', 'SENT', '2025-09-09 14:01:00', null, 'Testgatan 1', '12345', 'Testsvall'),
-       ('recipient13', 'b2cd4957-228f-46f0-a263-d4eae2eb5f52', 'DIGITAL_MAIL', 'FAILED', '2025-09-09 14:01:00', null, null, null, null),
-       ('recipient14', 'b2cd4957-228f-46f0-a263-d4eae2eb5f52', 'SMS', 'SENT', '2025-09-09 14:02:00', '+46701740605', null, null, null);
+VALUES ('7602d620-434a-436a-ae96-56eaa0123b03', 'b2cd4957-228f-46f0-a263-d4eae2eb5f52', 'SNAIL_MAIL', 'SENT', '2025-09-09 14:01:00', null, 'Testgatan 1', '12345', 'Testsvall'),
+       ('c8037db9-dc68-40a7-9404-fa0de779deec', 'b2cd4957-228f-46f0-a263-d4eae2eb5f52', 'DIGITAL_MAIL', 'FAILED', '2025-09-09 14:01:00', null, null, null, null),
+       ('73811e9a-e62b-4535-9802-0ba1718c2fdc', 'b2cd4957-228f-46f0-a263-d4eae2eb5f52', 'SMS', 'SENT', '2025-09-09 14:02:00', '+46701740605', null, null, null);
 
 
 
@@ -68,7 +68,7 @@ VALUES ('recipient12', 'b2cd4957-228f-46f0-a263-d4eae2eb5f52', 'SNAIL_MAIL', 'SE
 -- Test data for august 2025
 -- ====================================================================
 INSERT INTO message (id, municipality_id, department_id, user_id, message_type, created)
-VALUES ('4972e098-21b8-4fda-9a0b-4d1b1377f7e4', '2281', 'department1', 'user1', 'LETTER', '2025-08-05 10:00:00');
+VALUES ('4972e098-21b8-4fda-9a0b-4d1b1377f7e4', '2281', '9a8b6e67-6007-4379-a717-cca245448400', '4724b00c-1b1a-490d-ae43-9fb6237c6171', 'LETTER', '2025-08-05 10:00:00');
 
 INSERT INTO attachment(id, file_name, content_type, created, message_id, content)
 VALUES ('5a70a27f-997e-431e-9155-cc50d01e80c5', 'attachment.pdf',
@@ -81,117 +81,117 @@ INSERT INTO recipient (id, first_name, last_name, message_id, type, status, crea
                        city)
 VALUES
 -- 25 snail mail
-('recipient101', 'John', 'Doe', '4972e098-21b8-4fda-9a0b-4d1b1377f7e4', 'SNAIL_MAIL', 'SENT', '2025-08-05 10:01:00', '+46701740605',
+('3a4fb0e8-db66-4edd-93d8-21e1acd939d5', 'John', 'Doe', '4972e098-21b8-4fda-9a0b-4d1b1377f7e4', 'SNAIL_MAIL', 'SENT', '2025-08-05 10:01:00', '+46701740605',
  'Testgatan 12', '12345', 'Testsvall'),
-('recipient102', 'John', 'Doe', '4972e098-21b8-4fda-9a0b-4d1b1377f7e4', 'SNAIL_MAIL', 'SENT', '2025-08-05 10:01:00', '+46701740605',
+('79d21ca3-f8da-48e1-b6d3-be10435d13bc', 'John', 'Doe', '4972e098-21b8-4fda-9a0b-4d1b1377f7e4', 'SNAIL_MAIL', 'SENT', '2025-08-05 10:01:00', '+46701740605',
  'Testgatan 13', '12345', 'Testsvall'),
-('recipient103', 'John', 'Doe', '4972e098-21b8-4fda-9a0b-4d1b1377f7e4', 'SNAIL_MAIL', 'SENT', '2025-08-05 10:01:00', '+46701740605',
+('8834fd7e-510a-45a3-8fd6-46dc306cef83', 'John', 'Doe', '4972e098-21b8-4fda-9a0b-4d1b1377f7e4', 'SNAIL_MAIL', 'SENT', '2025-08-05 10:01:00', '+46701740605',
  'Testgatan 14', '12345', 'Testsvall'),
-('recipient104', 'John', 'Doe', '4972e098-21b8-4fda-9a0b-4d1b1377f7e4', 'SNAIL_MAIL', 'SENT', '2025-08-05 10:01:00', '+46701740605',
+('192c0b08-4cac-4727-8742-b1755683f609', 'John', 'Doe', '4972e098-21b8-4fda-9a0b-4d1b1377f7e4', 'SNAIL_MAIL', 'SENT', '2025-08-05 10:01:00', '+46701740605',
  'Testgatan 15', '12345', 'Testsvall'),
-('recipient105', 'John', 'Doe', '4972e098-21b8-4fda-9a0b-4d1b1377f7e4', 'SNAIL_MAIL', 'FAILED', '2025-08-05 10:01:00', '+46701740605',
+('a7b962ab-3d6d-454a-a50b-a7b06aec2a1c', 'John', 'Doe', '4972e098-21b8-4fda-9a0b-4d1b1377f7e4', 'SNAIL_MAIL', 'FAILED', '2025-08-05 10:01:00', '+46701740605',
  'Testgatan 16', '12345', 'Testsvall'),
-('recipient106', 'John', 'Doe', '4972e098-21b8-4fda-9a0b-4d1b1377f7e4', 'SNAIL_MAIL', 'SENT', '2025-08-05 10:01:00', '+46701740605',
+('616b4d7f-cc74-46c1-96fb-546d6d690c64', 'John', 'Doe', '4972e098-21b8-4fda-9a0b-4d1b1377f7e4', 'SNAIL_MAIL', 'SENT', '2025-08-05 10:01:00', '+46701740605',
  'Testgatan 17', '12345', 'Testsvall'),
-('recipient107', 'John', 'Doe', '4972e098-21b8-4fda-9a0b-4d1b1377f7e4', 'SNAIL_MAIL', 'SENT', '2025-08-05 10:01:00', '+46701740605',
+('6b403613-10ae-46ea-84dc-6966c8e4f770', 'John', 'Doe', '4972e098-21b8-4fda-9a0b-4d1b1377f7e4', 'SNAIL_MAIL', 'SENT', '2025-08-05 10:01:00', '+46701740605',
  'Testgatan 18', '12345', 'Testsvall'),
-('recipient108', 'John', 'Doe', '4972e098-21b8-4fda-9a0b-4d1b1377f7e4', 'SNAIL_MAIL', 'SENT', '2025-08-05 10:01:00', null, 'Testgatan 121',
+('716440f4-cf8a-46e3-93e1-77265fde6c04', 'John', 'Doe', '4972e098-21b8-4fda-9a0b-4d1b1377f7e4', 'SNAIL_MAIL', 'SENT', '2025-08-05 10:01:00', null, 'Testgatan 121',
  '12345', 'Testsvall'),
-('recipient109', 'John', 'Doe', '4972e098-21b8-4fda-9a0b-4d1b1377f7e4', 'SNAIL_MAIL', 'SENT', '2025-08-05 10:01:00', '+46701740605',
+('21efce98-dde3-471a-82c3-4c3f0f346dc6', 'John', 'Doe', '4972e098-21b8-4fda-9a0b-4d1b1377f7e4', 'SNAIL_MAIL', 'SENT', '2025-08-05 10:01:00', '+46701740605',
  'Testgatan 19', '12345', 'Testsvall'),
-('recipient110', 'Alex', 'Doe', '4972e098-21b8-4fda-9a0b-4d1b1377f7e4', 'SNAIL_MAIL', 'SENT', '2025-08-05 10:01:00', '+46701740605',
+('923e47f2-61ff-4a67-89c3-e237dad25795', 'Alex', 'Doe', '4972e098-21b8-4fda-9a0b-4d1b1377f7e4', 'SNAIL_MAIL', 'SENT', '2025-08-05 10:01:00', '+46701740605',
  'Testgatan 122', '12345', 'Testsvall'),
-('recipient111', 'Alex', 'Doe', '4972e098-21b8-4fda-9a0b-4d1b1377f7e4', 'SNAIL_MAIL', 'SENT', '2025-08-05 10:01:00', '+46701740605',
+('f7c7a93e-6b6d-4f63-a58a-d9c1bffb3a69', 'Alex', 'Doe', '4972e098-21b8-4fda-9a0b-4d1b1377f7e4', 'SNAIL_MAIL', 'SENT', '2025-08-05 10:01:00', '+46701740605',
  'Testgatan 123', '12345', 'Testsvall'),
-('recipient112', 'Alex', 'Doe', '4972e098-21b8-4fda-9a0b-4d1b1377f7e4', 'SNAIL_MAIL', 'SENT', '2025-08-05 10:01:00', '+46701740605',
+('80b3af9f-410c-4973-91cb-46b767ce8f4c', 'Alex', 'Doe', '4972e098-21b8-4fda-9a0b-4d1b1377f7e4', 'SNAIL_MAIL', 'SENT', '2025-08-05 10:01:00', '+46701740605',
  'Testgatan 124', '12345', 'Testsvall'),
-('recipient113', 'Alex', 'Doe', '4972e098-21b8-4fda-9a0b-4d1b1377f7e4', 'SNAIL_MAIL', 'SENT', '2025-08-05 10:01:00', null, 'Testgatan 12',
+('0211e141-601e-4456-97bf-b8aac7198eab', 'Alex', 'Doe', '4972e098-21b8-4fda-9a0b-4d1b1377f7e4', 'SNAIL_MAIL', 'SENT', '2025-08-05 10:01:00', null, 'Testgatan 12',
  '12345', 'Testsvall'),
-('recipient114', 'Alex', 'Doe', '4972e098-21b8-4fda-9a0b-4d1b1377f7e4', 'SNAIL_MAIL', 'SENT', '2025-08-05 10:01:00', '+46701740605',
+('ef4c331d-d506-4000-94c2-33817ca2674a', 'Alex', 'Doe', '4972e098-21b8-4fda-9a0b-4d1b1377f7e4', 'SNAIL_MAIL', 'SENT', '2025-08-05 10:01:00', '+46701740605',
  'Testgatan 125', '12345', 'Testsvall'),
-('recipient115', 'Alex', 'Doe', '4972e098-21b8-4fda-9a0b-4d1b1377f7e4', 'SNAIL_MAIL', 'SENT', '2025-08-05 10:01:00', '+46701740605',
+('37fe69c7-2b19-4f96-acb1-b2a51ad2471f', 'Alex', 'Doe', '4972e098-21b8-4fda-9a0b-4d1b1377f7e4', 'SNAIL_MAIL', 'SENT', '2025-08-05 10:01:00', '+46701740605',
  'Testgatan 126', '12345', 'Testsvall'),
-('recipient116', 'Alex', 'Doe', '4972e098-21b8-4fda-9a0b-4d1b1377f7e4', 'SNAIL_MAIL', 'SENT', '2025-08-05 10:01:00', '+46701740605',
+('de2a3771-4351-447d-9059-7c89f2391e79', 'Alex', 'Doe', '4972e098-21b8-4fda-9a0b-4d1b1377f7e4', 'SNAIL_MAIL', 'SENT', '2025-08-05 10:01:00', '+46701740605',
  'Testgatan 127', '12345', 'Testsvall'),
-('recipient117', 'Jane', 'Doe', '4972e098-21b8-4fda-9a0b-4d1b1377f7e4', 'SNAIL_MAIL', 'SENT', '2025-08-05 10:01:00', '+46701740605',
+('29af7c8c-e2ad-4759-9d2a-e58edac9c650', 'Jane', 'Doe', '4972e098-21b8-4fda-9a0b-4d1b1377f7e4', 'SNAIL_MAIL', 'SENT', '2025-08-05 10:01:00', '+46701740605',
  'Testgatan 128', '12345', 'Testsvall'),
-('recipient118', 'Jane', 'Doe', '4972e098-21b8-4fda-9a0b-4d1b1377f7e4', 'SNAIL_MAIL', 'SENT', '2025-08-05 10:01:00', null, 'Testgatan 129',
+('d7f51e54-760f-4c28-a752-1a0da517eaf6', 'Jane', 'Doe', '4972e098-21b8-4fda-9a0b-4d1b1377f7e4', 'SNAIL_MAIL', 'SENT', '2025-08-05 10:01:00', null, 'Testgatan 129',
  '12345', 'Testsvall'),
-('recipient119', 'Jane', 'Doe', '4972e098-21b8-4fda-9a0b-4d1b1377f7e4', 'SNAIL_MAIL', 'SENT', '2025-08-05 10:01:00', '+46701740605',
+('a8c5f131-0502-4cdc-8ff7-074bd7be6b93', 'Jane', 'Doe', '4972e098-21b8-4fda-9a0b-4d1b1377f7e4', 'SNAIL_MAIL', 'SENT', '2025-08-05 10:01:00', '+46701740605',
  'Testgatan 120', '12345', 'Testsvall'),
-('recipient120', 'Jane', 'Doe', '4972e098-21b8-4fda-9a0b-4d1b1377f7e4', 'SNAIL_MAIL', 'SENT', '2025-08-05 10:01:00', '+46701740605',
+('b6fab545-f4db-4473-85cd-e1848e4956e6', 'Jane', 'Doe', '4972e098-21b8-4fda-9a0b-4d1b1377f7e4', 'SNAIL_MAIL', 'SENT', '2025-08-05 10:01:00', '+46701740605',
  'Testgatan 112', '12345', 'Testsvall'),
-('recipient121', 'Jane', 'Doe', '4972e098-21b8-4fda-9a0b-4d1b1377f7e4', 'SNAIL_MAIL', 'SENT', '2025-08-05 10:01:00', '+46701740605',
+('a3ba2888-68c2-4d58-9beb-7e24a76b703a', 'Jane', 'Doe', '4972e098-21b8-4fda-9a0b-4d1b1377f7e4', 'SNAIL_MAIL', 'SENT', '2025-08-05 10:01:00', '+46701740605',
  'Testgatan 1122', '12345', 'Testsvall'),
-('recipient122', 'Jane', 'Doe', '4972e098-21b8-4fda-9a0b-4d1b1377f7e4', 'SNAIL_MAIL', 'SENT', '2025-08-05 10:01:00', '+46701740605',
+('25e4aa96-3955-4f3d-8ca7-0ee49a48fefa', 'Jane', 'Doe', '4972e098-21b8-4fda-9a0b-4d1b1377f7e4', 'SNAIL_MAIL', 'SENT', '2025-08-05 10:01:00', '+46701740605',
  'Testgatan 122', '12345', 'Testsvall'),
-('recipient123', 'Jane', 'Doe', '4972e098-21b8-4fda-9a0b-4d1b1377f7e4', 'SNAIL_MAIL', 'SENT', '2025-08-05 10:01:00', '+46701740605',
+('f5184a56-c473-40eb-9765-3133704680bd', 'Jane', 'Doe', '4972e098-21b8-4fda-9a0b-4d1b1377f7e4', 'SNAIL_MAIL', 'SENT', '2025-08-05 10:01:00', '+46701740605',
  'Testgatan 132', '12345', 'Testsvall'),
-('recipient124', 'Jane', 'Doe', '4972e098-21b8-4fda-9a0b-4d1b1377f7e4', 'SNAIL_MAIL', 'SENT', '2025-08-05 10:01:00', '+46701740605',
+('e8117bb2-4721-4f36-a0b0-d57efd81663a', 'Jane', 'Doe', '4972e098-21b8-4fda-9a0b-4d1b1377f7e4', 'SNAIL_MAIL', 'SENT', '2025-08-05 10:01:00', '+46701740605',
  'Testgatan 131', '12345', 'Testsvall'),
-('recipient125', 'Jane', 'Doe', '4972e098-21b8-4fda-9a0b-4d1b1377f7e4', 'SNAIL_MAIL', 'SENT', '2025-08-05 10:01:00', null, 'Testgatan 182',
+('8ee9ec17-0a47-4254-827e-ef6a7907cf89', 'Jane', 'Doe', '4972e098-21b8-4fda-9a0b-4d1b1377f7e4', 'SNAIL_MAIL', 'SENT', '2025-08-05 10:01:00', null, 'Testgatan 182',
  '12345', 'Testsvall'),
 
 -- 5 digital mail
-('recipient126', 'John', 'Wick', '4972e098-21b8-4fda-9a0b-4d1b1377f7e4', 'DIGITAL_MAIL', 'SENT', '2025-08-05 10:02:00', null, null, null, null),
-('recipient127', 'John', 'Wick', '4972e098-21b8-4fda-9a0b-4d1b1377f7e4', 'DIGITAL_MAIL', 'FAILED', '2025-08-05 10:02:00', null, null, null, null),
-('recipient128', 'John', 'Wick', '4972e098-21b8-4fda-9a0b-4d1b1377f7e4', 'DIGITAL_MAIL', 'SENT', '2025-08-05 10:02:00', null, null, null, null),
-('recipient129', 'John', 'Wick', '4972e098-21b8-4fda-9a0b-4d1b1377f7e4', 'DIGITAL_MAIL', 'SENT', '2025-08-05 10:02:00', null, null, null, null),
-('recipient130', 'John', 'Wick', '4972e098-21b8-4fda-9a0b-4d1b1377f7e4', 'DIGITAL_MAIL', 'SENT', '2025-08-05 10:02:00', null, null, null, null),
+('f0f29f02-3aa2-441b-ba0f-12e91b2132fd', 'John', 'Wick', '4972e098-21b8-4fda-9a0b-4d1b1377f7e4', 'DIGITAL_MAIL', 'SENT', '2025-08-05 10:02:00', null, null, null, null),
+('2a118373-4135-4300-8ef7-e37ad9050203', 'John', 'Wick', '4972e098-21b8-4fda-9a0b-4d1b1377f7e4', 'DIGITAL_MAIL', 'FAILED', '2025-08-05 10:02:00', null, null, null, null),
+('bd623ac0-70fc-4629-9d13-d46b9f99611a', 'John', 'Wick', '4972e098-21b8-4fda-9a0b-4d1b1377f7e4', 'DIGITAL_MAIL', 'SENT', '2025-08-05 10:02:00', null, null, null, null),
+('f3d58c2a-ab0d-45a0-a8ee-20466c0775dd', 'John', 'Wick', '4972e098-21b8-4fda-9a0b-4d1b1377f7e4', 'DIGITAL_MAIL', 'SENT', '2025-08-05 10:02:00', null, null, null, null),
+('dddd1089-c58d-4f49-9667-2d566f9d22b9', 'John', 'Wick', '4972e098-21b8-4fda-9a0b-4d1b1377f7e4', 'DIGITAL_MAIL', 'SENT', '2025-08-05 10:02:00', null, null, null, null),
 
 -- 5 sms
-('recipient131', 'John', 'Wick', '4972e098-21b8-4fda-9a0b-4d1b1377f7e4', 'SMS', 'SENT', '2025-08-05 10:03:00', '+46701740605', null, null, null),
-('recipient132', 'John', 'Wick', '4972e098-21b8-4fda-9a0b-4d1b1377f7e4', 'SMS', 'SENT', '2025-08-05 10:03:00', '+46701740605', null, null, null),
-('recipient133', 'John', 'Wick', '4972e098-21b8-4fda-9a0b-4d1b1377f7e4', 'SMS', 'FAILED', '2025-08-05 10:03:00', '+46701740605', null, null,
+('ef24f1a6-3254-4385-8a44-87ac7cde83d1', 'John', 'Wick', '4972e098-21b8-4fda-9a0b-4d1b1377f7e4', 'SMS', 'SENT', '2025-08-05 10:03:00', '+46701740605', null, null, null),
+('e47051bf-6183-4f92-b137-ee2f66463c0d', 'John', 'Wick', '4972e098-21b8-4fda-9a0b-4d1b1377f7e4', 'SMS', 'SENT', '2025-08-05 10:03:00', '+46701740605', null, null, null),
+('7712a9e5-ed22-4c57-8afb-e6dad1a9f87f', 'John', 'Wick', '4972e098-21b8-4fda-9a0b-4d1b1377f7e4', 'SMS', 'FAILED', '2025-08-05 10:03:00', '+46701740605', null, null,
  null),
-('recipient134', 'John', 'Wick', '4972e098-21b8-4fda-9a0b-4d1b1377f7e4', 'SMS', 'SENT', '2025-08-05 10:03:00', '+46701740605', null, null, null),
-('recipient135', 'John', 'Wick', '4972e098-21b8-4fda-9a0b-4d1b1377f7e4', 'SMS', 'SENT', '2025-08-05 10:03:00', '+46701740605', null, null, null);
+('188d6b6e-88eb-4d2c-94c7-8246f97ecb72', 'John', 'Wick', '4972e098-21b8-4fda-9a0b-4d1b1377f7e4', 'SMS', 'SENT', '2025-08-05 10:03:00', '+46701740605', null, null, null),
+('478f6e66-2685-4127-9e8c-4bd9bfbebab1', 'John', 'Wick', '4972e098-21b8-4fda-9a0b-4d1b1377f7e4', 'SMS', 'SENT', '2025-08-05 10:03:00', '+46701740605', null, null, null);
 
 
 
 INSERT INTO message (id, municipality_id, department_id, user_id, message_type, created)
-VALUES ('a8fec1ef-950f-4735-9c49-1a641043cdbb', '2281', 'department2', 'user2', 'LETTER', '2025-08-06 12:00:00');
+VALUES ('a8fec1ef-950f-4735-9c49-1a641043cdbb', '2281', '7b137896-cc1d-479b-bf2f-fc663eb8b943', '2a238b85-6023-4cfa-b0c8-aaa556ffa1d6', 'LETTER', '2025-08-06 12:00:00');
 
 -- 20 DIGITAL_MAIL, 10 DIGITAL_REGISTERED_LETTER, 5 SMS
 INSERT INTO recipient (id, message_id, type, status, created, phone_number)
 VALUES
 -- 20 digital mail
-('recipient201', 'a8fec1ef-950f-4735-9c49-1a641043cdbb', 'DIGITAL_MAIL', 'SENT', '2025-08-06 12:01:00', null),
-('recipient202', 'a8fec1ef-950f-4735-9c49-1a641043cdbb', 'DIGITAL_MAIL', 'SENT', '2025-08-06 12:01:00', null),
-('recipient203', 'a8fec1ef-950f-4735-9c49-1a641043cdbb', 'DIGITAL_MAIL', 'FAILED', '2025-08-06 12:01:00', null),
-('recipient204', 'a8fec1ef-950f-4735-9c49-1a641043cdbb', 'DIGITAL_MAIL', 'SENT', '2025-08-06 12:01:00', null),
-('recipient205', 'a8fec1ef-950f-4735-9c49-1a641043cdbb', 'DIGITAL_MAIL', 'SENT', '2025-08-06 12:01:00', null),
-('recipient206', 'a8fec1ef-950f-4735-9c49-1a641043cdbb', 'DIGITAL_MAIL', 'SENT', '2025-08-06 12:01:00', null),
-('recipient207', 'a8fec1ef-950f-4735-9c49-1a641043cdbb', 'DIGITAL_MAIL', 'SENT', '2025-08-06 12:01:00', null),
-('recipient208', 'a8fec1ef-950f-4735-9c49-1a641043cdbb', 'DIGITAL_MAIL', 'SENT', '2025-08-06 12:01:00', null),
-('recipient209', 'a8fec1ef-950f-4735-9c49-1a641043cdbb', 'DIGITAL_MAIL', 'SENT', '2025-08-06 12:01:00', null),
-('recipient210', 'a8fec1ef-950f-4735-9c49-1a641043cdbb', 'DIGITAL_MAIL', 'SENT', '2025-08-06 12:01:00', null),
-('recipient211', 'a8fec1ef-950f-4735-9c49-1a641043cdbb', 'DIGITAL_MAIL', 'SENT', '2025-08-06 12:01:00', null),
-('recipient212', 'a8fec1ef-950f-4735-9c49-1a641043cdbb', 'DIGITAL_MAIL', 'SENT', '2025-08-06 12:01:00', null),
-('recipient213', 'a8fec1ef-950f-4735-9c49-1a641043cdbb', 'DIGITAL_MAIL', 'SENT', '2025-08-06 12:01:00', null),
-('recipient214', 'a8fec1ef-950f-4735-9c49-1a641043cdbb', 'DIGITAL_MAIL', 'SENT', '2025-08-06 12:01:00', null),
-('recipient215', 'a8fec1ef-950f-4735-9c49-1a641043cdbb', 'DIGITAL_MAIL', 'SENT', '2025-08-06 12:01:00', null),
-('recipient216', 'a8fec1ef-950f-4735-9c49-1a641043cdbb', 'DIGITAL_MAIL', 'SENT', '2025-08-06 12:01:00', null),
-('recipient217', 'a8fec1ef-950f-4735-9c49-1a641043cdbb', 'DIGITAL_MAIL', 'SENT', '2025-08-06 12:01:00', null),
-('recipient218', 'a8fec1ef-950f-4735-9c49-1a641043cdbb', 'DIGITAL_MAIL', 'SENT', '2025-08-06 12:01:00', null),
-('recipient219', 'a8fec1ef-950f-4735-9c49-1a641043cdbb', 'DIGITAL_MAIL', 'SENT', '2025-08-06 12:01:00', null),
-('recipient220', 'a8fec1ef-950f-4735-9c49-1a641043cdbb', 'DIGITAL_MAIL', 'SENT', '2025-08-06 12:01:00', null),
+('e631d905-83f3-4087-93d2-3b49db81169e', 'a8fec1ef-950f-4735-9c49-1a641043cdbb', 'DIGITAL_MAIL', 'SENT', '2025-08-06 12:01:00', null),
+('a7be5f1b-bc02-4f5c-b5e2-0df6816704b9', 'a8fec1ef-950f-4735-9c49-1a641043cdbb', 'DIGITAL_MAIL', 'SENT', '2025-08-06 12:01:00', null),
+('c002784c-62c7-4503-80bf-b19da58ee27c', 'a8fec1ef-950f-4735-9c49-1a641043cdbb', 'DIGITAL_MAIL', 'FAILED', '2025-08-06 12:01:00', null),
+('b9542733-4eb8-4aab-9ccc-2bec9f01037d', 'a8fec1ef-950f-4735-9c49-1a641043cdbb', 'DIGITAL_MAIL', 'SENT', '2025-08-06 12:01:00', null),
+('6b08c201-a9a7-41bd-a30a-7e9095c141ad', 'a8fec1ef-950f-4735-9c49-1a641043cdbb', 'DIGITAL_MAIL', 'SENT', '2025-08-06 12:01:00', null),
+('12cf1213-730c-46d8-82bf-11dfca07f024', 'a8fec1ef-950f-4735-9c49-1a641043cdbb', 'DIGITAL_MAIL', 'SENT', '2025-08-06 12:01:00', null),
+('bd76b25b-6f76-4037-99f6-8e19e79ce08e', 'a8fec1ef-950f-4735-9c49-1a641043cdbb', 'DIGITAL_MAIL', 'SENT', '2025-08-06 12:01:00', null),
+('80fc69a0-dd47-4580-9e71-a28c568cc722', 'a8fec1ef-950f-4735-9c49-1a641043cdbb', 'DIGITAL_MAIL', 'SENT', '2025-08-06 12:01:00', null),
+('37865fad-1d70-46a6-a750-57f1f143881d', 'a8fec1ef-950f-4735-9c49-1a641043cdbb', 'DIGITAL_MAIL', 'SENT', '2025-08-06 12:01:00', null),
+('968869e4-847f-4b65-a5fb-f32f327d8263', 'a8fec1ef-950f-4735-9c49-1a641043cdbb', 'DIGITAL_MAIL', 'SENT', '2025-08-06 12:01:00', null),
+('101f8415-70a7-4ece-ac19-c751d58c8016', 'a8fec1ef-950f-4735-9c49-1a641043cdbb', 'DIGITAL_MAIL', 'SENT', '2025-08-06 12:01:00', null),
+('4c4813c2-a6e1-4726-b7f8-3baa94243146', 'a8fec1ef-950f-4735-9c49-1a641043cdbb', 'DIGITAL_MAIL', 'SENT', '2025-08-06 12:01:00', null),
+('6ce1d50a-7ee6-4030-8741-6011df401368', 'a8fec1ef-950f-4735-9c49-1a641043cdbb', 'DIGITAL_MAIL', 'SENT', '2025-08-06 12:01:00', null),
+('8fe35af7-2a0c-47e9-a845-441caf1fa2f8', 'a8fec1ef-950f-4735-9c49-1a641043cdbb', 'DIGITAL_MAIL', 'SENT', '2025-08-06 12:01:00', null),
+('10deef20-85df-4571-a63a-77bb2be5283c', 'a8fec1ef-950f-4735-9c49-1a641043cdbb', 'DIGITAL_MAIL', 'SENT', '2025-08-06 12:01:00', null),
+('7aa5d8c4-3abe-4d30-a63b-b5252e88890f', 'a8fec1ef-950f-4735-9c49-1a641043cdbb', 'DIGITAL_MAIL', 'SENT', '2025-08-06 12:01:00', null),
+('3835738d-2820-47f4-9cbd-dc45ffeca3ae', 'a8fec1ef-950f-4735-9c49-1a641043cdbb', 'DIGITAL_MAIL', 'SENT', '2025-08-06 12:01:00', null),
+('c4aa47c9-0cc4-44b5-b5e4-e692b950ac4d', 'a8fec1ef-950f-4735-9c49-1a641043cdbb', 'DIGITAL_MAIL', 'SENT', '2025-08-06 12:01:00', null),
+('8d0fc93b-38e8-4dc8-a14a-b3e7b1e3f2f2', 'a8fec1ef-950f-4735-9c49-1a641043cdbb', 'DIGITAL_MAIL', 'SENT', '2025-08-06 12:01:00', null),
+('db0b443f-6c12-45e5-b654-2736e9eb07b7', 'a8fec1ef-950f-4735-9c49-1a641043cdbb', 'DIGITAL_MAIL', 'SENT', '2025-08-06 12:01:00', null),
 
 -- 10 registered letters
-('recipient221', 'a8fec1ef-950f-4735-9c49-1a641043cdbb', 'DIGITAL_REGISTERED_LETTER', 'SENT', '2025-08-06 12:02:00', null),
-('recipient222', 'a8fec1ef-950f-4735-9c49-1a641043cdbb', 'DIGITAL_REGISTERED_LETTER', 'SENT', '2025-08-06 12:02:00', null),
-('recipient223', 'a8fec1ef-950f-4735-9c49-1a641043cdbb', 'DIGITAL_REGISTERED_LETTER', 'FAILED', '2025-08-06 12:02:00', null),
-('recipient224', 'a8fec1ef-950f-4735-9c49-1a641043cdbb', 'DIGITAL_REGISTERED_LETTER', 'SENT', '2025-08-06 12:02:00', null),
-('recipient225', 'a8fec1ef-950f-4735-9c49-1a641043cdbb', 'DIGITAL_REGISTERED_LETTER', 'SENT', '2025-08-06 12:02:00', null),
-('recipient226', 'a8fec1ef-950f-4735-9c49-1a641043cdbb', 'DIGITAL_REGISTERED_LETTER', 'SENT', '2025-08-06 12:02:00', null),
-('recipient227', 'a8fec1ef-950f-4735-9c49-1a641043cdbb', 'DIGITAL_REGISTERED_LETTER', 'SENT', '2025-08-06 12:02:00', null),
-('recipient228', 'a8fec1ef-950f-4735-9c49-1a641043cdbb', 'DIGITAL_REGISTERED_LETTER', 'SENT', '2025-08-06 12:02:00', null),
-('recipient229', 'a8fec1ef-950f-4735-9c49-1a641043cdbb', 'DIGITAL_REGISTERED_LETTER', 'SENT', '2025-08-06 12:02:00', null),
-('recipient230', 'a8fec1ef-950f-4735-9c49-1a641043cdbb', 'DIGITAL_REGISTERED_LETTER', 'SENT', '2025-08-06 12:02:00', null),
+('c69bb257-7b15-40ae-b5d4-21048b12e747', 'a8fec1ef-950f-4735-9c49-1a641043cdbb', 'DIGITAL_REGISTERED_LETTER', 'SENT', '2025-08-06 12:02:00', null),
+('edc026c9-9021-4e32-a7bd-82b255306c8b', 'a8fec1ef-950f-4735-9c49-1a641043cdbb', 'DIGITAL_REGISTERED_LETTER', 'SENT', '2025-08-06 12:02:00', null),
+('e8c2fe51-f9c8-4741-9387-84dad5ec3ee6', 'a8fec1ef-950f-4735-9c49-1a641043cdbb', 'DIGITAL_REGISTERED_LETTER', 'FAILED', '2025-08-06 12:02:00', null),
+('ee92d29c-a0f0-4203-ba5f-865e7b43e29d', 'a8fec1ef-950f-4735-9c49-1a641043cdbb', 'DIGITAL_REGISTERED_LETTER', 'SENT', '2025-08-06 12:02:00', null),
+('1a372f2a-c701-4030-aa6f-cee515d18855', 'a8fec1ef-950f-4735-9c49-1a641043cdbb', 'DIGITAL_REGISTERED_LETTER', 'SENT', '2025-08-06 12:02:00', null),
+('3178d6a2-cf70-4529-aa5d-0475a4aef0c6', 'a8fec1ef-950f-4735-9c49-1a641043cdbb', 'DIGITAL_REGISTERED_LETTER', 'SENT', '2025-08-06 12:02:00', null),
+('4e92bb4e-5083-4596-8554-4d820db73c52', 'a8fec1ef-950f-4735-9c49-1a641043cdbb', 'DIGITAL_REGISTERED_LETTER', 'SENT', '2025-08-06 12:02:00', null),
+('7077c96b-b00d-4220-b267-96c5840b18ee', 'a8fec1ef-950f-4735-9c49-1a641043cdbb', 'DIGITAL_REGISTERED_LETTER', 'SENT', '2025-08-06 12:02:00', null),
+('804693c2-bdf8-41b4-bea8-16b92bb3f805', 'a8fec1ef-950f-4735-9c49-1a641043cdbb', 'DIGITAL_REGISTERED_LETTER', 'SENT', '2025-08-06 12:02:00', null),
+('29e89656-9c77-47ea-939e-255fd95dc2d2', 'a8fec1ef-950f-4735-9c49-1a641043cdbb', 'DIGITAL_REGISTERED_LETTER', 'SENT', '2025-08-06 12:02:00', null),
 
 -- 5 sms
-('recipient231', 'a8fec1ef-950f-4735-9c49-1a641043cdbb', 'SMS', 'SENT', '2025-08-06 12:03:00', '+46701740605'),
-('recipient232', 'a8fec1ef-950f-4735-9c49-1a641043cdbb', 'SMS', 'SENT', '2025-08-06 12:03:00', '+46701740605'),
-('recipient233', 'a8fec1ef-950f-4735-9c49-1a641043cdbb', 'SMS', 'SENT', '2025-08-06 12:03:00', '+46701740605'),
-('recipient234', 'a8fec1ef-950f-4735-9c49-1a641043cdbb', 'SMS', 'FAILED', '2025-08-06 12:03:00', '+46701740605'),
-('recipient235', 'a8fec1ef-950f-4735-9c49-1a641043cdbb', 'SMS', 'SENT', '2025-08-06 12:03:00', '+46701740605');
+('dc9a9ae6-7371-4899-a652-abf667f2391f', 'a8fec1ef-950f-4735-9c49-1a641043cdbb', 'SMS', 'SENT', '2025-08-06 12:03:00', '+46701740605'),
+('c7c34e75-c13f-48b9-9104-5f8c10c88b29', 'a8fec1ef-950f-4735-9c49-1a641043cdbb', 'SMS', 'SENT', '2025-08-06 12:03:00', '+46701740605'),
+('4abbfcf6-e1dc-4545-834b-a3ac0e03710c', 'a8fec1ef-950f-4735-9c49-1a641043cdbb', 'SMS', 'SENT', '2025-08-06 12:03:00', '+46701740605'),
+('bb076ee2-e16e-4b4c-a6f6-028b22d0e87b', 'a8fec1ef-950f-4735-9c49-1a641043cdbb', 'SMS', 'FAILED', '2025-08-06 12:03:00', '+46701740605'),
+('6425c8eb-0119-433d-a4bd-efbd70a8c305', 'a8fec1ef-950f-4735-9c49-1a641043cdbb', 'SMS', 'SENT', '2025-08-06 12:03:00', '+46701740605');

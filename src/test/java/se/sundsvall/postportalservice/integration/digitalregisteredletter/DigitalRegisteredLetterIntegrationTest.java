@@ -117,7 +117,7 @@ class DigitalRegisteredLetterIntegrationTest {
 
 	@Test
 	void sendLetter_happyCase() {
-		final var userEntity = new UserEntity().withName("John Wick");
+		final var userEntity = new UserEntity().withUsername("John Wick");
 		final var messageEntity = new MessageEntity()
 			.withUser(userEntity)
 			.withMunicipalityId(MUNICIPALITY_ID);
@@ -146,7 +146,7 @@ class DigitalRegisteredLetterIntegrationTest {
 
 	@Test
 	void sendLetter_clientThrowsException() {
-		final var userEntity = new UserEntity().withName("John Wick");
+		final var userEntity = new UserEntity().withUsername("John Wick");
 		final var messageEntity = new MessageEntity()
 			.withUser(userEntity)
 			.withMunicipalityId(MUNICIPALITY_ID);

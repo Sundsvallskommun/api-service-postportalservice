@@ -99,7 +99,7 @@ class MessageServiceTest {
 
 	@BeforeEach
 	void setup() {
-		var identifier = Identifier.create()
+		final var identifier = Identifier.create()
 			.withType(Identifier.Type.AD_ACCOUNT)
 			.withValue(USERNAME)
 			.withTypeString("AD_ACCOUNT");
@@ -120,9 +120,9 @@ class MessageServiceTest {
 	 */
 	@Test
 	void processDigitalRegisteredLetterRequest_employeeNotFound() {
-		var request = TestDataFactory.createValidDigitalRegisteredLetterRequest();
-		var multipartFile = Mockito.mock(MultipartFile.class);
-		var multipartFiles = List.of(multipartFile);
+		final var request = TestDataFactory.createValidDigitalRegisteredLetterRequest();
+		final var multipartFile = Mockito.mock(MultipartFile.class);
+		final var multipartFiles = List.of(multipartFile);
 
 		when(employeeService.getSentBy(MUNICIPALITY_ID)).thenThrow(Problem.valueOf(BAD_GATEWAY, "Failed to retrieve employee data for user [%s]".formatted(USERNAME)));
 
@@ -140,9 +140,9 @@ class MessageServiceTest {
 	 */
 	@Test
 	void processDigitalRegisteredLetterRequest_invalidOrgTree() {
-		var request = TestDataFactory.createValidDigitalRegisteredLetterRequest();
-		var multipartFile = Mockito.mock(MultipartFile.class);
-		var multipartFiles = List.of(multipartFile);
+		final var request = TestDataFactory.createValidDigitalRegisteredLetterRequest();
+		final var multipartFile = Mockito.mock(MultipartFile.class);
+		final var multipartFiles = List.of(multipartFile);
 
 		when(employeeService.getSentBy(MUNICIPALITY_ID)).thenThrow(Problem.valueOf(INTERNAL_SERVER_ERROR, "Failed to parse organization from employee data"));
 
@@ -161,9 +161,9 @@ class MessageServiceTest {
 	 */
 	@Test
 	void processDigitalRegisteredLetterRequest_messagingSettingsThrows() {
-		var request = TestDataFactory.createValidDigitalRegisteredLetterRequest();
-		var multipartFile = Mockito.mock(MultipartFile.class);
-		var multipartFiles = List.of(multipartFile);
+		final var request = TestDataFactory.createValidDigitalRegisteredLetterRequest();
+		final var multipartFile = Mockito.mock(MultipartFile.class);
+		final var multipartFiles = List.of(multipartFile);
 
 		happyCaseStubEmployee();
 		when(messagingSettingsIntegrationMock.getSenderInfo(eq(MUNICIPALITY_ID), any()))
@@ -186,36 +186,36 @@ class MessageServiceTest {
 	 */
 	@Test
 	void processDigitalRegisteredLetterRequest_digitalRegisteredLetterThrows() {
-		var request = TestDataFactory.createValidDigitalRegisteredLetterRequest();
-		var multipartFile = Mockito.mock(MultipartFile.class);
-		var multipartFiles = List.of(multipartFile);
+		final var request = TestDataFactory.createValidDigitalRegisteredLetterRequest();
+		final var multipartFile = Mockito.mock(MultipartFile.class);
+		final var multipartFiles = List.of(multipartFile);
 
-		var attachmentEntities = List.of(new AttachmentEntity(), new AttachmentEntity());
+		final var attachmentEntities = List.of(new AttachmentEntity(), new AttachmentEntity());
 
 		happyCaseStubEmployee();
 		happyCaseStubMessagingSettings();
 		when(messageRepositoryMock.save(any())).thenAnswer(invocation -> invocation.getArgument(0, MessageEntity.class).withId("messageId"));
 		doAnswer(inv -> {
-			var recipientEntity = inv.getArgument(1, RecipientEntity.class);
+			final var recipientEntity = inv.getArgument(1, RecipientEntity.class);
 			recipientEntity.setStatus(FAILED);
 			recipientEntity.setStatusDetail("Something when wrong");
 			return null;
 		}).when(digitalRegisteredLetterIntegrationMock).sendLetter(any(MessageEntity.class), any(RecipientEntity.class));
-		when(userRepositoryMock.findByName(USERNAME)).thenReturn(Optional.empty());
+		when(userRepositoryMock.findByUsernameIgnoreCase(USERNAME)).thenReturn(Optional.empty());
 		when(departmentRepositoryMock.findByOrganizationId("departmentId")).thenReturn(Optional.empty());
 		when(attachmentMapperMock.toAttachmentEntities(multipartFiles)).thenReturn(attachmentEntities);
 
-		var result = messageService.processDigitalRegisteredLetterRequest(MUNICIPALITY_ID, request, multipartFiles);
+		final var result = messageService.processDigitalRegisteredLetterRequest(MUNICIPALITY_ID, request, multipartFiles);
 
 		assertThat(result).isNotNull().isEqualTo("messageId");
 
 		verify(employeeService).getSentBy(MUNICIPALITY_ID);
 		verify(messagingSettingsIntegrationMock).getSenderInfo(eq(MUNICIPALITY_ID), any());
-		verify(userRepositoryMock).findByName(USERNAME);
+		verify(userRepositoryMock).findByUsernameIgnoreCase(USERNAME);
 		verify(departmentRepositoryMock).findByOrganizationId("departmentId");
 		verify(digitalRegisteredLetterIntegrationMock).sendLetter(any(), any());
 		verify(messageRepositoryMock).save(messageEntityCaptor.capture());
-		var messageEntity = messageEntityCaptor.getValue();
+		final var messageEntity = messageEntityCaptor.getValue();
 		assertThat(messageEntity).isNotNull();
 		assertThat(messageEntity.getId()).isEqualTo("messageId");
 		assertThat(messageEntity.getAttachments()).isEqualTo(attachmentEntities);
@@ -228,7 +228,7 @@ class MessageServiceTest {
 		assertThat(messageEntity.getUser()).isNotNull().isInstanceOf(UserEntity.class).satisfies(userEntity -> {
 			// Asserts that a new user was created with the correct values since none existed previously
 			assertThat(userEntity.getId()).isNull();
-			assertThat(userEntity.getName()).isEqualTo(USERNAME);
+			assertThat(userEntity.getUsername()).isEqualTo(USERNAME);
 		});
 		assertThat(messageEntity.getRecipients().getFirst()).isNotNull().isInstanceOf(RecipientEntity.class).satisfies(recipientEntity -> {
 			assertThat(recipientEntity.getPartyId()).isEqualTo(request.getPartyId());
@@ -246,38 +246,38 @@ class MessageServiceTest {
 	 */
 	@Test
 	void processDigitalRegisteredLetterRequest_happyCase() {
-		var request = TestDataFactory.createValidDigitalRegisteredLetterRequest();
-		var multipartFile = Mockito.mock(MultipartFile.class);
-		var multipartFileList = List.of(multipartFile);
-		var attachmentEntities = List.of(new AttachmentEntity(), new AttachmentEntity());
-		var userEntity = new UserEntity().withName(USERNAME).withId("userId");
-		var departmentEntity = new DepartmentEntity().withName("departmentName").withOrganizationId("departmentId").withId("departmentId");
+		final var request = TestDataFactory.createValidDigitalRegisteredLetterRequest();
+		final var multipartFile = Mockito.mock(MultipartFile.class);
+		final var multipartFileList = List.of(multipartFile);
+		final var attachmentEntities = List.of(new AttachmentEntity(), new AttachmentEntity());
+		final var userEntity = new UserEntity().withUsername(USERNAME).withId("userId");
+		final var departmentEntity = new DepartmentEntity().withName("departmentName").withOrganizationId("departmentId").withId("departmentId");
 
 		happyCaseStubEmployee();
 		happyCaseStubMessagingSettings();
 
 		when(messageRepositoryMock.save(any())).thenAnswer(invocation -> invocation.getArgument(0, MessageEntity.class).withId("messageId"));
 		doAnswer(inv -> {
-			var recipientEntity = inv.getArgument(1, RecipientEntity.class);
+			final var recipientEntity = inv.getArgument(1, RecipientEntity.class);
 			recipientEntity.setStatus(SENT);
 			recipientEntity.setExternalId("229a3e3e-17ae-423a-9a14-671b5b1bbd17");
 			return null;
 		}).when(digitalRegisteredLetterIntegrationMock).sendLetter(any(MessageEntity.class), any(RecipientEntity.class));
-		when(userRepositoryMock.findByName(USERNAME)).thenReturn(Optional.of(userEntity));
+		when(userRepositoryMock.findByUsernameIgnoreCase(USERNAME)).thenReturn(Optional.of(userEntity));
 		when(departmentRepositoryMock.findByOrganizationId("departmentId")).thenReturn(Optional.of(departmentEntity));
 		when(attachmentMapperMock.toAttachmentEntities(multipartFileList)).thenReturn(attachmentEntities);
 
-		var result = messageService.processDigitalRegisteredLetterRequest(MUNICIPALITY_ID, request, multipartFileList);
+		final var result = messageService.processDigitalRegisteredLetterRequest(MUNICIPALITY_ID, request, multipartFileList);
 
 		assertThat(result).isNotNull().isEqualTo("messageId");
 
 		verify(employeeService).getSentBy(MUNICIPALITY_ID);
 		verify(messagingSettingsIntegrationMock).getSenderInfo(eq(MUNICIPALITY_ID), any());
-		verify(userRepositoryMock).findByName(USERNAME);
+		verify(userRepositoryMock).findByUsernameIgnoreCase(USERNAME);
 		verify(departmentRepositoryMock).findByOrganizationId("departmentId");
 		verify(digitalRegisteredLetterIntegrationMock).sendLetter(any(), any());
 		verify(messageRepositoryMock).save(messageEntityCaptor.capture());
-		var messageEntity = messageEntityCaptor.getValue();
+		final var messageEntity = messageEntityCaptor.getValue();
 		assertThat(messageEntity).isNotNull();
 		assertThat(messageEntity.getId()).isEqualTo("messageId");
 		assertThat(messageEntity.getAttachments()).isEqualTo(attachmentEntities);
@@ -290,7 +290,7 @@ class MessageServiceTest {
 		assertThat(messageEntity.getUser()).isNotNull().isInstanceOf(UserEntity.class).satisfies(entity -> {
 			// Asserts that a new user was created with the correct values since none existed previously
 			assertThat(userEntity.getId()).isEqualTo("userId");
-			assertThat(userEntity.getName()).isEqualTo(USERNAME);
+			assertThat(userEntity.getUsername()).isEqualTo(USERNAME);
 		});
 		assertThat(messageEntity.getRecipients().getFirst()).isNotNull().isInstanceOf(RecipientEntity.class).satisfies(recipientEntity -> {
 			assertThat(recipientEntity.getPartyId()).isEqualTo(request.getPartyId());
@@ -314,22 +314,22 @@ class MessageServiceTest {
 	}
 
 	private void happyCaseStubEmployee() {
-		var sentBy = new EmployeeService.SentBy("username", "departmentId", "departmentName");
+		final var sentBy = new EmployeeService.SentBy("username", "departmentId", "departmentName");
 
 		when(employeeService.getSentBy(any())).thenReturn(sentBy);
 	}
 
 	@Test
 	void processLetterRequest() {
-		var spy = Mockito.spy(messageService);
-		var multipartFile = Mockito.mock(MultipartFile.class);
-		var multipartFileList = List.of(multipartFile);
-		var letterRequest = TestDataFactory.createValidLetterRequest();
-		var sentBy = new EmployeeService.SentBy("username", "departmentId", "departmentName");
-		var userEntity = new UserEntity().withName("username");
-		var departmentEntity = new DepartmentEntity().withName("departmentName").withOrganizationId("departmentId");
-		var attachmentEntity = new AttachmentEntity().withFileName("filename").withContentType("contentType").withContent(null);
-		var messageId = "adc63e5c-b92f-4c75-b14f-819473cef5b6";
+		final var spy = Mockito.spy(messageService);
+		final var multipartFile = Mockito.mock(MultipartFile.class);
+		final var multipartFileList = List.of(multipartFile);
+		final var letterRequest = TestDataFactory.createValidLetterRequest();
+		final var sentBy = new EmployeeService.SentBy("username", "departmentId", "departmentName");
+		final var userEntity = new UserEntity().withUsername("username");
+		final var departmentEntity = new DepartmentEntity().withName("departmentName").withOrganizationId("departmentId");
+		final var attachmentEntity = new AttachmentEntity().withFileName("filename").withContentType("contentType").withContent(null);
+		final var messageId = "adc63e5c-b92f-4c75-b14f-819473cef5b6";
 
 		when(attachmentMapperMock.toAttachmentEntities(multipartFileList)).thenReturn(List.of(attachmentEntity));
 		when(messagingSettingsIntegrationMock.getSenderInfo(MUNICIPALITY_ID, departmentEntity.getOrganizationId()))
@@ -345,7 +345,7 @@ class MessageServiceTest {
 		doReturn(new CompletableFuture<>()).when(spy).processRecipients(any());
 		when(messageRepositoryMock.save(any())).thenAnswer(invocation -> invocation.getArgument(0, MessageEntity.class).withId(messageId));
 
-		var result = spy.processLetterRequest(MUNICIPALITY_ID, letterRequest, multipartFileList);
+		final var result = spy.processLetterRequest(MUNICIPALITY_ID, letterRequest, multipartFileList);
 
 		assertThat(result).isEqualTo(messageId);
 		verify(attachmentMapperMock).toAttachmentEntities(multipartFileList);
@@ -360,12 +360,12 @@ class MessageServiceTest {
 
 	@Test
 	void processSmsRequest() {
-		var spy = Mockito.spy(messageService);
-		var smsRequest = TestDataFactory.createValidSmsRequest();
-		var sentBy = new EmployeeService.SentBy("username", "departmentId", "departmentName");
-		var userEntity = new UserEntity().withName("username");
-		var departmentEntity = new DepartmentEntity().withName("departmentName").withOrganizationId("departmentId");
-		var messageId = "adc63e5c-b92f-4c75-b14f-819473cef5b6";
+		final var spy = Mockito.spy(messageService);
+		final var smsRequest = TestDataFactory.createValidSmsRequest();
+		final var sentBy = new EmployeeService.SentBy("username", "departmentId", "departmentName");
+		final var userEntity = new UserEntity().withUsername("username");
+		final var departmentEntity = new DepartmentEntity().withName("departmentName").withOrganizationId("departmentId");
+		final var messageId = "adc63e5c-b92f-4c75-b14f-819473cef5b6";
 
 		when(messagingSettingsIntegrationMock.getSenderInfo(MUNICIPALITY_ID, departmentEntity.getOrganizationId()))
 			.thenReturn(new SenderInfoResponse().smsSender("Avsändare"));
@@ -375,7 +375,7 @@ class MessageServiceTest {
 		doReturn(new CompletableFuture<>()).when(spy).processRecipients(any());
 		when(messageRepositoryMock.save(any())).thenAnswer(invocation -> invocation.getArgument(0, MessageEntity.class).withId(messageId));
 
-		var result = spy.processSmsRequest(MUNICIPALITY_ID, smsRequest);
+		final var result = spy.processSmsRequest(MUNICIPALITY_ID, smsRequest);
 
 		assertThat(result).isEqualTo(messageId);
 		verify(entityMapperMock).toRecipientEntity(any(SmsRecipient.class));
@@ -388,19 +388,19 @@ class MessageServiceTest {
 
 	@Test
 	void processRecipients() {
-		var spy = Mockito.spy(messageService);
-		var recipient1 = new RecipientEntity().withFirstName("john");
-		var recipient2 = new RecipientEntity().withFirstName("sarah");
+		final var spy = Mockito.spy(messageService);
+		final var recipient1 = new RecipientEntity().withFirstName("john");
+		final var recipient2 = new RecipientEntity().withFirstName("sarah");
 
-		var messageEntity = MessageEntity.create()
+		final var messageEntity = MessageEntity.create()
 			.withRecipients(List.of(recipient1, recipient2));
 
-		var future1 = new CompletableFuture<Void>();
-		var future2 = new CompletableFuture<Void>();
+		final var future1 = new CompletableFuture<Void>();
+		final var future2 = new CompletableFuture<Void>();
 		doReturn(future1).when(spy).sendMessageToRecipient(messageEntity, recipient1);
 		doReturn(future2).when(spy).sendMessageToRecipient(messageEntity, recipient2);
 
-		var completableFuture = spy.processRecipients(messageEntity);
+		final var completableFuture = spy.processRecipients(messageEntity);
 		future1.complete(null);
 		future2.complete(null);
 		completableFuture.join();
@@ -412,19 +412,19 @@ class MessageServiceTest {
 
 	@Test
 	void processRecipients_future_completes_exceptionally() {
-		var spy = Mockito.spy(messageService);
-		var recipient1 = new RecipientEntity().withFirstName("john");
-		var recipient2 = new RecipientEntity().withFirstName("sarah");
+		final var spy = Mockito.spy(messageService);
+		final var recipient1 = new RecipientEntity().withFirstName("john");
+		final var recipient2 = new RecipientEntity().withFirstName("sarah");
 
-		var messageEntity = MessageEntity.create()
+		final var messageEntity = MessageEntity.create()
 			.withRecipients(List.of(recipient1, recipient2));
 
-		var future1 = new CompletableFuture<Void>();
-		var future2 = new CompletableFuture<Void>();
+		final var future1 = new CompletableFuture<Void>();
+		final var future2 = new CompletableFuture<Void>();
 		doReturn(future1).when(spy).sendMessageToRecipient(messageEntity, recipient1);
 		doReturn(future2).when(spy).sendMessageToRecipient(messageEntity, recipient2);
 
-		var completableFuture = spy.processRecipients(messageEntity);
+		final var completableFuture = spy.processRecipients(messageEntity);
 
 		future1.completeExceptionally(new RuntimeException("Simulated exception"));
 		future2.complete(null);
@@ -437,24 +437,24 @@ class MessageServiceTest {
 
 	@Test
 	void processRecipients_future_delayed() {
-		var spy = Mockito.spy(messageService);
-		var recipient1 = new RecipientEntity().withFirstName("john");
-		var recipient2 = new RecipientEntity().withFirstName("sarah");
-		var messageEntity = MessageEntity.create().withRecipients(List.of(recipient1, recipient2));
+		final var spy = Mockito.spy(messageService);
+		final var recipient1 = new RecipientEntity().withFirstName("john");
+		final var recipient2 = new RecipientEntity().withFirstName("sarah");
+		final var messageEntity = MessageEntity.create().withRecipients(List.of(recipient1, recipient2));
 
-		var future1 = new CompletableFuture<Void>();
-		var future2 = new CompletableFuture<Void>();
+		final var future1 = new CompletableFuture<Void>();
+		final var future2 = new CompletableFuture<Void>();
 		doReturn(future1).when(spy).sendMessageToRecipient(messageEntity, recipient1);
 		doReturn(future2).when(spy).sendMessageToRecipient(messageEntity, recipient2);
 
-		var completableFuture = spy.processRecipients(messageEntity);
+		final var completableFuture = spy.processRecipients(messageEntity);
 
 		future1.complete(null);
 
 		try {
 			Thread.sleep(3000);
 			future2.complete(null);
-		} catch (InterruptedException e) {
+		} catch (final InterruptedException e) {
 			Thread.currentThread().interrupt();
 		}
 		completableFuture.join();
@@ -464,10 +464,10 @@ class MessageServiceTest {
 
 	@Test
 	void sendMessageToRecipient_SMS() {
-		var spy = Mockito.spy(messageService);
+		final var spy = Mockito.spy(messageService);
 
-		var recipient1 = new RecipientEntity().withFirstName("john").withMessageType(MessageType.SMS);
-		var messageEntity = MessageEntity.create().withRecipients(List.of(recipient1));
+		final var recipient1 = new RecipientEntity().withFirstName("john").withMessageType(MessageType.SMS);
+		final var messageEntity = MessageEntity.create().withRecipients(List.of(recipient1));
 		doReturn(new CompletableFuture<>()).when(spy).sendSmsToRecipient(messageEntity, recipient1);
 
 		spy.sendMessageToRecipient(messageEntity, recipient1);
@@ -477,10 +477,10 @@ class MessageServiceTest {
 
 	@Test
 	void sendMessageToRecipient_digitalMail() {
-		var spy = Mockito.spy(messageService);
+		final var spy = Mockito.spy(messageService);
 
-		var recipient1 = new RecipientEntity().withFirstName("john").withMessageType(MessageType.DIGITAL_MAIL);
-		var messageEntity = MessageEntity.create().withRecipients(List.of(recipient1));
+		final var recipient1 = new RecipientEntity().withFirstName("john").withMessageType(MessageType.DIGITAL_MAIL);
+		final var messageEntity = MessageEntity.create().withRecipients(List.of(recipient1));
 		doReturn(new CompletableFuture<>()).when(spy).sendDigitalMailToRecipient(messageEntity, recipient1);
 
 		spy.sendMessageToRecipient(messageEntity, recipient1);
@@ -490,10 +490,10 @@ class MessageServiceTest {
 
 	@Test
 	void sendMessageToRecipient_snailMail() {
-		var spy = Mockito.spy(messageService);
+		final var spy = Mockito.spy(messageService);
 
-		var recipient1 = new RecipientEntity().withFirstName("john").withMessageType(MessageType.SNAIL_MAIL);
-		var messageEntity = MessageEntity.create().withRecipients(List.of(recipient1));
+		final var recipient1 = new RecipientEntity().withFirstName("john").withMessageType(MessageType.SNAIL_MAIL);
+		final var messageEntity = MessageEntity.create().withRecipients(List.of(recipient1));
 		doReturn(new CompletableFuture<>()).when(spy).sendSnailMailToRecipient(messageEntity, recipient1);
 
 		spy.sendMessageToRecipient(messageEntity, recipient1);
@@ -503,8 +503,8 @@ class MessageServiceTest {
 
 	@Test
 	void sendMessageToRecipient_unsupportedMessageType() {
-		var recipient1 = new RecipientEntity().withFirstName("john").withMessageType(MessageType.LETTER);
-		var messageEntity = MessageEntity.create().withRecipients(List.of(recipient1));
+		final var recipient1 = new RecipientEntity().withFirstName("john").withMessageType(MessageType.LETTER);
+		final var messageEntity = MessageEntity.create().withRecipients(List.of(recipient1));
 
 		messageService.sendMessageToRecipient(messageEntity, recipient1);
 
@@ -514,11 +514,11 @@ class MessageServiceTest {
 
 	@Test
 	void processSmsRequestToRecipient() {
-		var spy = Mockito.spy(messageService);
-		var recipient1 = new RecipientEntity().withFirstName("john");
-		var messageEntity = MessageEntity.create().withRecipients(List.of(recipient1));
-		var uuid = UUID.randomUUID();
-		var messageResult = new MessageResult()
+		final var spy = Mockito.spy(messageService);
+		final var recipient1 = new RecipientEntity().withFirstName("john");
+		final var messageEntity = MessageEntity.create().withRecipients(List.of(recipient1));
+		final var uuid = UUID.randomUUID();
+		final var messageResult = new MessageResult()
 			.messageId(uuid)
 			.deliveries(List.of(new DeliveryResult()
 				.status(generated.se.sundsvall.messaging.MessageStatus.SENT)));
@@ -526,7 +526,7 @@ class MessageServiceTest {
 		when(messagingIntegrationMock.sendSms(messageEntity, recipient1)).thenReturn(messageResult);
 		doCallRealMethod().when(spy).updateRecipient(messageResult, recipient1);
 
-		var completableFuture = spy.sendSmsToRecipient(messageEntity, recipient1);
+		final var completableFuture = spy.sendSmsToRecipient(messageEntity, recipient1);
 
 		completableFuture.join();
 		assertThat(recipient1.getStatus()).isEqualTo(MessageStatus.SENT.toString());
@@ -536,13 +536,13 @@ class MessageServiceTest {
 
 	@Test
 	void processSmsRequestToRecipient_exception() {
-		var spy = Mockito.spy(messageService);
-		var recipient1 = new RecipientEntity().withFirstName("john");
-		var messageEntity = MessageEntity.create().withRecipients(List.of(recipient1));
+		final var spy = Mockito.spy(messageService);
+		final var recipient1 = new RecipientEntity().withFirstName("john");
+		final var messageEntity = MessageEntity.create().withRecipients(List.of(recipient1));
 
 		when(messagingIntegrationMock.sendSms(messageEntity, recipient1)).thenThrow(new RuntimeException("Simulated exception"));
 
-		var completableFuture = spy.sendSmsToRecipient(messageEntity, recipient1);
+		final var completableFuture = spy.sendSmsToRecipient(messageEntity, recipient1);
 
 		completableFuture.join();
 		assertThat(recipient1.getStatus()).isEqualTo(MessageStatus.FAILED.toString());
@@ -552,34 +552,34 @@ class MessageServiceTest {
 
 	@Test
 	void getOrCreateUser_userExists() {
-		var userEntity = new UserEntity().withName("Linus");
-		when(userRepositoryMock.findByName("Linus")).thenReturn(Optional.of(userEntity));
+		final var userEntity = new UserEntity().withUsername("Linus");
+		when(userRepositoryMock.findByUsernameIgnoreCase("Linus")).thenReturn(Optional.of(userEntity));
 
-		var result = messageService.getOrCreateUser("Linus");
+		final var result = messageService.getOrCreateUser("Linus");
 
 		assertThat(result).isEqualTo(userEntity);
-		verify(userRepositoryMock).findByName("Linus");
+		verify(userRepositoryMock).findByUsernameIgnoreCase("Linus");
 	}
 
 	@Test
 	void getOrCreateUser_userDoesNotExist() {
-		when(userRepositoryMock.findByName("Linus")).thenReturn(Optional.empty());
+		when(userRepositoryMock.findByUsernameIgnoreCase("Linus")).thenReturn(Optional.empty());
 
-		var result = messageService.getOrCreateUser("Linus");
+		final var result = messageService.getOrCreateUser("Linus");
 
 		assertThat(result).isNotNull().isInstanceOf(UserEntity.class);
-		assertThat(result.getName()).isEqualTo("Linus");
+		assertThat(result.getUsername()).isEqualTo("Linus");
 
-		verify(userRepositoryMock).findByName("Linus");
+		verify(userRepositoryMock).findByUsernameIgnoreCase("Linus");
 	}
 
 	@Test
 	void getOrCreateDepartment_departmentExists() {
-		var departmentEntity = new DepartmentEntity().withName("IT").withOrganizationId("orgId");
+		final var departmentEntity = new DepartmentEntity().withName("IT").withOrganizationId("orgId");
 		when(departmentRepositoryMock.findByOrganizationId("orgId")).thenReturn(Optional.of(departmentEntity));
 
-		var sentBy = new EmployeeService.SentBy("username", "orgId", "IT");
-		var result = messageService.getOrCreateDepartment(sentBy);
+		final var sentBy = new EmployeeService.SentBy("username", "orgId", "IT");
+		final var result = messageService.getOrCreateDepartment(sentBy);
 
 		assertThat(result).isEqualTo(departmentEntity);
 		verify(departmentRepositoryMock).findByOrganizationId("orgId");
@@ -589,8 +589,8 @@ class MessageServiceTest {
 	void getOrCreateDepartment_departmentDoesNotExist() {
 		when(departmentRepositoryMock.findByOrganizationId("orgId")).thenReturn(Optional.empty());
 
-		var sentBy = new EmployeeService.SentBy("username", "orgId", "IT");
-		var result = messageService.getOrCreateDepartment(sentBy);
+		final var sentBy = new EmployeeService.SentBy("username", "orgId", "IT");
+		final var result = messageService.getOrCreateDepartment(sentBy);
 
 		assertThat(result).isNotNull().isInstanceOf(DepartmentEntity.class);
 		assertThat(result.getOrganizationId()).isEqualTo("orgId");
