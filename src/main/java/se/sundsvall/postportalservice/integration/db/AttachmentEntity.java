@@ -1,5 +1,7 @@
 package se.sundsvall.postportalservice.integration.db;
 
+import static org.hibernate.annotations.TimeZoneStorageType.NORMALIZE;
+
 import jakarta.persistence.Basic;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -14,6 +16,7 @@ import jakarta.persistence.Table;
 import java.sql.Blob;
 import java.time.OffsetDateTime;
 import java.util.Objects;
+import org.hibernate.annotations.TimeZoneStorage;
 
 @Entity
 @Table(name = "attachment", indexes = {
@@ -38,6 +41,7 @@ public class AttachmentEntity {
 	private Blob content;
 
 	@Column(name = "created", columnDefinition = "DATETIME")
+	@TimeZoneStorage(NORMALIZE)
 	private OffsetDateTime created;
 
 	@PrePersist
