@@ -568,7 +568,6 @@ class MessageResourceTest {
 					.withMessage("message")
 					.withRecipients(List.of(SmsRecipient.create())),
 				List.of(
-					new Violation("recipients[0].partyId", "not a valid UUID"),
 					new Violation("recipients[0].phoneNumber", "must be a valid MSISDN (example: +46701740605). Regular expression: ^\\+[1-9][\\d]{3,14}$"))),
 
 			Arguments.of("Request where recipient has invalid attribute values",
@@ -578,7 +577,6 @@ class MessageResourceTest {
 						.withPartyId("invalid")
 						.withPhoneNumber("invalid"))),
 				List.of(
-					new Violation("recipients[0].partyId", "not a valid UUID"),
 					new Violation("recipients[0].phoneNumber", "must be a valid MSISDN (example: +46701740605). Regular expression: ^\\+[1-9][\\d]{3,14}$"))));
 	}
 

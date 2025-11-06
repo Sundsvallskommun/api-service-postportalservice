@@ -58,10 +58,9 @@ class SmsRecipientTest {
 		final var smsRecipient = new SmsRecipient();
 		final var violations = validator.validate(smsRecipient);
 
-		assertThat(violations).hasSize(2)
+		assertThat(violations).hasSize(1)
 			.extracting(violation -> violation.getPropertyPath().toString(), ConstraintViolation::getMessage)
 			.containsExactlyInAnyOrder(
-				tuple("partyId", "not a valid UUID"),
 				tuple("phoneNumber", "must be a valid MSISDN (example: +46701740605). Regular expression: ^\\+[1-9][\\d]{3,14}$"));
 		assertThat(smsRecipient).hasAllNullFieldsOrProperties();
 	}
