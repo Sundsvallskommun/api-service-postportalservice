@@ -5,7 +5,9 @@ import static se.sundsvall.postportalservice.integration.db.converter.MessageTyp
 
 import java.util.List;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 import org.zalando.problem.Problem;
 import se.sundsvall.dept44.models.api.paging.PagingAndSortingMetaData;
 import se.sundsvall.postportalservice.api.model.Message;
@@ -71,6 +73,16 @@ public class HistoryService {
 		final var externalId = message.getRecipients().getFirst().getExternalId();
 
 		return digitalRegisteredLetterIntegration.getSigningInformation(municipalityId, externalId);
+	}
+
+	public ResponseEntity<StreamingResponseBody> getLetterReceipt(final String municipalityId, final String messageId) {
+		final var message = messageRepository.findByIdAndMessageType(messageId, DIGITAL_REGISTERED_LETTER)
+			.orElseThrow(() -> Problem.valueOf(NOT_FOUND, "No digital registered letter found for id '%s'".formatted(messageId)));
+
+		// Digital registered letters are always sent to a single recipient
+		final var externalId = message.getRecipients().getFirst().getExternalId();
+
+		return digitalRegisteredLetterIntegration.getLetterReceipt(municipalityId, externalId);
 	}
 
 }

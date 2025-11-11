@@ -2,12 +2,20 @@ package se.sundsvall.postportalservice.integration.digitalregisteredletter;
 
 import static java.util.Collections.emptyList;
 import static org.springframework.util.CollectionUtils.isEmpty;
+import static org.zalando.problem.Status.INTERNAL_SERVER_ERROR;
 import static se.sundsvall.postportalservice.Constants.FAILED;
 import static se.sundsvall.postportalservice.service.util.IdentifierUtil.getIdentifierHeaderValue;
 
 import generated.se.sundsvall.digitalregisteredletter.LetterStatus;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
+import java.util.Optional;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
+import org.zalando.problem.Problem;
 import se.sundsvall.postportalservice.api.model.SigningInformation;
 import se.sundsvall.postportalservice.integration.db.MessageEntity;
 import se.sundsvall.postportalservice.integration.db.RecipientEntity;
@@ -77,6 +85,37 @@ public class DigitalRegisteredLetterIntegration {
 			recipientEntity.setStatus(FAILED);
 			recipientEntity.setStatusDetail(e.getMessage());
 		}
+	}
+
+	public ResponseEntity<StreamingResponseBody> getLetterReceipt(final String municipalityId, final String letterId) {
+		final var feignResponse = client.getLetterReceipt(municipalityId, letterId);
+		final var headers = feignResponse.headers();
+
+		final var newHeaders = new HttpHeaders();
+		Optional.ofNullable(headers.get("Content-Type"))
+			.ifPresentOrElse(values -> newHeaders.put("Content-Type", values.stream().toList()),
+				() -> {
+					throw Problem.valueOf(INTERNAL_SERVER_ERROR, "Missing Content-Type header in letter receipt response");
+				});
+
+		Optional.ofNullable(headers.get("Content-Disposition"))
+			.ifPresentOrElse(values -> newHeaders.put("Content-Disposition", values.stream().toList()),
+				() -> {
+					throw Problem.valueOf(INTERNAL_SERVER_ERROR, "Missing Content-Disposition header in letter receipt response");
+				});
+
+		final StreamingResponseBody streamingResponseBody = outputStream -> {
+			try (final InputStream inputStream = feignResponse.body().asInputStream()) {
+				inputStream.transferTo(outputStream);
+			} catch (final IOException e) {
+				throw Problem.valueOf(INTERNAL_SERVER_ERROR, "Could not stream letter receipt: " + e.getMessage());
+			}
+		};
+
+		return ResponseEntity
+			.status(feignResponse.status())
+			.headers(newHeaders)
+			.body(streamingResponseBody);
 	}
 
 }

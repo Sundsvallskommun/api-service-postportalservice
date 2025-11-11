@@ -1,5 +1,6 @@
 package se.sundsvall.postportalservice.api;
 
+import static org.springframework.http.MediaType.ALL_VALUE;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.http.MediaType.APPLICATION_PROBLEM_JSON_VALUE;
 import static org.springframework.http.ResponseEntity.ok;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 import org.zalando.problem.Problem;
 import se.sundsvall.dept44.common.validators.annotation.ValidMunicipalityId;
 import se.sundsvall.dept44.common.validators.annotation.ValidUuid;
@@ -77,6 +79,18 @@ class HistoryResource {
 		@Parameter(name = "municipalityId", description = "Municipality ID", example = "2281") @ValidMunicipalityId @PathVariable final String municipalityId,
 		@Parameter(name = "messageId", description = "Message ID", example = "9ce333ec-a473-438b-8406-a71e957dc107") @PathVariable @ValidUuid final String messageId) {
 		return ok(historyService.getSigningInformation(municipalityId, messageId));
+	}
+
+	@GetMapping(value = "/messages/{messageId}/receipt", produces = ALL_VALUE)
+	@Operation(summary = "Read digital registered letter receipt with the complete letter", description = "Retrieves letter receipt combined with the letter", responses = {
+		@ApiResponse(responseCode = "200", description = "Successful Operation - OK", content = @Content(mediaType = ALL_VALUE, schema = @Schema(type = "string", format = "binary"))),
+		@ApiResponse(responseCode = "404", description = "Not Found", content = @Content(mediaType = APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = Problem.class)))
+	})
+	ResponseEntity<StreamingResponseBody> readLetterReceipt(
+		@Parameter(name = "municipalityId", description = "Municipality ID", example = "2281") @ValidMunicipalityId @PathVariable final String municipalityId,
+		@Parameter(name = "messageId", description = "Message ID", example = "9ce333ec-a473-438b-8406-a71e957dc107") @PathVariable @ValidUuid final String messageId) {
+
+		return historyService.getLetterReceipt(municipalityId, messageId);
 	}
 
 }

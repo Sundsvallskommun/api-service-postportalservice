@@ -7,6 +7,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
+import static org.springframework.http.ResponseEntity.ok;
 import static org.zalando.problem.Status.NOT_FOUND;
 import static se.sundsvall.postportalservice.TestDataFactory.INVALID_MUNICIPALITY_ID;
 import static se.sundsvall.postportalservice.TestDataFactory.MUNICIPALITY_ID;
@@ -23,6 +24,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 import org.zalando.problem.Problem;
 import org.zalando.problem.violations.ConstraintViolationProblem;
 import se.sundsvall.postportalservice.Application;
@@ -206,6 +208,64 @@ class HistoryResourceTest {
 				assertThat(violation.getMessage()).isEqualTo("not a valid UUID");
 			});
 
+	}
+
+	@Test
+	void readLetterReceipt() {
+		final var messageId = UUID.randomUUID().toString();
+		final var mockResponseEntity = ok()
+			.header("Content-Type", "application/pdf")
+			.body((StreamingResponseBody) outputStream -> outputStream.write("test data".getBytes()));
+
+		when(historyServiceMock.getLetterReceipt(MUNICIPALITY_ID, messageId)).thenReturn(mockResponseEntity);
+
+		final var bytes = webTestClient.get()
+			.uri("/{municipalityId}/history/messages/{messageId}/receipt", MUNICIPALITY_ID, messageId)
+			.exchange()
+			.expectStatus().isOk()
+			.expectBody(byte[].class)
+			.returnResult()
+			.getResponseBody();
+
+		assertThat(bytes).isNotNull().isEqualTo("test data".getBytes());
+		verify(historyServiceMock).getLetterReceipt(MUNICIPALITY_ID, messageId);
+	}
+
+	@Test
+	void readLetterReceipt_notFound() {
+		final var messageId = UUID.randomUUID().toString();
+
+		when(historyServiceMock.getLetterReceipt(MUNICIPALITY_ID, messageId)).thenThrow(Problem.valueOf(NOT_FOUND));
+
+		webTestClient.get()
+			.uri("/{municipalityId}/history/messages/{messageId}/receipt", MUNICIPALITY_ID, messageId)
+			.exchange()
+			.expectStatus().isNotFound();
+
+		verify(historyServiceMock).getLetterReceipt(MUNICIPALITY_ID, messageId);
+	}
+
+	@Test
+	void readLetterReceipt_badRequest() {
+		final var response = webTestClient.get()
+			.uri("/{municipalityId}/history/messages/{messageId}/receipt", INVALID_MUNICIPALITY_ID, "invalid")
+			.exchange()
+			.expectStatus().isBadRequest()
+			.expectBody(ConstraintViolationProblem.class)
+			.returnResult()
+			.getResponseBody();
+
+		assertThat(response).isNotNull();
+		assertThat(response.getTitle()).isEqualTo("Constraint Violation");
+		assertThat(response.getViolations()).hasSize(2).satisfiesExactlyInAnyOrder(
+			violation -> {
+				assertThat(violation.getField()).isEqualTo("readLetterReceipt.municipalityId");
+				assertThat(violation.getMessage()).isEqualTo("not a valid municipality ID");
+			},
+			violation -> {
+				assertThat(violation.getField()).isEqualTo("readLetterReceipt.messageId");
+				assertThat(violation.getMessage()).isEqualTo("not a valid UUID");
+			});
 	}
 
 }

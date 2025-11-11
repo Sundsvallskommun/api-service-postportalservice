@@ -59,4 +59,14 @@ class HistoryIT extends AbstractAppTest {
 			.withExpectedResponse(RESPONSE_FILE)
 			.sendRequestAndVerifyResponse();
 	}
+
+	@Test
+	void test05_readLetterReceipt() {
+		setupCall()
+			// message with id 1decdead-52b8-42d9-aa62-5ef08c4a701e is a DIGITAL_REGISTERED_LETTER in the test data
+			.withServicePath("/2281/history/messages/1decdead-52b8-42d9-aa62-5ef08c4a701e/receipt")
+			.withHttpMethod(GET)
+			.withExpectedResponseStatus(OK)
+			.sendRequestAndVerifyResponse();
+	}
 }
