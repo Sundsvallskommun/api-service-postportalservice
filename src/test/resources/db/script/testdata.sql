@@ -67,8 +67,8 @@ VALUES ('7602d620-434a-436a-ae96-56eaa0123b03', 'b2cd4957-228f-46f0-a263-d4eae2e
 -- ====================================================================
 -- Test data for august 2025
 -- ====================================================================
-INSERT INTO message (id, municipality_id, department_id, user_id, message_type, created)
-VALUES ('4972e098-21b8-4fda-9a0b-4d1b1377f7e4', '2281', '9a8b6e67-6007-4379-a717-cca245448400', '4724b00c-1b1a-490d-ae43-9fb6237c6171', 'LETTER', '2025-08-05 10:00:00');
+INSERT INTO message (id, municipality_id, department_id, user_id, message_type, created, subject, body)
+VALUES ('4972e098-21b8-4fda-9a0b-4d1b1377f7e4', '2281', '9a8b6e67-6007-4379-a717-cca245448400', '4724b00c-1b1a-490d-ae43-9fb6237c6171', 'LETTER', '2025-08-05 10:00:00', 'Test message subject', 'This is the message body content.');
 
 INSERT INTO attachment(id, file_name, content_type, created, message_id, content)
 VALUES ('5a70a27f-997e-431e-9155-cc50d01e80c5', 'attachment.pdf',

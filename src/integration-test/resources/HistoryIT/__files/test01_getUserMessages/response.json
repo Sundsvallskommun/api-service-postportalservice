@@ -2,6 +2,7 @@
 	"messages": [
 		{
 			"messageId": "4972e098-21b8-4fda-9a0b-4d1b1377f7e4",
+			"subject": "Test message subject",
 			"type": "LETTER",
 			"sentAt": "2025-08-05T10:00:00",
 			"numberOfRecipients": 35

@@ -12,6 +12,9 @@ public class MessageDetails {
 	@Schema(description = "Message subject", accessMode = Schema.AccessMode.READ_ONLY, example = "This is a subject")
 	private String subject;
 
+	@Schema(description = "Message body", accessMode = Schema.AccessMode.READ_ONLY, example = "This is the message body")
+	private String body;
+
 	@Schema(description = "When the message was sent", accessMode = Schema.AccessMode.READ_ONLY, example = "2021-01-01T12:00:00")
 	private LocalDateTime sentAt;
 
@@ -40,6 +43,19 @@ public class MessageDetails {
 
 	public LocalDateTime getSentAt() {
 		return sentAt;
+	}
+
+	public String getBody() {
+		return body;
+	}
+
+	public MessageDetails withBody(String body) {
+		this.body = body;
+		return this;
+	}
+
+	public void setBody(String body) {
+		this.body = body;
 	}
 
 	public MessageDetails withSentAt(LocalDateTime sentAt) {
@@ -81,6 +97,7 @@ public class MessageDetails {
 	public String toString() {
 		return "MessageDetails{" +
 			"subject='" + subject + '\'' +
+			", body='" + body + '\'' +
 			", sentAt=" + sentAt +
 			", attachments=" + attachments +
 			", recipients=" + recipients +
@@ -92,12 +109,12 @@ public class MessageDetails {
 		if (o == null || getClass() != o.getClass())
 			return false;
 		MessageDetails that = (MessageDetails) o;
-		return Objects.equals(subject, that.subject) && Objects.equals(sentAt, that.sentAt) && Objects.equals(attachments, that.attachments) && Objects.equals(recipients, that.recipients);
+		return Objects.equals(subject, that.subject) && Objects.equals(body, that.body) && Objects.equals(sentAt, that.sentAt) && Objects.equals(attachments, that.attachments) && Objects.equals(recipients, that.recipients);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(subject, sentAt, attachments, recipients);
+		return Objects.hash(subject, body, sentAt, attachments, recipients);
 	}
 
 	public static class AttachmentDetails {

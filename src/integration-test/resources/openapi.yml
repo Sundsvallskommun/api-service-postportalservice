@@ -1199,6 +1199,11 @@ components:
           description: Message subject
           readOnly: true
           example: This is a subject
+        body:
+          type: string
+          description: Message body
+          readOnly: true
+          example: This is the message body
         sentAt:
           type: string
           description: When the message was sent

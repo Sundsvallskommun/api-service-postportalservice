@@ -20,6 +20,7 @@ class MessageDetailsTest {
 
 	// MessageDetails attributes
 	private static final String SUBJECT = "subject";
+	private static final String BODY = "body";
 	private static final LocalDateTime SENT_AT = now();
 	private static final List<MessageDetails.AttachmentDetails> ATTACHMENTS = List.of(new MessageDetails.AttachmentDetails());
 	private static final List<MessageDetails.RecipientDetails> RECIPIENTS = List.of(new MessageDetails.RecipientDetails());
@@ -78,11 +79,13 @@ class MessageDetailsTest {
 	void MessageDetails_getterAndSetterTest() {
 		final var bean = new MessageDetails();
 		bean.setSubject(SUBJECT);
+		bean.setBody(BODY);
 		bean.setSentAt(SENT_AT);
 		bean.setAttachments(ATTACHMENTS);
 		bean.setRecipients(RECIPIENTS);
 
 		assertThat(bean.getSubject()).isEqualTo(SUBJECT);
+		assertThat(bean.getBody()).isEqualTo(BODY);
 		assertThat(bean.getSentAt()).isEqualTo(SENT_AT);
 		assertThat(bean.getAttachments()).isEqualTo(ATTACHMENTS);
 		assertThat(bean.getRecipients()).isEqualTo(RECIPIENTS);
@@ -126,6 +129,7 @@ class MessageDetailsTest {
 	void MessageDetails_builderPatternTest() {
 		final var bean = MessageDetails.create()
 			.withSubject(SUBJECT)
+			.withBody(BODY)
 			.withSentAt(SENT_AT)
 			.withAttachments(ATTACHMENTS)
 			.withRecipients(RECIPIENTS);
@@ -173,7 +177,7 @@ class MessageDetailsTest {
 	@Test
 	void MessageDetails_constructorTest() {
 		assertThat(new MessageDetails()).hasAllNullFieldsOrProperties();
-		assertThat(new MessageDetails()).hasOnlyFields("subject", "sentAt", "attachments", "recipients");
+		assertThat(new MessageDetails()).hasOnlyFields("subject", "body", "sentAt", "attachments", "recipients");
 	}
 
 	@Test

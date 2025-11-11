@@ -135,11 +135,13 @@ class HistoryMapperTest {
 	void toMessageDetails() {
 		// Setup
 		final var subject = "subject";
+		final var body = "body";
 		final var created = OffsetDateTime.now();
 		final var attachment = AttachmentEntity.create();
 		final var recipient = RecipientEntity.create();
 		final var messageEntity = MessageEntity.create()
 			.withSubject(subject)
+			.withBody(body)
 			.withCreated(created)
 			.withAttachments(List.of(attachment))
 			.withRecipients(List.of(recipient));
@@ -151,6 +153,7 @@ class HistoryMapperTest {
 		assertThat(result).isNotNull().hasNoNullFieldsOrProperties();
 		assertThat(result.getSentAt()).isEqualTo(created.toLocalDateTime());
 		assertThat(result.getSubject()).isEqualTo(subject);
+		assertThat(result.getBody()).isEqualTo(body);
 		assertThat(result.getAttachments()).hasSize(1);
 		assertThat(result.getRecipients()).hasSize(1);
 	}
