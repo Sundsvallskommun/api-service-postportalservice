@@ -259,7 +259,7 @@ class DigitalRegisteredLetterIntegrationTest {
 
 		// Mock Feign Response without Content-Type
 		final Response mockFeignResponse = mock(Response.class);
-		final Response.Body mockBody = mock(Response.Body.class);
+
 		final Map<String, Collection<String>> headers = new HashMap<>();
 		headers.put("Content-Disposition", List.of("attachment; filename=receipt.pdf"));
 
@@ -280,7 +280,7 @@ class DigitalRegisteredLetterIntegrationTest {
 
 		// Mock Feign Response without Content-Disposition
 		final Response mockFeignResponse = mock(Response.class);
-		final Response.Body mockBody = mock(Response.Body.class);
+
 		final Map<String, Collection<String>> headers = new HashMap<>();
 		headers.put("Content-Type", List.of("application/pdf"));
 
