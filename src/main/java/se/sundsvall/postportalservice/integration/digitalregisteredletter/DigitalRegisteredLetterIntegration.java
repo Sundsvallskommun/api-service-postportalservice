@@ -93,13 +93,15 @@ public class DigitalRegisteredLetterIntegration {
 
 		final var newHeaders = new HttpHeaders();
 		Optional.ofNullable(headers.get("Content-Type"))
-			.ifPresentOrElse(values -> newHeaders.put("Content-Type", values.stream().toList()),
+			.flatMap(values -> values.stream().findFirst())
+			.ifPresentOrElse(value -> newHeaders.set("Content-Type", value),
 				() -> {
 					throw Problem.valueOf(INTERNAL_SERVER_ERROR, "Missing Content-Type header in letter receipt response");
 				});
 
 		Optional.ofNullable(headers.get("Content-Disposition"))
-			.ifPresentOrElse(values -> newHeaders.put("Content-Disposition", values.stream().toList()),
+			.flatMap(values -> values.stream().findFirst())
+			.ifPresentOrElse(value -> newHeaders.set("Content-Disposition", value),
 				() -> {
 					throw Problem.valueOf(INTERNAL_SERVER_ERROR, "Missing Content-Disposition header in letter receipt response");
 				});
