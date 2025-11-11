@@ -10,6 +10,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
+import static org.springframework.http.ResponseEntity.ok;
 import static se.sundsvall.postportalservice.TestDataFactory.MUNICIPALITY_ID;
 import static se.sundsvall.postportalservice.integration.db.converter.MessageType.DIGITAL_REGISTERED_LETTER;
 
@@ -29,6 +30,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 import org.zalando.problem.Problem;
 import se.sundsvall.postportalservice.api.model.SigningInformation;
 import se.sundsvall.postportalservice.api.model.SigningStatus;
@@ -64,7 +66,7 @@ class HistoryServiceTest {
 
 	@ParameterizedTest
 	@EnumSource(value = MessageType.class, mode = EXCLUDE, names = "DIGITAL_REGISTERED_LETTER")
-	void getUserMessages_noDigitalRegisteredLettersCommunication(MessageType messageType) {
+	void getUserMessages_noDigitalRegisteredLettersCommunication(final MessageType messageType) {
 		final var username = "username";
 		final var messageEntity = MessageEntity.create()
 			.withCreated(OffsetDateTime.now())
@@ -288,6 +290,42 @@ class HistoryServiceTest {
 		assertThat(result).isNotNull().isEqualTo(signingInformation);
 		verify(messageRepositoryMock).findByIdAndMessageType(messageId, DIGITAL_REGISTERED_LETTER);
 		verify(digitalRegisteredLetterIntegrationMock).getSigningInformation(MUNICIPALITY_ID, externalId);
+		verifyNoMoreInteractions(messageRepositoryMock, digitalRegisteredLetterIntegrationMock);
+	}
+
+	@Test
+	void getLetterReceipt_notFound() {
+		final var messageId = "messageId";
+		when(messageRepositoryMock.findByIdAndMessageType(messageId, DIGITAL_REGISTERED_LETTER)).thenReturn(Optional.empty());
+
+		assertThatThrownBy(() -> historyService.getLetterReceipt(MUNICIPALITY_ID, messageId))
+			.isInstanceOf(Problem.class)
+			.hasMessageContaining("Not Found: No digital registered letter found for id '%s'".formatted(messageId));
+
+		verify(messageRepositoryMock).findByIdAndMessageType(messageId, DIGITAL_REGISTERED_LETTER);
+		verifyNoInteractions(digitalRegisteredLetterIntegrationMock);
+		verifyNoMoreInteractions(messageRepositoryMock);
+	}
+
+	@Test
+	void getLetterReceipt() {
+		final var messageId = "messageId";
+		final var externalId = "123asd";
+		final var recipientEntity = new RecipientEntity().withExternalId(externalId);
+		final var messageEntity = new MessageEntity()
+			.withRecipients(List.of(recipientEntity));
+		final var mockResponseEntity = ok()
+			.header("Content-Type", "application/pdf")
+			.body((StreamingResponseBody) outputStream -> outputStream.write("test data".getBytes()));
+
+		when(messageRepositoryMock.findByIdAndMessageType(messageId, DIGITAL_REGISTERED_LETTER)).thenReturn(Optional.of(messageEntity));
+		when(digitalRegisteredLetterIntegrationMock.getLetterReceipt(MUNICIPALITY_ID, externalId)).thenReturn(mockResponseEntity);
+
+		final var result = historyService.getLetterReceipt(MUNICIPALITY_ID, messageId);
+
+		assertThat(result).isNotNull().isEqualTo(mockResponseEntity);
+		verify(messageRepositoryMock).findByIdAndMessageType(messageId, DIGITAL_REGISTERED_LETTER);
+		verify(digitalRegisteredLetterIntegrationMock).getLetterReceipt(MUNICIPALITY_ID, externalId);
 		verifyNoMoreInteractions(messageRepositoryMock, digitalRegisteredLetterIntegrationMock);
 	}
 

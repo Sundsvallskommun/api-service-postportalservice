@@ -1,0 +1,19 @@
+{
+	"request": {
+		"url": "/api-digitalregisteredletter/2281/letters/externalId1/receipt",
+		"method": "GET",
+		"headers": {
+			"Authorization": {
+				"equalTo": "Bearer MTQ0NjJkZmQ5OTM2NDE1ZTZjNGZmZjI3"
+			}
+		}
+	},
+	"response": {
+		"status": 200,
+		"headers": {
+			"Content-Type": "application/pdf",
+			"Content-Disposition": "attachment; filename=receipt.pdf"
+		},
+		"bodyFileName": "test05_readLetterReceipt/responses/api-digitalregisteredletter-receipt.pdf"
+	}
+}

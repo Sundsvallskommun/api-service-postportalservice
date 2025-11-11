@@ -1,35 +1,35 @@
 openapi: 3.0.1
 info:
   title: Postportalservice
-  contact: { }
+  contact: {}
   license:
     name: MIT License
     url: https://opensource.org/licenses/MIT
-  version: "1.1"
+  version: "1.2"
 servers:
-  - url: http://localhost:60778
-    description: Generated server url
+- url: http://localhost:54207
+  description: Generated server url
 paths:
   /{municipalityId}/precheck:
     post:
       tags:
-        - Precheck Resources
+      - Precheck Resources
       summary: "Checks how a recipient can be contacted, digital post or physical\
         \ letter"
       operationId: precheckRecipients
       parameters:
-        - name: X-Sent-By
-          in: header
-          required: true
-          schema:
-            type: string
-        - name: municipalityId
-          in: path
-          description: Municipality ID
-          required: true
-          schema:
-            type: string
-          example: 2281
+      - name: X-Sent-By
+        in: header
+        required: true
+        schema:
+          type: string
+      - name: municipalityId
+        in: path
+        description: Municipality ID
+        required: true
+        schema:
+          type: string
+        example: 2281
       requestBody:
         content:
           application/json:
@@ -49,8 +49,8 @@ paths:
             application/problem+json:
               schema:
                 oneOf:
-                  - $ref: "#/components/schemas/Problem"
-                  - $ref: "#/components/schemas/ConstraintViolationProblem"
+                - $ref: "#/components/schemas/Problem"
+                - $ref: "#/components/schemas/ConstraintViolationProblem"
         "500":
           description: Internal Server Error
           content:
@@ -66,16 +66,16 @@ paths:
   /{municipalityId}/precheck/kivra:
     post:
       tags:
-        - Precheck Resources
+      - Precheck Resources
       summary: Check if the given partyIds are eligible for receiving digital registered
         letters with Kivra
       operationId: checkKivraEligibility
       parameters:
-        - name: municipalityId
-          in: path
-          required: true
-          schema:
-            type: string
+      - name: municipalityId
+        in: path
+        required: true
+        schema:
+          type: string
       requestBody:
         content:
           application/json:
@@ -97,8 +97,8 @@ paths:
             application/problem+json:
               schema:
                 oneOf:
-                  - $ref: "#/components/schemas/Problem"
-                  - $ref: "#/components/schemas/ConstraintViolationProblem"
+                - $ref: "#/components/schemas/Problem"
+                - $ref: "#/components/schemas/ConstraintViolationProblem"
         "500":
           description: Internal Server Error
           content:
@@ -114,22 +114,22 @@ paths:
   /{municipalityId}/messages/sms:
     post:
       tags:
-        - Message Resources
+      - Message Resources
       summary: Send an SMS
       operationId: sendSms
       parameters:
-        - name: X-Sent-By
-          in: header
-          required: true
-          schema:
-            type: string
-        - name: municipalityId
-          in: path
-          description: Municipality ID
-          required: true
-          schema:
-            type: string
-          example: 2281
+      - name: X-Sent-By
+        in: header
+        required: true
+        schema:
+          type: string
+      - name: municipalityId
+        in: path
+        description: Municipality ID
+        required: true
+        schema:
+          type: string
+        example: 2281
       requestBody:
         content:
           application/json:
@@ -145,8 +145,8 @@ paths:
             application/problem+json:
               schema:
                 oneOf:
-                  - $ref: "#/components/schemas/Problem"
-                  - $ref: "#/components/schemas/ConstraintViolationProblem"
+                - $ref: "#/components/schemas/Problem"
+                - $ref: "#/components/schemas/ConstraintViolationProblem"
         "500":
           description: Internal Server Error
           content:
@@ -162,29 +162,29 @@ paths:
   /{municipalityId}/messages/registered-letter:
     post:
       tags:
-        - Message Resources
+      - Message Resources
       summary: Send a digital registered letter.
       operationId: sendDigitalRegisteredLetter
       parameters:
-        - name: X-Sent-By
-          in: header
-          required: true
-          schema:
-            type: string
-        - name: municipalityId
-          in: path
-          description: Municipality ID
-          required: true
-          schema:
-            type: string
-          example: 2281
+      - name: X-Sent-By
+        in: header
+        required: true
+        schema:
+          type: string
+      - name: municipalityId
+        in: path
+        description: Municipality ID
+        required: true
+        schema:
+          type: string
+        example: 2281
       requestBody:
         content:
           multipart/form-data:
             schema:
               required:
-                - attachments
-                - request
+              - attachments
+              - request
               type: object
               properties:
                 request:
@@ -204,8 +204,8 @@ paths:
             application/problem+json:
               schema:
                 oneOf:
-                  - $ref: "#/components/schemas/Problem"
-                  - $ref: "#/components/schemas/ConstraintViolationProblem"
+                - $ref: "#/components/schemas/Problem"
+                - $ref: "#/components/schemas/ConstraintViolationProblem"
         "500":
           description: Internal Server Error
           content:
@@ -221,30 +221,30 @@ paths:
   /{municipalityId}/messages/letter:
     post:
       tags:
-        - Message Resources
+      - Message Resources
       summary: Send a message by either digital mail or as a physical letter. Digital
         mail is always preferred if possible.
       operationId: sendLetter
       parameters:
-        - name: X-Sent-By
-          in: header
-          required: true
-          schema:
-            type: string
-        - name: municipalityId
-          in: path
-          description: Municipality ID
-          required: true
-          schema:
-            type: string
-          example: 2281
+      - name: X-Sent-By
+        in: header
+        required: true
+        schema:
+          type: string
+      - name: municipalityId
+        in: path
+        description: Municipality ID
+        required: true
+        schema:
+          type: string
+        example: 2281
       requestBody:
         content:
           multipart/form-data:
             schema:
               required:
-                - attachments
-                - request
+              - attachments
+              - request
               type: object
               properties:
                 request:
@@ -264,8 +264,8 @@ paths:
             application/problem+json:
               schema:
                 oneOf:
-                  - $ref: "#/components/schemas/Problem"
-                  - $ref: "#/components/schemas/ConstraintViolationProblem"
+                - $ref: "#/components/schemas/Problem"
+                - $ref: "#/components/schemas/ConstraintViolationProblem"
         "500":
           description: Internal Server Error
           content:
@@ -281,30 +281,30 @@ paths:
   /{municipalityId}/messages/letter/csv:
     post:
       tags:
-        - Message Resources
+      - Message Resources
       summary: Send a message by either digital mail or as a physical letter. Digital
         mail is always preferred if possible.
       operationId: sendLetterCSV
       parameters:
-        - name: X-Sent-By
-          in: header
-          required: true
-          schema:
-            type: string
-        - name: municipalityId
-          in: path
-          description: Municipality ID
-          required: true
-          schema:
-            type: string
-          example: 2281
+      - name: X-Sent-By
+        in: header
+        required: true
+        schema:
+          type: string
+      - name: municipalityId
+        in: path
+        description: Municipality ID
+        required: true
+        schema:
+          type: string
+        example: 2281
       requestBody:
         content:
           multipart/form-data:
             schema:
               required:
-                - csv-file
-                - request
+              - csv-file
+              - request
               type: object
               properties:
                 request:
@@ -327,8 +327,8 @@ paths:
             application/problem+json:
               schema:
                 oneOf:
-                  - $ref: "#/components/schemas/Problem"
-                  - $ref: "#/components/schemas/ConstraintViolationProblem"
+                - $ref: "#/components/schemas/Problem"
+                - $ref: "#/components/schemas/ConstraintViolationProblem"
         "500":
           description: Internal Server Error
           content:
@@ -344,31 +344,31 @@ paths:
   /{municipalityId}/statistics/departments:
     get:
       tags:
-        - Statistics Resources
+      - Statistics Resources
       summary: Get general statistics for each department within the municipality
       operationId: getStatisticsByDepartment
       parameters:
-        - name: municipalityId
-          in: path
-          description: Municipality ID
-          required: true
-          schema:
-            type: string
-          example: 2281
-        - name: year
-          in: query
-          description: Filter statistics by year
-          required: true
-          schema:
-            pattern: "[0-9]{4}"
-            type: string
-        - name: month
-          in: query
-          description: Filter statistics by month
-          required: true
-          schema:
-            pattern: "^0?[1-9]$|^1[0-2]$"
-            type: string
+      - name: municipalityId
+        in: path
+        description: Municipality ID
+        required: true
+        schema:
+          type: string
+        example: 2281
+      - name: year
+        in: query
+        description: Filter statistics by year
+        required: true
+        schema:
+          pattern: "[0-9]{4}"
+          type: string
+      - name: month
+        in: query
+        description: Filter statistics by month
+        required: true
+        schema:
+          pattern: "^0?[1-9]$|^1[0-2]$"
+          type: string
       responses:
         "200":
           description: OK
@@ -384,8 +384,8 @@ paths:
             application/problem+json:
               schema:
                 oneOf:
-                  - $ref: "#/components/schemas/Problem"
-                  - $ref: "#/components/schemas/ConstraintViolationProblem"
+                - $ref: "#/components/schemas/Problem"
+                - $ref: "#/components/schemas/ConstraintViolationProblem"
         "500":
           description: Internal Server Error
           content:
@@ -401,29 +401,29 @@ paths:
   /{municipalityId}/history/users/{userId}/messages:
     get:
       tags:
-        - History Resources
+      - History Resources
       summary: Get messages sent by user
       operationId: getUserMessages
       parameters:
-        - name: municipalityId
-          in: path
-          description: Municipality ID
-          required: true
-          schema:
-            type: string
-          example: 2281
-        - name: userId
-          in: path
-          description: Username for user to fetch messages for
-          required: true
-          schema:
-            type: string
-          example: joe01doe
-        - name: pageable
-          in: query
-          required: true
-          schema:
-            $ref: "#/components/schemas/Pageable"
+      - name: municipalityId
+        in: path
+        description: Municipality ID
+        required: true
+        schema:
+          type: string
+        example: 2281
+      - name: userId
+        in: path
+        description: Username for user to fetch messages for
+        required: true
+        schema:
+          type: string
+        example: joe01doe
+      - name: pageable
+        in: query
+        required: true
+        schema:
+          $ref: "#/components/schemas/Pageable"
       responses:
         "200":
           description: OK
@@ -443,8 +443,8 @@ paths:
             application/problem+json:
               schema:
                 oneOf:
-                  - $ref: "#/components/schemas/Problem"
-                  - $ref: "#/components/schemas/ConstraintViolationProblem"
+                - $ref: "#/components/schemas/Problem"
+                - $ref: "#/components/schemas/ConstraintViolationProblem"
         "500":
           description: Internal Server Error
           content:
@@ -460,31 +460,31 @@ paths:
   /{municipalityId}/history/users/{userId}/messages/{messageId}:
     get:
       tags:
-        - History Resources
+      - History Resources
       summary: Get messages details
       operationId: getMessageDetails
       parameters:
-        - name: municipalityId
-          in: path
-          description: Municipality ID
-          required: true
-          schema:
-            type: string
-          example: 2281
-        - name: userId
-          in: path
-          description: Username for the user who sent the message
-          required: true
-          schema:
-            type: string
-          example: joe01doe
-        - name: messageId
-          in: path
-          description: Message ID
-          required: true
-          schema:
-            type: string
-          example: 9ce333ec-a473-438b-8406-a71e957dc107
+      - name: municipalityId
+        in: path
+        description: Municipality ID
+        required: true
+        schema:
+          type: string
+        example: 2281
+      - name: userId
+        in: path
+        description: Username for the user who sent the message
+        required: true
+        schema:
+          type: string
+        example: joe01doe
+      - name: messageId
+        in: path
+        description: Message ID
+        required: true
+        schema:
+          type: string
+        example: 9ce333ec-a473-438b-8406-a71e957dc107
       responses:
         "200":
           description: OK
@@ -504,8 +504,8 @@ paths:
             application/problem+json:
               schema:
                 oneOf:
-                  - $ref: "#/components/schemas/Problem"
-                  - $ref: "#/components/schemas/ConstraintViolationProblem"
+                - $ref: "#/components/schemas/Problem"
+                - $ref: "#/components/schemas/ConstraintViolationProblem"
         "500":
           description: Internal Server Error
           content:
@@ -521,26 +521,26 @@ paths:
   /{municipalityId}/history/messages/{messageId}/signinginfo:
     get:
       tags:
-        - History Resources
+      - History Resources
       summary: Get signing information
       description: Retrieves signing information connected to letter matching provided
         id
       operationId: getSigningInformation
       parameters:
-        - name: municipalityId
-          in: path
-          description: Municipality ID
-          required: true
-          schema:
-            type: string
-          example: 2281
-        - name: messageId
-          in: path
-          description: Message ID
-          required: true
-          schema:
-            type: string
-          example: 9ce333ec-a473-438b-8406-a71e957dc107
+      - name: municipalityId
+        in: path
+        description: Municipality ID
+        required: true
+        schema:
+          type: string
+        example: 2281
+      - name: messageId
+        in: path
+        description: Message ID
+        required: true
+        schema:
+          type: string
+        example: 9ce333ec-a473-438b-8406-a71e957dc107
       responses:
         "200":
           description: Successful Operation - OK
@@ -560,8 +560,8 @@ paths:
             application/problem+json:
               schema:
                 oneOf:
-                  - $ref: "#/components/schemas/Problem"
-                  - $ref: "#/components/schemas/ConstraintViolationProblem"
+                - $ref: "#/components/schemas/Problem"
+                - $ref: "#/components/schemas/ConstraintViolationProblem"
         "500":
           description: Internal Server Error
           content:
@@ -574,24 +574,28 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/Problem"
-  /{municipalityId}/attachments/{attachmentId}:
+  /{municipalityId}/history/messages/{messageId}/receipt:
     get:
       tags:
-        - Attachment Resources
-      summary: Downloads letter attachment content
-      description: Retrieves attachment content by id
-      operationId: downloadAttachment
+      - History Resources
+      summary: Read digital registered letter receipt with the complete letter
+      description: Retrieves letter receipt combined with the letter
+      operationId: readLetterReceipt
       parameters:
-        - name: municipalityId
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: attachmentId
-          in: path
-          required: true
-          schema:
-            type: string
+      - name: municipalityId
+        in: path
+        description: Municipality ID
+        required: true
+        schema:
+          type: string
+        example: 2281
+      - name: messageId
+        in: path
+        description: Message ID
+        required: true
+        schema:
+          type: string
+        example: 9ce333ec-a473-438b-8406-a71e957dc107
       responses:
         "200":
           description: Successful Operation - OK
@@ -612,8 +616,60 @@ paths:
             application/problem+json:
               schema:
                 oneOf:
-                  - $ref: "#/components/schemas/Problem"
-                  - $ref: "#/components/schemas/ConstraintViolationProblem"
+                - $ref: "#/components/schemas/Problem"
+                - $ref: "#/components/schemas/ConstraintViolationProblem"
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "502":
+          description: Bad Gateway
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+  /{municipalityId}/attachments/{attachmentId}:
+    get:
+      tags:
+      - Attachment Resources
+      summary: Downloads letter attachment content
+      description: Retrieves attachment content by id
+      operationId: downloadAttachment
+      parameters:
+      - name: municipalityId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: attachmentId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: Successful Operation - OK
+          content:
+            '*/*':
+              schema:
+                type: string
+                format: binary
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                oneOf:
+                - $ref: "#/components/schemas/Problem"
+                - $ref: "#/components/schemas/ConstraintViolationProblem"
         "500":
           description: Internal Server Error
           content:
@@ -629,7 +685,7 @@ paths:
   /api-docs:
     get:
       tags:
-        - API
+      - API
       summary: OpenAPI
       operationId: getApiDocs
       responses:
@@ -646,7 +702,7 @@ components:
   schemas:
     PrecheckRequest:
       required:
-        - partyIds
+      - partyIds
       type: object
       properties:
         partyIds:
@@ -654,8 +710,8 @@ components:
           type: array
           description: List of party ids to precheck
           example:
-            - b46f0ca2-d2ad-43e8-8d50-3aeb949e3604
-            - fd99a03c-790c-4b87-bc4b-f4f73e4a2df4
+          - b46f0ca2-d2ad-43e8-8d50-3aeb949e3604
+          - fd99a03c-790c-4b87-bc4b-f4f73e4a2df4
           items:
             type: string
             description: List of party ids to precheck
@@ -684,11 +740,11 @@ components:
     StatusType:
       type: object
       properties:
+        reasonPhrase:
+          type: string
         statusCode:
           type: integer
           format: int32
-        reasonPhrase:
-          type: string
     ConstraintViolationProblem:
       type: object
       properties:
@@ -801,9 +857,9 @@ components:
       type: string
       description: Possible delivery methods
       enum:
-        - DIGITAL_MAIL
-        - SNAIL_MAIL
-        - DELIVERY_NOT_POSSIBLE
+      - DIGITAL_MAIL
+      - SNAIL_MAIL
+      - DELIVERY_NOT_POSSIBLE
     PrecheckRecipient:
       type: object
       properties:
@@ -834,7 +890,7 @@ components:
       description: Result of precheck for given recipients
     KivraEligibilityRequest:
       required:
-        - partyIds
+      - partyIds
       type: object
       properties:
         partyIds:
@@ -842,8 +898,8 @@ components:
           type: array
           description: List of party IDs to check for Kivra eligibility
           example:
-            - da03b33e-9de2-45ac-8291-31a88de59410
-            - eb13b33e-9de2-45ac-8291-31a88de59411
+          - da03b33e-9de2-45ac-8291-31a88de59410
+          - eb13b33e-9de2-45ac-8291-31a88de59411
           items:
             type: string
             description: List of party IDs to check for Kivra eligibility
@@ -852,7 +908,7 @@ components:
       description: Kivra eligibility request model
     SmsRecipient:
       required:
-        - phoneNumber
+      - phoneNumber
       type: object
       properties:
         partyId:
@@ -866,8 +922,8 @@ components:
       description: SMS recipient model
     SmsRequest:
       required:
-        - message
-        - recipients
+      - message
+      - recipients
       type: object
       properties:
         message:
@@ -883,8 +939,8 @@ components:
       description: SMS request model
     DigitalRegisteredLetterRequest:
       required:
-        - body
-        - subject
+      - body
+      - subject
       type: object
       properties:
         body:
@@ -908,12 +964,12 @@ components:
       description: Digital registered letter request model
     Address:
       required:
-        - city
-        - country
-        - firstName
-        - lastName
-        - street
-        - zipCode
+      - city
+      - country
+      - firstName
+      - lastName
+      - street
+      - zipCode
       type: object
       properties:
         firstName:
@@ -957,9 +1013,9 @@ components:
       description: Address model
     LetterRequest:
       required:
-        - body
-        - contentType
-        - subject
+      - body
+      - contentType
+      - subject
       type: object
       properties:
         subject:
@@ -988,7 +1044,7 @@ components:
       description: Letter request model
     Recipient:
       required:
-        - deliveryMethod
+      - deliveryMethod
       type: object
       properties:
         partyId:
@@ -1000,17 +1056,17 @@ components:
           description: Delivery method for the recipient
           example: DIGITAL_MAIL
           enum:
-            - DIGITAL_MAIL
-            - SNAIL_MAIL
-            - DELIVERY_NOT_POSSIBLE
+          - DIGITAL_MAIL
+          - SNAIL_MAIL
+          - DELIVERY_NOT_POSSIBLE
         address:
           $ref: "#/components/schemas/Address"
       description: Recipient model
     LetterCsvRequest:
       required:
-        - body
-        - contentType
-        - subject
+      - body
+      - contentType
+      - subject
       type: object
       properties:
         subject:
@@ -1324,4 +1380,4 @@ components:
           type: string
           description: Last name of the signing party
       description: Information about the user that signed the letter
-  securitySchemes: { }
+  securitySchemes: {}
