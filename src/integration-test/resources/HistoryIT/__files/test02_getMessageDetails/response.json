@@ -1,4 +1,6 @@
 {
+	"subject": "Test message subject",
+	"body": "This is the message body content.",
 	"sentAt": "2025-08-05T10:00:00",
 	"attachments": [
 		{
