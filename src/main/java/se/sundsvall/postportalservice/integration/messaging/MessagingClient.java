@@ -57,7 +57,7 @@ public interface MessagingClient {
 		@RequestBody final SnailmailRequest request,
 		@RequestParam final String batchId);
 
-	@PostMapping(path = "/{municipalityId}/snail-mail/batch/{batchId}", produces = APPLICATION_JSON_VALUE)
+	@PostMapping(path = "/{municipalityId}/snail-mail/batch/{batchId}")
 	void triggerSnailMailBatchProcessing(
 		@PathVariable final String municipalityId,
 		@PathVariable final String batchId);
