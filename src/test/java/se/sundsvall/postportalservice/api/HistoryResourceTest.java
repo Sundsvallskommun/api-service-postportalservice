@@ -31,6 +31,7 @@ import se.sundsvall.postportalservice.Application;
 import se.sundsvall.postportalservice.api.model.MessageDetails;
 import se.sundsvall.postportalservice.api.model.Messages;
 import se.sundsvall.postportalservice.api.model.SigningInformation;
+import se.sundsvall.postportalservice.api.model.SigningStatus;
 import se.sundsvall.postportalservice.service.HistoryService;
 
 @SpringBootTest(classes = Application.class, webEnvironment = RANDOM_PORT)
@@ -63,6 +64,42 @@ class HistoryResourceTest {
 				.build(MUNICIPALITY_ID, userId, messageId))
 			.exchange()
 			.expectStatus().isEqualTo(HttpStatus.OK);
+
+		verify(historyServiceMock).getMessageDetails(MUNICIPALITY_ID, userId, messageId);
+	}
+
+	@Test
+	void getMessageDetails_WithSigningStatus() {
+		final var messageId = UUID.randomUUID().toString();
+		final var userId = "joe01doe";
+		final var letterState = "SIGNED";
+		final var signingProcessState = "COMPLETED";
+
+		final var messageDetails = new MessageDetails()
+			.withSubject("Test subject")
+			.withSigningStatus(new SigningStatus()
+				.withLetterState(letterState)
+				.withSigningProcessState(signingProcessState));
+
+		when(historyServiceMock.getMessageDetails(MUNICIPALITY_ID, userId, messageId))
+			.thenReturn(messageDetails);
+
+		final var response = webTestClient.get()
+			.uri(uriBuilder -> uriBuilder.replacePath("/{municipalityId}/history/users/{userId}/messages/{messageId}")
+				.build(MUNICIPALITY_ID, userId, messageId))
+			.exchange()
+			.expectStatus().isEqualTo(HttpStatus.OK)
+			.expectBody(MessageDetails.class)
+			.returnResult()
+			.getResponseBody();
+
+		assertThat(response).isNotNull().satisfies(details -> {
+			assertThat(details.getSubject()).isEqualTo("Test subject");
+			assertThat(details.getSigningStatus()).isNotNull().satisfies(status -> {
+				assertThat(status.getLetterState()).isEqualTo(letterState);
+				assertThat(status.getSigningProcessState()).isEqualTo(signingProcessState);
+			});
+		});
 
 		verify(historyServiceMock).getMessageDetails(MUNICIPALITY_ID, userId, messageId);
 	}

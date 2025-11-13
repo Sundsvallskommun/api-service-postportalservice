@@ -260,6 +260,81 @@ class HistoryServiceTest {
 	}
 
 	@Test
+	void getMessageDetails_withDigitalRegisteredLetterAndSigningStatus() {
+		final var messageId = "messageId";
+		final var userId = "userId";
+		final var letterState = "letterState";
+		final var signingProcessState = "signingProcessState";
+		final var message = MessageEntity.create()
+			.withSubject("subject")
+			.withCreated(OffsetDateTime.now())
+			.withAttachments(List.of())
+			.withRecipients(List.of())
+			.withMessageType(DIGITAL_REGISTERED_LETTER)
+			.withId(messageId);
+		final var letterStatus = new LetterStatus()
+			.letterId(messageId)
+			.status(letterState);
+		final var signingStatus = SigningStatus.create()
+			.withLetterState(letterState)
+			.withSigningProcessState(signingProcessState);
+
+		when(messageRepositoryMock.findByMunicipalityIdAndIdAndUserUsernameIgnoreCase(MUNICIPALITY_ID, messageId, userId)).thenReturn(Optional.of(message));
+		when(digitalRegisteredLetterIntegrationMock.getLetterStatuses(MUNICIPALITY_ID, List.of(messageId))).thenReturn(List.of(letterStatus));
+		when(historyMapperMock.toSigningStatus(letterStatus)).thenReturn(signingStatus);
+
+		final var result = historyService.getMessageDetails(MUNICIPALITY_ID, userId, messageId);
+
+		assertThat(result).isNotNull().satisfies(messageDetails -> {
+			assertThat(messageDetails.getSubject()).isEqualTo(message.getSubject());
+			assertThat(messageDetails.getSentAt()).isEqualTo(message.getCreated().toLocalDateTime());
+			assertThat(messageDetails.getAttachments()).isEmpty();
+			assertThat(messageDetails.getRecipients()).isEmpty();
+			assertThat(messageDetails.getSigningStatus()).isNotNull().satisfies(status -> {
+				assertThat(status.getLetterState()).isEqualTo(letterState);
+				assertThat(status.getSigningProcessState()).isEqualTo(signingProcessState);
+			});
+		});
+		verify(messageRepositoryMock).findByMunicipalityIdAndIdAndUserUsernameIgnoreCase(MUNICIPALITY_ID, messageId, userId);
+		verify(digitalRegisteredLetterIntegrationMock).getLetterStatuses(MUNICIPALITY_ID, List.of(messageId));
+		verify(historyMapperMock).toMessageDetails(message);
+		verify(historyMapperMock).toAttachmentList(message.getAttachments());
+		verify(historyMapperMock).toRecipientList(message.getRecipients());
+		verify(historyMapperMock).toSigningStatus(letterStatus);
+	}
+
+	@Test
+	void getMessageDetails_withDigitalRegisteredLetterButNoSigningStatus() {
+		final var messageId = "messageId";
+		final var userId = "userId";
+		final var message = MessageEntity.create()
+			.withSubject("subject")
+			.withCreated(OffsetDateTime.now())
+			.withAttachments(List.of())
+			.withRecipients(List.of())
+			.withMessageType(DIGITAL_REGISTERED_LETTER)
+			.withId(messageId);
+
+		when(messageRepositoryMock.findByMunicipalityIdAndIdAndUserUsernameIgnoreCase(MUNICIPALITY_ID, messageId, userId)).thenReturn(Optional.of(message));
+		when(digitalRegisteredLetterIntegrationMock.getLetterStatuses(MUNICIPALITY_ID, List.of(messageId))).thenReturn(emptyList());
+
+		final var result = historyService.getMessageDetails(MUNICIPALITY_ID, userId, messageId);
+
+		assertThat(result).isNotNull().satisfies(messageDetails -> {
+			assertThat(messageDetails.getSubject()).isEqualTo(message.getSubject());
+			assertThat(messageDetails.getSentAt()).isEqualTo(message.getCreated().toLocalDateTime());
+			assertThat(messageDetails.getAttachments()).isEmpty();
+			assertThat(messageDetails.getRecipients()).isEmpty();
+			assertThat(messageDetails.getSigningStatus()).isNull();
+		});
+		verify(messageRepositoryMock).findByMunicipalityIdAndIdAndUserUsernameIgnoreCase(MUNICIPALITY_ID, messageId, userId);
+		verify(digitalRegisteredLetterIntegrationMock).getLetterStatuses(MUNICIPALITY_ID, List.of(messageId));
+		verify(historyMapperMock).toMessageDetails(message);
+		verify(historyMapperMock).toAttachmentList(message.getAttachments());
+		verify(historyMapperMock).toRecipientList(message.getRecipients());
+	}
+
+	@Test
 	void getSigningInformation_notFound() {
 		final var messageId = "messageId";
 		when(messageRepositoryMock.findByIdAndMessageType(messageId, DIGITAL_REGISTERED_LETTER)).thenReturn(Optional.empty());
