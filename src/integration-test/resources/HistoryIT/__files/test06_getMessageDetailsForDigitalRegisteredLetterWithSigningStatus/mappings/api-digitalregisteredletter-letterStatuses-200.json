@@ -1,0 +1,31 @@
+{
+	"request": {
+		"method": "POST",
+		"headers": {
+			"Authorization": {
+				"equalTo": "Bearer MTQ0NjJkZmQ5OTM2NDE1ZTZjNGZmZjI3"
+			},
+			"Content-Type": {
+				"equalTo": "application/json"
+			}
+		},
+		"url": "/api-digitalregisteredletter/2281/status/letters",
+		"bodyPatterns": [
+			{
+				"equalToJson": {
+					"letterIds": [
+						"1decdead-52b8-42d9-aa62-5ef08c4a701e"
+					]
+				},
+				"ignoreArrayOrder": true
+			}
+		]
+	},
+	"response": {
+		"status": 200,
+		"headers": {
+			"Content-Type": "application/json"
+		},
+		"bodyFileName": "test06_getMessageDetailsForDigitalRegisteredLetterWithSigningStatus/responses/api-digitalregisteredletter-letterStatuses.json"
+	}
+}

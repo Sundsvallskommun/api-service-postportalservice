@@ -3,9 +3,14 @@ package se.sundsvall.postportalservice.integration.digitalregisteredletter;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
+import generated.se.sundsvall.digitalregisteredletter.Device;
+import generated.se.sundsvall.digitalregisteredletter.SigningInfo;
+import generated.se.sundsvall.digitalregisteredletter.StepUp;
+import generated.se.sundsvall.digitalregisteredletter.User;
 import java.io.IOException;
 import java.sql.Blob;
 import java.sql.SQLException;
+import java.time.OffsetDateTime;
 import java.util.List;
 import org.assertj.core.api.iterable.ThrowingExtractor;
 import org.junit.jupiter.api.Test;
@@ -209,5 +214,64 @@ class DigitalRegisteredLetterMapperTest {
 	@Test
 	void toLetterStatusRequest_whenNull() {
 		assertThat(mapper.toLetterStatusRequest(null)).isNull();
+	}
+
+	@Test
+	void toSigningInformation_whenNull() {
+		assertThat(mapper.toSigningInformation(null)).isNull();
+	}
+
+	@Test
+	void toSigningInformation() {
+		final var status = "COMPLETED";
+		final var signed = OffsetDateTime.now();
+		final var contentKey = "contentKey";
+		final var orderRef = "orderRef";
+		final var signature = "signature";
+		final var ocspResponse = "ocspResponse";
+		final var personalIdentityNumber = "199001011234";
+		final var name = "Test User";
+		final var givenName = "Test";
+		final var surname = "User";
+		final var ipAddress = "192.168.1.1";
+		final var mrtd = true;
+
+		final var signingInfo = new SigningInfo()
+			.status(status)
+			.signed(signed)
+			.contentKey(contentKey)
+			.orderRef(orderRef)
+			.signature(signature)
+			.ocspResponse(ocspResponse)
+			.user(new User()
+				.personalIdentityNumber(personalIdentityNumber)
+				.name(name)
+				.givenName(givenName)
+				.surname(surname))
+			.device(new Device().ipAddress(ipAddress))
+			.stepUp(new StepUp().mrtd(mrtd));
+
+		final var result = mapper.toSigningInformation(signingInfo);
+
+		assertThat(result).isNotNull().satisfies(info -> {
+			assertThat(info.getStatus()).isEqualTo(status);
+			assertThat(info.getSignedAt()).isEqualTo(signed);
+			assertThat(info.getContentKey()).isEqualTo(contentKey);
+			assertThat(info.getOrderReference()).isEqualTo(orderRef);
+			assertThat(info.getSignature()).isEqualTo(signature);
+			assertThat(info.getOcspResponse()).isEqualTo(ocspResponse);
+			assertThat(info.getUser()).satisfies(user -> {
+				assertThat(user.getPersonalIdentityNumber()).isEqualTo(personalIdentityNumber);
+				assertThat(user.getName()).isEqualTo(name);
+				assertThat(user.getGivenName()).isEqualTo(givenName);
+				assertThat(user.getSurname()).isEqualTo(surname);
+			});
+			assertThat(info.getDevice()).satisfies(device -> {
+				assertThat(device.getIpAddress()).isEqualTo(ipAddress);
+			});
+			assertThat(info.getStepUp()).satisfies(stepUp -> {
+				assertThat(stepUp.getMrtd()).isEqualTo(mrtd);
+			});
+		});
 	}
 }

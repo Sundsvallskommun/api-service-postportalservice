@@ -22,6 +22,7 @@ class MessageDetailsTest {
 	private static final String SUBJECT = "subject";
 	private static final String BODY = "body";
 	private static final LocalDateTime SENT_AT = now();
+	private static final SigningStatus SIGNING_STATUS = new SigningStatus();
 	private static final List<MessageDetails.AttachmentDetails> ATTACHMENTS = List.of(new MessageDetails.AttachmentDetails());
 	private static final List<MessageDetails.RecipientDetails> RECIPIENTS = List.of(new MessageDetails.RecipientDetails());
 
@@ -81,12 +82,14 @@ class MessageDetailsTest {
 		bean.setSubject(SUBJECT);
 		bean.setBody(BODY);
 		bean.setSentAt(SENT_AT);
+		bean.setSigningStatus(SIGNING_STATUS);
 		bean.setAttachments(ATTACHMENTS);
 		bean.setRecipients(RECIPIENTS);
 
 		assertThat(bean.getSubject()).isEqualTo(SUBJECT);
 		assertThat(bean.getBody()).isEqualTo(BODY);
 		assertThat(bean.getSentAt()).isEqualTo(SENT_AT);
+		assertThat(bean.getSigningStatus()).isEqualTo(SIGNING_STATUS);
 		assertThat(bean.getAttachments()).isEqualTo(ATTACHMENTS);
 		assertThat(bean.getRecipients()).isEqualTo(RECIPIENTS);
 	}
@@ -131,11 +134,14 @@ class MessageDetailsTest {
 			.withSubject(SUBJECT)
 			.withBody(BODY)
 			.withSentAt(SENT_AT)
+			.withSigningStatus(SIGNING_STATUS)
 			.withAttachments(ATTACHMENTS)
 			.withRecipients(RECIPIENTS);
 
 		assertThat(bean.getSubject()).isEqualTo(SUBJECT);
+		assertThat(bean.getBody()).isEqualTo(BODY);
 		assertThat(bean.getSentAt()).isEqualTo(SENT_AT);
+		assertThat(bean.getSigningStatus()).isEqualTo(SIGNING_STATUS);
 		assertThat(bean.getAttachments()).isEqualTo(ATTACHMENTS);
 		assertThat(bean.getRecipients()).isEqualTo(RECIPIENTS);
 	}
@@ -177,7 +183,7 @@ class MessageDetailsTest {
 	@Test
 	void MessageDetails_constructorTest() {
 		assertThat(new MessageDetails()).hasAllNullFieldsOrProperties();
-		assertThat(new MessageDetails()).hasOnlyFields("subject", "body", "sentAt", "attachments", "recipients");
+		assertThat(new MessageDetails()).hasOnlyFields("subject", "body", "sentAt", "signingStatus", "attachments", "recipients");
 	}
 
 	@Test

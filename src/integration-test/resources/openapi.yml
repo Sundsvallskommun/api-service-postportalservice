@@ -7,7 +7,7 @@ info:
     url: https://opensource.org/licenses/MIT
   version: "1.2"
 servers:
-- url: http://localhost:54207
+- url: http://localhost:61815
   description: Generated server url
 paths:
   /{municipalityId}/precheck:
@@ -740,11 +740,11 @@ components:
     StatusType:
       type: object
       properties:
-        reasonPhrase:
-          type: string
         statusCode:
           type: integer
           format: int32
+        reasonPhrase:
+          type: string
     ConstraintViolationProblem:
       type: object
       properties:
@@ -1265,6 +1265,8 @@ components:
           description: When the message was sent
           format: date-time
           readOnly: true
+        signingStatus:
+          $ref: "#/components/schemas/SigningStatus"
         attachments:
           type: array
           readOnly: true

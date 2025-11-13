@@ -60,9 +60,21 @@ public class HistoryService {
 	}
 
 	public MessageDetails getMessageDetails(final String municipalityId, final String username, final String messageId) {
-		return messageRepository.findByMunicipalityIdAndIdAndUserUsernameIgnoreCase(municipalityId, messageId, username)
-			.map(historyMapper::toMessageDetails)
+		final var messageEntity = messageRepository.findByMunicipalityIdAndIdAndUserUsernameIgnoreCase(municipalityId, messageId, username)
 			.orElseThrow(() -> Problem.valueOf(NOT_FOUND, "Message with id '%s' and municipalityId '%s' for user with username '%s' not found".formatted(messageId, municipalityId, username)));
+
+		final var messageDetails = historyMapper.toMessageDetails(messageEntity);
+
+		// Decorate with signing information if this is a digital registered letter
+		if (DIGITAL_REGISTERED_LETTER.equals(messageEntity.getMessageType())) {
+			final var letterStatuses = digitalRegisteredLetterIntegration.getLetterStatuses(municipalityId, List.of(messageId));
+			letterStatuses.stream()
+				.filter(letterStatus -> messageId.equals(letterStatus.getLetterId()))
+				.findFirst()
+				.ifPresent(letterStatus -> messageDetails.setSigningStatus(historyMapper.toSigningStatus(letterStatus)));
+		}
+
+		return messageDetails;
 	}
 
 	public SigningInformation getSigningInformation(final String municipalityId, final String messageId) {

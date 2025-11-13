@@ -1,5 +1,7 @@
 package se.sundsvall.postportalservice.api.model;
 
+import static io.swagger.v3.oas.annotations.media.Schema.RequiredMode.NOT_REQUIRED;
+
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDateTime;
@@ -17,6 +19,9 @@ public class MessageDetails {
 
 	@Schema(description = "When the message was sent", accessMode = Schema.AccessMode.READ_ONLY, example = "2021-01-01T12:00:00")
 	private LocalDateTime sentAt;
+
+	@Schema(description = "Status for signing process. Only applicable for message type DIGITAL_REGISTERED_LETTER", requiredMode = NOT_REQUIRED, accessMode = Schema.AccessMode.READ_ONLY)
+	private SigningStatus signingStatus;
 
 	@ArraySchema(schema = @Schema(description = "List of attachment details", implementation = AttachmentDetails.class, accessMode = Schema.AccessMode.READ_ONLY))
 	private List<AttachmentDetails> attachments;
@@ -67,6 +72,19 @@ public class MessageDetails {
 		this.sentAt = sentAt;
 	}
 
+	public SigningStatus getSigningStatus() {
+		return signingStatus;
+	}
+
+	public MessageDetails withSigningStatus(SigningStatus signingStatus) {
+		this.signingStatus = signingStatus;
+		return this;
+	}
+
+	public void setSigningStatus(SigningStatus signingStatus) {
+		this.signingStatus = signingStatus;
+	}
+
 	public List<AttachmentDetails> getAttachments() {
 		return attachments;
 	}
@@ -99,6 +117,7 @@ public class MessageDetails {
 			"subject='" + subject + '\'' +
 			", body='" + body + '\'' +
 			", sentAt=" + sentAt +
+			", signingStatus=" + signingStatus +
 			", attachments=" + attachments +
 			", recipients=" + recipients +
 			'}';
@@ -109,12 +128,13 @@ public class MessageDetails {
 		if (o == null || getClass() != o.getClass())
 			return false;
 		MessageDetails that = (MessageDetails) o;
-		return Objects.equals(subject, that.subject) && Objects.equals(body, that.body) && Objects.equals(sentAt, that.sentAt) && Objects.equals(attachments, that.attachments) && Objects.equals(recipients, that.recipients);
+		return Objects.equals(subject, that.subject) && Objects.equals(body, that.body) && Objects.equals(sentAt, that.sentAt) && Objects.equals(signingStatus, that.signingStatus) && Objects.equals(attachments, that.attachments) && Objects.equals(
+			recipients, that.recipients);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(subject, body, sentAt, attachments, recipients);
+		return Objects.hash(subject, body, sentAt, signingStatus, attachments, recipients);
 	}
 
 	public static class AttachmentDetails {

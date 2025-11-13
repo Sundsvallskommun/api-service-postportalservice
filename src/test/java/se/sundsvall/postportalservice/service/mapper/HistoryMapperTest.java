@@ -150,12 +150,13 @@ class HistoryMapperTest {
 		final var result = HISTORY_MAPPER.toMessageDetails(messageEntity);
 
 		// Assert
-		assertThat(result).isNotNull().hasNoNullFieldsOrProperties();
+		assertThat(result).hasNoNullFieldsOrPropertiesExcept("signingStatus");
 		assertThat(result.getSentAt()).isEqualTo(created.toLocalDateTime());
 		assertThat(result.getSubject()).isEqualTo(subject);
 		assertThat(result.getBody()).isEqualTo(body);
 		assertThat(result.getAttachments()).hasSize(1);
 		assertThat(result.getRecipients()).hasSize(1);
+		assertThat(result.getSigningStatus()).isNull(); // Signing status is set by the service layer, not mapper
 	}
 
 	@Test

@@ -1,0 +1,15 @@
+{
+	"subject": "This is the subject",
+	"sentAt": "2025-09-07T12:00:00",
+	"signingStatus": {
+		"letterState": "SIGNED",
+		"signingProcessState": "COMPLETED"
+	},
+	"attachments": [],
+	"recipients": [
+		{
+			"messageType": "DIGITAL_REGISTERED_LETTER",
+			"status": "SENT"
+		}
+	]
+}
