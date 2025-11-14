@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.params.provider.EnumSource.Mode.EXCLUDE;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -103,33 +104,35 @@ class HistoryServiceTest {
 			});
 		});
 		verify(messageRepositoryMock).findAllByMunicipalityIdAndUserUsernameIgnoreCase(eq(MUNICIPALITY_ID), eq(username), any(Pageable.class));
-		verify(digitalRegisteredLetterIntegrationMock).getLetterStatuses(MUNICIPALITY_ID, emptyList());
 		verify(historyMapperMock).toMessageList(messageEntities);
 		verify(historyMapperMock).toMessage(messageEntity);
-		verify(pageMock).getContent();
+		verify(pageMock, times(2)).getContent();
 	}
 
 	@Test
 	void getUserMessages_digitalRegisteredLettersCommunicationWithMatchingLetterStatus() {
 		final var username = "username";
 		final var messageId = "messageId";
+		final var letterId = "letterId123";
 		final var letterState = "letterState";
 		final var signingProcessState = "signingProcessState";
+		final var recipientEntity = new RecipientEntity().withExternalId(letterId);
 		final var messageEntity = MessageEntity.create()
 			.withCreated(OffsetDateTime.now())
 			.withSubject("subject")
 			.withMessageType(MessageType.DIGITAL_REGISTERED_LETTER)
-			.withId(messageId);
+			.withId(messageId)
+			.withRecipients(List.of(recipientEntity));
 		final var messageEntities = List.of(messageEntity);
 		final var letterStatus = new LetterStatus()
-			.letterId(messageId)
+			.letterId(letterId)
 			.status(letterState);
 		final var signingStatus = SigningStatus.create()
 			.withLetterState(letterState)
 			.withSigningProcessState(signingProcessState);
 
 		when(messageRepositoryMock.findAllByMunicipalityIdAndUserUsernameIgnoreCase(eq(MUNICIPALITY_ID), eq(username), any(Pageable.class))).thenReturn(pageMock);
-		when(digitalRegisteredLetterIntegrationMock.getLetterStatuses(MUNICIPALITY_ID, List.of(messageId))).thenReturn(List.of(letterStatus));
+		when(digitalRegisteredLetterIntegrationMock.getLetterStatuses(MUNICIPALITY_ID, List.of(letterId))).thenReturn(List.of(letterStatus));
 		when(historyMapperMock.toSigningStatus(letterStatus)).thenReturn(signingStatus);
 
 		when(pageMock.getContent()).thenReturn(messageEntities);
@@ -162,30 +165,33 @@ class HistoryServiceTest {
 			});
 		});
 		verify(messageRepositoryMock).findAllByMunicipalityIdAndUserUsernameIgnoreCase(eq(MUNICIPALITY_ID), eq(username), any(Pageable.class));
-		verify(digitalRegisteredLetterIntegrationMock).getLetterStatuses(MUNICIPALITY_ID, List.of(messageId));
+		verify(digitalRegisteredLetterIntegrationMock).getLetterStatuses(MUNICIPALITY_ID, List.of(letterId));
 		verify(historyMapperMock).toMessageList(messageEntities);
 		verify(historyMapperMock).toMessage(messageEntity);
 		verify(historyMapperMock).toSigningStatus(letterStatus);
-		verify(pageMock).getContent();
+		verify(pageMock, times(2)).getContent();
 	}
 
 	@Test
 	void getUserMessages_digitalRegisteredLettersCommunicationWithNonMatchingStatus() {
 		final var username = "username";
 		final var messageId = "messageId";
+		final var letterId = "letterId123";
 		final var status = "COMPLETED";
+		final var recipientEntity = new RecipientEntity().withExternalId(letterId);
 		final var messageEntity = MessageEntity.create()
 			.withCreated(OffsetDateTime.now())
 			.withSubject("subject")
 			.withMessageType(MessageType.DIGITAL_REGISTERED_LETTER)
-			.withId(messageId);
+			.withId(messageId)
+			.withRecipients(List.of(recipientEntity));
 		final var messageEntities = List.of(messageEntity);
 		final var letterStatus = new LetterStatus()
-			.letterId("otherMessageId")
+			.letterId("otherLetterId")
 			.status(status);
 
 		when(messageRepositoryMock.findAllByMunicipalityIdAndUserUsernameIgnoreCase(eq(MUNICIPALITY_ID), eq(username), any(Pageable.class))).thenReturn(pageMock);
-		when(digitalRegisteredLetterIntegrationMock.getLetterStatuses(MUNICIPALITY_ID, List.of(messageId))).thenReturn(List.of(letterStatus));
+		when(digitalRegisteredLetterIntegrationMock.getLetterStatuses(MUNICIPALITY_ID, List.of(letterId))).thenReturn(List.of(letterStatus));
 		when(pageMock.getContent()).thenReturn(messageEntities);
 		when(pageMock.getSort()).thenReturn(Sort.unsorted());
 		when(pageMock.getSize()).thenReturn(1);
@@ -213,10 +219,10 @@ class HistoryServiceTest {
 			});
 		});
 		verify(messageRepositoryMock).findAllByMunicipalityIdAndUserUsernameIgnoreCase(eq(MUNICIPALITY_ID), eq(username), any(Pageable.class));
-		verify(digitalRegisteredLetterIntegrationMock).getLetterStatuses(MUNICIPALITY_ID, List.of(messageId));
+		verify(digitalRegisteredLetterIntegrationMock).getLetterStatuses(MUNICIPALITY_ID, List.of(letterId));
 		verify(historyMapperMock).toMessageList(messageEntities);
 		verify(historyMapperMock).toMessage(messageEntity);
-		verify(pageMock).getContent();
+		verify(pageMock, times(2)).getContent();
 	}
 
 	@Test
@@ -262,25 +268,27 @@ class HistoryServiceTest {
 	@Test
 	void getMessageDetails_withDigitalRegisteredLetterAndSigningStatus() {
 		final var messageId = "messageId";
+		final var letterId = "letterId123";
 		final var userId = "userId";
 		final var letterState = "letterState";
 		final var signingProcessState = "signingProcessState";
+		final var recipientEntity = new RecipientEntity().withExternalId(letterId);
 		final var message = MessageEntity.create()
 			.withSubject("subject")
 			.withCreated(OffsetDateTime.now())
 			.withAttachments(List.of())
-			.withRecipients(List.of())
+			.withRecipients(List.of(recipientEntity))
 			.withMessageType(DIGITAL_REGISTERED_LETTER)
 			.withId(messageId);
 		final var letterStatus = new LetterStatus()
-			.letterId(messageId)
+			.letterId(letterId)
 			.status(letterState);
 		final var signingStatus = SigningStatus.create()
 			.withLetterState(letterState)
 			.withSigningProcessState(signingProcessState);
 
 		when(messageRepositoryMock.findByMunicipalityIdAndIdAndUserUsernameIgnoreCase(MUNICIPALITY_ID, messageId, userId)).thenReturn(Optional.of(message));
-		when(digitalRegisteredLetterIntegrationMock.getLetterStatuses(MUNICIPALITY_ID, List.of(messageId))).thenReturn(List.of(letterStatus));
+		when(digitalRegisteredLetterIntegrationMock.getLetterStatuses(MUNICIPALITY_ID, List.of(letterId))).thenReturn(List.of(letterStatus));
 		when(historyMapperMock.toSigningStatus(letterStatus)).thenReturn(signingStatus);
 
 		final var result = historyService.getMessageDetails(MUNICIPALITY_ID, userId, messageId);
@@ -289,34 +297,37 @@ class HistoryServiceTest {
 			assertThat(messageDetails.getSubject()).isEqualTo(message.getSubject());
 			assertThat(messageDetails.getSentAt()).isEqualTo(message.getCreated().toLocalDateTime());
 			assertThat(messageDetails.getAttachments()).isEmpty();
-			assertThat(messageDetails.getRecipients()).isEmpty();
+			assertThat(messageDetails.getRecipients()).hasSize(1);
 			assertThat(messageDetails.getSigningStatus()).isNotNull().satisfies(status -> {
 				assertThat(status.getLetterState()).isEqualTo(letterState);
 				assertThat(status.getSigningProcessState()).isEqualTo(signingProcessState);
 			});
 		});
 		verify(messageRepositoryMock).findByMunicipalityIdAndIdAndUserUsernameIgnoreCase(MUNICIPALITY_ID, messageId, userId);
-		verify(digitalRegisteredLetterIntegrationMock).getLetterStatuses(MUNICIPALITY_ID, List.of(messageId));
+		verify(digitalRegisteredLetterIntegrationMock).getLetterStatuses(MUNICIPALITY_ID, List.of(letterId));
 		verify(historyMapperMock).toMessageDetails(message);
 		verify(historyMapperMock).toAttachmentList(message.getAttachments());
 		verify(historyMapperMock).toRecipientList(message.getRecipients());
+		verify(historyMapperMock).toRecipient(recipientEntity);
 		verify(historyMapperMock).toSigningStatus(letterStatus);
 	}
 
 	@Test
 	void getMessageDetails_withDigitalRegisteredLetterButNoSigningStatus() {
 		final var messageId = "messageId";
+		final var letterId = "letterId123";
 		final var userId = "userId";
+		final var recipientEntity = new RecipientEntity().withExternalId(letterId);
 		final var message = MessageEntity.create()
 			.withSubject("subject")
 			.withCreated(OffsetDateTime.now())
 			.withAttachments(List.of())
-			.withRecipients(List.of())
+			.withRecipients(List.of(recipientEntity))
 			.withMessageType(DIGITAL_REGISTERED_LETTER)
 			.withId(messageId);
 
 		when(messageRepositoryMock.findByMunicipalityIdAndIdAndUserUsernameIgnoreCase(MUNICIPALITY_ID, messageId, userId)).thenReturn(Optional.of(message));
-		when(digitalRegisteredLetterIntegrationMock.getLetterStatuses(MUNICIPALITY_ID, List.of(messageId))).thenReturn(emptyList());
+		when(digitalRegisteredLetterIntegrationMock.getLetterStatuses(MUNICIPALITY_ID, List.of(letterId))).thenReturn(emptyList());
 
 		final var result = historyService.getMessageDetails(MUNICIPALITY_ID, userId, messageId);
 
@@ -324,14 +335,15 @@ class HistoryServiceTest {
 			assertThat(messageDetails.getSubject()).isEqualTo(message.getSubject());
 			assertThat(messageDetails.getSentAt()).isEqualTo(message.getCreated().toLocalDateTime());
 			assertThat(messageDetails.getAttachments()).isEmpty();
-			assertThat(messageDetails.getRecipients()).isEmpty();
+			assertThat(messageDetails.getRecipients()).hasSize(1);
 			assertThat(messageDetails.getSigningStatus()).isNull();
 		});
 		verify(messageRepositoryMock).findByMunicipalityIdAndIdAndUserUsernameIgnoreCase(MUNICIPALITY_ID, messageId, userId);
-		verify(digitalRegisteredLetterIntegrationMock).getLetterStatuses(MUNICIPALITY_ID, List.of(messageId));
+		verify(digitalRegisteredLetterIntegrationMock).getLetterStatuses(MUNICIPALITY_ID, List.of(letterId));
 		verify(historyMapperMock).toMessageDetails(message);
 		verify(historyMapperMock).toAttachmentList(message.getAttachments());
 		verify(historyMapperMock).toRecipientList(message.getRecipients());
+		verify(historyMapperMock).toRecipient(recipientEntity);
 	}
 
 	@Test
