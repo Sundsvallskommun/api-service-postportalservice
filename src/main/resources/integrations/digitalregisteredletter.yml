@@ -7,7 +7,7 @@ info:
     url: https://opensource.org/licenses/MIT
   version: "2.5"
 servers:
-  - url: http://localhost:57005
+  - url: http://localhost:59565
     description: Generated server url
 tags:
   - name: Scheduler Resource
@@ -405,12 +405,7 @@ paths:
             type: string
       responses:
         "200":
-          description: Successful Operation - OK
-          content:
-            '*/*':
-              schema:
-                type: string
-                format: binary
+          description: Successful Operation
         "404":
           description: Not Found
           content:
@@ -456,12 +451,7 @@ paths:
             type: string
       responses:
         "200":
-          description: Successful Operation - OK
-          content:
-            '*/*':
-              schema:
-                type: string
-                format: binary
+          description: Successful Operation
         "404":
           description: Not Found
           content:
@@ -514,6 +504,10 @@ components:
     Problem:
       type: object
       properties:
+        title:
+          type: string
+        detail:
+          type: string
         instance:
           type: string
           format: uri
@@ -524,10 +518,6 @@ components:
           type: object
           additionalProperties:
             type: object
-        title:
-          type: string
-        detail:
-          type: string
         status:
           $ref: "#/components/schemas/StatusType"
     StatusType:
@@ -578,6 +568,8 @@ components:
           type: string
         message:
           type: string
+        detail:
+          type: string
         instance:
           type: string
           format: uri
@@ -585,8 +577,6 @@ components:
           type: object
           additionalProperties:
             type: object
-        detail:
-          type: string
         suppressed:
           type: array
           items:
@@ -649,6 +639,10 @@ components:
                 type: boolean
         message:
           type: string
+        title:
+          type: string
+        detail:
+          type: string
         instance:
           type: string
           format: uri
@@ -659,10 +653,6 @@ components:
           type: object
           additionalProperties:
             type: object
-        title:
-          type: string
-        detail:
-          type: string
         status:
           $ref: "#/components/schemas/StatusType"
         suppressed:
@@ -714,14 +704,12 @@ components:
           example: 43a32404-28ee-480f-a095-00d48109afab
         status:
           type: string
-          description: Delivery status of the letter. NOT_FOUND if the letter could
-            not be found
-          example: NEW
+          description: Delivery status of the letter
+          example: SENT
         signingInformation:
           type: string
-          description: Information about the signing process. NOT_FOUND if there is
-            no signing information available
-          example: COMPLETED
+          description: Information about the signing process
+          example: PENDING
       description: Letter status
     LetterRequest:
       required:

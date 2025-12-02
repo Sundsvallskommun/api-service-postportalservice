@@ -27,9 +27,9 @@ public class HistoryMapper {
 			.toList();
 	}
 
-	public Message toMessage(final MessageEntity nullableMessageEntity) {
-		return ofNullable(nullableMessageEntity)
-			.map(messageEntity -> Message.create()
+	public Message toMessage(final MessageEntity messageEntity) {
+		return ofNullable(messageEntity)
+			.map(message -> Message.create()
 				.withMessageId(messageEntity.getId())
 				.withNumberOfRecipients(ofNullable(messageEntity.getRecipients()).map(List::size).orElse(0))
 				.withType(ofNullable(messageEntity.getMessageType()).map(MessageType::name).orElse(null))
@@ -38,9 +38,9 @@ public class HistoryMapper {
 			.orElse(null);
 	}
 
-	public MessageDetails toMessageDetails(final MessageEntity nullableMessageEntity) {
-		return ofNullable(nullableMessageEntity)
-			.map(messageEntity -> MessageDetails.create()
+	public MessageDetails toMessageDetails(final MessageEntity messageEntity) {
+		return ofNullable(messageEntity)
+			.map(message -> MessageDetails.create()
 				.withSubject(messageEntity.getSubject())
 				.withBody(messageEntity.getBody())
 				.withSentAt(ofNullable(messageEntity.getCreated()).map(OffsetDateTime::toLocalDateTime).orElse(null))
@@ -56,9 +56,9 @@ public class HistoryMapper {
 			.toList();
 	}
 
-	public MessageDetails.AttachmentDetails toAttachment(final AttachmentEntity nullableAttachmentEntity) {
-		return ofNullable(nullableAttachmentEntity)
-			.map(attachmentEntity -> MessageDetails.AttachmentDetails.create()
+	public MessageDetails.AttachmentDetails toAttachment(final AttachmentEntity attachmentEntity) {
+		return ofNullable(attachmentEntity)
+			.map(attachment -> MessageDetails.AttachmentDetails.create()
 				.withFileName(attachmentEntity.getFileName())
 				.withContentType(attachmentEntity.getContentType())
 				.withAttachmentId(attachmentEntity.getId()))
@@ -72,9 +72,9 @@ public class HistoryMapper {
 			.toList();
 	}
 
-	public MessageDetails.RecipientDetails toRecipient(final RecipientEntity nullableRecipientEntity) {
-		return ofNullable(nullableRecipientEntity)
-			.map(recipientEntity -> MessageDetails.RecipientDetails.create()
+	public MessageDetails.RecipientDetails toRecipient(final RecipientEntity recipientEntity) {
+		return ofNullable(recipientEntity)
+			.map(recipient -> MessageDetails.RecipientDetails.create()
 				.withPartyId(recipientEntity.getPartyId())
 				.withCity(recipientEntity.getCity())
 				.withStreetAddress(recipientEntity.getStreetAddress())
@@ -86,9 +86,9 @@ public class HistoryMapper {
 			.orElse(null);
 	}
 
-	public SigningStatus toSigningStatus(LetterStatus nullableLetterStatus) {
-		return ofNullable(nullableLetterStatus)
-			.map(letterStatus -> SigningStatus.create()
+	public SigningStatus toSigningStatus(final LetterStatus letterStatus) {
+		return ofNullable(letterStatus)
+			.map(status -> SigningStatus.create()
 				.withLetterState(letterStatus.getStatus())
 				.withSigningProcessState(letterStatus.getSigningInformation()))
 			.orElse(null);
