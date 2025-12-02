@@ -13,10 +13,12 @@ public class Message {
 	@Schema(description = "Message ID", accessMode = READ_ONLY, example = "123456")
 	private String messageId;
 
-	@Schema(description = "The subject", accessMode = READ_ONLY, example = "Viktig information")
+	@Schema(description = "The subject", accessMode = READ_ONLY, example = "Important information")
 	private String subject;
 
-	@Schema(description = "Type of message", accessMode = READ_ONLY, example = "SMS|LETTER|DIGITAL_REGISTERED_LETTER")
+	@Schema(description = "Type of message", accessMode = READ_ONLY, examples = {
+		"SMS", "LETTER", "DIGITAL_REGISTERED_LETTER"
+	})
 	private String type;
 
 	@Schema(description = "When the message was sent", accessMode = READ_ONLY, example = "2021-01-01T12:00:00")
@@ -117,8 +119,12 @@ public class Message {
 
 	@Override
 	public boolean equals(Object obj) {
-		if (this == obj) { return true; }
-		if (!(obj instanceof final Message other)) { return false; }
+		if (this == obj) {
+			return true;
+		}
+		if (!(obj instanceof final Message other)) {
+			return false;
+		}
 		return Objects.equals(messageId, other.messageId) && numberOfRecipients == other.numberOfRecipients && Objects.equals(sentAt, other.sentAt) && Objects.equals(signingStatus, other.signingStatus) && Objects.equals(subject, other.subject) && Objects
 			.equals(type, other.type);
 	}

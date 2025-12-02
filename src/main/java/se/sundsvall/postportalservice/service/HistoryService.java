@@ -6,6 +6,7 @@ import static se.sundsvall.postportalservice.integration.db.converter.MessageTyp
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -40,7 +41,6 @@ public class HistoryService {
 
 	public Messages getUserMessages(final String municipalityId, final String username, final Pageable pageable) {
 		final var page = messageRepository.findAllByMunicipalityIdAndUserUsernameIgnoreCase(municipalityId, username, pageable);
-
 		final var messages = decorateWithSigningInformation(municipalityId, page);
 
 		return Messages.create()
@@ -51,7 +51,7 @@ public class HistoryService {
 	private List<Message> decorateWithSigningInformation(final String municipalityId, final Page<MessageEntity> page) {
 		final var messages = historyMapper.toMessageList(page.getContent());
 		final var messageById = messages.stream()
-			.collect(Collectors.toMap(Message::getMessageId, m -> m));
+			.collect(Collectors.toMap(Message::getMessageId, Function.identity()));
 
 		final var letterIdToMessageMap = page.getContent().stream()
 			.filter(entity -> DIGITAL_REGISTERED_LETTER.equals(entity.getMessageType()))
