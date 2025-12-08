@@ -234,10 +234,14 @@ public class MessageDetails {
 		@Schema(description = "City", accessMode = Schema.AccessMode.READ_ONLY, examples = "Sundsvall")
 		private String city;
 
-		@Schema(description = "Message type", accessMode = Schema.AccessMode.READ_ONLY, examples = "SNAIL_MAIL|DIGITAL_MAIL|SMS")
+		@Schema(description = "Message type", accessMode = Schema.AccessMode.READ_ONLY, examples = {
+			"SNAIL_MAIL", "DIGITAL_MAIL", "SMS"
+		})
 		private String messageType;
 
-		@Schema(description = "Status of the message to this recipient", accessMode = Schema.AccessMode.READ_ONLY, examples = "SENT|NOT_SENT|FAILED")
+		@Schema(description = "Status of the message to this recipient", accessMode = Schema.AccessMode.READ_ONLY, examples = {
+			"SENT", "NOT_SENT", "FAILED"
+		})
 		private String status;
 
 		public static RecipientDetails create() {

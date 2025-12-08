@@ -13,10 +13,12 @@ public class Message {
 	@Schema(description = "Message ID", accessMode = READ_ONLY, examples = "123456")
 	private String messageId;
 
-	@Schema(description = "The subject", accessMode = READ_ONLY, examples = "Viktig information")
+	@Schema(description = "The subject", accessMode = READ_ONLY, examples = "Important information")
 	private String subject;
 
-	@Schema(description = "Type of message", accessMode = READ_ONLY, examples = "SMS|LETTER|DIGITAL_REGISTERED_LETTER")
+	@Schema(description = "Type of message", accessMode = READ_ONLY, examples = {
+		"SMS", "LETTER", "DIGITAL_REGISTERED_LETTER"
+	})
 	private String type;
 
 	@Schema(description = "When the message was sent", accessMode = READ_ONLY, examples = "2021-01-01T12:00:00")
@@ -129,9 +131,8 @@ public class Message {
 
 	@Override
 	public String toString() {
-		final String builder = "Message [messageId=" + messageId + ", subject=" + subject + ", type=" + type + ", sentAt=" + sentAt + ", signingStatus=" + signingStatus + ", numberOfRecipients="
+		return "Message [messageId=" + messageId + ", subject=" + subject + ", type=" + type + ", sentAt=" + sentAt + ", signingStatus=" + signingStatus + ", numberOfRecipients="
 			+ numberOfRecipients + "]";
-		return builder;
 	}
 
 }

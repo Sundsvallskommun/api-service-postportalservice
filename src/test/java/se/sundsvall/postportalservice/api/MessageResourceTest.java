@@ -93,7 +93,7 @@ class MessageResourceTest {
 			.exchange()
 			.expectStatus().isCreated()
 			.expectHeader().contentType(ALL_VALUE)
-			.expectHeader().location("/2281/history/messages/messageId");
+			.expectHeader().location("/2281/history/users/joe01doe/messages/messageId");
 
 		final var capturedRequest = letterRequestCaptor.getValue();
 		assertThat(capturedRequest).isEqualTo(letterRequest);
@@ -307,7 +307,7 @@ class MessageResourceTest {
 			.exchange()
 			.expectStatus().isCreated()
 			.expectHeader().contentType(ALL_VALUE)
-			.expectHeader().location("/2281/history/messages/messageId");
+			.expectHeader().location("/2281/history/users/joe01doe/messages/messageId");
 
 		final var capturedRequest = digitalRegisteredLRequestCaptor.getValue();
 		assertThat(capturedRequest).isEqualTo(digitalRegisteredLetterRequest);
@@ -492,7 +492,7 @@ class MessageResourceTest {
 			.exchange()
 			.expectStatus().isCreated()
 			.expectHeader().contentType(ALL_VALUE)
-			.expectHeader().location("/2281/history/messages/messageId");
+			.expectHeader().location("/2281/history/users/joe01doe/messages/messageId");
 
 		verify(messageServiceMock).processSmsRequest(MUNICIPALITY_ID, request);
 	}

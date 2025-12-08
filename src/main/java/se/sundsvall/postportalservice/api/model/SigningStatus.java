@@ -8,10 +8,14 @@ import java.util.Objects;
 @Schema(description = "Signing status model")
 public class SigningStatus {
 
-	@Schema(description = "Present state for the letter", examples = "NEW|SENT|SIGNED|EXPIRED|FAILED - Client Error|FAILED - Server Error|FAILED - Unknown Error", accessMode = READ_ONLY)
+	@Schema(description = "Present state for the letter", examples = {
+		"NEW", "SENT", "SIGNED", "EXPIRED", "FAILED - Client Error", "FAILED - Server Error", "FAILED - Unknown Error"
+	}, accessMode = READ_ONLY)
 	private String letterState;
 
-	@Schema(description = "Present state for the signing process", examples = "PENDING|COMPLETED|FAILED", accessMode = READ_ONLY)
+	@Schema(description = "Present state for the signing process", examples = {
+		"PENDING", "COMPLETED", "FAILED"
+	}, accessMode = READ_ONLY)
 	private String signingProcessState;
 
 	public static SigningStatus create() {
@@ -39,8 +43,8 @@ public class SigningStatus {
 		this.signingProcessState = signingProcessState;
 	}
 
-	public SigningStatus withSigningProcessState(final String signingprocessState) {
-		this.signingProcessState = signingprocessState;
+	public SigningStatus withSigningProcessState(final String signingProcessState) {
+		this.signingProcessState = signingProcessState;
 		return this;
 	}
 
@@ -62,7 +66,9 @@ public class SigningStatus {
 
 	@Override
 	public String toString() {
-		return "SigningStatus [letterState=" + letterState + ", signingProcessState=" + signingProcessState + "]";
+		return "SigningStatus{" +
+			"letterState='" + letterState + '\'' +
+			", signingProcessState='" + signingProcessState + '\'' +
+			'}';
 	}
-
 }

@@ -51,7 +51,7 @@ import se.sundsvall.postportalservice.service.MessageService;
 @ApiResponse(responseCode = "502", description = "Bad Gateway", content = @Content(mediaType = APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = Problem.class)))
 class MessageResource {
 
-	private static final String MESSAGE_HISTORY_PATH = "/{municipalityId}/history/messages/{messageId}"; // NOSONAR
+	private static final String MESSAGE_HISTORY_PATH = "/{municipalityId}/history/users/{userId}/messages/{messageId}"; // NOSONAR
 	private final MessageService messageService;
 
 	MessageResource(final MessageService messageService) {
@@ -72,7 +72,7 @@ class MessageResource {
 		final var messageId = messageService.processLetterRequest(municipalityId, request, attachments);
 
 		return created(fromPath(MESSAGE_HISTORY_PATH)
-			.buildAndExpand(municipalityId, messageId).toUri())
+			.buildAndExpand(municipalityId, Identifier.get().getValue(), messageId).toUri())
 			.header(CONTENT_TYPE, ALL_VALUE)
 			.build();
 	}
@@ -92,7 +92,7 @@ class MessageResource {
 		final var messageId = messageService.processCsvLetterRequest(municipalityId, request, csvFile, attachments);
 
 		return created(fromPath(MESSAGE_HISTORY_PATH)
-			.buildAndExpand(municipalityId, messageId).toUri())
+			.buildAndExpand(municipalityId, Identifier.get().getValue(), messageId).toUri())
 			.header(CONTENT_TYPE, ALL_VALUE)
 			.build();
 	}
@@ -111,7 +111,7 @@ class MessageResource {
 		final var messageId = messageService.processDigitalRegisteredLetterRequest(municipalityId, request, attachments);
 
 		return created(fromPath(MESSAGE_HISTORY_PATH)
-			.buildAndExpand(municipalityId, messageId).toUri())
+			.buildAndExpand(municipalityId, Identifier.get().getValue(), messageId).toUri())
 			.header(CONTENT_TYPE, ALL_VALUE)
 			.build();
 	}
@@ -129,7 +129,7 @@ class MessageResource {
 		final var messageId = messageService.processSmsRequest(municipalityId, request);
 
 		return created(fromPath(MESSAGE_HISTORY_PATH)
-			.buildAndExpand(municipalityId, messageId).toUri())
+			.buildAndExpand(municipalityId, Identifier.get().getValue(), messageId).toUri())
 			.header(CONTENT_TYPE, ALL_VALUE)
 			.build();
 	}
