@@ -11,7 +11,7 @@ import java.util.Objects;
 @Schema(description = "SMS request model")
 public class SmsRequest {
 
-	@Schema(description = "The message to be sent", example = "This is the message to be sent")
+	@Schema(description = "The message to be sent", examples = "This is the message to be sent")
 	@NotBlank
 	private String message;
 

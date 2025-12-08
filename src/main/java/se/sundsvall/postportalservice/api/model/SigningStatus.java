@@ -8,10 +8,10 @@ import java.util.Objects;
 @Schema(description = "Signing status model")
 public class SigningStatus {
 
-	@Schema(description = "Present state for the letter", example = "NEW|SENT|SIGNED|EXPIRED|FAILED - Client Error|FAILED - Server Error|FAILED - Unknown Error", accessMode = READ_ONLY)
+	@Schema(description = "Present state for the letter", examples = "NEW|SENT|SIGNED|EXPIRED|FAILED - Client Error|FAILED - Server Error|FAILED - Unknown Error", accessMode = READ_ONLY)
 	private String letterState;
 
-	@Schema(description = "Present state for the signing process", example = "PENDING|COMPLETED|FAILED", accessMode = READ_ONLY)
+	@Schema(description = "Present state for the signing process", examples = "PENDING|COMPLETED|FAILED", accessMode = READ_ONLY)
 	private String signingProcessState;
 
 	public static SigningStatus create() {
@@ -22,11 +22,11 @@ public class SigningStatus {
 		return letterState;
 	}
 
-	public void setLetterState(String letterState) {
+	public void setLetterState(final String letterState) {
 		this.letterState = letterState;
 	}
 
-	public SigningStatus withLetterState(String letterState) {
+	public SigningStatus withLetterState(final String letterState) {
 		this.letterState = letterState;
 		return this;
 	}
@@ -35,11 +35,11 @@ public class SigningStatus {
 		return signingProcessState;
 	}
 
-	public void setSigningProcessState(String signingProcessState) {
+	public void setSigningProcessState(final String signingProcessState) {
 		this.signingProcessState = signingProcessState;
 	}
 
-	public SigningStatus withSigningProcessState(String signingprocessState) {
+	public SigningStatus withSigningProcessState(final String signingprocessState) {
 		this.signingProcessState = signingprocessState;
 		return this;
 	}
@@ -50,17 +50,19 @@ public class SigningStatus {
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) { return true; }
-		if (!(obj instanceof final SigningStatus other)) { return false; }
+	public boolean equals(final Object obj) {
+		if (this == obj) {
+			return true;
+		}
+		if (!(obj instanceof final SigningStatus other)) {
+			return false;
+		}
 		return Objects.equals(letterState, other.letterState) && Objects.equals(signingProcessState, other.signingProcessState);
 	}
 
 	@Override
 	public String toString() {
-		final var builder = new StringBuilder();
-		builder.append("SigningStatus [letterState=").append(letterState).append(", signingProcessState=").append(signingProcessState).append("]");
-		return builder.toString();
+		return "SigningStatus [letterState=" + letterState + ", signingProcessState=" + signingProcessState + "]";
 	}
 
 }

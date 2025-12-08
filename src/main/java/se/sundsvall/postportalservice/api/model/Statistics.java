@@ -6,22 +6,22 @@ import java.util.Objects;
 @Schema(description = "Statistics model")
 public class Statistics {
 
-	@Schema(description = "Entity id", example = "f40e6975-a82a-4167-8622-4b0e71ab8d92")
+	@Schema(description = "Entity id", examples = "f40e6975-a82a-4167-8622-4b0e71ab8d92")
 	private String id;
 
-	@Schema(description = "Entity name", example = "Test Department")
+	@Schema(description = "Entity name", examples = "Test Department")
 	private String name;
 
-	@Schema(description = "Number of snail mail sent", example = "50")
+	@Schema(description = "Number of snail mail sent", examples = "50")
 	private Long snailMail;
 
-	@Schema(description = "Number of digital mail sent", example = "30")
+	@Schema(description = "Number of digital mail sent", examples = "30")
 	private Long digitalMail;
 
-	@Schema(description = "Number of text messages", example = "20")
+	@Schema(description = "Number of text messages", examples = "20")
 	private Long sms;
 
-	@Schema(description = "Number of registered letters sent", example = "5")
+	@Schema(description = "Number of registered letters sent", examples = "5")
 	private Long digitalRegisteredLetter;
 
 	public static Statistics create() {

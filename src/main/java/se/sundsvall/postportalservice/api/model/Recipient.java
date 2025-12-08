@@ -12,11 +12,11 @@ import se.sundsvall.postportalservice.api.validation.groups.SnailMailGroup;
 @ValidRecipient
 public class Recipient {
 
-	@Schema(description = "PartyId is the unique identifier for the recipient", example = "6d0773d6-3e7f-4552-81bc-f0007af95adf")
+	@Schema(description = "PartyId is the unique identifier for the recipient", examples = "6d0773d6-3e7f-4552-81bc-f0007af95adf")
 	@ValidUuid
 	private String partyId;
 
-	@Schema(description = "Delivery method for the recipient", example = "DIGITAL_MAIL", implementation = DeliveryMethod.class)
+	@Schema(description = "Delivery method for the recipient", examples = "DIGITAL_MAIL", implementation = DeliveryMethod.class)
 	@NotNull
 	private DeliveryMethod deliveryMethod;
 

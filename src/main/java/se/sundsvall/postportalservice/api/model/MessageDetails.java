@@ -11,13 +11,13 @@ import java.util.Objects;
 @Schema(description = "Message details model")
 public class MessageDetails {
 
-	@Schema(description = "Message subject", accessMode = Schema.AccessMode.READ_ONLY, example = "This is a subject")
+	@Schema(description = "Message subject", accessMode = Schema.AccessMode.READ_ONLY, examples = "This is a subject")
 	private String subject;
 
-	@Schema(description = "Message body", accessMode = Schema.AccessMode.READ_ONLY, example = "This is the message body")
+	@Schema(description = "Message body", accessMode = Schema.AccessMode.READ_ONLY, examples = "This is the message body")
 	private String body;
 
-	@Schema(description = "When the message was sent", accessMode = Schema.AccessMode.READ_ONLY, example = "2021-01-01T12:00:00")
+	@Schema(description = "When the message was sent", accessMode = Schema.AccessMode.READ_ONLY, examples = "2021-01-01T12:00:00")
 	private LocalDateTime sentAt;
 
 	@Schema(description = "Status for signing process. Only applicable for message type DIGITAL_REGISTERED_LETTER", requiredMode = NOT_REQUIRED, accessMode = Schema.AccessMode.READ_ONLY)
@@ -37,78 +37,78 @@ public class MessageDetails {
 		return subject;
 	}
 
-	public MessageDetails withSubject(String subject) {
+	public void setSubject(final String subject) {
 		this.subject = subject;
-		return this;
 	}
 
-	public void setSubject(String subject) {
+	public MessageDetails withSubject(final String subject) {
 		this.subject = subject;
+		return this;
 	}
 
 	public LocalDateTime getSentAt() {
 		return sentAt;
 	}
 
+	public void setSentAt(final LocalDateTime sentAt) {
+		this.sentAt = sentAt;
+	}
+
 	public String getBody() {
 		return body;
 	}
 
-	public MessageDetails withBody(String body) {
+	public void setBody(final String body) {
+		this.body = body;
+	}
+
+	public MessageDetails withBody(final String body) {
 		this.body = body;
 		return this;
 	}
 
-	public void setBody(String body) {
-		this.body = body;
-	}
-
-	public MessageDetails withSentAt(LocalDateTime sentAt) {
+	public MessageDetails withSentAt(final LocalDateTime sentAt) {
 		this.sentAt = sentAt;
 		return this;
-	}
-
-	public void setSentAt(LocalDateTime sentAt) {
-		this.sentAt = sentAt;
 	}
 
 	public SigningStatus getSigningStatus() {
 		return signingStatus;
 	}
 
-	public MessageDetails withSigningStatus(SigningStatus signingStatus) {
+	public void setSigningStatus(final SigningStatus signingStatus) {
 		this.signingStatus = signingStatus;
-		return this;
 	}
 
-	public void setSigningStatus(SigningStatus signingStatus) {
+	public MessageDetails withSigningStatus(final SigningStatus signingStatus) {
 		this.signingStatus = signingStatus;
+		return this;
 	}
 
 	public List<AttachmentDetails> getAttachments() {
 		return attachments;
 	}
 
-	public MessageDetails withAttachments(List<AttachmentDetails> attachments) {
+	public void setAttachments(final List<AttachmentDetails> attachments) {
 		this.attachments = attachments;
-		return this;
 	}
 
-	public void setAttachments(List<AttachmentDetails> attachments) {
+	public MessageDetails withAttachments(final List<AttachmentDetails> attachments) {
 		this.attachments = attachments;
+		return this;
 	}
 
 	public List<RecipientDetails> getRecipients() {
 		return recipients;
 	}
 
-	public MessageDetails withRecipients(List<RecipientDetails> recipients) {
+	public void setRecipients(final List<RecipientDetails> recipients) {
 		this.recipients = recipients;
-		return this;
 	}
 
-	public void setRecipients(List<RecipientDetails> recipients) {
+	public MessageDetails withRecipients(final List<RecipientDetails> recipients) {
 		this.recipients = recipients;
+		return this;
 	}
 
 	@Override
@@ -124,10 +124,10 @@ public class MessageDetails {
 	}
 
 	@Override
-	public boolean equals(Object o) {
+	public boolean equals(final Object o) {
 		if (o == null || getClass() != o.getClass())
 			return false;
-		MessageDetails that = (MessageDetails) o;
+		final MessageDetails that = (MessageDetails) o;
 		return Objects.equals(subject, that.subject) && Objects.equals(body, that.body) && Objects.equals(sentAt, that.sentAt) && Objects.equals(signingStatus, that.signingStatus) && Objects.equals(attachments, that.attachments) && Objects.equals(
 			recipients, that.recipients);
 	}
@@ -139,13 +139,13 @@ public class MessageDetails {
 
 	public static class AttachmentDetails {
 
-		@Schema(description = "Attachment ID", accessMode = Schema.AccessMode.READ_ONLY, example = "123e4567-e89b-12d3-a456-426614174000")
+		@Schema(description = "Attachment ID", accessMode = Schema.AccessMode.READ_ONLY, examples = "123e4567-e89b-12d3-a456-426614174000")
 		private String attachmentId;
 
-		@Schema(description = "File name of the attachment", accessMode = Schema.AccessMode.READ_ONLY, example = "document.pdf")
+		@Schema(description = "File name of the attachment", accessMode = Schema.AccessMode.READ_ONLY, examples = "document.pdf")
 		private String fileName;
 
-		@Schema(description = "MIME type of the attachment", accessMode = Schema.AccessMode.READ_ONLY, example = "application/pdf")
+		@Schema(description = "MIME type of the attachment", accessMode = Schema.AccessMode.READ_ONLY, examples = "application/pdf")
 		private String contentType;
 
 		public static AttachmentDetails create() {
@@ -156,39 +156,39 @@ public class MessageDetails {
 			return attachmentId;
 		}
 
-		public AttachmentDetails withAttachmentId(String attachmentId) {
+		public void setAttachmentId(final String attachmentId) {
 			this.attachmentId = attachmentId;
-			return this;
 		}
 
-		public void setAttachmentId(String attachmentId) {
+		public AttachmentDetails withAttachmentId(final String attachmentId) {
 			this.attachmentId = attachmentId;
+			return this;
 		}
 
 		public String getFileName() {
 			return fileName;
 		}
 
-		public AttachmentDetails withFileName(String fileName) {
+		public void setFileName(final String fileName) {
 			this.fileName = fileName;
-			return this;
 		}
 
-		public void setFileName(String fileName) {
+		public AttachmentDetails withFileName(final String fileName) {
 			this.fileName = fileName;
+			return this;
 		}
 
 		public String getContentType() {
 			return contentType;
 		}
 
-		public AttachmentDetails withContentType(String mimeType) {
-			this.contentType = mimeType;
-			return this;
+		public void setContentType(final String contentType) {
+			this.contentType = contentType;
 		}
 
-		public void setContentType(String contentType) {
-			this.contentType = contentType;
+		public AttachmentDetails withContentType(final String mimeType) {
+			this.contentType = mimeType;
+			return this;
 		}
 
 		@Override
@@ -201,10 +201,10 @@ public class MessageDetails {
 		}
 
 		@Override
-		public boolean equals(Object o) {
+		public boolean equals(final Object o) {
 			if (o == null || getClass() != o.getClass())
 				return false;
-			AttachmentDetails that = (AttachmentDetails) o;
+			final AttachmentDetails that = (AttachmentDetails) o;
 			return Objects.equals(attachmentId, that.attachmentId) && Objects.equals(fileName, that.fileName) && Objects.equals(contentType, that.contentType);
 		}
 
@@ -216,28 +216,28 @@ public class MessageDetails {
 
 	public static class RecipientDetails {
 
-		@Schema(description = "Name of the recipient", accessMode = Schema.AccessMode.READ_ONLY, example = "John Doe")
+		@Schema(description = "Name of the recipient", accessMode = Schema.AccessMode.READ_ONLY, examples = "John Doe")
 		private String name;
 
-		@Schema(description = "The recipients party ID", accessMode = Schema.AccessMode.READ_ONLY, example = "1234567890")
+		@Schema(description = "The recipients party ID", accessMode = Schema.AccessMode.READ_ONLY, examples = "1234567890")
 		private String partyId;
 
-		@Schema(description = "Mobile number", accessMode = Schema.AccessMode.READ_ONLY, example = "+46701234567")
+		@Schema(description = "Mobile number", accessMode = Schema.AccessMode.READ_ONLY, examples = "+46701234567")
 		private String mobileNumber;
 
-		@Schema(description = "Street address", accessMode = Schema.AccessMode.READ_ONLY, example = "Main Street 5")
+		@Schema(description = "Street address", accessMode = Schema.AccessMode.READ_ONLY, examples = "Main Street 5")
 		private String streetAddress;
 
-		@Schema(description = "Zip code", accessMode = Schema.AccessMode.READ_ONLY, example = "85751")
+		@Schema(description = "Zip code", accessMode = Schema.AccessMode.READ_ONLY, examples = "85751")
 		private String zipCode;
 
-		@Schema(description = "City", accessMode = Schema.AccessMode.READ_ONLY, example = "Sundsvall")
+		@Schema(description = "City", accessMode = Schema.AccessMode.READ_ONLY, examples = "Sundsvall")
 		private String city;
 
-		@Schema(description = "Message type", accessMode = Schema.AccessMode.READ_ONLY, example = "SNAIL_MAIL|DIGITAL_MAIL|SMS")
+		@Schema(description = "Message type", accessMode = Schema.AccessMode.READ_ONLY, examples = "SNAIL_MAIL|DIGITAL_MAIL|SMS")
 		private String messageType;
 
-		@Schema(description = "Status of the message to this recipient", accessMode = Schema.AccessMode.READ_ONLY, example = "SENT|NOT_SENT|FAILED")
+		@Schema(description = "Status of the message to this recipient", accessMode = Schema.AccessMode.READ_ONLY, examples = "SENT|NOT_SENT|FAILED")
 		private String status;
 
 		public static RecipientDetails create() {
@@ -248,104 +248,104 @@ public class MessageDetails {
 			return status;
 		}
 
-		public RecipientDetails withStatus(String status) {
+		public void setStatus(final String status) {
 			this.status = status;
-			return this;
 		}
 
-		public void setStatus(String status) {
+		public RecipientDetails withStatus(final String status) {
 			this.status = status;
+			return this;
 		}
 
 		public String getMobileNumber() {
 			return mobileNumber;
 		}
 
-		public RecipientDetails withMobileNumber(String mobileNumber) {
+		public void setMobileNumber(final String mobileNumber) {
 			this.mobileNumber = mobileNumber;
-			return this;
 		}
 
-		public void setMobileNumber(String mobileNumber) {
+		public RecipientDetails withMobileNumber(final String mobileNumber) {
 			this.mobileNumber = mobileNumber;
+			return this;
 		}
 
 		public String getName() {
 			return name;
 		}
 
-		public RecipientDetails withName(String name) {
+		public void setName(final String name) {
 			this.name = name;
-			return this;
 		}
 
-		public void setName(String name) {
+		public RecipientDetails withName(final String name) {
 			this.name = name;
+			return this;
 		}
 
 		public String getPartyId() {
 			return partyId;
 		}
 
-		public RecipientDetails withPartyId(String partyId) {
+		public void setPartyId(final String partyId) {
 			this.partyId = partyId;
-			return this;
 		}
 
-		public void setPartyId(String partyId) {
+		public RecipientDetails withPartyId(final String partyId) {
 			this.partyId = partyId;
+			return this;
 		}
 
 		public String getStreetAddress() {
 			return streetAddress;
 		}
 
-		public RecipientDetails withStreetAddress(String streetAddress) {
+		public void setStreetAddress(final String streetAddress) {
 			this.streetAddress = streetAddress;
-			return this;
 		}
 
-		public void setStreetAddress(String streetAddress) {
+		public RecipientDetails withStreetAddress(final String streetAddress) {
 			this.streetAddress = streetAddress;
+			return this;
 		}
 
 		public String getZipCode() {
 			return zipCode;
 		}
 
-		public RecipientDetails withZipCode(String zipCode) {
+		public void setZipCode(final String zipCode) {
 			this.zipCode = zipCode;
-			return this;
 		}
 
-		public void setZipCode(String zipCode) {
+		public RecipientDetails withZipCode(final String zipCode) {
 			this.zipCode = zipCode;
+			return this;
 		}
 
 		public String getCity() {
 			return city;
 		}
 
-		public RecipientDetails withCity(String city) {
+		public void setCity(final String city) {
 			this.city = city;
-			return this;
 		}
 
-		public void setCity(String city) {
+		public RecipientDetails withCity(final String city) {
 			this.city = city;
+			return this;
 		}
 
 		public String getMessageType() {
 			return messageType;
 		}
 
-		public RecipientDetails withMessageType(String messageType) {
+		public void setMessageType(final String messageType) {
 			this.messageType = messageType;
-			return this;
 		}
 
-		public void setMessageType(String messageType) {
+		public RecipientDetails withMessageType(final String messageType) {
 			this.messageType = messageType;
+			return this;
 		}
 
 		@Override
@@ -363,10 +363,10 @@ public class MessageDetails {
 		}
 
 		@Override
-		public boolean equals(Object o) {
+		public boolean equals(final Object o) {
 			if (o == null || getClass() != o.getClass())
 				return false;
-			RecipientDetails that = (RecipientDetails) o;
+			final RecipientDetails that = (RecipientDetails) o;
 			return Objects.equals(name, that.name) && Objects.equals(partyId, that.partyId) && Objects.equals(mobileNumber, that.mobileNumber) && Objects.equals(streetAddress, that.streetAddress) && Objects.equals(
 				zipCode, that.zipCode) && Objects.equals(city, that.city) && Objects.equals(messageType, that.messageType) && Objects.equals(status, that.status);
 		}
