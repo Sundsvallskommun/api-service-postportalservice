@@ -10,7 +10,7 @@ import se.sundsvall.dept44.common.validators.annotation.ValidUuid;
 @Schema(description = "Kivra eligibility request model")
 public class KivraEligibilityRequest {
 
-	@Schema(description = "List of party IDs to check for Kivra eligibility", example = "[\"da03b33e-9de2-45ac-8291-31a88de59410\", \"eb13b33e-9de2-45ac-8291-31a88de59411\"]")
+	@Schema(description = "List of party IDs to check for Kivra eligibility", examples = "[\"da03b33e-9de2-45ac-8291-31a88de59410\", \"eb13b33e-9de2-45ac-8291-31a88de59411\"]")
 	@UniqueElements
 	@NotEmpty
 	private List<@ValidUuid String> partyIds;

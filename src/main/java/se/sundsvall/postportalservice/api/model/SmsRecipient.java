@@ -10,10 +10,10 @@ import se.sundsvall.dept44.common.validators.annotation.ValidMSISDN;
 @Schema(description = "SMS recipient model")
 public class SmsRecipient {
 
-	@Schema(description = "PartyId is the unique identifier for the recipient", example = "6d0773d6-3e7f-4552-81bc-f0007af95adf", requiredMode = NOT_REQUIRED)
+	@Schema(description = "PartyId is the unique identifier for the recipient", examples = "6d0773d6-3e7f-4552-81bc-f0007af95adf", requiredMode = NOT_REQUIRED)
 	private String partyId;
 
-	@Schema(description = "Phone number of the recipient, used for SMS notifications", example = "+46701234567", requiredMode = REQUIRED)
+	@Schema(description = "Phone number of the recipient, used for SMS notifications", examples = "+46701234567", requiredMode = REQUIRED)
 	@ValidMSISDN
 	private String phoneNumber;
 

@@ -12,21 +12,21 @@ import se.sundsvall.dept44.common.validators.annotation.ValidUuid;
 @Schema(description = "Digital registered letter request model")
 public class DigitalRegisteredLetterRequest {
 
-	@Schema(description = "The body of the letter in HTML format", example = "<h1>This is the body of the letter</h1>")
+	@Schema(description = "The body of the letter in HTML format", examples = "<h1>This is the body of the letter</h1>")
 	@NotBlank
 	private String body;
 
-	@Schema(description = "The content type of the body", example = "text/html")
+	@Schema(description = "The content type of the body", examples = "text/html")
 	@OneOf({
 		TEXT_PLAIN_VALUE, TEXT_HTML_VALUE
 	})
 	private String contentType;
 
-	@Schema(description = "The party id of the recipient", example = "6d0773d6-3e7f-4552-81bc-f0007af95adf")
+	@Schema(description = "The party id of the recipient", examples = "6d0773d6-3e7f-4552-81bc-f0007af95adf")
 	@ValidUuid
 	private String partyId;
 
-	@Schema(description = "The subject of the letter", example = "This is the subject of the letter")
+	@Schema(description = "The subject of the letter", examples = "This is the subject of the letter")
 	@NotBlank
 	private String subject;
 

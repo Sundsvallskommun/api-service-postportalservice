@@ -1,4 +1,4 @@
-openapi: 3.0.1
+openapi: 3.1.0
 info:
   title: Postportalservice
   contact: { }
@@ -7,7 +7,7 @@ info:
     url: https://opensource.org/licenses/MIT
   version: "1.2"
 servers:
-  - url: http://localhost:61011
+  - url: http://localhost:62780
     description: Generated server url
 paths:
   /{municipalityId}/precheck:
@@ -182,9 +182,6 @@ paths:
         content:
           multipart/form-data:
             schema:
-              required:
-                - attachments
-                - request
               type: object
               properties:
                 request:
@@ -194,6 +191,9 @@ paths:
                   items:
                     type: string
                     format: binary
+              required:
+                - attachments
+                - request
         required: true
       responses:
         "200":
@@ -242,9 +242,6 @@ paths:
         content:
           multipart/form-data:
             schema:
-              required:
-                - attachments
-                - request
               type: object
               properties:
                 request:
@@ -254,6 +251,9 @@ paths:
                   items:
                     type: string
                     format: binary
+              required:
+                - attachments
+                - request
         required: true
       responses:
         "200":
@@ -302,9 +302,6 @@ paths:
         content:
           multipart/form-data:
             schema:
-              required:
-                - csv-file
-                - request
               type: object
               properties:
                 request:
@@ -317,6 +314,9 @@ paths:
                   items:
                     type: string
                     format: binary
+              required:
+                - csv-file
+                - request
         required: true
       responses:
         "200":
@@ -360,15 +360,15 @@ paths:
           description: Filter statistics by year
           required: true
           schema:
-            pattern: "[0-9]{4}"
             type: string
+            pattern: "[0-9]{4}"
         - name: month
           in: query
           description: Filter statistics by month
           required: true
           schema:
-            pattern: "^0?[1-9]$|^1[0-2]$"
             type: string
+            pattern: "^0?[1-9]$|^1[0-2]$"
       responses:
         "200":
           description: OK
@@ -701,26 +701,29 @@ paths:
 components:
   schemas:
     PrecheckRequest:
-      required:
-        - partyIds
       type: object
+      description: Precheck request model
       properties:
         partyIds:
-          minItems: 1
           type: array
           description: List of party ids to precheck
-          example:
-            - b46f0ca2-d2ad-43e8-8d50-3aeb949e3604
-            - fd99a03c-790c-4b87-bc4b-f4f73e4a2df4
+          examples:
+            - "[\"b46f0ca2-d2ad-43e8-8d50-3aeb949e3604\", \"fd99a03c-790c-4b87-bc4b-f4f73e4a2df4\"\
+            ]"
           items:
             type: string
-            description: List of party ids to precheck
-            example: "[\"b46f0ca2-d2ad-43e8-8d50-3aeb949e3604\",\"fd99a03c-790c-4b87-bc4b-f4f73e4a2df4\"\
-              ]"
-      description: Precheck request model
+          minItems: 1
+      required:
+        - partyIds
     Problem:
       type: object
       properties:
+        status:
+          $ref: "#/components/schemas/StatusType"
+        title:
+          type: string
+        detail:
+          type: string
         instance:
           type: string
           format: uri
@@ -729,22 +732,15 @@ components:
           format: uri
         parameters:
           type: object
-          additionalProperties:
-            type: object
-        title:
-          type: string
-        detail:
-          type: string
-        status:
-          $ref: "#/components/schemas/StatusType"
+          additionalProperties: { }
     StatusType:
       type: object
       properties:
-        reasonPhrase:
-          type: string
         statusCode:
           type: integer
           format: int32
+        reasonPhrase:
+          type: string
     ConstraintViolationProblem:
       type: object
       properties:
@@ -772,8 +768,7 @@ components:
           format: uri
         parameters:
           type: object
-          additionalProperties:
-            type: object
+          additionalProperties: { }
         detail:
           type: string
         suppressed:
@@ -816,8 +811,7 @@ components:
     ThrowableProblem:
       type: object
       properties:
-        cause:
-          $ref: "#/components/schemas/ThrowableProblem"
+        cause: { }
         stackTrace:
           type: array
           items:
@@ -832,8 +826,7 @@ components:
           format: uri
         parameters:
           type: object
-          additionalProperties:
-            type: object
+          additionalProperties: { }
         status:
           $ref: "#/components/schemas/StatusType"
         detail:
@@ -862,107 +855,165 @@ components:
         - DELIVERY_NOT_POSSIBLE
     PrecheckRecipient:
       type: object
+      description: Per-recipient delivery capability
       properties:
         personalIdentityNumber:
           type: string
           description: Personal identity number of the recipient
-          example: 19111111-1111
+          examples:
+            - 19111111-1111
         partyId:
           type: string
           description: Party ID of the recipient
-          example: da03b33e-9de2-45ac-8291-31a88de59410
+          examples:
+            - da03b33e-9de2-45ac-8291-31a88de59410
         deliveryMethod:
           $ref: "#/components/schemas/DeliveryMethod"
+          description: Delivery method for the recipient
         reason:
           type: string
           description: Reason when delivery method isn't available or an upstream
             lookup failed
-          example: Person not found
-      description: Per-recipient delivery capability
+          examples:
+            - Person not found
     PrecheckResponse:
       type: object
+      description: Result of precheck for given recipients
       properties:
         recipients:
           type: array
           description: Per-recipient result
           items:
             $ref: "#/components/schemas/PrecheckRecipient"
-      description: Result of precheck for given recipients
     KivraEligibilityRequest:
-      required:
-        - partyIds
       type: object
+      description: Kivra eligibility request model
       properties:
         partyIds:
-          minItems: 1
           type: array
           description: List of party IDs to check for Kivra eligibility
-          example:
-            - da03b33e-9de2-45ac-8291-31a88de59410
-            - eb13b33e-9de2-45ac-8291-31a88de59411
+          examples:
+            - "[\"da03b33e-9de2-45ac-8291-31a88de59410\", \"eb13b33e-9de2-45ac-8291-31a88de59411\"\
+            ]"
           items:
             type: string
-            description: List of party IDs to check for Kivra eligibility
-            example: "[\"da03b33e-9de2-45ac-8291-31a88de59410\",\"eb13b33e-9de2-45ac-8291-31a88de59411\"\
-              ]"
-      description: Kivra eligibility request model
-    SmsRecipient:
+          minItems: 1
       required:
-        - phoneNumber
+        - partyIds
+    SmsRecipient:
       type: object
+      description: SMS recipient model
       properties:
         partyId:
           type: string
           description: PartyId is the unique identifier for the recipient
-          example: 6d0773d6-3e7f-4552-81bc-f0007af95adf
+          examples:
+            - 6d0773d6-3e7f-4552-81bc-f0007af95adf
         phoneNumber:
           type: string
           description: "Phone number of the recipient, used for SMS notifications"
-          example: "+46701234567"
-      description: SMS recipient model
-    SmsRequest:
+          examples:
+            - "+46701234567"
       required:
-        - message
-        - recipients
+        - phoneNumber
+    SmsRequest:
       type: object
+      description: SMS request model
       properties:
         message:
-          minLength: 1
           type: string
           description: The message to be sent
-          example: This is the message to be sent
+          examples:
+            - This is the message to be sent
+          minLength: 1
         recipients:
-          minItems: 1
           type: array
           items:
             $ref: "#/components/schemas/SmsRecipient"
-      description: SMS request model
-    DigitalRegisteredLetterRequest:
+            description: List of recipients
+          minItems: 1
       required:
-        - body
-        - subject
+        - message
+        - recipients
+    DigitalRegisteredLetterRequest:
       type: object
+      description: Digital registered letter request model
       properties:
         body:
-          minLength: 1
           type: string
           description: The body of the letter in HTML format
-          example: <h1>This is the body of the letter</h1>
+          examples:
+            - <h1>This is the body of the letter</h1>
+          minLength: 1
         contentType:
           type: string
           description: The content type of the body
-          example: text/html
+          examples:
+            - text/html
         partyId:
           type: string
           description: The party id of the recipient
-          example: 6d0773d6-3e7f-4552-81bc-f0007af95adf
+          examples:
+            - 6d0773d6-3e7f-4552-81bc-f0007af95adf
         subject:
-          minLength: 1
           type: string
           description: The subject of the letter
-          example: This is the subject of the letter
-      description: Digital registered letter request model
+          examples:
+            - This is the subject of the letter
+          minLength: 1
+      required:
+        - body
+        - subject
     Address:
+      type: object
+      description: Address model
+      properties:
+        firstName:
+          type: string
+          description: First name of the recipient
+          examples:
+            - John
+          minLength: 1
+        lastName:
+          type: string
+          description: Last name of the recipient
+          examples:
+            - Doe
+          minLength: 1
+        street:
+          type: string
+          description: Street address
+          examples:
+            - Main Street 1
+          minLength: 1
+        apartmentNumber:
+          type: string
+          description: Apartment number
+          examples:
+            - "1101"
+        careOf:
+          type: string
+          description: Care of
+          examples:
+            - c/o Jane Doe
+        zipCode:
+          type: string
+          description: Zip code
+          examples:
+            - "12345"
+          minLength: 1
+        city:
+          type: string
+          description: City
+          examples:
+            - Sundsvall
+          minLength: 1
+        country:
+          type: string
+          description: Country
+          examples:
+            - Sweden
+          minLength: 1
       required:
         - city
         - country
@@ -970,370 +1021,394 @@ components:
         - lastName
         - street
         - zipCode
-      type: object
-      properties:
-        firstName:
-          minLength: 1
-          type: string
-          description: First name of the recipient
-          example: John
-        lastName:
-          minLength: 1
-          type: string
-          description: Last name of the recipient
-          example: Doe
-        street:
-          minLength: 1
-          type: string
-          description: Street address
-          example: Main Street 1
-        apartmentNumber:
-          type: string
-          description: Apartment number
-          example: "1101"
-        careOf:
-          type: string
-          description: Care of
-          example: c/o Jane Doe
-        zipCode:
-          minLength: 1
-          type: string
-          description: Zip code
-          example: "12345"
-        city:
-          minLength: 1
-          type: string
-          description: City
-          example: Sundsvall
-        country:
-          minLength: 1
-          type: string
-          description: Country
-          example: Sweden
-      description: Address model
     LetterRequest:
-      required:
-        - body
-        - contentType
-        - subject
       type: object
+      description: Letter request model
       properties:
         subject:
-          minLength: 1
           type: string
           description: The subject of the letter
-          example: This is the subject of the letter
-        body:
+          examples:
+            - This is the subject of the letter
           minLength: 1
+        body:
           type: string
           description: The body of the letter
-          example: This is the body of the letter
-        contentType:
+          examples:
+            - This is the body of the letter
           minLength: 1
+        contentType:
           type: string
           description: The content type of the body
-          example: text/plain
+          examples:
+            - text/plain
+          minLength: 1
         recipients:
           type: array
           items:
             $ref: "#/components/schemas/Recipient"
+            description: List of recipients
         addresses:
           type: array
           items:
             $ref: "#/components/schemas/Address"
-      description: Letter request model
-    Recipient:
-      required:
-        - deliveryMethod
-      type: object
-      properties:
-        partyId:
-          type: string
-          description: PartyId is the unique identifier for the recipient
-          example: 6d0773d6-3e7f-4552-81bc-f0007af95adf
-        deliveryMethod:
-          type: string
-          description: Delivery method for the recipient
-          example: DIGITAL_MAIL
-          enum:
-            - DIGITAL_MAIL
-            - SNAIL_MAIL
-            - DELIVERY_NOT_POSSIBLE
-        address:
-          $ref: "#/components/schemas/Address"
-      description: Recipient model
-    LetterCsvRequest:
+            description: List of addresses
       required:
         - body
         - contentType
         - subject
+    Recipient:
       type: object
+      description: Recipient model
+      properties:
+        partyId:
+          type: string
+          description: PartyId is the unique identifier for the recipient
+          examples:
+            - 6d0773d6-3e7f-4552-81bc-f0007af95adf
+        deliveryMethod:
+          type: string
+          description: Delivery method for the recipient
+          enum:
+            - DIGITAL_MAIL
+            - SNAIL_MAIL
+            - DELIVERY_NOT_POSSIBLE
+          examples:
+            - DIGITAL_MAIL
+        address:
+          $ref: "#/components/schemas/Address"
+          description: "Address details for the recipient, used for SNAIL_MAIL delivery\
+            \ method"
+      required:
+        - deliveryMethod
+    LetterCsvRequest:
+      type: object
+      description: Letter CSV request model
       properties:
         subject:
-          minLength: 1
           type: string
           description: The subject of the letter
-          example: This is the subject of the letter
-        body:
+          examples:
+            - This is the subject of the letter
           minLength: 1
+        body:
           type: string
           description: The body of the letter
-          example: This is the body of the letter
-        contentType:
+          examples:
+            - This is the body of the letter
           minLength: 1
+        contentType:
           type: string
           description: The content type of the body
-          example: text/plain
-      description: Letter CSV request model
+          examples:
+            - text/plain
+          minLength: 1
+      required:
+        - body
+        - contentType
+        - subject
     Statistics:
       type: object
+      description: Statistics model
       properties:
         id:
           type: string
           description: Entity id
-          example: f40e6975-a82a-4167-8622-4b0e71ab8d92
+          examples:
+            - f40e6975-a82a-4167-8622-4b0e71ab8d92
         name:
           type: string
           description: Entity name
-          example: Test Department
+          examples:
+            - Test Department
         snailMail:
           type: integer
-          description: Number of snail mail sent
           format: int64
-          example: 50
+          description: Number of snail mail sent
+          examples:
+            - "50"
         digitalMail:
           type: integer
-          description: Number of digital mail sent
           format: int64
-          example: 30
+          description: Number of digital mail sent
+          examples:
+            - "30"
         sms:
           type: integer
-          description: Number of text messages
           format: int64
-          example: 20
+          description: Number of text messages
+          examples:
+            - "20"
         digitalRegisteredLetter:
           type: integer
-          description: Number of registered letters sent
           format: int64
-          example: 5
-      description: Statistics model
+          description: Number of registered letters sent
+          examples:
+            - "5"
     Pageable:
       type: object
       properties:
         page:
+          type: integer
+          format: int32
           minimum: 0
-          type: integer
-          format: int32
         size:
-          minimum: 1
           type: integer
           format: int32
+          minimum: 1
         sort:
           type: array
           items:
             type: string
     Message:
       type: object
+      description: Message model
       properties:
         messageId:
           type: string
           description: Message ID
+          examples:
+            - "123456"
           readOnly: true
-          example: "123456"
         subject:
           type: string
           description: The subject
+          examples:
+            - Important information
           readOnly: true
-          example: Important information
         type:
           type: string
           description: Type of message
+          examples:
+            - SMS
+            - LETTER
+            - DIGITAL_REGISTERED_LETTER
           readOnly: true
         sentAt:
           type: string
-          description: When the message was sent
           format: date-time
+          description: When the message was sent
+          examples:
+            - 2021-01-01T12:00:00
           readOnly: true
         signingStatus:
           $ref: "#/components/schemas/SigningStatus"
+          description: Status for signing process. Only applicable for message type
+            DIGITAL_REGISTERED_LETTER
+          readOnly: true
         numberOfRecipients:
           type: integer
-          description: Total number of recipients to whom the message has been sent
           format: int32
+          description: Total number of recipients to whom the message has been sent
+          examples:
+            - "12"
           readOnly: true
-          example: 12
-      description: Message model
-      readOnly: true
     Messages:
       type: object
+      description: Messages model
       properties:
         messages:
           type: array
-          readOnly: true
           items:
             $ref: "#/components/schemas/Message"
+            readOnly: true
+          readOnly: true
         _meta:
           $ref: "#/components/schemas/PagingMetaData"
-      description: Messages model
+          readOnly: true
     PagingMetaData:
       type: object
+      description: PagingMetaData model
       properties:
         page:
           type: integer
-          description: Current page
           format: int32
-          readOnly: true
+          description: Current page
           example: 5
+          readOnly: true
         limit:
           type: integer
-          description: Displayed objects per page
           format: int32
-          readOnly: true
+          description: Displayed objects per page
           example: 20
+          readOnly: true
         count:
           type: integer
-          description: Displayed objects on current page
           format: int32
-          readOnly: true
+          description: Displayed objects on current page
           example: 13
+          readOnly: true
         totalRecords:
           type: integer
-          description: Total amount of hits based on provided search parameters
           format: int64
-          readOnly: true
+          description: Total amount of hits based on provided search parameters
           example: 98
+          readOnly: true
         totalPages:
           type: integer
-          description: Total amount of pages based on provided search parameters
           format: int32
-          readOnly: true
+          description: Total amount of pages based on provided search parameters
           example: 23
-      description: PagingMetaData model
-      readOnly: true
+          readOnly: true
     SigningStatus:
       type: object
+      description: Signing status model
       properties:
         letterState:
           type: string
           description: Present state for the letter
+          examples:
+            - NEW
+            - SENT
+            - SIGNED
+            - EXPIRED
+            - FAILED - Client Error
+            - FAILED - Server Error
+            - FAILED - Unknown Error
           readOnly: true
         signingProcessState:
           type: string
           description: Present state for the signing process
+          examples:
+            - PENDING
+            - COMPLETED
+            - FAILED
           readOnly: true
-      description: Signing status model
-      readOnly: true
     AttachmentDetails:
       type: object
       properties:
         attachmentId:
           type: string
           description: Attachment ID
+          examples:
+            - 123e4567-e89b-12d3-a456-426614174000
           readOnly: true
-          example: 123e4567-e89b-12d3-a456-426614174000
         fileName:
           type: string
           description: File name of the attachment
+          examples:
+            - document.pdf
           readOnly: true
-          example: document.pdf
         contentType:
           type: string
           description: MIME type of the attachment
+          examples:
+            - application/pdf
           readOnly: true
-          example: application/pdf
-      description: List of attachment details
-      readOnly: true
     MessageDetails:
       type: object
+      description: Message details model
       properties:
         subject:
           type: string
           description: Message subject
+          examples:
+            - This is a subject
           readOnly: true
-          example: This is a subject
         body:
           type: string
           description: Message body
+          examples:
+            - This is the message body
           readOnly: true
-          example: This is the message body
         sentAt:
           type: string
-          description: When the message was sent
           format: date-time
+          description: When the message was sent
+          examples:
+            - 2021-01-01T12:00:00
           readOnly: true
         signingStatus:
           $ref: "#/components/schemas/SigningStatus"
+          description: Status for signing process. Only applicable for message type
+            DIGITAL_REGISTERED_LETTER
+          readOnly: true
         attachments:
           type: array
-          readOnly: true
           items:
             $ref: "#/components/schemas/AttachmentDetails"
+            description: List of attachment details
+            readOnly: true
+          readOnly: true
         recipients:
           type: array
-          readOnly: true
           items:
             $ref: "#/components/schemas/RecipientDetails"
-      description: Message details model
+            description: List of recipient details
+            readOnly: true
+          readOnly: true
     RecipientDetails:
       type: object
       properties:
         name:
           type: string
           description: Name of the recipient
+          examples:
+            - John Doe
           readOnly: true
-          example: John Doe
         partyId:
           type: string
           description: The recipients party ID
+          examples:
+            - "1234567890"
           readOnly: true
-          example: "1234567890"
         mobileNumber:
           type: string
           description: Mobile number
+          examples:
+            - "+46701234567"
           readOnly: true
-          example: "+46701234567"
         streetAddress:
           type: string
           description: Street address
+          examples:
+            - Main Street 5
           readOnly: true
-          example: Main Street 5
         zipCode:
           type: string
           description: Zip code
+          examples:
+            - "85751"
           readOnly: true
-          example: "85751"
         city:
           type: string
           description: City
+          examples:
+            - Sundsvall
           readOnly: true
-          example: Sundsvall
         messageType:
           type: string
           description: Message type
+          examples:
+            - SNAIL_MAIL
+            - DIGITAL_MAIL
+            - SMS
           readOnly: true
         status:
           type: string
           description: Status of the message to this recipient
+          examples:
+            - SENT
+            - NOT_SENT
+            - FAILED
           readOnly: true
-      description: List of recipient details
-      readOnly: true
     Device:
       type: object
       properties:
         ipAddress:
           type: string
           description: Ip address used when the letter was signed
-      description: Information about the device used when signing the letter
     SigningInformation:
       type: object
+      description: SigningInformation model
       properties:
         status:
           type: string
           description: Status of the signing order
         signedAt:
           type: string
-          description: Timestamp when the letter was signed by receiving party
           format: date-time
+          description: Timestamp when the letter was signed by receiving party
         contentKey:
           type: string
           description: The unique Kivra id for the signing order
@@ -1348,18 +1423,19 @@ components:
           description: Online certificate status protocol for the signing order
         user:
           $ref: "#/components/schemas/User"
+          description: Information about the user that signed the letter
         device:
           $ref: "#/components/schemas/Device"
+          description: Information about the device used when signing the letter
         stepUp:
           $ref: "#/components/schemas/StepUp"
-      description: SigningInformation model
+          description: Step-up information for the signing order
     StepUp:
       type: object
       properties:
         mrtd:
           type: boolean
           description: Whether an MRTD check was performed before the order was completed
-      description: Step-up information for the signing order
     User:
       type: object
       properties:
@@ -1375,5 +1451,4 @@ components:
         surname:
           type: string
           description: Last name of the signing party
-      description: Information about the user that signed the letter
   securitySchemes: { }

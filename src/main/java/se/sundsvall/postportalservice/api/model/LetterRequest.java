@@ -10,15 +10,15 @@ import java.util.Objects;
 @Schema(description = "Letter request model")
 public class LetterRequest {
 
-	@Schema(description = "The subject of the letter", example = "This is the subject of the letter")
+	@Schema(description = "The subject of the letter", examples = "This is the subject of the letter")
 	@NotBlank
 	private String subject;
 
-	@Schema(description = "The body of the letter", example = "This is the body of the letter")
+	@Schema(description = "The body of the letter", examples = "This is the body of the letter")
 	@NotBlank
 	private String body;
 
-	@Schema(description = "The content type of the body", example = "text/plain")
+	@Schema(description = "The content type of the body", examples = "text/plain")
 	@NotBlank
 	private String contentType;
 

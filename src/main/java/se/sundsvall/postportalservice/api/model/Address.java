@@ -7,33 +7,33 @@ import java.util.Objects;
 @Schema(description = "Address model")
 public class Address {
 
-	@Schema(description = "First name of the recipient", example = "John")
+	@Schema(description = "First name of the recipient", examples = "John")
 	@NotBlank
 	private String firstName;
 
-	@Schema(description = "Last name of the recipient", example = "Doe")
+	@Schema(description = "Last name of the recipient", examples = "Doe")
 	@NotBlank
 	private String lastName;
 
-	@Schema(description = "Street address", example = "Main Street 1")
+	@Schema(description = "Street address", examples = "Main Street 1")
 	@NotBlank
 	private String street;
 
-	@Schema(description = "Apartment number", example = "1101")
+	@Schema(description = "Apartment number", examples = "1101")
 	private String apartmentNumber;
 
-	@Schema(description = "Care of", example = "c/o Jane Doe")
+	@Schema(description = "Care of", examples = "c/o Jane Doe")
 	private String careOf;
 
-	@Schema(description = "Zip code", example = "12345")
+	@Schema(description = "Zip code", examples = "12345")
 	@NotBlank
 	private String zipCode;
 
-	@Schema(description = "City", example = "Sundsvall")
+	@Schema(description = "City", examples = "Sundsvall")
 	@NotBlank
 	private String city;
 
-	@Schema(description = "Country", example = "Sweden")
+	@Schema(description = "Country", examples = "Sweden")
 	@NotBlank
 	private String country;
 
