@@ -8,7 +8,7 @@ _The service also handles sending registered letters in digital form, SMS and ma
 
 ### Prerequisites
 
-- **Java 21 or higher**
+- **Java 25 or higher**
 - **Maven**
 - **MariaDB**
 - **Git**
