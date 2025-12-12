@@ -179,8 +179,6 @@ class MessageResourceTest {
 
 		return Stream.of(
 			Arguments.of("Empty request", LetterRequest.create(), List.of(
-				new Violation("body", "must not be blank"),
-				new Violation("contentType", "must not be blank"),
 				new Violation("subject", "must not be blank"))),
 
 			Arguments.of("Empty address data", createRequestWithSetTopAttributes()

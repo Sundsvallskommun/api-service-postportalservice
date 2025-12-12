@@ -1,5 +1,8 @@
 package se.sundsvall.postportalservice.api.model;
 
+import static io.swagger.v3.oas.annotations.media.Schema.RequiredMode.NOT_REQUIRED;
+import static io.swagger.v3.oas.annotations.media.Schema.RequiredMode.REQUIRED;
+
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
@@ -10,16 +13,14 @@ import java.util.Objects;
 @Schema(description = "Letter request model")
 public class LetterRequest {
 
-	@Schema(description = "The subject of the letter", examples = "This is the subject of the letter")
+	@Schema(description = "The subject of the letter", examples = "This is the subject of the letter", requiredMode = REQUIRED)
 	@NotBlank
 	private String subject;
 
-	@Schema(description = "The body of the letter", examples = "This is the body of the letter")
-	@NotBlank
+	@Schema(description = "The body of the letter", examples = "This is the body of the letter", requiredMode = NOT_REQUIRED)
 	private String body;
 
-	@Schema(description = "The content type of the body", examples = "text/plain")
-	@NotBlank
+	@Schema(description = "The content type of the body", examples = "text/plain", requiredMode = NOT_REQUIRED)
 	private String contentType;
 
 	@ArraySchema(schema = @Schema(description = "List of recipients", implementation = Recipient.class))
