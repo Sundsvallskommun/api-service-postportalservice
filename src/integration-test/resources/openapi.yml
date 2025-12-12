@@ -1,13 +1,13 @@
 openapi: 3.1.0
 info:
   title: Postportalservice
-  contact: { }
+  contact: {}
   license:
     name: MIT License
     url: https://opensource.org/licenses/MIT
   version: "1.2"
 servers:
-  - url: http://localhost:62780
+  - url: http://localhost:65305
     description: Generated server url
 paths:
   /{municipalityId}/precheck:
@@ -732,7 +732,7 @@ components:
           format: uri
         parameters:
           type: object
-          additionalProperties: { }
+          additionalProperties: {}
     StatusType:
       type: object
       properties:
@@ -768,7 +768,7 @@ components:
           format: uri
         parameters:
           type: object
-          additionalProperties: { }
+          additionalProperties: {}
         detail:
           type: string
         suppressed:
@@ -811,7 +811,7 @@ components:
     ThrowableProblem:
       type: object
       properties:
-        cause: { }
+        cause: {}
         stackTrace:
           type: array
           items:
@@ -826,7 +826,7 @@ components:
           format: uri
         parameters:
           type: object
-          additionalProperties: { }
+          additionalProperties: {}
         status:
           $ref: "#/components/schemas/StatusType"
         detail:
@@ -1036,13 +1036,11 @@ components:
           description: The body of the letter
           examples:
             - This is the body of the letter
-          minLength: 1
         contentType:
           type: string
           description: The content type of the body
           examples:
             - text/plain
-          minLength: 1
         recipients:
           type: array
           items:
@@ -1054,8 +1052,6 @@ components:
             $ref: "#/components/schemas/Address"
             description: List of addresses
       required:
-        - body
-        - contentType
         - subject
     Recipient:
       type: object
@@ -1451,4 +1447,4 @@ components:
         surname:
           type: string
           description: Last name of the signing party
-  securitySchemes: { }
+  securitySchemes: {}
