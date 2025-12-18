@@ -81,29 +81,32 @@ public class EntityMapper {
 	}
 
 	public RecipientEntity toSnailMailRecipientEntity(final CitizenExtended citizenExtended) {
-		return Optional.ofNullable(citizenExtended).map(citizen -> {
-			var address = Optional.ofNullable(citizen.getAddresses()).orElse(emptyList()).stream()
-				.filter(citizenAddress -> "Current".equalsIgnoreCase(citizenAddress.getStatus()))
-				.findAny()
-				.orElse(null);
-			if (address == null) {
-				return null;
-			}
-
-			return RecipientEntity.create()
-				.withPartyId(Optional.ofNullable(citizen.getPersonId()).map(UUID::toString).orElse(null))
-				.withFirstName(citizen.getGivenname())
-				.withLastName(citizen.getLastname())
-				.withMessageType(MessageType.SNAIL_MAIL)
-				.withStreetAddress(address.getAddress())
-				.withApartmentNumber(address.getAppartmentNumber())
-				.withCareOf(address.getCo())
-				.withZipCode(address.getPostalCode())
-				.withCity(address.getCity())
-				.withCountry(address.getCountry())
-				.withStatus(PENDING);
-		})
+		var address = Optional.ofNullable(citizenExtended)
+			.map(CitizenExtended::getAddresses)
+			.orElse(emptyList())
+			.stream()
+			.filter(citizenAddress -> "POPULATION_REGISTRATION_ADDRESS".equals(citizenAddress.getAddressType()))
+			.findFirst()
 			.orElse(null);
+
+		if (address == null) {
+			// If no valid address is found, we return null. We don't want to create a RecipientEntity without an address.
+			// The faulty citizenExtended will be handled by a separate method.
+			return null;
+		}
+
+		return RecipientEntity.create()
+			.withPartyId(Optional.ofNullable(citizenExtended.getPersonId()).map(UUID::toString).orElse(null))
+			.withFirstName(citizenExtended.getGivenname())
+			.withLastName(citizenExtended.getLastname())
+			.withMessageType(MessageType.SNAIL_MAIL)
+			.withStreetAddress(address.getAddress())
+			.withApartmentNumber(address.getAppartmentNumber())
+			.withCareOf(address.getCo())
+			.withZipCode(address.getPostalCode())
+			.withCity(address.getCity())
+			.withCountry(address.getCountry())
+			.withStatus(PENDING);
 	}
 
 	public RecipientEntity toUndeliverableRecipientEntity(final CitizenExtended citizenExtended) {
