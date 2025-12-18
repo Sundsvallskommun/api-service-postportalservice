@@ -28,7 +28,7 @@ class EntityMapperTest {
 	@Test
 	void toRecipientEntity_smsRecipient() {
 		var smsRecipient = new SmsRecipient()
-			.withPartyId("00000000-0000-0000-0000-000000000001")
+			.withPartyId(UUID.randomUUID().toString())
 			.withPhoneNumber(MOBILE_NUMBER);
 
 		var result = entityMapper.toRecipientEntity(smsRecipient);
@@ -43,7 +43,7 @@ class EntityMapperTest {
 	@Test
 	void toRecipientEntity_recipient_digitalMail() {
 		var recipient = new Recipient()
-			.withPartyId("00000000-0000-0000-0000-000000000001")
+			.withPartyId(UUID.randomUUID().toString())
 			.withDeliveryMethod(Recipient.DeliveryMethod.DIGITAL_MAIL);
 
 		var result = entityMapper.toRecipientEntity(recipient);
@@ -74,7 +74,7 @@ class EntityMapperTest {
 			.withCity("City")
 			.withCountry("Country");
 		var recipient = new Recipient()
-			.withPartyId("00000000-0000-0000-0000-000000000001")
+			.withPartyId(UUID.randomUUID().toString())
 			.withAddress(address)
 			.withDeliveryMethod(Recipient.DeliveryMethod.SNAIL_MAIL);
 
@@ -92,6 +92,29 @@ class EntityMapperTest {
 		assertThat(result.getZipCode()).isEqualTo(address.getZipCode());
 		assertThat(result.getCity()).isEqualTo(address.getCity());
 		assertThat(result.getCountry()).isEqualTo(address.getCountry());
+	}
+
+	@Test
+	void toIneligibleMinorRecipientEntity() {
+		final var partyId = UUID.fromString(UUID.randomUUID().toString());
+		final var citizenExtended = new CitizenExtended()
+			.personId(partyId);
+
+		final var result = entityMapper.toIneligibleMinorRecipientEntity(citizenExtended);
+
+		assertThat(result).isNotNull();
+		assertThat(result.getPartyId()).isEqualTo(partyId.toString());
+		assertThat(result.getMessageType()).isEqualTo(MessageType.LETTER);
+		assertThat(result.getStatus()).isEqualTo("INELIGIBLE_MINOR");
+		assertThat(result.getFirstName()).isNull();
+		assertThat(result.getLastName()).isNull();
+	}
+
+	@Test
+	void toIneligibleMinorRecipientEntity_whenCitizenIsNull() {
+		final var result = entityMapper.toIneligibleMinorRecipientEntity(null);
+
+		assertThat(result).isNull();
 	}
 
 	@Test
@@ -123,7 +146,7 @@ class EntityMapperTest {
 
 	@Test
 	void toDigitalMailRecipientEntity() {
-		var partyId = "00000000-0000-0000-0000-000000000001";
+		var partyId = UUID.randomUUID().toString();
 
 		var result = entityMapper.toDigitalMailRecipientEntity(partyId);
 

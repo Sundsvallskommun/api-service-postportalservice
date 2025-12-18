@@ -3,6 +3,8 @@ package se.sundsvall.postportalservice;
 import static org.springframework.http.MediaType.TEXT_PLAIN_VALUE;
 
 import generated.se.sundsvall.messaging.Mailbox;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import se.sundsvall.postportalservice.api.model.Address;
 import se.sundsvall.postportalservice.api.model.DigitalRegisteredLetterRequest;
@@ -75,12 +77,31 @@ public final class TestDataFactory {
 			.withContentType("text/plain");
 	}
 
-	public static Mailbox createMailbox(String partyId, Boolean isReachable) {
+	public static Mailbox createMailbox(String partyId, Boolean isReachable, String reason) {
 		final var mailbox = new Mailbox();
 
 		mailbox.setPartyId(partyId);
 		mailbox.setReachable(isReachable);
+		mailbox.setReason(reason);
 
 		return mailbox;
+	}
+
+	public static Mailbox createMailbox(String partyId, Boolean isReachable) {
+		return createMailbox(partyId, isReachable, null);
+	}
+
+	/**
+	 * Generates a valid Swedish legal ID (personnummer) for a person of specified age.
+	 * Format: YYYYMMDDXXXX (12 digits)
+	 *
+	 * @param  yearsOld the age of the person in years
+	 * @param  suffix   the 4-digit suffix to make the ID unique
+	 * @return          a 12-digit legal ID string
+	 */
+	public static String generateLegalId(final int yearsOld, final String suffix) {
+		final var birthDate = LocalDate.now().minusYears(yearsOld);
+		final var dateFormatter = DateTimeFormatter.ofPattern("yyyyMMdd");
+		return birthDate.format(dateFormatter) + suffix;
 	}
 }

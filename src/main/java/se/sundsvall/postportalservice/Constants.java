@@ -9,4 +9,5 @@ public final class Constants {
 	public static final String PENDING = "PENDING";
 	public static final String SENT = "SENT";
 	public static final String UNDELIVERABLE = "UNDELIVERABLE";
+	public static final String INELIGIBLE_MINOR = "INELIGIBLE_MINOR";
 }

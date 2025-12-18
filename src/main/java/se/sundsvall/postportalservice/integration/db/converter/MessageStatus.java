@@ -7,7 +7,8 @@ public enum MessageStatus {
 	NOT_SENT,
 	FAILED,
 	NO_CONTACT_SETTINGS_FOUND,
-	NO_CONTACT_WANTED;
+	NO_CONTACT_WANTED,
+	INELIGIBLE_MINOR;
 
 	public static MessageStatus fromValue(final String value) {
 		try {
