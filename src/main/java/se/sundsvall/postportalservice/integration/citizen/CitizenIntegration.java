@@ -22,7 +22,7 @@ public class CitizenIntegration {
 	}
 
 	public List<PersonGuidBatch> getPartyIds(final String municipalityId, final List<String> personIds) {
-		if (ofNullable(personIds).orElse(emptyList()).isEmpty()) {
+		if (personIds == null || personIds.isEmpty()) {
 			return emptyList();
 		}
 

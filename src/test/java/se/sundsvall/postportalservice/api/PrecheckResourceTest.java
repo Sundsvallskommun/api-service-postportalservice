@@ -3,16 +3,20 @@ package se.sundsvall.postportalservice.api;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.groups.Tuple.tuple;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.http.MediaType.MULTIPART_FORM_DATA;
+import static org.springframework.web.reactive.function.BodyInserters.fromMultipartData;
 import static se.sundsvall.postportalservice.TestDataFactory.INVALID_MUNICIPALITY_ID;
 import static se.sundsvall.postportalservice.TestDataFactory.MUNICIPALITY_ID;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -22,15 +26,19 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.MediaType;
+import org.springframework.http.client.MultipartBodyBuilder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
+import org.springframework.web.multipart.MultipartFile;
 import org.zalando.problem.Problem;
 import org.zalando.problem.violations.ConstraintViolationProblem;
 import org.zalando.problem.violations.Violation;
 import se.sundsvall.dept44.support.Identifier;
 import se.sundsvall.postportalservice.Application;
 import se.sundsvall.postportalservice.api.model.KivraEligibilityRequest;
+import se.sundsvall.postportalservice.api.model.PrecheckCsvResponse;
 import se.sundsvall.postportalservice.api.model.PrecheckRequest;
 import se.sundsvall.postportalservice.api.model.PrecheckResponse;
 import se.sundsvall.postportalservice.api.model.PrecheckResponse.DeliveryMethod;
@@ -52,9 +60,29 @@ class PrecheckResourceTest {
 		verifyNoMoreInteractions(precheckServiceMock);
 	}
 
-	//
-	// Precheck
-	//
+	@Test
+	void precheckCSV() {
+		final var multipartBodyBuilder = new MultipartBodyBuilder();
+		multipartBodyBuilder.part("csv-file", "mockfile1").filename("legalIds.csv").contentType(MediaType.valueOf("text/csv"));
+
+		when(precheckServiceMock.precheckCSV(any(MultipartFile.class))).thenReturn(new PrecheckCsvResponse(Map.of("201901012391", 2, "201901022382", 3)));
+
+		final var response = webTestClient.post()
+			.uri("/{municipalityId}/precheck/csv", MUNICIPALITY_ID)
+			.header(Identifier.HEADER_NAME, "type=adAccount; joe01doe")
+			.contentType(MULTIPART_FORM_DATA)
+			.body(fromMultipartData(multipartBodyBuilder.build()))
+			.exchange()
+			.expectStatus().isOk()
+			.expectBody(PrecheckCsvResponse.class)
+			.returnResult()
+			.getResponseBody();
+
+		assertThat(response).isNotNull();
+		assertThat(response.duplicateEntries()).containsExactlyInAnyOrderEntriesOf(Map.of("201901012391", 2, "201901022382", 3));
+		verify(precheckServiceMock).precheckCSV(any(MultipartFile.class));
+	}
+
 	@Test
 	void precheckPartyIds() {
 		final var request = new PrecheckRequest(List.of("b46f0ca2-d2ad-43e8-8d50-3aeb949e3604", "fd99a03c-790c-4b87-bc4b-f4f73e4a2df4"));
@@ -164,10 +192,6 @@ class PrecheckResourceTest {
 
 		);
 	}
-
-	//
-	// CheckKivraEligibility
-	//
 
 	@Test
 	void checkKivraEligibility() {

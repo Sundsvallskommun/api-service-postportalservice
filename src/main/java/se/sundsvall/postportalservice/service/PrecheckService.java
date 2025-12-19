@@ -8,11 +8,15 @@ import generated.se.sundsvall.citizen.CitizenExtended;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 import se.sundsvall.postportalservice.api.model.KivraEligibilityRequest;
+import se.sundsvall.postportalservice.api.model.PrecheckCsvResponse;
 import se.sundsvall.postportalservice.api.model.PrecheckResponse;
 import se.sundsvall.postportalservice.api.model.PrecheckResponse.DeliveryMethod;
 import se.sundsvall.postportalservice.api.model.PrecheckResponse.PrecheckRecipient;
@@ -23,6 +27,7 @@ import se.sundsvall.postportalservice.integration.messaging.MessagingIntegration
 import se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration;
 import se.sundsvall.postportalservice.service.mapper.EntityMapper;
 import se.sundsvall.postportalservice.service.mapper.PrecheckMapper;
+import se.sundsvall.postportalservice.service.util.CsvUtil;
 import se.sundsvall.postportalservice.service.util.CitizenCategorizationHelper;
 import se.sundsvall.postportalservice.service.util.PartyIdMappingHelper;
 import se.sundsvall.postportalservice.service.util.PrecheckUtil;
@@ -56,6 +61,19 @@ public class PrecheckService {
 		this.precheckMapper = precheckMapper;
 		this.employeeService = employeeService;
 		this.entityMapper = entityMapper;
+	}
+
+	public PrecheckCsvResponse precheckCSV(final MultipartFile csvFile) {
+
+		// Returns a map with personal identity numbers as keys and their occurrence counts as values
+		var occurrenceMap = CsvUtil.validateCSV(csvFile);
+
+		// Filter the map to include only entries with more than one occurrence
+		var duplicateEntriesMap = occurrenceMap.entrySet().stream()
+			.filter(entry -> entry.getValue() > 1)
+			.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+
+		return new PrecheckCsvResponse(duplicateEntriesMap);
 	}
 
 	public PrecheckResponse precheckPartyIds(final String municipalityId, final List<String> partyIds) {

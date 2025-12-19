@@ -5,6 +5,7 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.sql.Blob;
+import java.sql.SQLException;
 import java.util.List;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -31,8 +32,12 @@ class AttachmentMapperTest {
 	}
 
 	@Test
-	void toAttachmentEntities() {
+	void toAttachmentEntities() throws SQLException {
 		var blob = Mockito.mock(Blob.class);
+		when(blob.length()).thenReturn(3L);
+		when(blob.getBytes(1L, 3)).thenReturn(new byte[] {
+			1, 2, 3
+		});
 		var multipartFile = Mockito.mock(MultipartFile.class);
 		when(multipartFile.getOriginalFilename()).thenReturn("file");
 		when(multipartFile.getContentType()).thenReturn("application/pdf");
@@ -50,8 +55,12 @@ class AttachmentMapperTest {
 	}
 
 	@Test
-	void toAttachmentEntity() {
+	void toAttachmentEntity() throws SQLException {
 		var blob = Mockito.mock(Blob.class);
+		when(blob.length()).thenReturn(3L);
+		when(blob.getBytes(1L, 3)).thenReturn(new byte[] {
+			1, 2, 3
+		});
 		var multipartFile = Mockito.mock(MultipartFile.class);
 		when(multipartFile.getOriginalFilename()).thenReturn("file");
 		when(multipartFile.getContentType()).thenReturn("application/pdf");

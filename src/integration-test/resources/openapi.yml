@@ -1,13 +1,13 @@
 openapi: 3.1.0
 info:
   title: Postportalservice
-  contact: {}
+  contact: { }
   license:
     name: MIT License
     url: https://opensource.org/licenses/MIT
   version: "1.3"
 servers:
-  - url: http://localhost:65305
+  - url: http://localhost:60343
     description: Generated server url
 paths:
   /{municipalityId}/precheck:
@@ -91,6 +91,57 @@ paths:
                 type: array
                 items:
                   type: string
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/Problem"
+                  - $ref: "#/components/schemas/ConstraintViolationProblem"
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "502":
+          description: Bad Gateway
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+  /{municipalityId}/precheck/csv:
+    post:
+      tags:
+        - Precheck Resources
+      summary: Check if a given csv is properly formatted. Also returns information
+        about any duplicate entries
+      operationId: validateCsv
+      parameters:
+        - name: municipalityId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                csv-file:
+                  type: string
+                  format: binary
+              required:
+                - csv-file
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PrecheckCsvResponse"
         "400":
           description: Bad Request
           content:
@@ -718,12 +769,6 @@ components:
     Problem:
       type: object
       properties:
-        status:
-          $ref: "#/components/schemas/StatusType"
-        title:
-          type: string
-        detail:
-          type: string
         instance:
           type: string
           format: uri
@@ -732,7 +777,13 @@ components:
           format: uri
         parameters:
           type: object
-          additionalProperties: {}
+          additionalProperties: { }
+        status:
+          $ref: "#/components/schemas/StatusType"
+        title:
+          type: string
+        detail:
+          type: string
     StatusType:
       type: object
       properties:
@@ -768,7 +819,7 @@ components:
           format: uri
         parameters:
           type: object
-          additionalProperties: {}
+          additionalProperties: { }
         detail:
           type: string
         suppressed:
@@ -811,7 +862,7 @@ components:
     ThrowableProblem:
       type: object
       properties:
-        cause: {}
+        cause: { }
         stackTrace:
           type: array
           items:
@@ -826,7 +877,7 @@ components:
           format: uri
         parameters:
           type: object
-          additionalProperties: {}
+          additionalProperties: { }
         status:
           $ref: "#/components/schemas/StatusType"
         detail:
@@ -900,6 +951,16 @@ components:
           minItems: 1
       required:
         - partyIds
+    PrecheckCsvResponse:
+      type: object
+      description: Model used as response when validating csv format and duplicate
+        entries
+      properties:
+        duplicateEntries:
+          type: object
+          additionalProperties:
+            type: integer
+            format: int32
     SmsRecipient:
       type: object
       description: SMS recipient model
@@ -1447,4 +1508,4 @@ components:
         surname:
           type: string
           description: Last name of the signing party
-  securitySchemes: {}
+  securitySchemes: { }

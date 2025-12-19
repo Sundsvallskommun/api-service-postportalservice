@@ -14,6 +14,7 @@ import static se.sundsvall.postportalservice.service.util.SemaphoreUtil.withPerm
 
 import generated.se.sundsvall.messaging.DeliveryResult;
 import generated.se.sundsvall.messaging.MessageResult;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
@@ -119,7 +120,7 @@ public class MessageService {
 		message.setBody(request.getBody());
 		message.setMessageType(LETTER);
 
-		final var recipientEntities = precheckService.precheckLegalIds(municipalityId, legalIds);
+		final var recipientEntities = precheckService.precheckLegalIds(municipalityId, new ArrayList<>(legalIds));
 		message.setRecipients(recipientEntities);
 		final var attachmentEntities = attachmentMapper.toAttachmentEntities(attachments);
 		message.setAttachments(attachmentEntities);

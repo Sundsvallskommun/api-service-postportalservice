@@ -17,6 +17,9 @@ import static se.sundsvall.postportalservice.TestDataFactory.generateLegalId;
 import generated.se.sundsvall.citizen.CitizenAddress;
 import generated.se.sundsvall.citizen.CitizenExtended;
 import generated.se.sundsvall.citizen.PersonGuidBatch;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.Predicate;
@@ -27,8 +30,12 @@ import org.mockito.Answers;
 import org.mockito.ArgumentMatchers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.web.multipart.MultipartFile;
 import org.zalando.problem.Problem;
+import se.sundsvall.dept44.test.annotation.resource.Load;
+import se.sundsvall.dept44.test.extension.ResourceLoaderExtension;
 import se.sundsvall.postportalservice.api.model.PrecheckResponse.DeliveryMethod;
 import se.sundsvall.postportalservice.api.model.PrecheckResponse.PrecheckRecipient;
 import se.sundsvall.postportalservice.integration.citizen.CitizenIntegration;
@@ -39,7 +46,9 @@ import se.sundsvall.postportalservice.integration.messagingsettings.MessagingSet
 import se.sundsvall.postportalservice.service.mapper.EntityMapper;
 import se.sundsvall.postportalservice.service.mapper.PrecheckMapper;
 
-@ExtendWith(MockitoExtension.class)
+@ExtendWith({
+	MockitoExtension.class, ResourceLoaderExtension.class
+})
 class PrecheckServiceTest {
 
 	private static final String MUNICIPALITY_ID = "2281";
@@ -411,6 +420,38 @@ class PrecheckServiceTest {
 		verify(messagingIntegrationMock).precheckMailboxes(MUNICIPALITY_ID, ORGANIZATION_NUMBER, List.of());
 		verifyNoMoreInteractions(citizenIntegrationMock, employeeServiceMock, messagingSettingsIntegrationMock, messagingIntegrationMock);
 		verifyNoInteractions(precheckMapperMock);
+	}
+
+	@Test
+	void precheckCSV(@Load(value = "/testfile/legalIds.csv") final String csv) throws IOException {
+		var multipartFileMock = Mockito.mock(MultipartFile.class);
+		when(multipartFileMock.getInputStream()).thenReturn(new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8)));
+
+		var result = precheckService.precheckCSV(multipartFileMock);
+
+		assertThat(result.duplicateEntries()).isEmpty();
+	}
+
+	@Test
+	void precheckCSV_withDuplicates(@Load(value = "/testfile/legalIds-duplicates.csv") final String csv) throws IOException {
+		var multipartFileMock = Mockito.mock(MultipartFile.class);
+		when(multipartFileMock.getInputStream()).thenReturn(new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8)));
+
+		var result = precheckService.precheckCSV(multipartFileMock);
+
+		assertThat(result.duplicateEntries()).hasSize(2)
+			.containsEntry("201901012391", 2)
+			.containsEntry("201901012392", 2);
+	}
+
+	@Test
+	void precheckCSV_withInvalidFormat(@Load(value = "/testfile/legalIds-invalid-format.csv") final String csv) throws IOException {
+		var multipartFileMock = Mockito.mock(MultipartFile.class);
+		when(multipartFileMock.getInputStream()).thenReturn(new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8)));
+
+		assertThatThrownBy(() -> precheckService.precheckCSV(multipartFileMock))
+			.isInstanceOf(Problem.class)
+			.hasMessageContaining("Bad Request: Invalid CSV format. Each data row must contain 12 digits, an optional hyphen between digit 8 and 9 are acceptable. Invalid entry: 20190--1012391");
 	}
 
 }

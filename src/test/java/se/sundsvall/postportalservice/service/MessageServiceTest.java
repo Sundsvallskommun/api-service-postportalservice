@@ -20,6 +20,7 @@ import static se.sundsvall.postportalservice.TestDataFactory.MUNICIPALITY_ID;
 
 import generated.se.sundsvall.messaging.DeliveryResult;
 import generated.se.sundsvall.messaging.MessageResult;
+import generated.se.sundsvall.messaging.MessageStatus;
 import generated.se.sundsvall.messagingsettings.SenderInfoResponse;
 import java.util.List;
 import java.util.Optional;
@@ -48,7 +49,6 @@ import se.sundsvall.postportalservice.integration.db.DepartmentEntity;
 import se.sundsvall.postportalservice.integration.db.MessageEntity;
 import se.sundsvall.postportalservice.integration.db.RecipientEntity;
 import se.sundsvall.postportalservice.integration.db.UserEntity;
-import se.sundsvall.postportalservice.integration.db.converter.MessageStatus;
 import se.sundsvall.postportalservice.integration.db.converter.MessageType;
 import se.sundsvall.postportalservice.integration.db.dao.DepartmentRepository;
 import se.sundsvall.postportalservice.integration.db.dao.MessageRepository;
@@ -521,7 +521,7 @@ class MessageServiceTest {
 		final var messageResult = new MessageResult()
 			.messageId(uuid)
 			.deliveries(List.of(new DeliveryResult()
-				.status(generated.se.sundsvall.messaging.MessageStatus.SENT)));
+				.status(MessageStatus.SENT)));
 
 		when(messagingIntegrationMock.sendSms(messageEntity, recipient1)).thenReturn(messageResult);
 		doCallRealMethod().when(spy).updateRecipient(messageResult, recipient1);

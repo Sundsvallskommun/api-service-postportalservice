@@ -1,0 +1,5 @@
+{
+	"title": "Bad Request",
+	"status": 400,
+	"detail": "CSV header is invalid. Expected 'Personnummer' but found: invalid-header"
+}

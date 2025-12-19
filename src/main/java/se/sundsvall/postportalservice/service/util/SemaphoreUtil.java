@@ -37,7 +37,7 @@ public final class SemaphoreUtil {
 				setMdc(contextMap);
 				return task.get();
 			})
-			.whenComplete((res, ex) -> {
+			.whenComplete((_, _) -> {
 				try {
 					semaphore.release();
 				} finally {
