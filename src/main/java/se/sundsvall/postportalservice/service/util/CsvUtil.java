@@ -35,11 +35,6 @@ public final class CsvUtil {
 			while ((line = reader.readLine()) != null) {
 				var trimmed = line.trim();
 
-				// Skip empty lines
-				if (trimmed.isEmpty()) {
-					continue;
-				}
-
 				if (!headerRead) {
 					// Header must be exactly "Personnummer"
 					if (!"Personnummer".equals(trimmed)) {
@@ -50,11 +45,13 @@ public final class CsvUtil {
 				}
 
 				// Validate that the line contains exactly 12 digits, with an optional hyphen between digit 8 and 9
-				if (!trimmed.matches("^\\d{8}-?\\d{4}$")) {
+				if (!trimmed.isEmpty() && !trimmed.matches("^\\d{8}-?\\d{4}$")) {
 					throw Problem.valueOf(BAD_REQUEST, "Invalid CSV format. Each data row must contain 12 digits, an optional hyphen between digit 8 and 9 are acceptable. Invalid entry: " + trimmed);
 				}
 
-				counts.merge(trimmed.replace("-", ""), 1, Integer::sum);
+				if (!trimmed.isEmpty()) {
+					counts.merge(trimmed.replace("-", ""), 1, Integer::sum);
+				}
 			}
 			return counts;
 
