@@ -27,8 +27,8 @@ import se.sundsvall.postportalservice.integration.messaging.MessagingIntegration
 import se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration;
 import se.sundsvall.postportalservice.service.mapper.EntityMapper;
 import se.sundsvall.postportalservice.service.mapper.PrecheckMapper;
-import se.sundsvall.postportalservice.service.util.CsvUtil;
 import se.sundsvall.postportalservice.service.util.CitizenCategorizationHelper;
+import se.sundsvall.postportalservice.service.util.CsvUtil;
 import se.sundsvall.postportalservice.service.util.PartyIdMappingHelper;
 import se.sundsvall.postportalservice.service.util.PrecheckUtil;
 
