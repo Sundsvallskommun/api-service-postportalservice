@@ -18,7 +18,6 @@ import generated.se.sundsvall.messaging.MessageStatus;
 import generated.se.sundsvall.messaging.SmsRequest;
 import generated.se.sundsvall.messaging.SnailmailRequest;
 import java.sql.Blob;
-import java.sql.SQLException;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.AfterEach;
@@ -63,10 +62,9 @@ class MessagingIntegrationTest {
 	}
 
 	@Test
-	void sendDigitalMail() throws SQLException {
+	void sendDigitalMail() {
 		var blob = Mockito.mock(Blob.class);
-		when(blob.length()).thenReturn(123L);
-		when(blob.getBytes(1, (int) blob.length())).thenReturn(new byte[123]);
+
 		var departmentEntity = DepartmentEntity.create()
 			.withName("Jönssonligan")
 			.withOrganizationId("123");

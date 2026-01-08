@@ -2,6 +2,7 @@ package se.sundsvall.postportalservice.api;
 
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.http.MediaType.APPLICATION_PROBLEM_JSON_VALUE;
+import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;
 import static org.springframework.http.ResponseEntity.ok;
 
 import generated.se.sundsvall.messaging.ConstraintViolationProblem;
@@ -20,13 +21,17 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 import org.zalando.problem.Problem;
 import se.sundsvall.dept44.common.validators.annotation.ValidMunicipalityId;
 import se.sundsvall.dept44.support.Identifier;
 import se.sundsvall.postportalservice.api.model.KivraEligibilityRequest;
+import se.sundsvall.postportalservice.api.model.PrecheckCsvResponse;
 import se.sundsvall.postportalservice.api.model.PrecheckRequest;
 import se.sundsvall.postportalservice.api.model.PrecheckResponse;
+import se.sundsvall.postportalservice.api.validation.ValidCsv;
 import se.sundsvall.postportalservice.api.validation.ValidIdentifier;
 import se.sundsvall.postportalservice.service.PrecheckService;
 
@@ -69,5 +74,14 @@ class PrecheckResource {
 		@RequestBody @Valid final KivraEligibilityRequest request) {
 		final var result = precheckService.precheckKivra(municipalityId, request);
 		return ok(result);
+	}
+
+	@Operation(summary = "Check if a given csv is properly formatted. Also returns information about any duplicate entries", responses = {
+		@ApiResponse(responseCode = "200", description = "Successful operation", useReturnTypeSchema = true)
+	})
+	@PostMapping(value = "/csv", consumes = MULTIPART_FORM_DATA_VALUE, produces = APPLICATION_JSON_VALUE)
+	ResponseEntity<PrecheckCsvResponse> validateCsv(@ValidMunicipalityId @PathVariable final String municipalityId,
+		@RequestPart(name = "csv-file") @ValidCsv final MultipartFile csvFile) {
+		return ok(precheckService.precheckCSV(csvFile));
 	}
 }

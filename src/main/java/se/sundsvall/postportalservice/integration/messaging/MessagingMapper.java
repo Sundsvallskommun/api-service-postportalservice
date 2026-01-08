@@ -22,7 +22,6 @@ import java.util.UUID;
 import se.sundsvall.postportalservice.integration.db.AttachmentEntity;
 import se.sundsvall.postportalservice.integration.db.MessageEntity;
 import se.sundsvall.postportalservice.integration.db.RecipientEntity;
-import se.sundsvall.postportalservice.service.util.BlobUtil;
 
 public final class MessagingMapper {
 
@@ -47,7 +46,7 @@ public final class MessagingMapper {
 	}
 
 	public static DigitalMailRequest toDigitalMailRequest(final MessageEntity messageEntity, final String partyId) {
-		return Optional.ofNullable(messageEntity).map(present -> new DigitalMailRequest()
+		return Optional.ofNullable(messageEntity).map(_ -> new DigitalMailRequest()
 			.contentType(DigitalMailRequest.ContentTypeEnum.fromValue(messageEntity.getContentType()))
 			.body(messageEntity.getBody())
 			.subject(messageEntity.getSubject())
@@ -70,9 +69,9 @@ public final class MessagingMapper {
 	}
 
 	public static DigitalMailAttachment toDigitalMailAttachment(final AttachmentEntity attachmentEntity) {
-		return Optional.ofNullable(attachmentEntity).map(present -> new DigitalMailAttachment()
+		return Optional.ofNullable(attachmentEntity).map(_ -> new DigitalMailAttachment()
 			.filename(attachmentEntity.getFileName())
-			.content(BlobUtil.convertBlobToBase64String(attachmentEntity.getContent()))
+			.content(attachmentEntity.getContentString())
 			.contentType(DigitalMailAttachment.ContentTypeEnum.fromValue(attachmentEntity.getContentType())))
 			.orElse(null);
 	}
@@ -97,15 +96,15 @@ public final class MessagingMapper {
 	}
 
 	public static SnailmailAttachment toSnailmailAttachment(final AttachmentEntity attachmentEntity) {
-		return Optional.ofNullable(attachmentEntity).map(present -> new SnailmailAttachment()
+		return Optional.ofNullable(attachmentEntity).map(_ -> new SnailmailAttachment()
 			.filename(attachmentEntity.getFileName())
-			.content(BlobUtil.convertBlobToBase64String(attachmentEntity.getContent()))
+			.content(attachmentEntity.getContentString())
 			.contentType(attachmentEntity.getContentType()))
 			.orElse(null);
 	}
 
 	public static Address toAddress(final RecipientEntity recipientEntity) {
-		return Optional.ofNullable(recipientEntity).map(present -> new Address()
+		return Optional.ofNullable(recipientEntity).map(_ -> new Address()
 			.address(recipientEntity.getStreetAddress())
 			.apartmentNumber(recipientEntity.getApartmentNumber())
 			.careOf(recipientEntity.getCareOf())

@@ -1,6 +1,7 @@
 package se.sundsvall.postportalservice.service.mapper;
 
 import static java.util.Collections.emptyList;
+import static se.sundsvall.postportalservice.service.util.BlobUtil.convertBlobToBase64String;
 
 import java.util.List;
 import java.util.Optional;
@@ -26,12 +27,17 @@ public final class AttachmentMapper {
 	}
 
 	public AttachmentEntity toAttachmentEntity(final MultipartFile multipartFile) {
-		return Optional.ofNullable(multipartFile)
-			.map(file -> new AttachmentEntity()
-				.withFileName(file.getOriginalFilename())
-				.withContentType(file.getContentType())
-				.withContent(blobUtil.convertToBlob(file)))
-			.orElse(null);
+		if (multipartFile == null) {
+			return null;
+		}
+		var blob = blobUtil.convertToBlob(multipartFile);
+		var contentString = convertBlobToBase64String(blob);
+
+		return new AttachmentEntity()
+			.withFileName(multipartFile.getOriginalFilename())
+			.withContentType(multipartFile.getContentType())
+			.withContent(blob)
+			.withContentString(contentString);
 	}
 
 }

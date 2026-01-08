@@ -13,6 +13,7 @@ import jakarta.persistence.Index;
 import jakarta.persistence.Lob;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import java.sql.Blob;
 import java.time.OffsetDateTime;
 import java.util.Objects;
@@ -40,6 +41,10 @@ public class AttachmentEntity {
 	@Column(name = "content", columnDefinition = "LONGBLOB")
 	private Blob content;
 
+	// This is used to avoid having to convert Blob to String n(recipient) times when mapping to requests
+	@Transient
+	private String contentString;
+
 	@Column(name = "created", columnDefinition = "DATETIME")
 	@TimeZoneStorage(NORMALIZE)
 	private OffsetDateTime created;
@@ -51,6 +56,19 @@ public class AttachmentEntity {
 
 	public static AttachmentEntity create() {
 		return new AttachmentEntity();
+	}
+
+	public AttachmentEntity withContentString(String contentString) {
+		this.contentString = contentString;
+		return this;
+	}
+
+	public String getContentString() {
+		return contentString;
+	}
+
+	public void setContentString(String contentString) {
+		this.contentString = contentString;
 	}
 
 	public String getId() {
@@ -114,27 +132,28 @@ public class AttachmentEntity {
 	}
 
 	@Override
+	public boolean equals(Object o) {
+		if (o == null || getClass() != o.getClass())
+			return false;
+		AttachmentEntity that = (AttachmentEntity) o;
+		return Objects.equals(id, that.id) && Objects.equals(fileName, that.fileName) && Objects.equals(contentType, that.contentType) && Objects.equals(content, that.content) && Objects.equals(contentString,
+			that.contentString) && Objects.equals(created, that.created);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(id, fileName, contentType, content, contentString, created);
+	}
+
+	@Override
 	public String toString() {
 		return "AttachmentEntity{" +
 			"id='" + id + '\'' +
 			", fileName='" + fileName + '\'' +
 			", contentType='" + contentType + '\'' +
 			", content=" + content +
+			", contentString='" + contentString + '\'' +
 			", created=" + created +
 			'}';
-	}
-
-	@Override
-	public boolean equals(Object o) {
-		if (o == null || getClass() != o.getClass())
-			return false;
-		AttachmentEntity that = (AttachmentEntity) o;
-		return Objects.equals(id, that.id) && Objects.equals(fileName, that.fileName) && Objects.equals(contentType, that.contentType) && Objects.equals(content, that.content) && Objects.equals(created,
-			that.created);
-	}
-
-	@Override
-	public int hashCode() {
-		return Objects.hash(id, fileName, contentType, content, created);
 	}
 }
