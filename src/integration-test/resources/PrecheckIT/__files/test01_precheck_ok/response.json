@@ -10,6 +10,7 @@
 		},
 		{
 			"deliveryMethod": "DELIVERY_NOT_POSSIBLE",
+			"reason": "Sender not accepted by recipient",
 			"partyId": "33333333-3333-3333-3333-333333333333"
 		}
 	]

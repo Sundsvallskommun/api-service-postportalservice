@@ -1,6 +1,7 @@
 package se.sundsvall.postportalservice.service.mapper;
 
 import static java.util.Collections.emptyList;
+import static se.sundsvall.postportalservice.Constants.INELIGIBLE_MINOR;
 import static se.sundsvall.postportalservice.Constants.PENDING;
 import static se.sundsvall.postportalservice.Constants.UNDELIVERABLE;
 
@@ -110,11 +111,18 @@ public class EntityMapper {
 	}
 
 	public RecipientEntity toUndeliverableRecipientEntity(final CitizenExtended citizenExtended) {
+		return createBaseRecipientEntity(citizenExtended, UNDELIVERABLE);
+	}
+
+	public RecipientEntity toIneligibleMinorRecipientEntity(final CitizenExtended citizenExtended) {
+		return createBaseRecipientEntity(citizenExtended, INELIGIBLE_MINOR);
+	}
+
+	private RecipientEntity createBaseRecipientEntity(final CitizenExtended citizenExtended, final String status) {
 		return Optional.ofNullable(citizenExtended).map(citizen -> RecipientEntity.create()
 			.withPartyId(Optional.ofNullable(citizen.getPersonId()).map(UUID::toString).orElse(null))
 			.withMessageType(MessageType.LETTER)
-			.withStatus(UNDELIVERABLE))
+			.withStatus(status))
 			.orElse(null);
-
 	}
 }

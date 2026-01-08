@@ -19,6 +19,14 @@ public final class PrecheckUtil {
 
 	private PrecheckUtil() {}
 
+	/**
+	 * Record for holding mailbox partyId with reason for unreachability.
+	 *
+	 * @param partyId partyId of the recipient
+	 * @param reason  reason for unreachability (null if reachable)
+	 */
+	public record UnreachableMailbox(String partyId, String reason) {}
+
 	public static List<PersonGuidBatch> filterSuccessfulPersonGuidBatches(final List<PersonGuidBatch> batches) {
 		return ofNullable(batches).orElse(emptyList()).stream()
 			.filter(batch -> TRUE.equals(batch.getSuccess()))
@@ -41,11 +49,17 @@ public final class PrecheckUtil {
 			.toList();
 	}
 
-	public static List<String> filterUnreachableMailboxes(final List<Mailbox> mailboxes) {
+	public static List<UnreachableMailbox> filterUnreachableMailboxesWithReason(final List<Mailbox> mailboxes) {
 		return ofNullable(mailboxes).orElse(emptyList()).stream()
 			.filter(mailbox -> FALSE.equals(mailbox.getReachable()))
-			.map(Mailbox::getPartyId)
-			.filter(Objects::nonNull)
+			.filter(mailbox -> mailbox.getPartyId() != null)
+			.map(mailbox -> new UnreachableMailbox(mailbox.getPartyId(), mailbox.getReason()))
+			.toList();
+	}
+
+	public static List<String> filterUnreachableMailboxes(final List<Mailbox> mailboxes) {
+		return filterUnreachableMailboxesWithReason(mailboxes).stream()
+			.map(UnreachableMailbox::partyId)
 			.toList();
 	}
 

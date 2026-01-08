@@ -25,6 +25,8 @@ class MessageStatusTest {
 			Arguments.of("pending", MessageStatus.PENDING),
 			Arguments.of("not_sent", MessageStatus.NOT_SENT),
 			Arguments.of("failed", MessageStatus.FAILED),
+			Arguments.of("INELIGIBLE_MINOR", MessageStatus.INELIGIBLE_MINOR),
+			Arguments.of("ineligible_minor", MessageStatus.INELIGIBLE_MINOR),
 			Arguments.of("unknown", MessageStatus.FAILED),
 			Arguments.of(null, MessageStatus.FAILED));
 	}

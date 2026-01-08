@@ -5,10 +5,12 @@
 	},
 	{
 		"partyId": "22222222-2222-2222-2222-222222222222",
+		"reason": "Sender not accepted by recipient",
 		"reachable": false
 	},
 	{
 		"partyId": "33333333-3333-3333-3333-333333333333",
+		"reason": "Sender not accepted by recipient",
 		"reachable": false
 	}
 ]
