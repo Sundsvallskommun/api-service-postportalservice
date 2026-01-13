@@ -2,13 +2,14 @@ package se.sundsvall.postportalservice.service.util;
 
 import static java.util.Collections.emptyList;
 import static java.util.Optional.ofNullable;
+import static se.sundsvall.postportalservice.integration.citizen.CitizenIntegration.POPULATION_REGISTRATION_ADDRESS;
 
 import generated.se.sundsvall.citizen.CitizenExtended;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Predicate;
+import se.sundsvall.postportalservice.service.util.PartyIdMappingHelper.PartyIdMapping;
 import se.sundsvall.postportalservice.util.LegalIdUtil;
 
 /**
@@ -19,79 +20,102 @@ public final class CitizenCategorizationHelper {
 	private CitizenCategorizationHelper() {}
 
 	/**
-	 * Predicate to filter adult citizens based on partyId-to-legalId mapping.
+	 * Predicate to filter adult citizens.
 	 *
-	 * @param  partyIdToLegalId map from party ID to legalId
-	 * @return                  predicate that returns true for adults over 18
+	 * @return predicate that returns true for adults over 18
 	 */
-	public static Predicate<CitizenExtended> isAdult(final Map<String, String> partyIdToLegalId) {
+	public static Predicate<SimplifiedCitizen> isAdult() {
 		return citizen -> {
-			final var partyId = extractPartyId(citizen);
-			if (partyId == null) {
+			if (citizen == null || citizen.legalId() == null) {
 				return false;
 			}
-			final var legalId = partyIdToLegalId.get(partyId);
-			return LegalIdUtil.isAnAdult(legalId);
+			return LegalIdUtil.isAnAdult(citizen.legalId());
 		};
 	}
 
 	/**
-	 * Creates a predicate to filter minor citizens based on partyId-to-legalId mapping.
+	 * Creates a predicate to filter minor citizens.
 	 *
-	 * @param  partyIdToLegalId map from party ID to legalId
-	 * @return                  predicate that returns true for minors (< 18)
+	 * @return predicate that returns true for minors (< 18)
 	 */
-	public static Predicate<CitizenExtended> isMinor(final Map<String, String> partyIdToLegalId) {
+	public static Predicate<SimplifiedCitizen> isMinor() {
 		return citizen -> {
-			final var partyId = extractPartyId(citizen);
-			if (partyId == null) {
+			if (citizen == null || citizen.legalId() == null) {
 				return false;
 			}
-			final var legalId = partyIdToLegalId.get(partyId);
-			return legalId != null && !LegalIdUtil.isAnAdult(legalId);
+			return !LegalIdUtil.isAnAdult(citizen.legalId());
 		};
+	}
+
+	/**
+	 * Converts CitizenExtended objects to SimplifiedCitizen records.
+	 *
+	 * @param  citizens         CitizenExtended objects to convert
+	 * @param  partyIdToLegalId map from party ID to legal ID
+	 * @return                  list of SimplifiedCitizen records
+	 */
+	public static List<SimplifiedCitizen> fromCitizenExtended(
+		final List<CitizenExtended> citizens,
+		final PartyIdMapping partyIdToLegalId) {
+
+		return ofNullable(citizens).orElse(emptyList()).stream()
+			.map(citizen -> {
+				// Get the partyId so we can lookup the legalId
+				final var partyId = Optional.ofNullable(citizen.getPersonId())
+					.map(UUID::toString)
+					.orElse(null);
+				final var legalId = partyIdToLegalId.partyIdToLegalId().get(partyId);
+				final var isRegistered = isRegisteredInSweden(citizen);
+
+				return new SimplifiedCitizen(partyId, legalId, isRegistered);
+			})
+			.toList();
+	}
+
+	private static boolean isRegisteredInSweden(final CitizenExtended citizen) {
+		return ofNullable(citizen.getAddresses())
+			.orElse(emptyList())
+			.stream()
+			.anyMatch(address -> POPULATION_REGISTRATION_ADDRESS.equals(address.getAddressType()));
 	}
 
 	/**
 	 * Categorizes citizens into different eligibility groups for message delivery.
 	 *
-	 * @param  citizens             list of citizens to categorize
-	 * @param  partyIdTolegalId     map from party ID to legalId for age verification
-	 * @param  isRegisteredInSweden predicate to check if citizen is registered in Sweden
-	 * @return                      categorized citizens grouped by eligibility
+	 * @param  citizens list of citizens to categorize
+	 * @return          categorized citizens grouped by eligibility
 	 */
-	public static CategorizedCitizens categorizeCitizens(final List<CitizenExtended> citizens, final Map<String, String> partyIdTolegalId,
-		final Predicate<CitizenExtended> isRegisteredInSweden) {
-
+	public static CategorizedCitizens categorizeCitizens(final List<SimplifiedCitizen> citizens) {
 		final var citizenList = ofNullable(citizens).orElse(emptyList());
 
 		final var adultsInSweden = citizenList.stream()
-			.filter(isRegisteredInSweden)
-			.filter(isAdult(partyIdTolegalId))
+			.filter(SimplifiedCitizen::isRegisteredInSweden)
+			.filter(isAdult())
 			.toList();
 
 		final var minorsInSweden = citizenList.stream()
-			.filter(isRegisteredInSweden)
-			.filter(isMinor(partyIdTolegalId))
+			.filter(SimplifiedCitizen::isRegisteredInSweden)
+			.filter(isMinor())
 			.toList();
 
 		final var notInSweden = citizenList.stream()
-			.filter(isRegisteredInSweden.negate())
+			.filter(citizen -> !citizen.isRegisteredInSweden())
 			.toList();
 
 		return new CategorizedCitizens(adultsInSweden, minorsInSweden, notInSweden);
 	}
 
 	/**
-	 * Extracts partyId from a CitizenExtended object.
+	 * Lightweight citizen representation containing only fields needed for categorization.
 	 *
-	 * @param  citizen the citizen object
-	 * @return         partyId as string, null if not present
+	 * @param partyId              partyId
+	 * @param legalId              legalId
+	 * @param isRegisteredInSweden whether the citizen has a population registration address in Sweden
 	 */
-	private static String extractPartyId(final CitizenExtended citizen) {
-		return Optional.ofNullable(citizen.getPersonId())
-			.map(UUID::toString)
-			.orElse(null);
+	public record SimplifiedCitizen(
+		String partyId,
+		String legalId,
+		boolean isRegisteredInSweden) {
 	}
 
 	/**
@@ -102,8 +126,8 @@ public final class CitizenCategorizationHelper {
 	 * @param notRegisteredInSweden citizens not registered in Sweden (undeliverable)
 	 */
 	public record CategorizedCitizens(
-		List<CitizenExtended> eligibleAdults,
-		List<CitizenExtended> ineligibleMinors,
-		List<CitizenExtended> notRegisteredInSweden) {
+		List<SimplifiedCitizen> eligibleAdults,
+		List<SimplifiedCitizen> ineligibleMinors,
+		List<SimplifiedCitizen> notRegisteredInSweden) {
 	}
 }

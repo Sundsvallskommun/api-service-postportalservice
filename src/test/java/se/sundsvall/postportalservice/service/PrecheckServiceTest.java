@@ -4,14 +4,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.times;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static org.zalando.problem.Status.BAD_GATEWAY;
-import static se.sundsvall.postportalservice.TestDataFactory.createMailbox;
 import static se.sundsvall.postportalservice.TestDataFactory.generateLegalId;
 
 import generated.se.sundsvall.citizen.CitizenAddress;
@@ -22,12 +21,10 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.UUID;
-import java.util.function.Predicate;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Answers;
-import org.mockito.ArgumentMatchers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -41,10 +38,10 @@ import se.sundsvall.postportalservice.api.model.PrecheckResponse.PrecheckRecipie
 import se.sundsvall.postportalservice.integration.citizen.CitizenIntegration;
 import se.sundsvall.postportalservice.integration.db.RecipientEntity;
 import se.sundsvall.postportalservice.integration.db.converter.MessageType;
-import se.sundsvall.postportalservice.integration.messaging.MessagingIntegration;
-import se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration;
+import se.sundsvall.postportalservice.integration.digitalregisteredletter.DigitalRegisteredLetterIntegration;
+import se.sundsvall.postportalservice.service.MailboxStatusService.MailboxStatus;
 import se.sundsvall.postportalservice.service.mapper.EntityMapper;
-import se.sundsvall.postportalservice.service.mapper.PrecheckMapper;
+import se.sundsvall.postportalservice.service.util.PrecheckUtil;
 
 @ExtendWith({
 	MockitoExtension.class, ResourceLoaderExtension.class
@@ -52,23 +49,15 @@ import se.sundsvall.postportalservice.service.mapper.PrecheckMapper;
 class PrecheckServiceTest {
 
 	private static final String MUNICIPALITY_ID = "2281";
-	private static final String ORGANIZATION_NUMBER = "5555555555";
-	private static final String DEPARTMENT_ID = "123";
 
 	@Mock
 	private CitizenIntegration citizenIntegrationMock;
 
 	@Mock
-	private EmployeeService employeeServiceMock;
+	private MailboxStatusService mailboxStatusServiceMock;
 
 	@Mock
-	private MessagingSettingsIntegration messagingSettingsIntegrationMock;
-
-	@Mock
-	private MessagingIntegration messagingIntegrationMock;
-
-	@Mock
-	private PrecheckMapper precheckMapperMock;
+	private DigitalRegisteredLetterIntegration digitalRegisteredLetterIntegrationMock;
 
 	@Mock(answer = Answers.CALLS_REAL_METHODS)
 	private EntityMapper entityMapperMock;
@@ -78,65 +67,84 @@ class PrecheckServiceTest {
 
 	@AfterEach
 	void noMoreInteractions() {
-		verifyNoMoreInteractions(citizenIntegrationMock, messagingSettingsIntegrationMock, messagingIntegrationMock, entityMapperMock, precheckMapperMock);
+		verifyNoMoreInteractions(citizenIntegrationMock, entityMapperMock, mailboxStatusServiceMock,
+			digitalRegisteredLetterIntegrationMock);
 	}
 
 	@Test
 	void precheckPartyIds() {
-		final var partyId1 = "5c1b2636-5ffc-467d-95be-156aeb73ec8e"; // Eligible for digital mail
-		final var partyId2 = "7c1b2636-5ffc-467d-95be-156aeb73ec8e"; // Not eligible for digital mail, but eligible for snail mail
-		final var partyId3 = "8c1b2636-5ffc-467d-95be-156aeb73ec8e"; // Not eligible for digital mail or snail mail
-		final var partyIds = List.of(partyId1, partyId2, partyId3);
+		final var digitalMailUuid = "5c1b2636-5ffc-467d-95be-156aeb73ec8e"; // Eligible for digital mail
+		final var snailMailUuid = "7c1b2636-5ffc-467d-95be-156aeb73ec8e"; // Not eligible for digital mail, but eligible for snail mail
+		final var notEligibleUuid = "8c1b2636-5ffc-467d-95be-156aeb73ec8e"; // Not eligible for digital mail or snail mail
+		final var partyIds = List.of(digitalMailUuid, snailMailUuid, notEligibleUuid);
 
-		final var mailbox1 = createMailbox(partyId1, true);
-		final var mailbox2 = createMailbox(partyId2, false);
-		final var mailbox3 = createMailbox(partyId3, false);
-		final var mailboxes = List.of(mailbox1, mailbox2, mailbox3);
+		// Mock mailbox status - digitalMailUuid is reachable, others are not
+		final var unreachableMailbox1 = new PrecheckUtil.UnreachableMailbox(snailMailUuid, "No digital mailbox");
+		final var unreachableMailbox2 = new PrecheckUtil.UnreachableMailbox(notEligibleUuid, "No digital mailbox");
+		final var mailboxStatus = new MailboxStatus(
+			List.of(digitalMailUuid),
+			List.of(unreachableMailbox1, unreachableMailbox2));
 
-		final var citizenExtended2 = new CitizenExtended()
+		when(mailboxStatusServiceMock.checkMailboxStatus(MUNICIPALITY_ID, partyIds)).thenReturn(mailboxStatus);
+
+		// Mock citizen data for those without digital mailboxes
+		final var snailMailCitizen = new CitizenExtended()
+			.personId(UUID.fromString(snailMailUuid))
 			.addresses(List.of(new CitizenAddress().addressType("POPULATION_REGISTRATION_ADDRESS")));
-		final var citizenExtended3 = new CitizenExtended()
+		final var notEligibleCitizen = new CitizenExtended()
+			.personId(UUID.fromString(notEligibleUuid))
 			.addresses(List.of(new CitizenAddress().addressType("INVALID_ADDRESS_TYPE")));
 
-		final var citizens = List.of(citizenExtended2, citizenExtended3);
+		final var citizens = List.of(snailMailCitizen, notEligibleCitizen);
 
-		final var sentBy = new EmployeeService.SentBy("username", DEPARTMENT_ID, "departmentName");
+		when(citizenIntegrationMock.getCitizens(MUNICIPALITY_ID, List.of(snailMailUuid, notEligibleUuid))).thenReturn(citizens);
 
-		when(employeeServiceMock.getSentBy(MUNICIPALITY_ID)).thenReturn(sentBy);
-		when(messagingSettingsIntegrationMock.getOrganizationNumber(MUNICIPALITY_ID, DEPARTMENT_ID)).thenReturn(ORGANIZATION_NUMBER);
-		when(messagingIntegrationMock.precheckMailboxes(MUNICIPALITY_ID, ORGANIZATION_NUMBER, partyIds)).thenReturn(mailboxes);
-		when(citizenIntegrationMock.getCitizens(MUNICIPALITY_ID, List.of(partyId2, partyId3))).thenReturn(citizens);
-		when(precheckMapperMock.toSnailMailEligiblePartyIds(eq(citizens), ArgumentMatchers.<Predicate<CitizenExtended>>any())).thenReturn(List.of(partyId2));
-		when(precheckMapperMock.toSnailMailIneligiblePartyIds(eq(citizens), ArgumentMatchers.<Predicate<CitizenExtended>>any())).thenReturn(List.of(partyId3));
+		// Mock person numbers for age verification
+		final var digitalMailBatch = new PersonGuidBatch()
+			.success(Boolean.TRUE)
+			.personId(UUID.fromString(digitalMailUuid))
+			.personNumber(generateLegalId(30, "2399"));
+
+		final var snailMailBatch = new PersonGuidBatch()
+			.success(Boolean.TRUE)
+			.personId(UUID.fromString(snailMailUuid))
+			.personNumber(generateLegalId(35, "2398"));
+
+		final var notEligibleBatch = new PersonGuidBatch()
+			.success(Boolean.TRUE)
+			.personId(UUID.fromString(notEligibleUuid))
+			.personNumber(generateLegalId(40, "2388"));
+
+		when(citizenIntegrationMock.getPersonNumbers(MUNICIPALITY_ID, partyIds))
+			.thenReturn(List.of(digitalMailBatch, snailMailBatch, notEligibleBatch));
 
 		final var result = precheckService.precheckPartyIds(MUNICIPALITY_ID, partyIds);
 
 		assertThat(result.precheckRecipients()).hasSize(3)
 			.extracting(PrecheckRecipient::partyId, PrecheckRecipient::deliveryMethod)
 			.containsExactlyInAnyOrder(
-				tuple(partyId1, DeliveryMethod.DIGITAL_MAIL),
-				tuple(partyId2, DeliveryMethod.SNAIL_MAIL),
-				tuple(partyId3, DeliveryMethod.DELIVERY_NOT_POSSIBLE));
+				tuple(digitalMailUuid, DeliveryMethod.DIGITAL_MAIL),
+				tuple(snailMailUuid, DeliveryMethod.SNAIL_MAIL),
+				tuple(notEligibleUuid, DeliveryMethod.DELIVERY_NOT_POSSIBLE));
 
-		verify(employeeServiceMock).getSentBy(MUNICIPALITY_ID);
-		verify(messagingIntegrationMock).precheckMailboxes(MUNICIPALITY_ID, ORGANIZATION_NUMBER, partyIds);
-		verify(citizenIntegrationMock).getCitizens(MUNICIPALITY_ID, List.of(partyId2, partyId3));
-		verify(precheckMapperMock).toSnailMailEligiblePartyIds(eq(citizens), ArgumentMatchers.<Predicate<CitizenExtended>>any());
-		verify(precheckMapperMock).toSnailMailIneligiblePartyIds(eq(citizens), ArgumentMatchers.<Predicate<CitizenExtended>>any());
-		verifyNoMoreInteractions(employeeServiceMock, citizenIntegrationMock, messagingIntegrationMock, precheckMapperMock);
+		verify(mailboxStatusServiceMock).checkMailboxStatus(MUNICIPALITY_ID, partyIds);
+		verify(citizenIntegrationMock).getCitizens(MUNICIPALITY_ID, List.of(snailMailUuid, notEligibleUuid));
+		verify(citizenIntegrationMock).getPersonNumbers(MUNICIPALITY_ID, partyIds);
 	}
 
 	@Test
-	void precheckPartyIds_employeeThrows() {
-		when(employeeServiceMock.getSentBy(MUNICIPALITY_ID)).thenThrow(Problem.valueOf(BAD_GATEWAY, "Failed to retrieve employee data"));
+	void precheckPartyIds_mailboxServiceThrows() {
+		final var partyIds = List.of("party-1", "party-2");
 
-		assertThatThrownBy(() -> precheckService.precheckPartyIds(MUNICIPALITY_ID, List.of()))
+		when(mailboxStatusServiceMock.checkMailboxStatus(MUNICIPALITY_ID, partyIds))
+			.thenThrow(Problem.valueOf(BAD_GATEWAY, "Failed to check mailbox status"));
+
+		assertThatThrownBy(() -> precheckService.precheckPartyIds(MUNICIPALITY_ID, partyIds))
 			.isInstanceOf(Problem.class)
-			.hasMessageContaining("Bad Gateway: Failed to retrieve employee data");
+			.hasMessageContaining("Bad Gateway: Failed to check mailbox status");
 
-		verify(employeeServiceMock).getSentBy(MUNICIPALITY_ID);
-		verifyNoMoreInteractions(employeeServiceMock);
-		verifyNoInteractions(messagingIntegrationMock, citizenIntegrationMock, precheckMapperMock);
+		verify(mailboxStatusServiceMock).checkMailboxStatus(MUNICIPALITY_ID, partyIds);
+		verifyNoInteractions(citizenIntegrationMock);
 	}
 
 	@Test
@@ -154,15 +162,10 @@ class PrecheckServiceTest {
 		final var partyIds = List.of(partyId);
 
 		when(citizenIntegrationMock.getPartyIds(MUNICIPALITY_ID, legalIds)).thenReturn(personGuidBatches);
-		final var sentBy = new EmployeeService.SentBy("username", DEPARTMENT_ID, "departmentName");
-		when(employeeServiceMock.getSentBy(MUNICIPALITY_ID)).thenReturn(sentBy);
-		when(messagingSettingsIntegrationMock.getOrganizationNumber(MUNICIPALITY_ID, DEPARTMENT_ID))
-			.thenReturn(ORGANIZATION_NUMBER);
 
-		// mailbox with digital mail
-		final var mailbox = createMailbox(partyId, true);
-		when(messagingIntegrationMock.precheckMailboxes(MUNICIPALITY_ID, ORGANIZATION_NUMBER, partyIds))
-			.thenReturn(List.of(mailbox));
+		// Mock mailbox status - digital mailbox available
+		final var mailboxStatus = new MailboxStatus(List.of(partyId), List.of());
+		when(mailboxStatusServiceMock.checkMailboxStatus(MUNICIPALITY_ID, partyIds)).thenReturn(mailboxStatus);
 
 		final var result = precheckService.precheckLegalIds(MUNICIPALITY_ID, legalIds);
 
@@ -172,12 +175,8 @@ class PrecheckServiceTest {
 
 		// Verify
 		verify(citizenIntegrationMock).getPartyIds(MUNICIPALITY_ID, legalIds);
-		verify(employeeServiceMock).getSentBy(MUNICIPALITY_ID);
-		verify(messagingSettingsIntegrationMock).getOrganizationNumber(MUNICIPALITY_ID, DEPARTMENT_ID);
-		verify(messagingIntegrationMock).precheckMailboxes(MUNICIPALITY_ID, ORGANIZATION_NUMBER, partyIds);
+		verify(mailboxStatusServiceMock).checkMailboxStatus(MUNICIPALITY_ID, partyIds);
 		verify(entityMapperMock).toDigitalMailRecipientEntity(any());
-
-		verifyNoMoreInteractions(citizenIntegrationMock, employeeServiceMock, messagingSettingsIntegrationMock, messagingIntegrationMock);
 	}
 
 	@Test
@@ -195,15 +194,11 @@ class PrecheckServiceTest {
 		final var partyIds = List.of(partyId);
 
 		when(citizenIntegrationMock.getPartyIds(MUNICIPALITY_ID, legalIds)).thenReturn(personGuidBatches);
-		final var sentBy = new EmployeeService.SentBy("username", DEPARTMENT_ID, "departmentName");
-		when(employeeServiceMock.getSentBy(MUNICIPALITY_ID)).thenReturn(sentBy);
-		when(messagingSettingsIntegrationMock.getOrganizationNumber(MUNICIPALITY_ID, DEPARTMENT_ID))
-			.thenReturn(ORGANIZATION_NUMBER);
 
-		// No digital mailbox
-		final var mailbox = createMailbox(partyId, false);
-		when(messagingIntegrationMock.precheckMailboxes(MUNICIPALITY_ID, ORGANIZATION_NUMBER, partyIds))
-			.thenReturn(List.of(mailbox));
+		// Mock mailbox status - no digital mailbox
+		final var unreachableMailbox = new PrecheckUtil.UnreachableMailbox(partyId, "No digital mailbox");
+		final var mailboxStatus = new MailboxStatus(List.of(), List.of(unreachableMailbox));
+		when(mailboxStatusServiceMock.checkMailboxStatus(MUNICIPALITY_ID, partyIds)).thenReturn(mailboxStatus);
 
 		// adult registered in Sweden
 		final var citizenExtended = new CitizenExtended()
@@ -212,7 +207,6 @@ class PrecheckServiceTest {
 				.addressType("POPULATION_REGISTRATION_ADDRESS")));
 
 		when(citizenIntegrationMock.getCitizens(MUNICIPALITY_ID, partyIds)).thenReturn(List.of(citizenExtended));
-		when(citizenIntegrationMock.isRegisteredInSweden(citizenExtended)).thenReturn(true);
 
 		final var result = precheckService.precheckLegalIds(MUNICIPALITY_ID, legalIds);
 
@@ -221,15 +215,9 @@ class PrecheckServiceTest {
 			.containsExactly(tuple(partyId, MessageType.SNAIL_MAIL, "PENDING"));
 
 		verify(citizenIntegrationMock).getPartyIds(MUNICIPALITY_ID, legalIds);
-		verify(employeeServiceMock).getSentBy(MUNICIPALITY_ID);
-		verify(messagingSettingsIntegrationMock).getOrganizationNumber(MUNICIPALITY_ID, DEPARTMENT_ID);
-		verify(messagingIntegrationMock).precheckMailboxes(MUNICIPALITY_ID, ORGANIZATION_NUMBER, partyIds);
+		verify(mailboxStatusServiceMock).checkMailboxStatus(MUNICIPALITY_ID, partyIds);
 		verify(citizenIntegrationMock).getCitizens(MUNICIPALITY_ID, partyIds);
-		verify(citizenIntegrationMock, times(3)).isRegisteredInSweden(any(CitizenExtended.class));
 		verify(entityMapperMock).toSnailMailRecipientEntity(any());
-
-		verifyNoMoreInteractions(citizenIntegrationMock, employeeServiceMock,
-			messagingSettingsIntegrationMock, messagingIntegrationMock);
 	}
 
 	@Test
@@ -247,15 +235,11 @@ class PrecheckServiceTest {
 		final var partyIds = List.of(partyId);
 
 		when(citizenIntegrationMock.getPartyIds(MUNICIPALITY_ID, legalIds)).thenReturn(personGuidBatches);
-		final var sentBy = new EmployeeService.SentBy("username", DEPARTMENT_ID, "departmentName");
-		when(employeeServiceMock.getSentBy(MUNICIPALITY_ID)).thenReturn(sentBy);
-		when(messagingSettingsIntegrationMock.getOrganizationNumber(MUNICIPALITY_ID, DEPARTMENT_ID))
-			.thenReturn(ORGANIZATION_NUMBER);
 
-		// no digital mailbox
-		final var mailbox = createMailbox(partyId, false);
-		when(messagingIntegrationMock.precheckMailboxes(MUNICIPALITY_ID, ORGANIZATION_NUMBER, partyIds))
-			.thenReturn(List.of(mailbox));
+		// Mock mailbox status - no digital mailbox
+		final var unreachableMailbox = new PrecheckUtil.UnreachableMailbox(partyId, "No digital mailbox");
+		final var mailboxStatus = new MailboxStatus(List.of(), List.of(unreachableMailbox));
+		when(mailboxStatusServiceMock.checkMailboxStatus(MUNICIPALITY_ID, partyIds)).thenReturn(mailboxStatus);
 
 		// Setup citizen data - NOT registered in Sweden
 		final var citizenExtended = new CitizenExtended()
@@ -265,7 +249,6 @@ class PrecheckServiceTest {
 
 		when(citizenIntegrationMock.getCitizens(MUNICIPALITY_ID, partyIds))
 			.thenReturn(List.of(citizenExtended));
-		when(citizenIntegrationMock.isRegisteredInSweden(citizenExtended)).thenReturn(false);
 
 		// Execute
 		final var result = precheckService.precheckLegalIds(MUNICIPALITY_ID, legalIds);
@@ -277,15 +260,9 @@ class PrecheckServiceTest {
 
 		// Verify
 		verify(citizenIntegrationMock).getPartyIds(MUNICIPALITY_ID, legalIds);
-		verify(employeeServiceMock).getSentBy(MUNICIPALITY_ID);
-		verify(messagingSettingsIntegrationMock).getOrganizationNumber(MUNICIPALITY_ID, DEPARTMENT_ID);
-		verify(messagingIntegrationMock).precheckMailboxes(MUNICIPALITY_ID, ORGANIZATION_NUMBER, partyIds);
+		verify(mailboxStatusServiceMock).checkMailboxStatus(MUNICIPALITY_ID, partyIds);
 		verify(citizenIntegrationMock).getCitizens(MUNICIPALITY_ID, partyIds);
-		verify(citizenIntegrationMock, times(3)).isRegisteredInSweden(any(CitizenExtended.class));
 		verify(entityMapperMock).toUndeliverableRecipientEntity(any());
-
-		verifyNoMoreInteractions(citizenIntegrationMock, employeeServiceMock,
-			messagingSettingsIntegrationMock, messagingIntegrationMock);
 	}
 
 	@Test
@@ -305,15 +282,11 @@ class PrecheckServiceTest {
 
 		// Setup mocks
 		when(citizenIntegrationMock.getPartyIds(MUNICIPALITY_ID, legalIds)).thenReturn(personGuidBatches);
-		final var sentBy = new EmployeeService.SentBy("username", DEPARTMENT_ID, "departmentName");
-		when(employeeServiceMock.getSentBy(MUNICIPALITY_ID)).thenReturn(sentBy);
-		when(messagingSettingsIntegrationMock.getOrganizationNumber(MUNICIPALITY_ID, DEPARTMENT_ID))
-			.thenReturn(ORGANIZATION_NUMBER);
 
-		// Setup mailbox without digital mail
-		final var mailbox = createMailbox(partyId, false);
-		when(messagingIntegrationMock.precheckMailboxes(MUNICIPALITY_ID, ORGANIZATION_NUMBER, partyIds))
-			.thenReturn(List.of(mailbox));
+		// Mock mailbox status - no digital mailbox
+		final var unreachableMailbox = new PrecheckUtil.UnreachableMailbox(partyId, "No digital mailbox");
+		final var mailboxStatus = new MailboxStatus(List.of(), List.of(unreachableMailbox));
+		when(mailboxStatusServiceMock.checkMailboxStatus(MUNICIPALITY_ID, partyIds)).thenReturn(mailboxStatus);
 
 		// Setup citizen data - minor registered in Sweden
 		final var citizenExtended = new CitizenExtended()
@@ -323,7 +296,6 @@ class PrecheckServiceTest {
 
 		when(citizenIntegrationMock.getCitizens(MUNICIPALITY_ID, partyIds))
 			.thenReturn(List.of(citizenExtended));
-		when(citizenIntegrationMock.isRegisteredInSweden(citizenExtended)).thenReturn(true);
 
 		// Execute
 		final var result = precheckService.precheckLegalIds(MUNICIPALITY_ID, legalIds);
@@ -335,15 +307,9 @@ class PrecheckServiceTest {
 
 		// Verify
 		verify(citizenIntegrationMock).getPartyIds(MUNICIPALITY_ID, legalIds);
-		verify(employeeServiceMock).getSentBy(MUNICIPALITY_ID);
-		verify(messagingSettingsIntegrationMock).getOrganizationNumber(MUNICIPALITY_ID, DEPARTMENT_ID);
-		verify(messagingIntegrationMock).precheckMailboxes(MUNICIPALITY_ID, ORGANIZATION_NUMBER, partyIds);
+		verify(mailboxStatusServiceMock).checkMailboxStatus(MUNICIPALITY_ID, partyIds);
 		verify(citizenIntegrationMock).getCitizens(MUNICIPALITY_ID, partyIds);
-		verify(citizenIntegrationMock, times(3)).isRegisteredInSweden(any(CitizenExtended.class));
 		verify(entityMapperMock).toIneligibleMinorRecipientEntity(any());
-
-		verifyNoMoreInteractions(citizenIntegrationMock, employeeServiceMock,
-			messagingSettingsIntegrationMock, messagingIntegrationMock);
 	}
 
 	@Test
@@ -356,70 +322,28 @@ class PrecheckServiceTest {
 			.hasMessageContaining("Bad Gateway: Failed to retrieve citizen data");
 
 		verify(citizenIntegrationMock).getPartyIds(MUNICIPALITY_ID, legalIds);
-		verifyNoInteractions(employeeServiceMock, messagingSettingsIntegrationMock, messagingIntegrationMock, precheckMapperMock);
+		verifyNoInteractions(mailboxStatusServiceMock);
 	}
 
 	@Test
-	void precheckLegalIds_employeeThrows() {
+	void precheckLegalIds_mailboxServiceThrows() {
 		final var legalIds = List.of("201801022383", "201801032390", "201801042381");
-		final var batches = List.of(new PersonGuidBatch(), new PersonGuidBatch());
-		when(citizenIntegrationMock.getPartyIds(MUNICIPALITY_ID, legalIds)).thenReturn(batches);
+		final var batches = List.of(new PersonGuidBatch()
+			.success(Boolean.TRUE)
+			.personNumber(legalIds.get(0))
+			.personId(UUID.randomUUID()));
 
-		when(employeeServiceMock.getSentBy(MUNICIPALITY_ID)).thenThrow(Problem.valueOf(BAD_GATEWAY, "Failed to retrieve employee data"));
+		when(citizenIntegrationMock.getPartyIds(MUNICIPALITY_ID, legalIds)).thenReturn(batches);
+		when(mailboxStatusServiceMock.checkMailboxStatus(anyString(), anyList()))
+			.thenThrow(Problem.valueOf(BAD_GATEWAY, "Failed to check mailbox status"));
 
 		assertThatThrownBy(() -> precheckService.precheckLegalIds(MUNICIPALITY_ID, legalIds))
 			.isInstanceOf(Problem.class)
-			.hasMessageContaining("Bad Gateway: Failed to retrieve employee data");
+			.hasMessageContaining("Bad Gateway: Failed to check mailbox status");
 
 		verify(citizenIntegrationMock).getPartyIds(MUNICIPALITY_ID, legalIds);
-		verify(employeeServiceMock).getSentBy(MUNICIPALITY_ID);
-		verifyNoMoreInteractions(citizenIntegrationMock, employeeServiceMock);
-		verifyNoInteractions(messagingSettingsIntegrationMock, messagingIntegrationMock, precheckMapperMock);
-	}
-
-	@Test
-	void precheckLegalIds_messagingSettingThrows() {
-		final var legalIds = List.of("201801022383", "201801032390", "201801042381");
-		final var batches = List.of(new PersonGuidBatch(), new PersonGuidBatch());
-		final var sentBy = new EmployeeService.SentBy("username", DEPARTMENT_ID, "departmentName");
-
-		when(citizenIntegrationMock.getPartyIds(MUNICIPALITY_ID, legalIds)).thenReturn(batches);
-		when(employeeServiceMock.getSentBy(MUNICIPALITY_ID)).thenReturn(sentBy);
-		when(messagingSettingsIntegrationMock.getOrganizationNumber(MUNICIPALITY_ID, DEPARTMENT_ID))
-			.thenThrow(Problem.valueOf(BAD_GATEWAY, "Failed to retrieve messaging settings"));
-
-		assertThatThrownBy(() -> precheckService.precheckLegalIds(MUNICIPALITY_ID, legalIds))
-			.isInstanceOf(Problem.class)
-			.hasMessageContaining("Bad Gateway: Failed to retrieve messaging settings");
-
-		verify(citizenIntegrationMock).getPartyIds(MUNICIPALITY_ID, legalIds);
-		verify(employeeServiceMock).getSentBy(MUNICIPALITY_ID);
-		verify(messagingSettingsIntegrationMock).getOrganizationNumber(MUNICIPALITY_ID, DEPARTMENT_ID);
-		verifyNoMoreInteractions(citizenIntegrationMock, employeeServiceMock, messagingSettingsIntegrationMock);
-		verifyNoInteractions(messagingIntegrationMock, precheckMapperMock);
-	}
-
-	@Test
-	void precheckLegalIds_messagingThrows() {
-		final var legalIds = List.of("201801022383", "201801032390", "201801042381");
-		final var batches = List.of(new PersonGuidBatch(), new PersonGuidBatch());
-		final var sentBy = new EmployeeService.SentBy("username", DEPARTMENT_ID, "departmentName");
-
-		when(citizenIntegrationMock.getPartyIds(MUNICIPALITY_ID, legalIds)).thenReturn(batches);
-		when(employeeServiceMock.getSentBy(MUNICIPALITY_ID)).thenReturn(sentBy);
-		when(messagingSettingsIntegrationMock.getOrganizationNumber(MUNICIPALITY_ID, DEPARTMENT_ID)).thenReturn(ORGANIZATION_NUMBER);
-		when(messagingIntegrationMock.precheckMailboxes(MUNICIPALITY_ID, ORGANIZATION_NUMBER, List.of())).thenThrow(Problem.valueOf(BAD_GATEWAY, "Failed to retrieve mailbox data"));
-
-		assertThatThrownBy(() -> precheckService.precheckLegalIds(MUNICIPALITY_ID, legalIds))
-			.isInstanceOf(Problem.class)
-			.hasMessageContaining("Bad Gateway: Failed to retrieve mailbox data");
-
-		verify(citizenIntegrationMock).getPartyIds(MUNICIPALITY_ID, legalIds);
-		verify(employeeServiceMock).getSentBy(MUNICIPALITY_ID);
-		verify(messagingSettingsIntegrationMock).getOrganizationNumber(MUNICIPALITY_ID, DEPARTMENT_ID);
-		verify(messagingIntegrationMock).precheckMailboxes(MUNICIPALITY_ID, ORGANIZATION_NUMBER, List.of());
-		verifyNoMoreInteractions(citizenIntegrationMock, employeeServiceMock, messagingSettingsIntegrationMock, messagingIntegrationMock);
-		verifyNoInteractions(precheckMapperMock);
+		verify(mailboxStatusServiceMock).checkMailboxStatus(anyString(), anyList());
+		verifyNoMoreInteractions(citizenIntegrationMock, mailboxStatusServiceMock);
 	}
 
 	@Test
