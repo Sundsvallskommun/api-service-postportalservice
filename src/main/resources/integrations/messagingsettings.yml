@@ -1,15 +1,61 @@
-openapi: 3.0.1
+openapi: 3.1.0
 info:
-  title: messaging-settings
+  title: api-service-messaging-settings
   contact: { }
   license:
     name: MIT License
     url: https://opensource.org/licenses/MIT
-  version: "1.3"
+  version: "2.0"
 servers:
-  - url: https://messaging-settings-af-messaging-settings.apps.ocp101.sundsvall.se
+  - url: http://localhost:63463
     description: Generated server url
 paths:
+  /{municipalityId}:
+    get:
+      tags:
+        - Messaging Settings
+      summary: Get messaging settings
+      description: Get all messaging settings or the ones that matches provided filter
+      operationId: fetchMessagingSettings
+      parameters:
+        - name: municipalityId
+          in: path
+          description: Municipality ID
+          required: true
+          schema:
+            type: string
+          example: 2281
+        - name: filter
+          in: query
+          description: "Syntax description: [spring-filter](https://github.com/turkraft/spring-filter/blob/85730f950a5f8623159cc0eb4d737555f9382bb7/README.md#syntax)"
+          required: false
+          schema:
+            type: string
+          example: "created > '2022-09-08T12:00:00.000+02:00' and values.key: 'namespace'\
+          \ and values.value: 'NS1'"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MessagingSettings"
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/Problem"
+                  - $ref: "#/components/schemas/ConstraintViolationProblem"
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
   /{municipalityId}/{namespace}/{departmentName}/sender-info:
     get:
       tags:
@@ -185,8 +231,8 @@ paths:
           description: Department ID
           required: true
           schema:
-            minLength: 1
             type: string
+            minLength: 1
           example: SKM
       responses:
         "200":
@@ -195,6 +241,59 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/CallbackEmailResponse"
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/Problem"
+                  - $ref: "#/components/schemas/ConstraintViolationProblem"
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+      deprecated: true
+  /{municipalityId}/user:
+    get:
+      tags:
+        - Messaging Settings
+      summary: Get messaging settings for organization connected to a user
+      description: Get messaging settings for the organization connected to the provided
+        user.
+      operationId: getMessagingSettingsForUser
+      parameters:
+        - name: X-Sent-By
+          in: header
+          description: User identity
+          required: true
+          schema:
+            type: string
+          example: joe01doe;type=adAccount
+        - name: municipalityId
+          in: path
+          description: Municipality ID
+          required: true
+          schema:
+            type: string
+          example: 2281
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MessagingSettings"
         "404":
           description: Not Found
           content:
@@ -275,6 +374,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/Problem"
+      deprecated: true
   /{municipalityId}/portal-settings:
     get:
       tags:
@@ -317,6 +417,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/Problem"
+      deprecated: true
   /api-docs:
     get:
       tags:
@@ -338,6 +439,12 @@ components:
     Problem:
       type: object
       properties:
+        status:
+          $ref: "#/components/schemas/StatusType"
+        title:
+          type: string
+        detail:
+          type: string
         instance:
           type: string
           format: uri
@@ -346,14 +453,7 @@ components:
           format: uri
         parameters:
           type: object
-          additionalProperties:
-            type: object
-        status:
-          $ref: "#/components/schemas/StatusType"
-        title:
-          type: string
-        detail:
-          type: string
+          additionalProperties: { }
     StatusType:
       type: object
       properties:
@@ -402,15 +502,14 @@ components:
           type: string
         message:
           type: string
+        detail:
+          type: string
         instance:
           type: string
           format: uri
         parameters:
           type: object
-          additionalProperties:
-            type: object
-        detail:
-          type: string
+          additionalProperties: { }
         suppressed:
           type: array
           items:
@@ -447,8 +546,7 @@ components:
     ThrowableProblem:
       type: object
       properties:
-        cause:
-          $ref: "#/components/schemas/ThrowableProblem"
+        cause: { }
         stackTrace:
           type: array
           items:
@@ -473,6 +571,12 @@ components:
                 type: boolean
         message:
           type: string
+        status:
+          $ref: "#/components/schemas/StatusType"
+        title:
+          type: string
+        detail:
+          type: string
         instance:
           type: string
           format: uri
@@ -481,14 +585,7 @@ components:
           format: uri
         parameters:
           type: object
-          additionalProperties:
-            type: object
-        status:
-          $ref: "#/components/schemas/StatusType"
-        title:
-          type: string
-        detail:
-          type: string
+          additionalProperties: { }
         suppressed:
           type: array
           items:
@@ -529,83 +626,158 @@ components:
           type: string
         message:
           type: string
+    MessagingSettingValue:
+      type: object
+      description: Messaging setting value model
+      properties:
+        key:
+          type: string
+          description: Identifier key for the value setting
+          examples:
+            - department_name
+          readOnly: true
+        value:
+          type: string
+          description: Stored value for the value setting
+          examples:
+            - Department 44
+          readOnly: true
+        type:
+          type: string
+          description: "Type of data for the stored value. Can be one of [STRING|NUMERIC|BOOLEAN]"
+          examples:
+            - STRING
+          readOnly: true
+    MessagingSettings:
+      type: object
+      description: Messaging settings response model
+      properties:
+        id:
+          type: string
+          description: Id for the messaging setting instance
+          examples:
+            - c9383d10-6fb5-4fc1-bd0a-50bf5a24d5b7
+          readOnly: true
+        municipalityId:
+          type: string
+          description: Municipality id for municipality that the messaging setting
+            instance belongs to
+          examples:
+            - "2281"
+          readOnly: true
+        created:
+          type: string
+          format: date-time
+          description: Timestamp when the instance was created
+          examples:
+            - 2025-10-24T15:30:00+02:00
+          readOnly: true
+        updated:
+          type: string
+          format: date-time
+          description: Timestamp when the instance was last updated. Null if instance
+            has never been updated.
+          examples:
+            - 2025-10-25T16:30:00+02:00
+          readOnly: true
+        values:
+          type: array
+          description: Values connected to the messaging setting instance
+          items:
+            $ref: "#/components/schemas/MessagingSettingValue"
     SenderInfoResponse:
       type: object
+      description: SenderInfo response
       properties:
         organizationNumber:
           type: string
           description: Organization number of the organization connected to the information
-          example: "162021005489"
+          examples:
+            - "162021005489"
         supportText:
           type: string
           description: Descriptive support text
-          example: Kontakta oss via epost eller telefon
+          examples:
+            - Kontakta oss via epost eller telefon
         contactInformationUrl:
           type: string
           description: Contact information URL
-          example: https://sundsvall.se/
+          examples:
+            - https://sundsvall.se/
         contactInformationPhoneNumber:
           type: string
           description: Contact information phone number
-          example: 060-19 10 00
+          examples:
+            - 060-19 10 00
         contactInformationEmail:
           type: string
           description: Contact information e-mail address
-          example: sundsvalls.kommun@sundsvall.se
+          examples:
+            - sundsvalls.kommun@sundsvall.se
         contactInformationEmailName:
           type: string
           description: Name of contact information e-mail sender
-          example: Sundsvalls kommun
+          examples:
+            - Sundsvalls kommun
         smsSender:
           type: string
           description: Name of SMS sender
-          example: Sundsvall
+          examples:
+            - Sundsvall
         folderName:
           type: string
           description: Folder name
-          example: Foo
-      description: SenderInfo response
+          examples:
+            - Foo
     CallbackEmailResponse:
       type: object
+      description: CallbackEmail response
       properties:
         organizationNumber:
           type: string
           description: Organization number of the organization connected to the information
-          example: "162021005489"
+          examples:
+            - "162021005489"
         callbackEmail:
           type: string
           description: Callback e-mail address
-          example: no-reply@domain.tld
-      description: CallbackEmail response
+          examples:
+            - no-reply@domain.tld
     PortalSettingsResponse:
       type: object
+      description: PortalSettings response
       properties:
         organizationNumber:
           type: string
           description: Organization number of the organization connected to the information
-          example: "162021005489"
+          examples:
+            - "162021005489"
         municipalityId:
           type: string
           description: Municipality ID
-          example: "2281"
+          examples:
+            - "2281"
         departmentName:
           type: string
           description: Department name
-          example: SKM
+          examples:
+            - SKM
         snailMailMethod:
           type: string
           description: Method of delivery
-          example: EMAIL
           enum:
             - EMAIL
             - SC_ADMIN
+          examples:
+            - EMAIL
         smsEnabled:
           type: boolean
           description: Indicates if sms is enabled for the given department
-          example: true
+          examples:
+            - "true"
         rekEnabled:
           type: boolean
           description: Indicates if rek is enabled for the given department
-          example: true
-      description: PortalSettings response
+          examples:
+            - "true"
   securitySchemes: { }

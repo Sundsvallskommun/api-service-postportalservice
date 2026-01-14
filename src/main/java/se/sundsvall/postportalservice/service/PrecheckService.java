@@ -25,7 +25,6 @@ import se.sundsvall.postportalservice.api.model.PrecheckResponse.PrecheckRecipie
 import se.sundsvall.postportalservice.integration.citizen.CitizenIntegration;
 import se.sundsvall.postportalservice.integration.db.RecipientEntity;
 import se.sundsvall.postportalservice.integration.digitalregisteredletter.DigitalRegisteredLetterIntegration;
-import se.sundsvall.postportalservice.service.MailboxStatusService.MailboxStatus;
 import se.sundsvall.postportalservice.service.mapper.EntityMapper;
 import se.sundsvall.postportalservice.service.util.CitizenCategorizationHelper;
 import se.sundsvall.postportalservice.service.util.CitizenCategorizationHelper.CategorizedCitizens;
@@ -140,10 +139,9 @@ public class PrecheckService {
 	/**
 	 * Builds recipient entities from categorized data.
 	 *
-	 * @param  digitalMailPartyIds partyIds eligible for digital mail
-	 * @param  categorized         categorized citizens
-	 * @param  allCitizens         original CitizenExtended list for EntityMapper
-	 * @return                     list of recipient entities
+	 * @param digitalMailPartyIds partyIds eligible for digital mail
+	 * @param categorized categorized citizens
+	 * @return list of recipient entities
 	 */
 	private List<RecipientEntity> createRecipientEntities(
 		final List<String> digitalMailPartyIds,
@@ -151,13 +149,12 @@ public class PrecheckService {
 		final List<CitizenExtended> allCitizens) {
 
 		// Create lookup map: partyId -> CitizenExtended
-		final var citizenByPartyId = ofNullable(allCitizens)
-			.orElse(emptyList()).stream()
-			.filter(c -> c.getPersonId() != null)
+		final var citizenByPartyId = ofNullable(allCitizens).orElse(emptyList()).stream()
+			.filter(citizenExtended -> citizenExtended.getPersonId() != null)
 			.collect(Collectors.toMap(
-				c -> c.getPersonId().toString(),
+				citizenExtended -> citizenExtended.getPersonId().toString(),
 				Function.identity(),
-				(existing, replacement) -> existing));
+				(existing, _) -> existing));
 
 		final var digitalMailRecipients = createDigitalMailRecipients(digitalMailPartyIds);
 		final var snailMailRecipients = createSnailMailRecipients(categorized.eligibleAdults(), citizenByPartyId);
@@ -214,11 +211,11 @@ public class PrecheckService {
 	/**
 	 * Builds precheck response from categorized partyIds.
 	 *
-	 * @param  mailboxStatus       mailbox status containing reachable and unreachable partyIds for digital mail
-	 * @param  categorizedCitizens categorized citizens by eligibility
-	 * @return                     precheck response with recipients and delivery methods
+	 * @param mailboxStatus mailbox status containing reachable and unreachable partyIds for digital mail
+	 * @param categorizedCitizens categorized citizens by eligibility
+	 * @return precheck response with recipients and delivery methods
 	 */
-	private PrecheckResponse createPrecheckResponse(MailboxStatus mailboxStatus, final CategorizedCitizens categorizedCitizens) {
+	private PrecheckResponse createPrecheckResponse(MailboxStatusService.MailboxStatus mailboxStatus, final CategorizedCitizens categorizedCitizens) {
 		// Create map for partyId -> reason lookups
 		final var reasonByPartyId = new LinkedHashMap<String, String>();
 		mailboxStatus.unreachableWithReason().forEach(unreachable -> reasonByPartyId.put(unreachable.partyId(), unreachable.reason()));
