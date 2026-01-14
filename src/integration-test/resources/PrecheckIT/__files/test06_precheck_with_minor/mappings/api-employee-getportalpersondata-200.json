@@ -1,0 +1,18 @@
+{
+	"request": {
+		"url": "/api-employee/2281/portalpersondata/personal/joe01doe",
+		"method": "GET",
+		"headers": {
+			"Authorization": {
+				"equalTo": "Bearer 0000000000000000AAAAAAAAAAAAAAAA"
+			}
+		}
+	},
+	"response": {
+		"status": 200,
+		"headers": {
+			"Content-Type": "application/json"
+		},
+		"bodyFileName": "test06_precheck_with_minor/responses/api-employee-getportalpersondata.json"
+	}
+}

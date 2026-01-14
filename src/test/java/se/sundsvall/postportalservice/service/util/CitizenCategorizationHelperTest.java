@@ -3,11 +3,10 @@ package se.sundsvall.postportalservice.service.util;
 import static org.assertj.core.api.Assertions.assertThat;
 import static se.sundsvall.postportalservice.TestDataFactory.generateLegalId;
 
-import generated.se.sundsvall.citizen.CitizenExtended;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
+import se.sundsvall.postportalservice.service.util.CitizenCategorizationHelper.SimplifiedCitizen;
 
 class CitizenCategorizationHelperTest {
 
@@ -19,11 +18,9 @@ class CitizenCategorizationHelperTest {
 	@Test
 	void isAdult_withAdultCitizen() {
 		final var partyId = UUID.randomUUID().toString();
-		final var mapping = Map.of(partyId, ADULT_LEGAL_ID); // Adult
+		final var citizen = new SimplifiedCitizen(partyId, ADULT_LEGAL_ID, true);
 
-		final var citizen = new CitizenExtended().personId(UUID.fromString(partyId));
-
-		final var predicate = CitizenCategorizationHelper.isAdult(mapping);
+		final var predicate = CitizenCategorizationHelper.isAdult();
 
 		assertThat(predicate.test(citizen)).isTrue();
 	}
@@ -31,49 +28,36 @@ class CitizenCategorizationHelperTest {
 	@Test
 	void isAdult_withMinorCitizen() {
 		final var partyId = UUID.randomUUID().toString();
-		final var mapping = Map.of(partyId, MINOR_LEGAL_ID); // Minor
+		final var citizen = new SimplifiedCitizen(partyId, MINOR_LEGAL_ID, true);
 
-		final var citizen = new CitizenExtended()
-			.personId(UUID.fromString(partyId));
-
-		final var predicate = CitizenCategorizationHelper.isAdult(mapping);
+		final var predicate = CitizenCategorizationHelper.isAdult();
 
 		assertThat(predicate.test(citizen)).isFalse();
 	}
 
 	@Test
-	void isAdult_withNullPartyId() {
-		final var mapping = Map.of(UUID.randomUUID().toString(), ADULT_LEGAL_ID);
+	void isAdult_withNullLegalId() {
+		final var partyId = UUID.randomUUID().toString();
+		final var citizen = new SimplifiedCitizen(partyId, null, true);
 
-		final var citizen = new CitizenExtended()
-			.personId(null);
-
-		final var predicate = CitizenCategorizationHelper.isAdult(mapping);
+		final var predicate = CitizenCategorizationHelper.isAdult();
 
 		assertThat(predicate.test(citizen)).isFalse();
 	}
 
 	@Test
-	void isAdult_withPartyIdNotInMapping() {
-		final var mapping = Map.of(UUID.randomUUID().toString(), ADULT_LEGAL_ID);
+	void isAdult_withNullCitizen() {
+		final var predicate = CitizenCategorizationHelper.isAdult();
 
-		final var citizen = new CitizenExtended()
-			.personId(UUID.randomUUID());
-
-		final var predicate = CitizenCategorizationHelper.isAdult(mapping);
-
-		assertThat(predicate.test(citizen)).isFalse();
+		assertThat(predicate.test(null)).isFalse();
 	}
 
 	@Test
 	void isMinor_withMinorCitizen() {
 		final var partyId = UUID.randomUUID().toString();
-		final var mapping = Map.of(partyId, MINOR_LEGAL_ID); // Born 2010, minor
+		final var citizen = new SimplifiedCitizen(partyId, MINOR_LEGAL_ID, true);
 
-		final var citizen = new CitizenExtended()
-			.personId(UUID.fromString(partyId));
-
-		final var predicate = CitizenCategorizationHelper.isMinor(mapping);
+		final var predicate = CitizenCategorizationHelper.isMinor();
 
 		assertThat(predicate.test(citizen)).isTrue();
 	}
@@ -81,38 +65,28 @@ class CitizenCategorizationHelperTest {
 	@Test
 	void isMinor_withAdultCitizen() {
 		final var partyId = UUID.randomUUID().toString();
-		final var mapping = Map.of(partyId, ADULT_LEGAL_ID); // Born 1990, adult
+		final var citizen = new SimplifiedCitizen(partyId, ADULT_LEGAL_ID, true);
 
-		final var citizen = new CitizenExtended()
-			.personId(UUID.fromString(partyId));
-
-		final var predicate = CitizenCategorizationHelper.isMinor(mapping);
+		final var predicate = CitizenCategorizationHelper.isMinor();
 
 		assertThat(predicate.test(citizen)).isFalse();
 	}
 
 	@Test
-	void isMinor_withNullPartyId() {
-		final var mapping = Map.of(UUID.randomUUID().toString(), MINOR_LEGAL_ID);
+	void isMinor_withNullLegalId() {
+		final var partyId = UUID.randomUUID().toString();
+		final var citizen = new SimplifiedCitizen(partyId, null, true);
 
-		final var citizen = new CitizenExtended()
-			.personId(null);
-
-		final var predicate = CitizenCategorizationHelper.isMinor(mapping);
+		final var predicate = CitizenCategorizationHelper.isMinor();
 
 		assertThat(predicate.test(citizen)).isFalse();
 	}
 
 	@Test
-	void isMinor_withPartyIdNotInMapping() {
-		final var mapping = Map.of(UUID.randomUUID().toString(), MINOR_LEGAL_ID);
+	void isMinor_withNullCitizen() {
+		final var predicate = CitizenCategorizationHelper.isMinor();
 
-		final var citizen = new CitizenExtended()
-			.personId(UUID.randomUUID());
-
-		final var predicate = CitizenCategorizationHelper.isMinor(mapping);
-
-		assertThat(predicate.test(citizen)).isFalse();
+		assertThat(predicate.test(null)).isFalse();
 	}
 
 	@Test
@@ -121,47 +95,29 @@ class CitizenCategorizationHelperTest {
 		final var minorPartyId = UUID.randomUUID().toString();
 		final var notInSwedenPartyId = UUID.randomUUID().toString();
 
-		final var mapping = Map.of(
-			adultPartyId, ADULT_LEGAL_ID, // Adult
-			minorPartyId, MINOR_LEGAL_ID, // Minor
-			notInSwedenPartyId, "198001011234" // Adult but not in Sweden
-		);
-
-		final var adultCitizen = new CitizenExtended()
-			.personId(UUID.fromString(adultPartyId));
-
-		final var minorCitizen = new CitizenExtended()
-			.personId(UUID.fromString(minorPartyId));
-
-		final var notInSwedenCitizen = new CitizenExtended()
-			.personId(UUID.fromString(notInSwedenPartyId));
+		final var adultCitizen = new SimplifiedCitizen(adultPartyId, ADULT_LEGAL_ID, true);
+		final var minorCitizen = new SimplifiedCitizen(minorPartyId, MINOR_LEGAL_ID, true);
+		final var notInSwedenCitizen = new SimplifiedCitizen(notInSwedenPartyId, ADULT_LEGAL_ID2, false);
 
 		final var result = CitizenCategorizationHelper.categorizeCitizens(
-			List.of(adultCitizen, minorCitizen, notInSwedenCitizen),
-			mapping,
-			citizen -> !citizen.getPersonId().equals(UUID.fromString(notInSwedenPartyId)));
+			List.of(adultCitizen, minorCitizen, notInSwedenCitizen));
 
 		assertThat(result.eligibleAdults()).hasSize(1)
-			.extracting(CitizenExtended::getPersonId)
-			.containsExactly(UUID.fromString(adultPartyId));
+			.extracting(SimplifiedCitizen::partyId)
+			.containsExactly(adultPartyId);
 
 		assertThat(result.ineligibleMinors()).hasSize(1)
-			.extracting(CitizenExtended::getPersonId)
-			.containsExactly(UUID.fromString(minorPartyId));
+			.extracting(SimplifiedCitizen::partyId)
+			.containsExactly(minorPartyId);
 
 		assertThat(result.notRegisteredInSweden()).hasSize(1)
-			.extracting(CitizenExtended::getPersonId)
-			.containsExactly(UUID.fromString(notInSwedenPartyId));
+			.extracting(SimplifiedCitizen::partyId)
+			.containsExactly(notInSwedenPartyId);
 	}
 
 	@Test
 	void categorizeCitizens_withNullCitizens() {
-		final var mapping = Map.of(UUID.randomUUID().toString(), ADULT_LEGAL_ID);
-
-		final var result = CitizenCategorizationHelper.categorizeCitizens(
-			null,
-			mapping,
-			citizen -> true);
+		final var result = CitizenCategorizationHelper.categorizeCitizens(null);
 
 		assertThat(result.eligibleAdults()).isEmpty();
 		assertThat(result.ineligibleMinors()).isEmpty();
@@ -170,12 +126,7 @@ class CitizenCategorizationHelperTest {
 
 	@Test
 	void categorizeCitizens_withEmptyList() {
-		final var mapping = Map.of(UUID.randomUUID().toString(), ADULT_LEGAL_ID);
-
-		final var result = CitizenCategorizationHelper.categorizeCitizens(
-			List.of(),
-			mapping,
-			citizen -> true);
+		final var result = CitizenCategorizationHelper.categorizeCitizens(List.of());
 
 		assertThat(result.eligibleAdults()).isEmpty();
 		assertThat(result.ineligibleMinors()).isEmpty();
@@ -187,20 +138,11 @@ class CitizenCategorizationHelperTest {
 		final var partyId1 = UUID.randomUUID().toString();
 		final var partyId2 = UUID.randomUUID().toString();
 
-		final var mapping = Map.of(
-			partyId1, ADULT_LEGAL_ID,
-			partyId2, ADULT_LEGAL_ID2);
-
-		final var citizen1 = new CitizenExtended()
-			.personId(UUID.fromString(partyId1));
-
-		final var citizen2 = new CitizenExtended()
-			.personId(UUID.fromString(partyId2));
+		final var citizen1 = new SimplifiedCitizen(partyId1, ADULT_LEGAL_ID, true);
+		final var citizen2 = new SimplifiedCitizen(partyId2, ADULT_LEGAL_ID2, true);
 
 		final var result = CitizenCategorizationHelper.categorizeCitizens(
-			List.of(citizen1, citizen2),
-			mapping,
-			citizen -> true);
+			List.of(citizen1, citizen2));
 
 		assertThat(result.eligibleAdults()).hasSize(2);
 		assertThat(result.ineligibleMinors()).isEmpty();
@@ -212,20 +154,11 @@ class CitizenCategorizationHelperTest {
 		final var partyId1 = UUID.randomUUID().toString();
 		final var partyId2 = UUID.randomUUID().toString();
 
-		final var mapping = Map.of(
-			partyId1, MINOR_LEGAL_ID,
-			partyId2, MINOR_LEGAL_ID2);
-
-		final var citizen1 = new CitizenExtended()
-			.personId(UUID.fromString(partyId1));
-
-		final var citizen2 = new CitizenExtended()
-			.personId(UUID.fromString(partyId2));
+		final var citizen1 = new SimplifiedCitizen(partyId1, MINOR_LEGAL_ID, true);
+		final var citizen2 = new SimplifiedCitizen(partyId2, MINOR_LEGAL_ID2, true);
 
 		final var result = CitizenCategorizationHelper.categorizeCitizens(
-			List.of(citizen1, citizen2),
-			mapping,
-			citizen -> true);
+			List.of(citizen1, citizen2));
 
 		assertThat(result.eligibleAdults()).isEmpty();
 		assertThat(result.ineligibleMinors()).hasSize(2);
@@ -237,23 +170,42 @@ class CitizenCategorizationHelperTest {
 		final var partyId1 = UUID.randomUUID().toString();
 		final var partyId2 = UUID.randomUUID().toString();
 
-		final var mapping = Map.of(
-			partyId1, ADULT_LEGAL_ID,
-			partyId2, ADULT_LEGAL_ID2);
-
-		final var citizen1 = new CitizenExtended()
-			.personId(UUID.fromString(partyId1));
-
-		final var citizen2 = new CitizenExtended()
-			.personId(UUID.fromString(partyId2));
+		final var citizen1 = new SimplifiedCitizen(partyId1, ADULT_LEGAL_ID, false);
+		final var citizen2 = new SimplifiedCitizen(partyId2, ADULT_LEGAL_ID2, false);
 
 		final var result = CitizenCategorizationHelper.categorizeCitizens(
-			List.of(citizen1, citizen2),
-			mapping,
-			citizen -> false);
+			List.of(citizen1, citizen2));
 
 		assertThat(result.eligibleAdults()).isEmpty();
 		assertThat(result.ineligibleMinors()).isEmpty();
 		assertThat(result.notRegisteredInSweden()).hasSize(2);
+	}
+
+	@Test
+	void categorizeCitizens_withMixedRegistrationStatus() {
+		final var adultInSwedenPartyId = UUID.randomUUID().toString();
+		final var adultNotInSwedenPartyId = UUID.randomUUID().toString();
+		final var minorInSwedenPartyId = UUID.randomUUID().toString();
+		final var minorNotInSwedenPartyId = UUID.randomUUID().toString();
+
+		final var adultInSweden = new SimplifiedCitizen(adultInSwedenPartyId, ADULT_LEGAL_ID, true);
+		final var adultNotInSweden = new SimplifiedCitizen(adultNotInSwedenPartyId, ADULT_LEGAL_ID2, false);
+		final var minorInSweden = new SimplifiedCitizen(minorInSwedenPartyId, MINOR_LEGAL_ID, true);
+		final var minorNotInSweden = new SimplifiedCitizen(minorNotInSwedenPartyId, MINOR_LEGAL_ID2, false);
+
+		final var result = CitizenCategorizationHelper.categorizeCitizens(
+			List.of(adultInSweden, adultNotInSweden, minorInSweden, minorNotInSweden));
+
+		assertThat(result.eligibleAdults()).hasSize(1)
+			.extracting(SimplifiedCitizen::partyId)
+			.containsExactly(adultInSwedenPartyId);
+
+		assertThat(result.ineligibleMinors()).hasSize(1)
+			.extracting(SimplifiedCitizen::partyId)
+			.containsExactly(minorInSwedenPartyId);
+
+		assertThat(result.notRegisteredInSweden()).hasSize(2)
+			.extracting(SimplifiedCitizen::partyId)
+			.containsExactlyInAnyOrder(adultNotInSwedenPartyId, minorNotInSwedenPartyId);
 	}
 }

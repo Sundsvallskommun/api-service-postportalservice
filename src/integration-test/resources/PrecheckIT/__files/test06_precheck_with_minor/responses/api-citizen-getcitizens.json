@@ -18,5 +18,15 @@
 				"addressType": "INVALID_ADDRESS"
 			}
 		]
+	},
+	{
+		"personNumber": "202501011234",
+		"success": true,
+		"personId": "44444444-4444-4444-4444-444444444444",
+		"addresses": [
+			{
+				"addressType": "POPULATION_REGISTRATION_ADDRESS"
+			}
+		]
 	}
 ]

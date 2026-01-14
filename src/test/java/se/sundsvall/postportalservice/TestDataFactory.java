@@ -17,8 +17,9 @@ import se.sundsvall.postportalservice.api.model.SmsRequest;
 public final class TestDataFactory {
 
 	public static final String MUNICIPALITY_ID = "2281";
-	public static final String INVALID_MUNICIPALITY_ID = "NOT_A_VALID_MUNICIPALITY_ID";
 	public static final String MOBILE_NUMBER = "+46701740605";
+	public static final String SUNDSVALL_MUNICIPALITY_ORG_NO = "2120002411";
+	public static final String INVALID_MUNICIPALITY_ID = "NOT_A_VALID_MUNICIPALITY_ID";
 
 	private TestDataFactory() {}
 

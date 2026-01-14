@@ -3,6 +3,8 @@ package se.sundsvall.postportalservice.service.util;
 import static java.util.Collections.emptyList;
 
 import generated.se.sundsvall.citizen.PersonGuidBatch;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -66,8 +68,15 @@ public final class PartyIdMappingHelper {
 	 * @param partyIds         list of party IDs
 	 * @param partyIdToLegalId map from party ID to legalId
 	 */
-	public record PartyIdMapping(
-		List<String> partyIds,
-		Map<String, String> partyIdToLegalId) {
+	public record PartyIdMapping(List<String> partyIds, Map<String, String> partyIdToLegalId) {
+
+		public PartyIdMapping() {
+			this(new ArrayList<>(), new HashMap<>());
+		}
+
+		public void addToPartyIdToLegalIdMap(String partyId, String legalId) {
+			this.partyIds.add(partyId);
+			this.partyIdToLegalId.put(partyId, legalId);
+		}
 	}
 }

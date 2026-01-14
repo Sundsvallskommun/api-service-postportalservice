@@ -79,4 +79,17 @@ class PrecheckIT extends AbstractAppTest {
 			.withExpectedResponse(RESPONSE_FILE)
 			.sendRequestAndVerifyResponse();
 	}
+
+	@Test
+	void test06_precheck_with_minor() {
+		setupCall()
+			.withHttpMethod(POST)
+			.withServicePath("/2281/precheck")
+			.withHeader(Identifier.HEADER_NAME, "type=adAccount; joe01doe")
+			.withContentType(APPLICATION_JSON)
+			.withRequest(REQUEST_FILE)
+			.withExpectedResponseStatus(OK)
+			.withExpectedResponse(RESPONSE_FILE)
+			.sendRequestAndVerifyResponse();
+	}
 }

@@ -25,7 +25,7 @@ public interface CitizenClient {
 		consumes = APPLICATION_JSON_VALUE,
 		produces = APPLICATION_JSON_VALUE)
 	List<CitizenExtended> getCitizens(
-		@PathVariable("municipalityId") String municipalityId,
+		@PathVariable String municipalityId,
 		@RequestBody List<String> personIds);
 
 	@PostMapping(
@@ -33,6 +33,14 @@ public interface CitizenClient {
 		consumes = APPLICATION_JSON_VALUE,
 		produces = APPLICATION_JSON_VALUE)
 	List<PersonGuidBatch> getPartyIds(
-		@PathVariable("municipalityId") String municipalityId,
+		@PathVariable String municipalityId,
+		@RequestBody List<String> personIds);
+
+	@PostMapping(
+		path = "/{municipalidyId}/personnumbers/batch",
+		consumes = APPLICATION_JSON_VALUE,
+		produces = APPLICATION_JSON_VALUE)
+	List<PersonGuidBatch> getLegalIds(
+		@PathVariable String municipalidyId,
 		@RequestBody List<String> personIds);
 }

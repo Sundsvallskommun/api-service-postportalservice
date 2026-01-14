@@ -56,6 +56,13 @@ class CitizenIntegrationTest {
 	}
 
 	@Test
+	void getCitizens_shouldReturnEmptyList_whenPartyIdsAreNull() {
+		final var result = citizenIntegration.getCitizens(MUNICIPALITY_ID, null);
+
+		assertThat(result).isNotNull().isEmpty();
+	}
+
+	@Test
 	void getPartyIds() {
 		final var personGuidBatch1 = new PersonGuidBatch();
 		final var personGuidBatch2 = new PersonGuidBatch();
@@ -77,47 +84,38 @@ class CitizenIntegrationTest {
 	}
 
 	@Test
-	void getPopulationRegistrationAddress_emptyIfNoCitizen() {
-		final var result = citizenIntegration.getPopulationRegistrationAddress(null);
+	void getPartyIds_shouldReturnEmptyList_whenPersonIdsAreNull() {
+		final var result = citizenIntegration.getPartyIds(MUNICIPALITY_ID, null);
 
-		assertThat(result).isEmpty();
+		assertThat(result).isNotNull().isEmpty();
 	}
 
 	@Test
-	void getPopulationRegistrationAddress_emptyIfNoAddresses() {
-		final var citizen = createCitizen(emptyList());
+	void getPersonNumbers() {
+		final var personGuidBatch1 = new PersonGuidBatch();
+		final var personGuidBatch2 = new PersonGuidBatch();
 
-		final var result = citizenIntegration.getPopulationRegistrationAddress(citizen);
+		personGuidBatch1.setPersonId(UUID.fromString("28fba79e-73aa-4ecb-939f-301f326d2d4c"));
+		personGuidBatch2.setPersonId(UUID.fromString("f560865a-51f0-4e96-bca1-55d57a0d3f68"));
 
-		assertThat(result).isEmpty();
+		final var personGuidBatches = List.of(
+			personGuidBatch1,
+			personGuidBatch2);
+
+		when(citizenClientMock.getLegalIds(MUNICIPALITY_ID, PARTY_IDS)).thenReturn(personGuidBatches);
+
+		final var result = citizenIntegration.getPersonNumbers(MUNICIPALITY_ID, PARTY_IDS);
+
+		assertThat(result).hasSize(2);
+		assertThat(result).isEqualTo(personGuidBatches);
+		verify(citizenClientMock).getLegalIds(MUNICIPALITY_ID, PARTY_IDS);
 	}
 
 	@Test
-	void getPopulationRegistrationAddress_emptyIfNoMatchingType() {
-		final var citizen = createCitizen(List.of(createAddress("SOME_ADDRESS_TYPE"), createAddress("FOREIGN_ADDRESS")));
+	void getPersonNumbers_shouldReturnEmptyList_whenPartyIdsAreNull() {
+		final var result = citizenIntegration.getPersonNumbers(MUNICIPALITY_ID, null);
 
-		final var result = citizenIntegration.getPopulationRegistrationAddress(citizen);
-
-		assertThat(result).isEmpty();
-	}
-
-	@Test
-	void getPopulationRegistrationAddress_firstMatching() {
-		final var address1 = createAddress("SOME_ADDRESS_TYPE");
-		final var address2 = createAddress(CitizenIntegration.POPULATION_REGISTRATION_ADDRESS);
-		final var address3 = createAddress(CitizenIntegration.POPULATION_REGISTRATION_ADDRESS);
-		final var citizen = createCitizen(List.of(address1, address2, address3));
-
-		final var result = citizenIntegration.getPopulationRegistrationAddress(citizen);
-
-		assertThat(result).isPresent();
-		assertThat(result.get()).isEqualTo(address2);
-	}
-
-	private CitizenAddress createAddress(String type) {
-		var address = new CitizenAddress();
-		address.setAddressType(type);
-		return address;
+		assertThat(result).isNotNull().isEmpty();
 	}
 
 	private CitizenExtended createCitizen(List<CitizenAddress> addresses) {
