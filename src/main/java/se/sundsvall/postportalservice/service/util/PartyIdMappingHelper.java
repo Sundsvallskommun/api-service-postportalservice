@@ -65,6 +65,8 @@ public final class PartyIdMappingHelper {
 	/**
 	 * Record holding both party IDs and partyId-to-legalId mapping.
 	 *
+	 * @param partyIds         list of party IDs
+	 * @param partyIdToLegalId map from party ID to legalId
 	 */
 	public record PartyIdMapping(List<String> partyIds, Map<String, String> partyIdToLegalId) {
 

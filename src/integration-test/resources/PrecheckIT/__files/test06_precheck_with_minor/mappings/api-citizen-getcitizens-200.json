@@ -1,0 +1,23 @@
+{
+	"request": {
+		"method": "POST",
+		"url": "/api-citizen/2281/batch",
+		"bodyPatterns": [
+			{
+				"equalToJson": [
+					"22222222-2222-2222-2222-222222222222",
+					"33333333-3333-3333-3333-333333333333",
+					"44444444-4444-4444-4444-444444444444"
+				],
+				"ignoreExtraElements": true
+			}
+		]
+	},
+	"response": {
+		"status": 200,
+		"headers": {
+			"Content-Type": "application/json"
+		},
+		"bodyFileName": "test06_precheck_with_minor/responses/api-citizen-getcitizens.json"
+	}
+}

@@ -102,13 +102,13 @@ class CitizenIntegrationTest {
 			personGuidBatch1,
 			personGuidBatch2);
 
-		when(citizenClientMock.getPersonNumbers(MUNICIPALITY_ID, PARTY_IDS)).thenReturn(personGuidBatches);
+		when(citizenClientMock.getLegalIds(MUNICIPALITY_ID, PARTY_IDS)).thenReturn(personGuidBatches);
 
 		final var result = citizenIntegration.getPersonNumbers(MUNICIPALITY_ID, PARTY_IDS);
 
 		assertThat(result).hasSize(2);
 		assertThat(result).isEqualTo(personGuidBatches);
-		verify(citizenClientMock).getPersonNumbers(MUNICIPALITY_ID, PARTY_IDS);
+		verify(citizenClientMock).getLegalIds(MUNICIPALITY_ID, PARTY_IDS);
 	}
 
 	@Test

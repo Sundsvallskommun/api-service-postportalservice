@@ -3,6 +3,7 @@ package se.sundsvall.postportalservice.service;
 import static java.util.Collections.emptyList;
 import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
+import static se.sundsvall.postportalservice.Constants.INELIGIBLE_MINOR;
 
 import generated.se.sundsvall.citizen.CitizenExtended;
 import generated.se.sundsvall.citizen.PersonGuidBatch;
@@ -24,13 +25,14 @@ import se.sundsvall.postportalservice.api.model.PrecheckResponse.PrecheckRecipie
 import se.sundsvall.postportalservice.integration.citizen.CitizenIntegration;
 import se.sundsvall.postportalservice.integration.db.RecipientEntity;
 import se.sundsvall.postportalservice.integration.digitalregisteredletter.DigitalRegisteredLetterIntegration;
+import se.sundsvall.postportalservice.service.MailboxStatusService.MailboxStatus;
 import se.sundsvall.postportalservice.service.mapper.EntityMapper;
 import se.sundsvall.postportalservice.service.util.CitizenCategorizationHelper;
+import se.sundsvall.postportalservice.service.util.CitizenCategorizationHelper.CategorizedCitizens;
 import se.sundsvall.postportalservice.service.util.CitizenCategorizationHelper.SimplifiedCitizen;
 import se.sundsvall.postportalservice.service.util.CsvUtil;
 import se.sundsvall.postportalservice.service.util.PartyIdMappingHelper;
 import se.sundsvall.postportalservice.service.util.PartyIdMappingHelper.PartyIdMapping;
-import se.sundsvall.postportalservice.service.util.PrecheckUtil;
 
 @Service
 public class PrecheckService {
@@ -54,10 +56,10 @@ public class PrecheckService {
 	public PrecheckCsvResponse precheckCSV(final MultipartFile csvFile) {
 
 		// Returns a map with personal identity numbers as keys and their occurrence counts as values
-		var occurrenceMap = CsvUtil.validateCSV(csvFile);
+		final var occurrenceMap = CsvUtil.validateCSV(csvFile);
 
 		// Filter the map to include only entries with more than one occurrence
-		var duplicateEntriesMap = occurrenceMap.entrySet().stream()
+		final var duplicateEntriesMap = occurrenceMap.entrySet().stream()
 			.filter(entry -> entry.getValue() > 1)
 			.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
@@ -71,40 +73,27 @@ public class PrecheckService {
 		// Get citizen details for those without digital mailboxes
 		final var citizens = citizenIntegration.getCitizens(municipalityId, mailboxStatus.unreachable());
 
-		var partyIdMapping = getPartyIdMapping(municipalityId, partyIds);
+		final var partyIdMapping = getPartyIdMapping(municipalityId, partyIds);
 
 		// Convert CitizenExtended to SimplifiedCitizen and categorize by eligibility
 		final var simplifiedCitizens = CitizenCategorizationHelper.fromCitizenExtended(citizens, partyIdMapping);
 
-		var categorizedCitizens = CitizenCategorizationHelper.categorizeCitizens(simplifiedCitizens);
-
-		// Concatenate ineligible minors and not registered in Sweden for precheck response, as both are ineligible for snail
-		// mail
-		var ineligibleForSnailMail = Stream.concat(
-			categorizedCitizens.ineligibleMinors().stream(),
-			categorizedCitizens.notRegisteredInSweden().stream())
-			.map(SimplifiedCitizen::partyId)
-			.toList();
+		// Categorize and perform age verification
+		final var categorizedCitizens = CitizenCategorizationHelper.categorizeCitizens(simplifiedCitizens);
 
 		// Build precheck recipients with reason data
-		return createPrecheckResponse(
-			mailboxStatus.reachable(),
-			categorizedCitizens.eligibleAdults().stream()
-				.map(SimplifiedCitizen::partyId)
-				.toList(),
-			ineligibleForSnailMail,
-			mailboxStatus.unreachableWithReason());
+		return createPrecheckResponse(mailboxStatus, categorizedCitizens);
 	}
 
 	private PartyIdMapping getPartyIdMapping(final String municipalityId, final List<String> partyIds) {
 		// Get partyIds and create mapping that we can use for age verification later on
-		var partyIdMapping = new PartyIdMapping();
+		final var partyIdMapping = new PartyIdMapping();
 
-		var citizens = citizenIntegration.getPersonNumbers(municipalityId, partyIds);
+		final var citizens = citizenIntegration.getPersonNumbers(municipalityId, partyIds);
 
 		partyIds.forEach(partyId -> {
 			// Find corresponding person number for the partyId
-			var matchingLegalId = citizens.stream()
+			final var matchingLegalId = citizens.stream()
 				.filter(citizen -> Boolean.TRUE.equals(citizen.getSuccess()))
 				.filter(citizen -> citizen.getPersonId() != null)   // Check that we have a personId / UUID
 				.filter(citizen -> partyId.equalsIgnoreCase(citizen.getPersonId().toString()))
@@ -158,11 +147,12 @@ public class PrecheckService {
 	 */
 	private List<RecipientEntity> createRecipientEntities(
 		final List<String> digitalMailPartyIds,
-		final CitizenCategorizationHelper.CategorizedCitizens categorized,
+		final CategorizedCitizens categorized,
 		final List<CitizenExtended> allCitizens) {
 
 		// Create lookup map: partyId -> CitizenExtended
-		final var citizenByPartyId = allCitizens.stream()
+		final var citizenByPartyId = ofNullable(allCitizens)
+			.orElse(emptyList()).stream()
 			.filter(c -> c.getPersonId() != null)
 			.collect(Collectors.toMap(
 				c -> c.getPersonId().toString(),
@@ -224,31 +214,34 @@ public class PrecheckService {
 	/**
 	 * Builds precheck response from categorized partyIds.
 	 *
-	 * @param  digitalMailPartyIds  partyIds eligible for digital mail
-	 * @param  snailMailPartyIds    partyIds eligible for snail mail
-	 * @param  ineligiblePartyIds   partyIds ineligible for delivery
-	 * @param  unreachableMailboxes unreachable mailboxes with reason information
-	 * @return                      precheck response with all recipients
+	 * @param  mailboxStatus       mailbox status containing reachable and unreachable partyIds for digital mail
+	 * @param  categorizedCitizens categorized citizens by eligibility
+	 * @return                     precheck response with recipients and delivery methods
 	 */
-	private PrecheckResponse createPrecheckResponse(final List<String> digitalMailPartyIds, final List<String> snailMailPartyIds,
-		final List<String> ineligiblePartyIds, final List<PrecheckUtil.UnreachableMailbox> unreachableMailboxes) {
-
+	private PrecheckResponse createPrecheckResponse(MailboxStatus mailboxStatus, final CategorizedCitizens categorizedCitizens) {
 		// Create map for partyId -> reason lookups
 		final var reasonByPartyId = new LinkedHashMap<String, String>();
-		unreachableMailboxes.forEach(unreachable -> reasonByPartyId.put(unreachable.partyId(), unreachable.reason()));
+		mailboxStatus.unreachableWithReason().forEach(unreachable -> reasonByPartyId.put(unreachable.partyId(), unreachable.reason()));
 
-		final var digitalMailRecipients = digitalMailPartyIds.stream()
+		// Map reachable by digital-mail
+		final var digitalMailRecipients = mailboxStatus.reachable().stream()
 			.map(partyId -> new PrecheckRecipient(null, partyId, DeliveryMethod.DIGITAL_MAIL, null));
 
-		final var snailMailRecipients = snailMailPartyIds.stream()
-			.map(partyId -> new PrecheckRecipient(null, partyId, DeliveryMethod.SNAIL_MAIL, null));
+		// Map reachable by snail-mail
+		final var snailMailRecipients = categorizedCitizens.eligibleAdults().stream()
+			.map(simplifiedCitizen -> new PrecheckRecipient(null, simplifiedCitizen.partyId(), DeliveryMethod.SNAIL_MAIL, null));
 
-		// Include reason for ineligible recipients
-		final var ineligibleRecipients = ineligiblePartyIds.stream()
-			.map(partyId -> new PrecheckRecipient(
-				null, partyId, DeliveryMethod.DELIVERY_NOT_POSSIBLE, reasonByPartyId.get(partyId)));
+		// Map ineligible recipients with reason
+		final var ineligibleRecipients = categorizedCitizens.notRegisteredInSweden().stream()
+			.map(simplifiedCitizen -> new PrecheckRecipient(
+				null, simplifiedCitizen.partyId(), DeliveryMethod.DELIVERY_NOT_POSSIBLE, reasonByPartyId.get(simplifiedCitizen.partyId())));
 
-		final var recipients = Stream.of(digitalMailRecipients, snailMailRecipients, ineligibleRecipients)
+		// Map ineligible minors with fixed reason
+		final var ineligibleMinorRecipients = categorizedCitizens.ineligibleMinors().stream()
+			.map(simplifiedCitizen -> new PrecheckRecipient(
+				null, simplifiedCitizen.partyId(), DeliveryMethod.DELIVERY_NOT_POSSIBLE, INELIGIBLE_MINOR));
+
+		final var recipients = Stream.of(digitalMailRecipients, snailMailRecipients, ineligibleRecipients, ineligibleMinorRecipients)
 			.flatMap(Function.identity())
 			.toList();
 

@@ -40,6 +40,6 @@ public class CitizenIntegration {
 			return emptyList();
 		}
 
-		return client.getPersonNumbers(municipalityId, partyIds);
+		return client.getLegalIds(municipalityId, partyIds);
 	}
 }

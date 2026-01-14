@@ -40,7 +40,7 @@ public interface CitizenClient {
 		path = "/{municipalidyId}/personnumbers/batch",
 		consumes = APPLICATION_JSON_VALUE,
 		produces = APPLICATION_JSON_VALUE)
-	List<PersonGuidBatch> getPersonNumbers(
+	List<PersonGuidBatch> getLegalIds(
 		@PathVariable String municipalidyId,
 		@RequestBody List<String> personIds);
 }

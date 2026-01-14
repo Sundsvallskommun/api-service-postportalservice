@@ -1,0 +1,32 @@
+[
+	{
+		"personNumber": "200001022391",
+		"success": true,
+		"personId": "22222222-2222-2222-2222-222222222222",
+		"addresses": [
+			{
+				"addressType": "POPULATION_REGISTRATION_ADDRESS"
+			}
+		]
+	},
+	{
+		"personNumber": "200001122381",
+		"success": true,
+		"personId": "33333333-3333-3333-3333-333333333333",
+		"addresses": [
+			{
+				"addressType": "INVALID_ADDRESS"
+			}
+		]
+	},
+	{
+		"personNumber": "202501011234",
+		"success": true,
+		"personId": "44444444-4444-4444-4444-444444444444",
+		"addresses": [
+			{
+				"addressType": "POPULATION_REGISTRATION_ADDRESS"
+			}
+		]
+	}
+]
