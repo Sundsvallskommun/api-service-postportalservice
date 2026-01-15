@@ -5,6 +5,7 @@ import static org.zalando.problem.Status.NOT_FOUND;
 
 import generated.se.sundsvall.messagingsettings.MessagingSettingValue;
 import generated.se.sundsvall.messagingsettings.SenderInfoResponse;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -25,6 +26,21 @@ public class MessagingSettingsIntegration {
 	public static final String CONTACT_INFORMATION_EMAIL = "contact_information_email";
 	public static final String DEPARTMENT_NAME = "department_name";
 	public static final String DEPARTMENT_ID = "department_id";
+
+	public static final List<String> REQUIRED_KEYS = List.of(
+		ORGANIZATION_NUMBER,
+		FOLDER_NAME,
+		SMS_SENDER,
+		SUPPORT_TEXT,
+		CONTACT_INFORMATION_URL,
+		CONTACT_INFORMATION_PHONE_NUMBER,
+		CONTACT_INFORMATION_EMAIL,
+		DEPARTMENT_NAME,
+		DEPARTMENT_ID);
+
+	public static final Map<String, String> VALUE_VALIDATION_MAP = Map.of(
+		ORGANIZATION_NUMBER, "^\\d+$");
+
 	public static final String ERROR_MESSAGE_ATTRIBUTE_MISSING = "Required messaging setting attribute '%s' is missing for user '%s' in municipalityId '%s'";
 
 	private final MessagingSettingsClient messagingSettingsClient;
@@ -42,7 +58,7 @@ public class MessagingSettingsIntegration {
 		}
 
 		if (settings.size() > 1) {
-			throw Problem.valueOf(BAD_GATEWAY, "Found multiple messaging settings for user '%s' in municipalityId '%s', can't determine which is should be used."
+			throw Problem.valueOf(BAD_GATEWAY, "Found multiple messaging settings for user '%s' in municipalityId '%s', can't determine which one to use"
 				.formatted(Identifier.get().getValue(), municipalityId));
 		}
 
@@ -63,36 +79,19 @@ public class MessagingSettingsIntegration {
 	 * @throws org.zalando.problem.ThrowableProblem if any expected value is missing
 	 */
 	private void assertThatRequiredValuesArePresent(final Map<String, String> settingsMap, final String user, final String municipalityId) {
-		Optional.ofNullable(settingsMap.get(ORGANIZATION_NUMBER))
-			.orElseThrow(() -> Problem.valueOf(BAD_GATEWAY, ERROR_MESSAGE_ATTRIBUTE_MISSING.formatted(ORGANIZATION_NUMBER, user, municipalityId)));
+		// Iterate over required keys and check presence
+		for (var key : REQUIRED_KEYS) {
+			Optional.ofNullable(settingsMap.get(key))
+				.orElseThrow(() -> Problem.valueOf(BAD_GATEWAY, ERROR_MESSAGE_ATTRIBUTE_MISSING.formatted(key, user, municipalityId)));
+		}
 
-		Optional.ofNullable(settingsMap.get(ORGANIZATION_NUMBER))
-			.map(Integer::parseInt)
-			.orElseThrow(() -> Problem.valueOf(BAD_GATEWAY, "Invalid organization number format for user '%s' in municipalityId '%s'".formatted(user, municipalityId)));
-
-		Optional.ofNullable(settingsMap.get(FOLDER_NAME))
-			.orElseThrow(() -> Problem.valueOf(BAD_GATEWAY, ERROR_MESSAGE_ATTRIBUTE_MISSING.formatted(FOLDER_NAME, user, municipalityId)));
-
-		Optional.ofNullable(settingsMap.get(SMS_SENDER))
-			.orElseThrow(() -> Problem.valueOf(BAD_GATEWAY, ERROR_MESSAGE_ATTRIBUTE_MISSING.formatted(SMS_SENDER, user, municipalityId)));
-
-		Optional.ofNullable(settingsMap.get(SUPPORT_TEXT))
-			.orElseThrow(() -> Problem.valueOf(BAD_GATEWAY, ERROR_MESSAGE_ATTRIBUTE_MISSING.formatted(SUPPORT_TEXT, user, municipalityId)));
-
-		Optional.ofNullable(settingsMap.get(CONTACT_INFORMATION_URL))
-			.orElseThrow(() -> Problem.valueOf(BAD_GATEWAY, ERROR_MESSAGE_ATTRIBUTE_MISSING.formatted(CONTACT_INFORMATION_URL, user, municipalityId)));
-
-		Optional.ofNullable(settingsMap.get(CONTACT_INFORMATION_PHONE_NUMBER))
-			.orElseThrow(() -> Problem.valueOf(BAD_GATEWAY, ERROR_MESSAGE_ATTRIBUTE_MISSING.formatted(CONTACT_INFORMATION_PHONE_NUMBER, user, municipalityId)));
-
-		Optional.ofNullable(settingsMap.get(CONTACT_INFORMATION_EMAIL))
-			.orElseThrow(() -> Problem.valueOf(BAD_GATEWAY, ERROR_MESSAGE_ATTRIBUTE_MISSING.formatted(CONTACT_INFORMATION_EMAIL, user, municipalityId)));
-
-		Optional.ofNullable(settingsMap.get(DEPARTMENT_NAME))
-			.orElseThrow(() -> Problem.valueOf(BAD_GATEWAY, ERROR_MESSAGE_ATTRIBUTE_MISSING.formatted(DEPARTMENT_NAME, user, municipalityId)));
-
-		Optional.ofNullable(settingsMap.get(DEPARTMENT_ID))
-			.orElseThrow(() -> Problem.valueOf(BAD_GATEWAY, ERROR_MESSAGE_ATTRIBUTE_MISSING.formatted(DEPARTMENT_ID, user, municipalityId)));
+		// Validate specific values against their regex patterns
+		for (var value : VALUE_VALIDATION_MAP.entrySet()) {
+			var settingValue = settingsMap.get(value.getKey());
+			if (!settingValue.matches(value.getValue())) {
+				throw Problem.valueOf(BAD_GATEWAY, "Invalid format for messaging setting attribute '%s' for user '%s' in municipalityId '%s'".formatted(value.getKey(), user, municipalityId));
+			}
+		}
 	}
 
 	public SenderInfoResponse getSenderInfo(final String municipalityId, final String departmentId) {
