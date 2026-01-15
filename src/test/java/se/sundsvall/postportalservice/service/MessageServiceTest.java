@@ -3,7 +3,6 @@ package se.sundsvall.postportalservice.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.doReturn;
@@ -13,16 +12,24 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static org.zalando.problem.Status.BAD_GATEWAY;
-import static org.zalando.problem.Status.INTERNAL_SERVER_ERROR;
 import static se.sundsvall.postportalservice.Constants.FAILED;
 import static se.sundsvall.postportalservice.Constants.SENT;
 import static se.sundsvall.postportalservice.TestDataFactory.MUNICIPALITY_ID;
+import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.CONTACT_INFORMATION_EMAIL;
+import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.CONTACT_INFORMATION_PHONE_NUMBER;
+import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.CONTACT_INFORMATION_URL;
+import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.DEPARTMENT_ID;
+import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.DEPARTMENT_NAME;
+import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.FOLDER_NAME;
+import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.ORGANIZATION_NUMBER;
+import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.SMS_SENDER;
+import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.SUPPORT_TEXT;
 
 import generated.se.sundsvall.messaging.DeliveryResult;
 import generated.se.sundsvall.messaging.MessageResult;
 import generated.se.sundsvall.messaging.MessageStatus;
-import generated.se.sundsvall.messagingsettings.SenderInfoResponse;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -63,12 +70,19 @@ import se.sundsvall.postportalservice.service.mapper.EntityMapper;
 class MessageServiceTest {
 
 	private static final String USERNAME = "username";
+	private static final Map<String, String> SETTINGS_MAP = Map.of(
+		DEPARTMENT_ID, "departmentId",
+		DEPARTMENT_NAME, "departmentName",
+		ORGANIZATION_NUMBER, "123456789",
+		FOLDER_NAME, "folderName",
+		SMS_SENDER, "smsSender",
+		SUPPORT_TEXT, "supportText",
+		CONTACT_INFORMATION_URL, "contactInformationUrl",
+		CONTACT_INFORMATION_PHONE_NUMBER, "contactInformationPhoneNumber",
+		CONTACT_INFORMATION_EMAIL, "contactInformationEmail");
 
 	@Mock
 	private MessagingIntegration messagingIntegrationMock;
-
-	@Mock
-	private EmployeeService employeeService;
 
 	@Mock
 	private DepartmentRepository departmentRepositoryMock;
@@ -110,49 +124,9 @@ class MessageServiceTest {
 	void tearDown() {
 		Identifier.remove();
 		verifyNoMoreInteractions(attachmentMapperMock, entityMapperMock,
-			messagingIntegrationMock, employeeService,
+			messagingIntegrationMock,
 			departmentRepositoryMock, userRepositoryMock,
 			messageRepositoryMock, digitalRegisteredLetterIntegrationMock);
-	}
-
-	/**
-	 * Employee service throws an 502 Problem, we expect the exception to be thrown and the process to stop.
-	 */
-	@Test
-	void processDigitalRegisteredLetterRequest_employeeNotFound() {
-		final var request = TestDataFactory.createValidDigitalRegisteredLetterRequest();
-		final var multipartFile = Mockito.mock(MultipartFile.class);
-		final var multipartFiles = List.of(multipartFile);
-
-		when(employeeService.getSentBy(MUNICIPALITY_ID)).thenThrow(Problem.valueOf(BAD_GATEWAY, "Failed to retrieve employee data for user [%s]".formatted(USERNAME)));
-
-		assertThatThrownBy(() -> messageService.processDigitalRegisteredLetterRequest(MUNICIPALITY_ID, request, multipartFiles))
-			.isInstanceOf(Problem.class)
-			.hasMessage("Bad Gateway: Failed to retrieve employee data for user [%s]".formatted(USERNAME));
-
-		verify(employeeService).getSentBy(MUNICIPALITY_ID);
-		verifyNoMoreInteractions(employeeService);
-		verifyNoInteractions(messagingIntegrationMock, departmentRepositoryMock, userRepositoryMock, messageRepositoryMock);
-	}
-
-	/**
-	 * Employee service throws an 500 Problem, we expect the exception to be thrown and the process to stop.
-	 */
-	@Test
-	void processDigitalRegisteredLetterRequest_invalidOrgTree() {
-		final var request = TestDataFactory.createValidDigitalRegisteredLetterRequest();
-		final var multipartFile = Mockito.mock(MultipartFile.class);
-		final var multipartFiles = List.of(multipartFile);
-
-		when(employeeService.getSentBy(MUNICIPALITY_ID)).thenThrow(Problem.valueOf(INTERNAL_SERVER_ERROR, "Failed to parse organization from employee data"));
-
-		assertThatThrownBy(() -> messageService.processDigitalRegisteredLetterRequest(MUNICIPALITY_ID, request, multipartFiles))
-			.isInstanceOf(Problem.class)
-			.hasMessage("Internal Server Error: Failed to parse organization from employee data");
-
-		verify(employeeService).getSentBy(MUNICIPALITY_ID);
-		verifyNoMoreInteractions(employeeService);
-		verifyNoInteractions(messagingIntegrationMock, departmentRepositoryMock, userRepositoryMock, messageRepositoryMock);
 	}
 
 	/**
@@ -164,17 +138,16 @@ class MessageServiceTest {
 		final var request = TestDataFactory.createValidDigitalRegisteredLetterRequest();
 		final var multipartFile = Mockito.mock(MultipartFile.class);
 		final var multipartFiles = List.of(multipartFile);
+		Identifier.set(new Identifier().withValue("test01user"));
 
-		happyCaseStubEmployee();
-		when(messagingSettingsIntegrationMock.getSenderInfo(eq(MUNICIPALITY_ID), any()))
-			.thenThrow(Problem.valueOf(BAD_GATEWAY, "Found no sender info for departmentId"));
+		when(messagingSettingsIntegrationMock.getMessagingSettingsForUser(MUNICIPALITY_ID))
+			.thenThrow(Problem.valueOf(BAD_GATEWAY, "No messaging settings found for user '%s' in municipalityId '%s'".formatted("test01user", MUNICIPALITY_ID)));
 
 		assertThatThrownBy(() -> messageService.processDigitalRegisteredLetterRequest(MUNICIPALITY_ID, request, multipartFiles))
 			.isInstanceOf(Problem.class)
-			.hasMessage("Bad Gateway: Found no sender info for departmentId");
+			.hasMessage("Bad Gateway: No messaging settings found for user '%s' in municipalityId '%s'".formatted("test01user", MUNICIPALITY_ID));
 
-		verify(employeeService).getSentBy(MUNICIPALITY_ID);
-		verify(messagingSettingsIntegrationMock).getSenderInfo(eq(MUNICIPALITY_ID), any());
+		verify(messagingSettingsIntegrationMock).getMessagingSettingsForUser(MUNICIPALITY_ID);
 		verifyNoInteractions(messagingIntegrationMock, departmentRepositoryMock, userRepositoryMock, messageRepositoryMock);
 	}
 
@@ -192,8 +165,7 @@ class MessageServiceTest {
 
 		final var attachmentEntities = List.of(new AttachmentEntity(), new AttachmentEntity());
 
-		happyCaseStubEmployee();
-		happyCaseStubMessagingSettings();
+		when(messagingSettingsIntegrationMock.getMessagingSettingsForUser(MUNICIPALITY_ID)).thenReturn(SETTINGS_MAP);
 		when(messageRepositoryMock.save(any())).thenAnswer(invocation -> invocation.getArgument(0, MessageEntity.class).withId("messageId"));
 		doAnswer(inv -> {
 			final var recipientEntity = inv.getArgument(1, RecipientEntity.class);
@@ -209,8 +181,6 @@ class MessageServiceTest {
 
 		assertThat(result).isNotNull().isEqualTo("messageId");
 
-		verify(employeeService).getSentBy(MUNICIPALITY_ID);
-		verify(messagingSettingsIntegrationMock).getSenderInfo(eq(MUNICIPALITY_ID), any());
 		verify(userRepositoryMock).findByUsernameIgnoreCase(USERNAME);
 		verify(departmentRepositoryMock).findByOrganizationId("departmentId");
 		verify(digitalRegisteredLetterIntegrationMock).sendLetter(any(), any());
@@ -253,8 +223,7 @@ class MessageServiceTest {
 		final var userEntity = new UserEntity().withUsername(USERNAME).withId("userId");
 		final var departmentEntity = new DepartmentEntity().withName("departmentName").withOrganizationId("departmentId").withId("departmentId");
 
-		happyCaseStubEmployee();
-		happyCaseStubMessagingSettings();
+		when(messagingSettingsIntegrationMock.getMessagingSettingsForUser(MUNICIPALITY_ID)).thenReturn(SETTINGS_MAP);
 
 		when(messageRepositoryMock.save(any())).thenAnswer(invocation -> invocation.getArgument(0, MessageEntity.class).withId("messageId"));
 		doAnswer(inv -> {
@@ -271,8 +240,6 @@ class MessageServiceTest {
 
 		assertThat(result).isNotNull().isEqualTo("messageId");
 
-		verify(employeeService).getSentBy(MUNICIPALITY_ID);
-		verify(messagingSettingsIntegrationMock).getSenderInfo(eq(MUNICIPALITY_ID), any());
 		verify(userRepositoryMock).findByUsernameIgnoreCase(USERNAME);
 		verify(departmentRepositoryMock).findByOrganizationId("departmentId");
 		verify(digitalRegisteredLetterIntegrationMock).sendLetter(any(), any());
@@ -303,45 +270,28 @@ class MessageServiceTest {
 		verifyNoInteractions(messagingIntegrationMock);
 	}
 
-	private void happyCaseStubMessagingSettings() {
-		when(messagingSettingsIntegrationMock.getSenderInfo(any(), any()))
-			.thenReturn(new SenderInfoResponse()
-				.supportText("supportText")
-				.contactInformationUrl("contactInformationUrl")
-				.contactInformationEmail("contactInformationEmail")
-				.contactInformationPhoneNumber("contactInformationPhoneNumber")
-				.organizationNumber("123455678"));
-	}
-
-	private void happyCaseStubEmployee() {
-		final var sentBy = new EmployeeService.SentBy("username", "departmentId", "departmentName");
-
-		when(employeeService.getSentBy(any())).thenReturn(sentBy);
-	}
-
 	@Test
 	void processLetterRequest() {
 		final var spy = Mockito.spy(messageService);
 		final var multipartFile = Mockito.mock(MultipartFile.class);
 		final var multipartFileList = List.of(multipartFile);
 		final var letterRequest = TestDataFactory.createValidLetterRequest();
-		final var sentBy = new EmployeeService.SentBy("username", "departmentId", "departmentName");
 		final var userEntity = new UserEntity().withUsername("username");
 		final var departmentEntity = new DepartmentEntity().withName("departmentName").withOrganizationId("departmentId");
 		final var attachmentEntity = new AttachmentEntity().withFileName("filename").withContentType("contentType").withContent(null);
 		final var messageId = "adc63e5c-b92f-4c75-b14f-819473cef5b6";
 
-		when(attachmentMapperMock.toAttachmentEntities(multipartFileList)).thenReturn(List.of(attachmentEntity));
-		when(messagingSettingsIntegrationMock.getSenderInfo(MUNICIPALITY_ID, departmentEntity.getOrganizationId()))
-			.thenReturn(new SenderInfoResponse()
-				.supportText("supportText")
-				.contactInformationUrl("contactInformationUrl")
-				.contactInformationEmail("contactInformationEmail")
-				.contactInformationPhoneNumber("contactInformationPhoneNumber"));
+		final var identifier = Identifier.create()
+			.withType(Identifier.Type.AD_ACCOUNT)
+			.withValue("username")
+			.withTypeString("AD_ACCOUNT");
+		Identifier.set(identifier);
 
-		when(employeeService.getSentBy(MUNICIPALITY_ID)).thenReturn(sentBy);
-		doReturn(userEntity).when(spy).getOrCreateUser(sentBy.userName());
-		doReturn(departmentEntity).when(spy).getOrCreateDepartment(sentBy);
+		when(messagingSettingsIntegrationMock.getMessagingSettingsForUser(MUNICIPALITY_ID)).thenReturn(SETTINGS_MAP);
+		when(attachmentMapperMock.toAttachmentEntities(multipartFileList)).thenReturn(List.of(attachmentEntity));
+		when(userRepositoryMock.findByUsernameIgnoreCase(Identifier.get().getValue())).thenReturn(Optional.of(userEntity));
+		when(departmentRepositoryMock.findByOrganizationId(SETTINGS_MAP.get(DEPARTMENT_ID))).thenReturn(Optional.of(departmentEntity));
+
 		doReturn(new CompletableFuture<>()).when(spy).processRecipients(any());
 		when(messageRepositoryMock.save(any())).thenAnswer(invocation -> invocation.getArgument(0, MessageEntity.class).withId(messageId));
 
@@ -349,11 +299,11 @@ class MessageServiceTest {
 
 		assertThat(result).isEqualTo(messageId);
 		verify(attachmentMapperMock).toAttachmentEntities(multipartFileList);
+		verify(messagingSettingsIntegrationMock).getMessagingSettingsForUser(MUNICIPALITY_ID);
+		verify(userRepositoryMock).findByUsernameIgnoreCase(Identifier.get().getValue());
+		verify(departmentRepositoryMock).findByOrganizationId(SETTINGS_MAP.get(DEPARTMENT_ID));
 		verify(entityMapperMock).toRecipientEntity(any(Address.class));
 		verify(entityMapperMock).toRecipientEntity(any(Recipient.class));
-		verify(employeeService).getSentBy(MUNICIPALITY_ID);
-		verify(spy).getOrCreateUser(sentBy.userName());
-		verify(spy).getOrCreateDepartment(sentBy);
 		verify(spy).processRecipients(any());
 		verify(messageRepositoryMock).save(any());
 	}
@@ -362,26 +312,23 @@ class MessageServiceTest {
 	void processSmsRequest() {
 		final var spy = Mockito.spy(messageService);
 		final var smsRequest = TestDataFactory.createValidSmsRequest();
-		final var sentBy = new EmployeeService.SentBy("username", "departmentId", "departmentName");
 		final var userEntity = new UserEntity().withUsername("username");
 		final var departmentEntity = new DepartmentEntity().withName("departmentName").withOrganizationId("departmentId");
 		final var messageId = "adc63e5c-b92f-4c75-b14f-819473cef5b6";
 
-		when(messagingSettingsIntegrationMock.getSenderInfo(MUNICIPALITY_ID, departmentEntity.getOrganizationId()))
-			.thenReturn(new SenderInfoResponse().smsSender("Avsändare"));
-		when(employeeService.getSentBy(MUNICIPALITY_ID)).thenReturn(sentBy);
-		doReturn(userEntity).when(spy).getOrCreateUser(sentBy.userName());
-		doReturn(departmentEntity).when(spy).getOrCreateDepartment(sentBy);
+		when(messagingSettingsIntegrationMock.getMessagingSettingsForUser(MUNICIPALITY_ID)).thenReturn(SETTINGS_MAP);
+		when(userRepositoryMock.findByUsernameIgnoreCase(Identifier.get().getValue())).thenReturn(Optional.of(userEntity));
+		when(departmentRepositoryMock.findByOrganizationId(SETTINGS_MAP.get(DEPARTMENT_ID))).thenReturn(Optional.of(departmentEntity));
 		doReturn(new CompletableFuture<>()).when(spy).processRecipients(any());
 		when(messageRepositoryMock.save(any())).thenAnswer(invocation -> invocation.getArgument(0, MessageEntity.class).withId(messageId));
 
 		final var result = spy.processSmsRequest(MUNICIPALITY_ID, smsRequest);
 
 		assertThat(result).isEqualTo(messageId);
+		verify(messagingSettingsIntegrationMock).getMessagingSettingsForUser(MUNICIPALITY_ID);
+		verify(userRepositoryMock).findByUsernameIgnoreCase(Identifier.get().getValue());
+		verify(departmentRepositoryMock).findByOrganizationId(SETTINGS_MAP.get(DEPARTMENT_ID));
 		verify(entityMapperMock).toRecipientEntity(any(SmsRecipient.class));
-		verify(employeeService).getSentBy(MUNICIPALITY_ID);
-		verify(spy).getOrCreateUser(sentBy.userName());
-		verify(spy).getOrCreateDepartment(sentBy);
 		verify(spy).processRecipients(any());
 		verify(messageRepositoryMock).save(any());
 	}
@@ -575,22 +522,21 @@ class MessageServiceTest {
 
 	@Test
 	void getOrCreateDepartment_departmentExists() {
-		final var departmentEntity = new DepartmentEntity().withName("IT").withOrganizationId("orgId");
-		when(departmentRepositoryMock.findByOrganizationId("orgId")).thenReturn(Optional.of(departmentEntity));
+		final var departmentEntity = new DepartmentEntity().withName(SETTINGS_MAP.get(DEPARTMENT_NAME)).withOrganizationId(SETTINGS_MAP.get(DEPARTMENT_ID));
+		when(departmentRepositoryMock.findByOrganizationId(SETTINGS_MAP.get(DEPARTMENT_ID))).thenReturn(Optional.of(departmentEntity));
 
-		final var sentBy = new EmployeeService.SentBy("username", "orgId", "IT");
-		final var result = messageService.getOrCreateDepartment(sentBy);
+		final var result = messageService.getOrCreateDepartment(SETTINGS_MAP);
 
 		assertThat(result).isEqualTo(departmentEntity);
-		verify(departmentRepositoryMock).findByOrganizationId("orgId");
+		verify(departmentRepositoryMock).findByOrganizationId(SETTINGS_MAP.get(DEPARTMENT_ID));
 	}
 
 	@Test
 	void getOrCreateDepartment_departmentDoesNotExist() {
+		var settingsMap = Map.of(DEPARTMENT_ID, "orgId", DEPARTMENT_NAME, "IT");
 		when(departmentRepositoryMock.findByOrganizationId("orgId")).thenReturn(Optional.empty());
 
-		final var sentBy = new EmployeeService.SentBy("username", "orgId", "IT");
-		final var result = messageService.getOrCreateDepartment(sentBy);
+		final var result = messageService.getOrCreateDepartment(settingsMap);
 
 		assertThat(result).isNotNull().isInstanceOf(DepartmentEntity.class);
 		assertThat(result.getOrganizationId()).isEqualTo("orgId");

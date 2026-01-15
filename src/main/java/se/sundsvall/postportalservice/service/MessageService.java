@@ -9,6 +9,15 @@ import static se.sundsvall.postportalservice.integration.db.converter.MessageTyp
 import static se.sundsvall.postportalservice.integration.db.converter.MessageType.LETTER;
 import static se.sundsvall.postportalservice.integration.db.converter.MessageType.SMS;
 import static se.sundsvall.postportalservice.integration.db.converter.MessageType.SNAIL_MAIL;
+import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.CONTACT_INFORMATION_EMAIL;
+import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.CONTACT_INFORMATION_PHONE_NUMBER;
+import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.CONTACT_INFORMATION_URL;
+import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.DEPARTMENT_ID;
+import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.DEPARTMENT_NAME;
+import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.FOLDER_NAME;
+import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.ORGANIZATION_NUMBER;
+import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.SMS_SENDER;
+import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.SUPPORT_TEXT;
 import static se.sundsvall.postportalservice.service.util.CsvUtil.parseCsvToLegalIds;
 import static se.sundsvall.postportalservice.service.util.SemaphoreUtil.withPermit;
 
@@ -17,6 +26,7 @@ import generated.se.sundsvall.messaging.MessageResult;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -28,6 +38,7 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import se.sundsvall.dept44.support.Identifier;
 import se.sundsvall.postportalservice.api.model.DigitalRegisteredLetterRequest;
 import se.sundsvall.postportalservice.api.model.LetterCsvRequest;
 import se.sundsvall.postportalservice.api.model.LetterRequest;
@@ -57,7 +68,6 @@ public class MessageService {
 	private final DigitalRegisteredLetterIntegration digitalRegisteredLetterIntegration;
 	private final MessagingIntegration messagingIntegration;
 	private final MessagingSettingsIntegration messagingSettingsIntegration;
-	private final EmployeeService employeeService;
 	private final PrecheckService precheckService;
 
 	private final AttachmentMapper attachmentMapper;
@@ -71,7 +81,6 @@ public class MessageService {
 		final DigitalRegisteredLetterIntegration digitalRegisteredLetterIntegration,
 		final MessagingIntegration messagingIntegration,
 		final MessagingSettingsIntegration messagingSettingsIntegration,
-		final EmployeeService employeeService,
 		final PrecheckService precheckService,
 		final AttachmentMapper attachmentMapper,
 		final EntityMapper entityMapper,
@@ -81,7 +90,6 @@ public class MessageService {
 		this.digitalRegisteredLetterIntegration = digitalRegisteredLetterIntegration;
 		this.messagingIntegration = messagingIntegration;
 		this.messagingSettingsIntegration = messagingSettingsIntegration;
-		this.employeeService = employeeService;
 		this.precheckService = precheckService;
 		this.attachmentMapper = attachmentMapper;
 		this.entityMapper = entityMapper;
@@ -308,29 +316,28 @@ public class MessageService {
 				.withUsername(userName));
 	}
 
-	DepartmentEntity getOrCreateDepartment(final EmployeeService.SentBy sentBy) {
-		return departmentRepository.findByOrganizationId(sentBy.departmentId())
+	DepartmentEntity getOrCreateDepartment(final Map<String, String> settingsMap) {
+		return departmentRepository.findByOrganizationId(settingsMap.get(DEPARTMENT_ID))
 			.orElseGet(() -> DepartmentEntity.create()
-				.withOrganizationId(sentBy.departmentId())
-				.withName(sentBy.departmentName()));
+				.withOrganizationId(settingsMap.get(DEPARTMENT_ID))
+				.withName(settingsMap.get(DEPARTMENT_NAME)));
 	}
 
 	private MessageEntity createMessageEntity(final String municipalityId) {
-		final var sentBy = employeeService.getSentBy(municipalityId);
+		final var settingsMap = messagingSettingsIntegration.getMessagingSettingsForUser(municipalityId);
 
-		final var senderInfo = messagingSettingsIntegration.getSenderInfo(municipalityId, sentBy.departmentId());
-		final var user = getOrCreateUser(sentBy.userName());
-		final var department = getOrCreateDepartment(sentBy)
-			.withFolderName(senderInfo.getFolderName())
-			.withOrganizationNumber(senderInfo.getOrganizationNumber())
-			.withSupportText(senderInfo.getSupportText())
-			.withContactInformationUrl(senderInfo.getContactInformationUrl())
-			.withContactInformationEmail(senderInfo.getContactInformationEmail())
-			.withContactInformationPhoneNumber(senderInfo.getContactInformationPhoneNumber());
+		final var user = getOrCreateUser(Identifier.get().getValue());
+		final var department = getOrCreateDepartment(settingsMap)
+			.withFolderName(settingsMap.get(FOLDER_NAME))
+			.withOrganizationNumber(settingsMap.get(ORGANIZATION_NUMBER))
+			.withSupportText(settingsMap.get(SUPPORT_TEXT))
+			.withContactInformationUrl(settingsMap.get(CONTACT_INFORMATION_URL))
+			.withContactInformationEmail(settingsMap.get(CONTACT_INFORMATION_EMAIL))
+			.withContactInformationPhoneNumber(settingsMap.get(CONTACT_INFORMATION_PHONE_NUMBER));
 
 		return MessageEntity.create()
 			.withMunicipalityId(municipalityId)
-			.withDisplayName(senderInfo.getSmsSender())
+			.withDisplayName(settingsMap.get(SMS_SENDER))
 			.withUser(user)
 			.withDepartment(department);
 	}

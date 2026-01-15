@@ -7,7 +7,7 @@
 		"headers": {
 			"Content-Type": "application/json"
 		},
-		"bodyFileName": "common/responses/api-gateway-token-response.json",
+		"bodyFileName": "common/token.json",
 		"status": 200
 	},
 	"name": "api-gateway"

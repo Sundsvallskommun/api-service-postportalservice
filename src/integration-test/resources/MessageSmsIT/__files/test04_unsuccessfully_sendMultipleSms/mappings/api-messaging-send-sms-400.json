@@ -4,7 +4,7 @@
 		"method": "POST",
 		"headers": {
 			"Authorization": {
-				"equalTo": "Bearer MTQ0NjJkZmQ5OTM2NDE1ZTZjNGZmZjI3"
+				"equalTo": "Bearer 0000000000000000AAAAAAAAAAAAAAAA"
 			},
 			"x-origin": {
 				"equalTo": "PostPortalService"

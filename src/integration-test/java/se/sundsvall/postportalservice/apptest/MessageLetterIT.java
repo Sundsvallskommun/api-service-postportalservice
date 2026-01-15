@@ -30,7 +30,7 @@ class MessageLetterIT extends AbstractAppTest {
 
 	private static final String REQUEST_FILE = "request.json";
 	private static final String MUNICIPALITY_ID = "2281";
-	private static final String IDENTIFIER = "type=adAccount; TestUser";
+	private static final String IDENTIFIER = "joe01doe; type=adAccount";
 
 	@Autowired
 	private MessageRepository messageRepository;
@@ -45,7 +45,7 @@ class MessageLetterIT extends AbstractAppTest {
 			.withRequestFile("request", REQUEST_FILE)
 			.withRequestFile("attachments", "test.pdf")
 			.withExpectedResponseStatus(CREATED)
-			.withExpectedResponseHeader(LOCATION, List.of("/%s/history/users/TestUser/messages/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}".formatted(MUNICIPALITY_ID)))
+			.withExpectedResponseHeader(LOCATION, List.of("/%s/history/users/joe01doe/messages/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}".formatted(MUNICIPALITY_ID)))
 			.withExpectedResponseBodyIsNull()
 			.sendRequest()
 			.getResponseHeaders()
@@ -77,7 +77,7 @@ class MessageLetterIT extends AbstractAppTest {
 			.withRequestFile("request", REQUEST_FILE)
 			.withRequestFile("attachments", "test.pdf")
 			.withExpectedResponseStatus(CREATED)
-			.withExpectedResponseHeader(LOCATION, List.of("/%s/history/users/TestUser/messages/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}".formatted(MUNICIPALITY_ID)))
+			.withExpectedResponseHeader(LOCATION, List.of("/%s/history/users/joe01doe/messages/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}".formatted(MUNICIPALITY_ID)))
 			.withExpectedResponseBodyIsNull()
 			.sendRequest()
 			.getResponseHeaders()
@@ -109,7 +109,7 @@ class MessageLetterIT extends AbstractAppTest {
 			.withRequestFile("request", REQUEST_FILE)
 			.withRequestFile("attachments", "test.pdf")
 			.withExpectedResponseStatus(CREATED)
-			.withExpectedResponseHeader(LOCATION, List.of("/%s/history/users/TestUser/messages/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}".formatted(MUNICIPALITY_ID)))
+			.withExpectedResponseHeader(LOCATION, List.of("/%s/history/users/joe01doe/messages/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}".formatted(MUNICIPALITY_ID)))
 			.withExpectedResponseBodyIsNull()
 			.sendRequest()
 			.getResponseHeaders()
@@ -142,7 +142,7 @@ class MessageLetterIT extends AbstractAppTest {
 			.withRequestFile("request", REQUEST_FILE)
 			.withRequestFile("attachments", "test.pdf")
 			.withExpectedResponseStatus(CREATED)
-			.withExpectedResponseHeader(LOCATION, List.of("/%s/history/users/TestUser/messages/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}".formatted(MUNICIPALITY_ID)))
+			.withExpectedResponseHeader(LOCATION, List.of("/%s/history/users/joe01doe/messages/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}".formatted(MUNICIPALITY_ID)))
 			.withExpectedResponseBodyIsNull()
 			.sendRequest()
 			.getResponseHeaders()
@@ -172,7 +172,7 @@ class MessageLetterIT extends AbstractAppTest {
 			.withRequestFile("csv-file", "legalIds.csv")
 			.withRequestFile("attachments", "test.pdf")
 			.withExpectedResponseStatus(CREATED)
-			.withExpectedResponseHeader(LOCATION, List.of("/%s/history/users/TestUser/messages/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}".formatted(MUNICIPALITY_ID)))
+			.withExpectedResponseHeader(LOCATION, List.of("/%s/history/users/joe01doe/messages/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}".formatted(MUNICIPALITY_ID)))
 			.withExpectedResponseBodyIsNull()
 			.sendRequest()
 			.getResponseHeaders()

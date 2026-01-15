@@ -107,7 +107,7 @@ public class DigitalRegisteredLetterMapper {
 
 	public SigningInformation.Device toDevice(final Device device) {
 		return Optional.ofNullable(device)
-			.map(present -> new SigningInformation.Device()
+			.map(_ -> new SigningInformation.Device()
 				.withIpAddress(device.getIpAddress()))
 			.orElse(null);
 	}

@@ -10,13 +10,13 @@
 		],
 		"headers": {
 			"Authorization": {
-				"equalTo": "Bearer MTQ0NjJkZmQ5OTM2NDE1ZTZjNGZmZjI3"
+				"equalTo": "Bearer 0000000000000000AAAAAAAAAAAAAAAA"
 			},
 			"x-origin": {
 				"equalTo": "PostPortalService"
 			},
 			"X-Sent-By": {
-				"equalTo": "TestUser; type=adAccount"
+				"equalTo": "joe01doe; type=adAccount"
 			},
 			"Content-Type": {
 				"equalTo": "application/json"

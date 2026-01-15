@@ -58,18 +58,6 @@ public class DigitalRegisteredLetterIntegration {
 		return client.getLetterStatuses(municipalityId, request);
 	}
 
-	public boolean getAllLetters(final String municipalityId) {
-		// TODO: Figure out how this should be implemented, this returns a paginated list of all letters.
-		// Not just the letters sent by PostPortalService..
-		return true;
-	}
-
-	public boolean getLetterById(final String municipalityId, final String letterId) {
-		// Used to fetch status for a specific letter.
-		// TODO: Implement, this should update the status of the requested letter in the postportalservice
-		return true;
-	}
-
 	public void sendLetter(final MessageEntity messageEntity, final RecipientEntity recipientEntity) {
 		RecipientId.init(recipientEntity.getId());
 		try {
@@ -94,14 +82,14 @@ public class DigitalRegisteredLetterIntegration {
 		final var newHeaders = new HttpHeaders();
 		Optional.ofNullable(headers.get("Content-Type"))
 			.flatMap(values -> values.stream().findFirst())
-			.ifPresentOrElse(value -> newHeaders.set("Content-Type", value),
+			.ifPresentOrElse(value1 -> newHeaders.set("Content-Type", value1),
 				() -> {
 					throw Problem.valueOf(INTERNAL_SERVER_ERROR, "Missing Content-Type header in letter receipt response");
 				});
 
 		Optional.ofNullable(headers.get("Content-Disposition"))
 			.flatMap(values -> values.stream().findFirst())
-			.ifPresentOrElse(value -> newHeaders.set("Content-Disposition", value),
+			.ifPresentOrElse(value1 -> newHeaders.set("Content-Disposition", value1),
 				() -> {
 					throw Problem.valueOf(INTERNAL_SERVER_ERROR, "Missing Content-Disposition header in letter receipt response");
 				});
