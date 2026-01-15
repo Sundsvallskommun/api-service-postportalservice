@@ -112,20 +112,6 @@ class DigitalRegisteredLetterIntegrationTest {
 	}
 
 	@Test
-	void getAllLetters() {
-		// TODO: Implement when logic is in place.
-		final var result = digitalRegisteredLetterIntegration.getAllLetters(MUNICIPALITY_ID);
-		assertThat(result).isTrue();
-	}
-
-	@Test
-	void getLetterById() {
-		// TODO: Implement when logic is in place.
-		final var result = digitalRegisteredLetterIntegration.getLetterById(MUNICIPALITY_ID, "letterId");
-		assertThat(result).isTrue();
-	}
-
-	@Test
 	void sendLetter_happyCase() {
 		final var userEntity = new UserEntity().withUsername("John Wick");
 		final var messageEntity = new MessageEntity()

@@ -6,10 +6,19 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static se.sundsvall.postportalservice.TestDataFactory.MUNICIPALITY_ID;
-import static se.sundsvall.postportalservice.TestDataFactory.SUNDSVALL_MUNICIPALITY_ORG_NO;
+import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.CONTACT_INFORMATION_EMAIL;
+import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.CONTACT_INFORMATION_PHONE_NUMBER;
+import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.CONTACT_INFORMATION_URL;
+import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.DEPARTMENT_ID;
+import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.DEPARTMENT_NAME;
+import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.FOLDER_NAME;
+import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.ORGANIZATION_NUMBER;
+import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.SMS_SENDER;
+import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.SUPPORT_TEXT;
 
 import generated.se.sundsvall.messaging.Mailbox;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -24,8 +33,16 @@ import se.sundsvall.postportalservice.service.util.PrecheckUtil;
 @ExtendWith(MockitoExtension.class)
 class MailboxStatusServiceTest {
 
-	@Mock
-	private EmployeeService employeeServiceMock;
+	private static final Map<String, String> SETTINGS_MAP = Map.of(
+		DEPARTMENT_ID, "departmentId",
+		DEPARTMENT_NAME, "departmentName",
+		ORGANIZATION_NUMBER, "123456789",
+		FOLDER_NAME, "folderName",
+		SMS_SENDER, "smsSender",
+		SUPPORT_TEXT, "supportText",
+		CONTACT_INFORMATION_URL, "contactInformationUrl",
+		CONTACT_INFORMATION_PHONE_NUMBER, "contactInformationPhoneNumber",
+		CONTACT_INFORMATION_EMAIL, "contactInformationEmail");
 
 	@Mock
 	private MessagingSettingsIntegration messagingSettingsMock;
@@ -38,7 +55,7 @@ class MailboxStatusServiceTest {
 
 	@AfterEach
 	void tearDown() {
-		verifyNoMoreInteractions(employeeServiceMock, messagingSettingsMock, messagingIntegrationMock);
+		verifyNoMoreInteractions(messagingSettingsMock, messagingIntegrationMock);
 	}
 
 	@Test
@@ -49,10 +66,8 @@ class MailboxStatusServiceTest {
 
 		var mailboxStatuses = List.of(generateReachableMailbox(partyId1), generateReachableMailbox(partyId2));
 
-		var sentBy = new EmployeeService.SentBy("userName", "deptId", "deptName");
-		when(employeeServiceMock.getSentBy(MUNICIPALITY_ID)).thenReturn(sentBy);
-		when(messagingSettingsMock.getOrganizationNumber(MUNICIPALITY_ID, sentBy.departmentId())).thenReturn(SUNDSVALL_MUNICIPALITY_ORG_NO);
-		when(messagingIntegrationMock.precheckMailboxes(MUNICIPALITY_ID, SUNDSVALL_MUNICIPALITY_ORG_NO, partyIds))
+		when(messagingSettingsMock.getMessagingSettingsForUser(MUNICIPALITY_ID)).thenReturn(SETTINGS_MAP);
+		when(messagingIntegrationMock.precheckMailboxes(MUNICIPALITY_ID, SETTINGS_MAP.get(ORGANIZATION_NUMBER), partyIds))
 			.thenReturn(mailboxStatuses);
 
 		var mailboxStatus = mailboxStatusService.checkMailboxStatus(MUNICIPALITY_ID, partyIds);
@@ -61,9 +76,8 @@ class MailboxStatusServiceTest {
 		assertThat(mailboxStatus.unreachable()).isEmpty();
 		assertThat(mailboxStatus.unreachableWithReason()).isEmpty();
 
-		verify(employeeServiceMock).getSentBy(MUNICIPALITY_ID);
-		verify(messagingSettingsMock).getOrganizationNumber(MUNICIPALITY_ID, sentBy.departmentId());
-		verify(messagingIntegrationMock).precheckMailboxes(MUNICIPALITY_ID, SUNDSVALL_MUNICIPALITY_ORG_NO, partyIds);
+		verify(messagingSettingsMock).getMessagingSettingsForUser(MUNICIPALITY_ID);
+		verify(messagingIntegrationMock).precheckMailboxes(MUNICIPALITY_ID, SETTINGS_MAP.get(ORGANIZATION_NUMBER), partyIds);
 	}
 
 	@Test
@@ -74,10 +88,8 @@ class MailboxStatusServiceTest {
 
 		var mailboxStatuses = List.of(generateReachableMailbox(reachablePartyId), generateUnreachableMailbox(unreachablePartyId));
 
-		var sentBy = new EmployeeService.SentBy("userName", "deptId", "deptName");
-		when(employeeServiceMock.getSentBy(MUNICIPALITY_ID)).thenReturn(sentBy);
-		when(messagingSettingsMock.getOrganizationNumber(MUNICIPALITY_ID, sentBy.departmentId())).thenReturn(SUNDSVALL_MUNICIPALITY_ORG_NO);
-		when(messagingIntegrationMock.precheckMailboxes(MUNICIPALITY_ID, SUNDSVALL_MUNICIPALITY_ORG_NO, partyIds))
+		when(messagingSettingsMock.getMessagingSettingsForUser(MUNICIPALITY_ID)).thenReturn(SETTINGS_MAP);
+		when(messagingIntegrationMock.precheckMailboxes(MUNICIPALITY_ID, SETTINGS_MAP.get(ORGANIZATION_NUMBER), partyIds))
 			.thenReturn(mailboxStatuses);
 
 		var mailboxStatus = mailboxStatusService.checkMailboxStatus(MUNICIPALITY_ID, partyIds);
@@ -87,9 +99,8 @@ class MailboxStatusServiceTest {
 			.containsExactly(
 				tuple(unreachablePartyId, "Some reason"));
 
-		verify(employeeServiceMock).getSentBy(MUNICIPALITY_ID);
-		verify(messagingSettingsMock).getOrganizationNumber(MUNICIPALITY_ID, sentBy.departmentId());
-		verify(messagingIntegrationMock).precheckMailboxes(MUNICIPALITY_ID, SUNDSVALL_MUNICIPALITY_ORG_NO, partyIds);
+		verify(messagingSettingsMock).getMessagingSettingsForUser(MUNICIPALITY_ID);
+		verify(messagingIntegrationMock).precheckMailboxes(MUNICIPALITY_ID, SETTINGS_MAP.get(ORGANIZATION_NUMBER), partyIds);
 
 	}
 

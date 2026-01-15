@@ -139,9 +139,9 @@ public class PrecheckService {
 	/**
 	 * Builds recipient entities from categorized data.
 	 *
-	 * @param digitalMailPartyIds partyIds eligible for digital mail
-	 * @param categorized categorized citizens
-	 * @return list of recipient entities
+	 * @param  digitalMailPartyIds partyIds eligible for digital mail
+	 * @param  categorized         categorized citizens
+	 * @return                     list of recipient entities
 	 */
 	private List<RecipientEntity> createRecipientEntities(
 		final List<String> digitalMailPartyIds,
@@ -211,9 +211,9 @@ public class PrecheckService {
 	/**
 	 * Builds precheck response from categorized partyIds.
 	 *
-	 * @param mailboxStatus mailbox status containing reachable and unreachable partyIds for digital mail
-	 * @param categorizedCitizens categorized citizens by eligibility
-	 * @return precheck response with recipients and delivery methods
+	 * @param  mailboxStatus       mailbox status containing reachable and unreachable partyIds for digital mail
+	 * @param  categorizedCitizens categorized citizens by eligibility
+	 * @return                     precheck response with recipients and delivery methods
 	 */
 	private PrecheckResponse createPrecheckResponse(MailboxStatusService.MailboxStatus mailboxStatus, final CategorizedCitizens categorizedCitizens) {
 		// Create map for partyId -> reason lookups

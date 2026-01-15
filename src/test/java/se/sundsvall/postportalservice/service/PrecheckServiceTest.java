@@ -330,7 +330,7 @@ class PrecheckServiceTest {
 		final var legalIds = List.of("201801022383", "201801032390", "201801042381");
 		final var batches = List.of(new PersonGuidBatch()
 			.success(Boolean.TRUE)
-			.personNumber(legalIds.get(0))
+			.personNumber(legalIds.getFirst())
 			.personId(UUID.randomUUID()));
 
 		when(citizenIntegrationMock.getPartyIds(MUNICIPALITY_ID, legalIds)).thenReturn(batches);

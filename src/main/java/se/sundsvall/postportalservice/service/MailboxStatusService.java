@@ -1,5 +1,7 @@
 package se.sundsvall.postportalservice.service;
 
+import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.ORGANIZATION_NUMBER;
+
 import java.util.List;
 import org.springframework.stereotype.Service;
 import se.sundsvall.postportalservice.integration.messaging.MessagingIntegration;
@@ -12,15 +14,12 @@ import se.sundsvall.postportalservice.service.util.PrecheckUtil;
 @Service
 public class MailboxStatusService {
 
-	private final EmployeeService employeeService;
 	private final MessagingSettingsIntegration messagingSettingsIntegration;
 	private final MessagingIntegration messagingIntegration;
 
 	public MailboxStatusService(
-		final EmployeeService employeeService,
 		final MessagingSettingsIntegration messagingSettingsIntegration,
 		final MessagingIntegration messagingIntegration) {
-		this.employeeService = employeeService;
 		this.messagingSettingsIntegration = messagingSettingsIntegration;
 		this.messagingIntegration = messagingIntegration;
 	}
@@ -33,9 +32,8 @@ public class MailboxStatusService {
 	 * @return                mailbox status with reachable and unreachable partyIds
 	 */
 	public MailboxStatus checkMailboxStatus(final String municipalityId, final List<String> partyIds) {
-		final var sentBy = employeeService.getSentBy(municipalityId);
-		final var orgNumber = messagingSettingsIntegration.getOrganizationNumber(municipalityId, sentBy.departmentId());
-		final var mailboxes = messagingIntegration.precheckMailboxes(municipalityId, orgNumber, partyIds);
+		final var settingsMap = messagingSettingsIntegration.getMessagingSettingsForUser(municipalityId);
+		final var mailboxes = messagingIntegration.precheckMailboxes(municipalityId, settingsMap.get(ORGANIZATION_NUMBER), partyIds);
 
 		final var reachable = PrecheckUtil.filterReachableMailboxes(mailboxes);
 		final var unreachableWithReason = PrecheckUtil.filterUnreachableMailboxesWithReason(mailboxes);
@@ -44,7 +42,7 @@ public class MailboxStatusService {
 	}
 
 	/**
-	 * Record for mailbox status results so we know which ones are reachable and not.
+	 * Record for mailbox status results, so we know which ones are reachable and not.
 	 *
 	 * @param reachable             partyIds with reachable digital mailboxes
 	 * @param unreachableWithReason unreachable mailboxes with reason information

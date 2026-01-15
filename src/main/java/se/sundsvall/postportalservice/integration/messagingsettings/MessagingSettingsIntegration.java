@@ -57,14 +57,18 @@ public class MessagingSettingsIntegration {
 	/**
 	 * Asserts that all required values are present in the settings map.
 	 *
-	 * @param settingsMap Settings map retrieved from MessagingSettings API
-	 * @param user User identifier retrieved from X-Sent-By header
-	 * @param municipalityId Municipality ID for which the settings were requested
+	 * @param  settingsMap                          Settings map retrieved from MessagingSettings API
+	 * @param  user                                 User identifier retrieved from X-Sent-By header
+	 * @param  municipalityId                       Municipality ID for which the settings were requested
 	 * @throws org.zalando.problem.ThrowableProblem if any expected value is missing
 	 */
 	private void assertThatRequiredValuesArePresent(final Map<String, String> settingsMap, final String user, final String municipalityId) {
 		Optional.ofNullable(settingsMap.get(ORGANIZATION_NUMBER))
 			.orElseThrow(() -> Problem.valueOf(BAD_GATEWAY, ERROR_MESSAGE_ATTRIBUTE_MISSING.formatted(ORGANIZATION_NUMBER, user, municipalityId)));
+
+		Optional.ofNullable(settingsMap.get(ORGANIZATION_NUMBER))
+			.map(Integer::parseInt)
+			.orElseThrow(() -> Problem.valueOf(BAD_GATEWAY, "Invalid organization number format for user '%s' in municipalityId '%s'".formatted(user, municipalityId)));
 
 		Optional.ofNullable(settingsMap.get(FOLDER_NAME))
 			.orElseThrow(() -> Problem.valueOf(BAD_GATEWAY, ERROR_MESSAGE_ATTRIBUTE_MISSING.formatted(FOLDER_NAME, user, municipalityId)));

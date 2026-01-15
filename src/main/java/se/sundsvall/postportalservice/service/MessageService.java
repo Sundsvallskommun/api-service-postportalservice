@@ -68,7 +68,6 @@ public class MessageService {
 	private final DigitalRegisteredLetterIntegration digitalRegisteredLetterIntegration;
 	private final MessagingIntegration messagingIntegration;
 	private final MessagingSettingsIntegration messagingSettingsIntegration;
-	private final EmployeeService employeeService;
 	private final PrecheckService precheckService;
 
 	private final AttachmentMapper attachmentMapper;
@@ -82,7 +81,6 @@ public class MessageService {
 		final DigitalRegisteredLetterIntegration digitalRegisteredLetterIntegration,
 		final MessagingIntegration messagingIntegration,
 		final MessagingSettingsIntegration messagingSettingsIntegration,
-		final EmployeeService employeeService,
 		final PrecheckService precheckService,
 		final AttachmentMapper attachmentMapper,
 		final EntityMapper entityMapper,
@@ -92,7 +90,6 @@ public class MessageService {
 		this.digitalRegisteredLetterIntegration = digitalRegisteredLetterIntegration;
 		this.messagingIntegration = messagingIntegration;
 		this.messagingSettingsIntegration = messagingSettingsIntegration;
-		this.employeeService = employeeService;
 		this.precheckService = precheckService;
 		this.attachmentMapper = attachmentMapper;
 		this.entityMapper = entityMapper;
@@ -170,7 +167,9 @@ public class MessageService {
 	}
 
 	/**
-	 * Maps an incoming SmsRequest to a MessageEntity. Persists the MessageEntity and its associated entities to the database. Sends a message to each recipient asynchronously. Returns the MessageEntity ID that can be used to read the message.
+	 * Maps an incoming SmsRequest to a MessageEntity. Persists the MessageEntity and its associated entities to the
+	 * database. Sends a message to each recipient asynchronously. Returns the MessageEntity ID that can be used to read the
+	 * message.
 	 */
 	public String processSmsRequest(final String municipalityId, final SmsRequest smsRequest) {
 		final var message = createMessageEntity(municipalityId);

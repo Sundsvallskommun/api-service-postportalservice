@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 import static org.springframework.http.HttpHeaders.LOCATION;
 import static org.springframework.http.HttpMethod.POST;
-import static org.springframework.http.HttpStatus.BAD_GATEWAY;
 import static org.springframework.http.HttpStatus.CREATED;
 import static se.sundsvall.postportalservice.Constants.FAILED;
 import static se.sundsvall.postportalservice.Constants.SENT;
@@ -24,9 +23,8 @@ import se.sundsvall.postportalservice.integration.db.dao.MessageRepository;
 class MessageSmsIT extends AbstractAppTest {
 
 	private static final String REQUEST_FILE = "request.json";
-	private static final String RESPONSE_FILE = "response.json";
 	private static final String MUNICIPALITY_ID = "2281";
-	private static final String IDENTIFIER = "type=adAccount; TestUser";
+	private static final String IDENTIFIER = "joe01doe; type=adAccount";
 
 	@Autowired
 	private MessageRepository messageRepository;
@@ -39,7 +37,7 @@ class MessageSmsIT extends AbstractAppTest {
 			.withHeader(Identifier.HEADER_NAME, IDENTIFIER)
 			.withRequest(REQUEST_FILE)
 			.withExpectedResponseStatus(CREATED)
-			.withExpectedResponseHeader(LOCATION, List.of("/%s/history/users/TestUser/messages/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}".formatted(MUNICIPALITY_ID)))
+			.withExpectedResponseHeader(LOCATION, List.of("/%s/history/users/joe01doe/messages/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}".formatted(MUNICIPALITY_ID)))
 			.withExpectedResponseBodyIsNull()
 			.sendRequest()
 			.getResponseHeaders()
@@ -67,7 +65,7 @@ class MessageSmsIT extends AbstractAppTest {
 			.withHeader(Identifier.HEADER_NAME, IDENTIFIER)
 			.withRequest(REQUEST_FILE)
 			.withExpectedResponseStatus(CREATED)
-			.withExpectedResponseHeader(LOCATION, List.of("/%s/history/users/TestUser/messages/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}".formatted(MUNICIPALITY_ID)))
+			.withExpectedResponseHeader(LOCATION, List.of("/%s/history/users/joe01doe/messages/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}".formatted(MUNICIPALITY_ID)))
 			.withExpectedResponseBodyIsNull()
 			.sendRequest()
 			.getResponseHeaders()
@@ -97,7 +95,7 @@ class MessageSmsIT extends AbstractAppTest {
 			.withHeader(Identifier.HEADER_NAME, IDENTIFIER)
 			.withRequest(REQUEST_FILE)
 			.withExpectedResponseStatus(CREATED)
-			.withExpectedResponseHeader(LOCATION, List.of("/%s/history/users/TestUser/messages/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}".formatted(MUNICIPALITY_ID)))
+			.withExpectedResponseHeader(LOCATION, List.of("/%s/history/users/joe01doe/messages/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}".formatted(MUNICIPALITY_ID)))
 			.withExpectedResponseBodyIsNull()
 			.sendRequest()
 			.getResponseHeaders()
@@ -127,7 +125,7 @@ class MessageSmsIT extends AbstractAppTest {
 			.withHeader(Identifier.HEADER_NAME, IDENTIFIER)
 			.withRequest(REQUEST_FILE)
 			.withExpectedResponseStatus(CREATED)
-			.withExpectedResponseHeader(LOCATION, List.of("/%s/history/users/TestUser/messages/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}".formatted(MUNICIPALITY_ID)))
+			.withExpectedResponseHeader(LOCATION, List.of("/%s/history/users/joe01doe/messages/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}".formatted(MUNICIPALITY_ID)))
 			.withExpectedResponseBodyIsNull()
 			.sendRequest()
 			.getResponseHeaders()
@@ -157,7 +155,7 @@ class MessageSmsIT extends AbstractAppTest {
 			.withHeader(Identifier.HEADER_NAME, IDENTIFIER)
 			.withRequest(REQUEST_FILE)
 			.withExpectedResponseStatus(CREATED)
-			.withExpectedResponseHeader(LOCATION, List.of("/%s/history/users/TestUser/messages/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}".formatted(MUNICIPALITY_ID)))
+			.withExpectedResponseHeader(LOCATION, List.of("/%s/history/users/joe01doe/messages/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}".formatted(MUNICIPALITY_ID)))
 			.withExpectedResponseBodyIsNull()
 			.sendRequest()
 			.getResponseHeaders()
@@ -178,31 +176,6 @@ class MessageSmsIT extends AbstractAppTest {
 					.filteredOn(recipient -> recipient.getStatus().equals(FAILED))
 					.hasSize(2);
 			});
-
-	}
-
-	@Test
-	void test06_employee_failure() {
-		setupCall()
-			.withServicePath("/%s/messages/sms".formatted(MUNICIPALITY_ID))
-			.withHttpMethod(POST)
-			.withHeader(Identifier.HEADER_NAME, IDENTIFIER)
-			.withRequest(REQUEST_FILE)
-			.withExpectedResponseStatus(BAD_GATEWAY)
-			.withExpectedResponse(RESPONSE_FILE)
-			.sendRequestAndVerifyResponse();
-	}
-
-	@Test
-	void test07_messagingsettings_failure() {
-		setupCall()
-			.withServicePath("/%s/messages/sms".formatted(MUNICIPALITY_ID))
-			.withHttpMethod(POST)
-			.withHeader(Identifier.HEADER_NAME, IDENTIFIER)
-			.withRequest(REQUEST_FILE)
-			.withExpectedResponseStatus(BAD_GATEWAY)
-			.withExpectedResponse(RESPONSE_FILE)
-			.sendRequestAndVerifyResponse();
 	}
 
 }

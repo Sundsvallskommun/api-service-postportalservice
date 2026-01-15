@@ -1,0 +1,21 @@
+{
+	"request": {
+		"url": "/api-messagingsettings/2281/user",
+		"method": "GET",
+		"headers": {
+			"Authorization": {
+				"equalTo": "Bearer 0000000000000000AAAAAAAAAAAAAAAA"
+			},
+			"X-Sent-By": {
+				"equalTo": "joe01doe; type=adAccount"
+			}
+		}
+	},
+	"response": {
+		"status": 200,
+		"headers": {
+			"Content-Type": "application/json"
+		},
+		"bodyFileName": "test03_successfully_sendSnailMailAndDigitalMail/responses/api-messagingsettings-user-settings.json"
+	}
+}

@@ -3,7 +3,6 @@ package se.sundsvall.postportalservice.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.doReturn;
@@ -86,9 +85,6 @@ class MessageServiceTest {
 	private MessagingIntegration messagingIntegrationMock;
 
 	@Mock
-	private EmployeeService employeeService;
-
-	@Mock
 	private DepartmentRepository departmentRepositoryMock;
 
 	@Mock
@@ -128,13 +124,14 @@ class MessageServiceTest {
 	void tearDown() {
 		Identifier.remove();
 		verifyNoMoreInteractions(attachmentMapperMock, entityMapperMock,
-			messagingIntegrationMock, employeeService,
+			messagingIntegrationMock,
 			departmentRepositoryMock, userRepositoryMock,
 			messageRepositoryMock, digitalRegisteredLetterIntegrationMock);
 	}
 
 	/**
-	 * Messaging settings integration throws an exception, we expect a Problem (502 Bad Gateway) to be thrown and the process to stop.
+	 * Messaging settings integration throws an exception, we expect a Problem (502 Bad Gateway) to be thrown and the
+	 * process to stop.
 	 */
 	@Test
 	void processDigitalRegisteredLetterRequest_messagingSettingsThrows() {
@@ -143,7 +140,7 @@ class MessageServiceTest {
 		final var multipartFiles = List.of(multipartFile);
 		Identifier.set(new Identifier().withValue("test01user"));
 
-		when(messagingSettingsIntegrationMock.getMessagingSettingsForUser(eq(MUNICIPALITY_ID)))
+		when(messagingSettingsIntegrationMock.getMessagingSettingsForUser(MUNICIPALITY_ID))
 			.thenThrow(Problem.valueOf(BAD_GATEWAY, "No messaging settings found for user '%s' in municipalityId '%s'".formatted("test01user", MUNICIPALITY_ID)));
 
 		assertThatThrownBy(() -> messageService.processDigitalRegisteredLetterRequest(MUNICIPALITY_ID, request, multipartFiles))
@@ -155,7 +152,9 @@ class MessageServiceTest {
 	}
 
 	/**
-	 * If the DigitalRegisteredLetter integration throws an exception. We expect the exception to be swallowed and the recipient to be marked as FAILED with the exception message as status detail. The process should continue and the message entity should
+	 * If the DigitalRegisteredLetter integration throws an exception. We expect the exception to be swallowed and the
+	 * recipient to be marked as FAILED with the exception message as status detail. The process should continue and the
+	 * message entity should
 	 * be saved with the recipient marked as FAILED.
 	 */
 	@Test
