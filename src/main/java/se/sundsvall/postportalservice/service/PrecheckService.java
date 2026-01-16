@@ -3,11 +3,13 @@ package se.sundsvall.postportalservice.service;
 import static java.util.Collections.emptyList;
 import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
+import static org.zalando.problem.Status.BAD_REQUEST;
 import static se.sundsvall.postportalservice.Constants.INELIGIBLE_MINOR;
 
 import generated.se.sundsvall.citizen.CitizenExtended;
 import generated.se.sundsvall.citizen.PersonGuidBatch;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -17,6 +19,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import org.zalando.problem.Problem;
 import se.sundsvall.postportalservice.api.model.KivraEligibilityRequest;
 import se.sundsvall.postportalservice.api.model.PrecheckCsvResponse;
 import se.sundsvall.postportalservice.api.model.PrecheckResponse;
@@ -25,6 +28,7 @@ import se.sundsvall.postportalservice.api.model.PrecheckResponse.PrecheckRecipie
 import se.sundsvall.postportalservice.integration.citizen.CitizenIntegration;
 import se.sundsvall.postportalservice.integration.db.RecipientEntity;
 import se.sundsvall.postportalservice.integration.digitalregisteredletter.DigitalRegisteredLetterIntegration;
+import se.sundsvall.postportalservice.integration.party.PartyIntegration;
 import se.sundsvall.postportalservice.service.mapper.EntityMapper;
 import se.sundsvall.postportalservice.service.util.CitizenCategorizationHelper;
 import se.sundsvall.postportalservice.service.util.CitizenCategorizationHelper.CategorizedCitizens;
@@ -40,19 +44,22 @@ public class PrecheckService {
 	private final CitizenIntegration citizenIntegration;
 	private final MailboxStatusService mailboxStatusService;
 	private final EntityMapper entityMapper;
+	private final PartyIntegration partyIntegration;
 
 	public PrecheckService(
 		final DigitalRegisteredLetterIntegration digitalRegisteredLetterIntegration,
 		final CitizenIntegration citizenIntegration,
 		final MailboxStatusService mailboxStatusService,
-		final EntityMapper entityMapper) {
+		final EntityMapper entityMapper,
+		final PartyIntegration partyIntegration) {
 		this.digitalRegisteredLetterIntegration = digitalRegisteredLetterIntegration;
 		this.citizenIntegration = citizenIntegration;
 		this.mailboxStatusService = mailboxStatusService;
 		this.entityMapper = entityMapper;
+		this.partyIntegration = partyIntegration;
 	}
 
-	public PrecheckCsvResponse precheckCSV(final MultipartFile csvFile) {
+	public PrecheckCsvResponse precheckCSV(final String municipalityId, final MultipartFile csvFile) {
 
 		// Returns a map with personal identity numbers as keys and their occurrence counts as values
 		final var occurrenceMap = CsvUtil.validateCSV(csvFile);
@@ -62,7 +69,26 @@ public class PrecheckService {
 			.filter(entry -> entry.getValue() > 1)
 			.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
-		return new PrecheckCsvResponse(duplicateEntriesMap);
+		final var legalIds = new HashSet<>(occurrenceMap.keySet());
+
+		// Get partyIds for all legalIds
+		final var partyIdMap = partyIntegration.getPartyIds(municipalityId, legalIds);
+
+		// Validate that at least one key has a non-null value
+		final var hasAtLeastOneValidPartyId = partyIdMap.values().stream()
+			.anyMatch(Objects::nonNull);
+
+		if (!hasAtLeastOneValidPartyId) {
+			throw Problem.valueOf(BAD_REQUEST, "No valid partyIds found for the provided legal IDs");
+		}
+
+		// Extract all keys (legalIds) whose value (partyId) is null
+		final var legalIdsWithoutPartyId = partyIdMap.entrySet().stream()
+			.filter(entry -> entry.getValue() == null)
+			.map(Map.Entry::getKey)
+			.collect(Collectors.toSet());
+
+		return new PrecheckCsvResponse(duplicateEntriesMap, legalIdsWithoutPartyId);
 	}
 
 	public PrecheckResponse precheckPartyIds(final String municipalityId, final List<String> partyIds) {

@@ -1,0 +1,13 @@
+{
+	"request": {
+		"method": "POST",
+		"url": "/api-party/2281/PRIVATE/partyIds"
+	},
+	"response": {
+		"status": 200,
+		"headers": {
+			"Content-Type": "application/json"
+		},
+		"bodyFileName": "test03_precheck_csv_valid_format/responses/api-party-getpartyids.json"
+	}
+}

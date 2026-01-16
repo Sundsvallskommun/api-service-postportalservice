@@ -37,6 +37,8 @@ spring:
             token-uri: http://token.url
           employee:
             token-uri: http://token.url
+          party:
+            token-uri: http://token.url
         registration:
           citizen:
             client-id: the-client-id
@@ -51,6 +53,9 @@ spring:
             client-id: the-client-id
             client-secret: the-client-secret
           employee:
+            client-id: the-client-id
+            client-secret: the-client-secret
+          party:
             client-id: the-client-id
             client-secret: the-client-secret
 integration:
@@ -72,5 +77,9 @@ integration:
     read-timeout: 20
   employee:
     url: http://employee.local
+    connect-timeout: 10
+    read-timeout: 20
+  party:
+    url: http://party.local
     connect-timeout: 10
     read-timeout: 20

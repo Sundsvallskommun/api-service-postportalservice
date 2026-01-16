@@ -4,6 +4,7 @@ import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.groups.Tuple.tuple;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -17,6 +18,7 @@ import static se.sundsvall.postportalservice.TestDataFactory.MUNICIPALITY_ID;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -65,7 +67,7 @@ class PrecheckResourceTest {
 		final var multipartBodyBuilder = new MultipartBodyBuilder();
 		multipartBodyBuilder.part("csv-file", "mockfile1").filename("legalIds.csv").contentType(MediaType.valueOf("text/csv"));
 
-		when(precheckServiceMock.precheckCSV(any(MultipartFile.class))).thenReturn(new PrecheckCsvResponse(Map.of("201901012391", 2, "201901022382", 3)));
+		when(precheckServiceMock.precheckCSV(eq(MUNICIPALITY_ID), any(MultipartFile.class))).thenReturn(new PrecheckCsvResponse(Map.of("201901012391", 2, "201901022382", 3), Set.of()));
 
 		final var response = webTestClient.post()
 			.uri("/{municipalityId}/precheck/csv", MUNICIPALITY_ID)
@@ -80,7 +82,29 @@ class PrecheckResourceTest {
 
 		assertThat(response).isNotNull();
 		assertThat(response.duplicateEntries()).containsExactlyInAnyOrderEntriesOf(Map.of("201901012391", 2, "201901022382", 3));
-		verify(precheckServiceMock).precheckCSV(any(MultipartFile.class));
+		verify(precheckServiceMock).precheckCSV(eq(MUNICIPALITY_ID), any(MultipartFile.class));
+	}
+
+	@Test
+	void precheckCSV_BadPathContent() {
+		final var multipartBodyBuilder = new MultipartBodyBuilder();
+		multipartBodyBuilder.part("csv-file", "mockfile1").filename("legalIds.csv").contentType(MediaType.valueOf("text/csv"));
+
+		final var response = webTestClient.post()
+			.uri("/{municipalityId}/precheck/csv", INVALID_MUNICIPALITY_ID)
+			.header(Identifier.HEADER_NAME, "type=adAccount; joe01doe")
+			.contentType(MULTIPART_FORM_DATA)
+			.body(fromMultipartData(multipartBodyBuilder.build()))
+			.exchange()
+			.expectStatus().isBadRequest()
+			.expectBody(ConstraintViolationProblem.class)
+			.returnResult()
+			.getResponseBody();
+
+		assertThat(response.getTitle()).isEqualTo("Constraint Violation");
+		assertThat(response.getViolations()).hasSize(1);
+
+		verifyNoInteractions(precheckServiceMock);
 	}
 
 	@Test
