@@ -373,7 +373,7 @@ class PrecheckServiceTest {
 		var result = precheckService.precheckCSV(MUNICIPALITY_ID, multipartFileMock);
 
 		assertThat(result.duplicateEntries()).isEmpty();
-		assertThat(result.badEntries()).hasSize(1).contains("201901062388");
+		assertThat(result.rejectedEntries()).hasSize(1).contains("201901062388");
 
 		verify(partyIntegrationMock).getPartyIds(eq(MUNICIPALITY_ID), anySet());
 	}
@@ -395,7 +395,7 @@ class PrecheckServiceTest {
 		assertThat(result.duplicateEntries()).hasSize(2)
 			.containsEntry("201901012391", 2)
 			.containsEntry("201901012392", 2);
-		assertThat(result.badEntries()).isEmpty();
+		assertThat(result.rejectedEntries()).isEmpty();
 
 		verify(partyIntegrationMock).getPartyIds(eq(MUNICIPALITY_ID), anySet());
 	}

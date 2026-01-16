@@ -169,11 +169,7 @@ public class PrecheckService {
 	 * @param  categorized         categorized citizens
 	 * @return                     list of recipient entities
 	 */
-	private List<RecipientEntity> createRecipientEntities(
-		final List<String> digitalMailPartyIds,
-		final CategorizedCitizens categorized,
-		final List<CitizenExtended> allCitizens) {
-
+	private List<RecipientEntity> createRecipientEntities(final List<String> digitalMailPartyIds, final CategorizedCitizens categorized, final List<CitizenExtended> allCitizens) {
 		// Create lookup map: partyId -> CitizenExtended
 		final var citizenByPartyId = ofNullable(allCitizens).orElse(emptyList()).stream()
 			.filter(citizenExtended -> citizenExtended.getPersonId() != null)
@@ -198,10 +194,7 @@ public class PrecheckService {
 			.filter(Objects::nonNull);
 	}
 
-	private Stream<RecipientEntity> createSnailMailRecipients(
-		final List<SimplifiedCitizen> citizens,
-		final Map<String, CitizenExtended> citizenByPartyId) {
-
+	private Stream<RecipientEntity> createSnailMailRecipients(final List<SimplifiedCitizen> citizens, final Map<String, CitizenExtended> citizenByPartyId) {
 		return ofNullable(citizens).orElse(emptyList()).stream()
 			.map(SimplifiedCitizen::partyId)
 			.map(citizenByPartyId::get)
@@ -210,10 +203,7 @@ public class PrecheckService {
 			.filter(Objects::nonNull);
 	}
 
-	private Stream<RecipientEntity> createIneligibleMinorRecipients(
-		final List<SimplifiedCitizen> citizens,
-		final Map<String, CitizenExtended> citizenByPartyId) {
-
+	private Stream<RecipientEntity> createIneligibleMinorRecipients(final List<SimplifiedCitizen> citizens, final Map<String, CitizenExtended> citizenByPartyId) {
 		return ofNullable(citizens).orElse(emptyList()).stream()
 			.map(SimplifiedCitizen::partyId)
 			.map(citizenByPartyId::get)
@@ -222,10 +212,7 @@ public class PrecheckService {
 			.filter(Objects::nonNull);
 	}
 
-	private Stream<RecipientEntity> createUndeliverableRecipients(
-		final List<SimplifiedCitizen> citizens,
-		final Map<String, CitizenExtended> citizenByPartyId) {
-
+	private Stream<RecipientEntity> createUndeliverableRecipients(final List<SimplifiedCitizen> citizens, final Map<String, CitizenExtended> citizenByPartyId) {
 		return ofNullable(citizens).orElse(emptyList()).stream()
 			.map(SimplifiedCitizen::partyId)
 			.map(citizenByPartyId::get)
