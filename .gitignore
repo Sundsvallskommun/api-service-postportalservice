@@ -53,3 +53,7 @@ application-default.*
 # Spring
 application-default.properties
 /.factorypath
+
+# Claude Code
+.claude/
+CLAUDE.md

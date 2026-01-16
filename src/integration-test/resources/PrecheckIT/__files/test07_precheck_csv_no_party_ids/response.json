@@ -1,0 +1,5 @@
+{
+	"status": 400,
+	"title": "Bad Request",
+	"detail": "No valid partyIds found for the provided legal IDs"
+}

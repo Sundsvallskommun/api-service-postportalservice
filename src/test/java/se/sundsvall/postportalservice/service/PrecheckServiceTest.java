@@ -5,7 +5,9 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.anySet;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -19,7 +21,9 @@ import generated.se.sundsvall.citizen.PersonGuidBatch;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -39,6 +43,7 @@ import se.sundsvall.postportalservice.integration.citizen.CitizenIntegration;
 import se.sundsvall.postportalservice.integration.db.RecipientEntity;
 import se.sundsvall.postportalservice.integration.db.converter.MessageType;
 import se.sundsvall.postportalservice.integration.digitalregisteredletter.DigitalRegisteredLetterIntegration;
+import se.sundsvall.postportalservice.integration.party.PartyIntegration;
 import se.sundsvall.postportalservice.service.MailboxStatusService.MailboxStatus;
 import se.sundsvall.postportalservice.service.mapper.EntityMapper;
 import se.sundsvall.postportalservice.service.util.PrecheckUtil;
@@ -59,6 +64,9 @@ class PrecheckServiceTest {
 	@Mock
 	private DigitalRegisteredLetterIntegration digitalRegisteredLetterIntegrationMock;
 
+	@Mock
+	private PartyIntegration partyIntegrationMock;
+
 	@Mock(answer = Answers.CALLS_REAL_METHODS)
 	private EntityMapper entityMapperMock;
 
@@ -68,7 +76,7 @@ class PrecheckServiceTest {
 	@AfterEach
 	void noMoreInteractions() {
 		verifyNoMoreInteractions(citizenIntegrationMock, entityMapperMock, mailboxStatusServiceMock,
-			digitalRegisteredLetterIntegrationMock);
+			digitalRegisteredLetterIntegrationMock, partyIntegrationMock);
 	}
 
 	@Test
@@ -351,9 +359,23 @@ class PrecheckServiceTest {
 		var multipartFileMock = Mockito.mock(MultipartFile.class);
 		when(multipartFileMock.getInputStream()).thenReturn(new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8)));
 
-		var result = precheckService.precheckCSV(multipartFileMock);
+		// Mock partyIntegration - one entry has no partyId
+		final var partyIdMap = new HashMap<String, String>();
+		partyIdMap.put("201901012391", UUID.randomUUID().toString());
+		partyIdMap.put("201901022382", UUID.randomUUID().toString());
+		partyIdMap.put("201901032399", UUID.randomUUID().toString());
+		partyIdMap.put("201901042380", UUID.randomUUID().toString());
+		partyIdMap.put("201901052397", UUID.randomUUID().toString());
+		partyIdMap.put("201901062388", null); // No partyId for this entry
+
+		when(partyIntegrationMock.getPartyIds(eq(MUNICIPALITY_ID), anySet())).thenReturn(partyIdMap);
+
+		var result = precheckService.precheckCSV(MUNICIPALITY_ID, multipartFileMock);
 
 		assertThat(result.duplicateEntries()).isEmpty();
+		assertThat(result.rejectedEntries()).hasSize(1).contains("201901062388");
+
+		verify(partyIntegrationMock).getPartyIds(eq(MUNICIPALITY_ID), anySet());
 	}
 
 	@Test
@@ -361,11 +383,21 @@ class PrecheckServiceTest {
 		var multipartFileMock = Mockito.mock(MultipartFile.class);
 		when(multipartFileMock.getInputStream()).thenReturn(new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8)));
 
-		var result = precheckService.precheckCSV(multipartFileMock);
+		// Mock partyIntegration - all entries have partyIds
+		final var partyIdMap = Map.of(
+			"201901012391", UUID.randomUUID().toString(),
+			"201901012392", UUID.randomUUID().toString());
+
+		when(partyIntegrationMock.getPartyIds(eq(MUNICIPALITY_ID), anySet())).thenReturn(partyIdMap);
+
+		var result = precheckService.precheckCSV(MUNICIPALITY_ID, multipartFileMock);
 
 		assertThat(result.duplicateEntries()).hasSize(2)
 			.containsEntry("201901012391", 2)
 			.containsEntry("201901012392", 2);
+		assertThat(result.rejectedEntries()).isEmpty();
+
+		verify(partyIntegrationMock).getPartyIds(eq(MUNICIPALITY_ID), anySet());
 	}
 
 	@Test
@@ -373,9 +405,48 @@ class PrecheckServiceTest {
 		var multipartFileMock = Mockito.mock(MultipartFile.class);
 		when(multipartFileMock.getInputStream()).thenReturn(new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8)));
 
-		assertThatThrownBy(() -> precheckService.precheckCSV(multipartFileMock))
+		assertThatThrownBy(() -> precheckService.precheckCSV(MUNICIPALITY_ID, multipartFileMock))
 			.isInstanceOf(Problem.class)
 			.hasMessageContaining("Bad Request: Invalid CSV format. Each data row must contain 12 digits, an optional hyphen between digit 8 and 9 are acceptable. Invalid entry: 20190--1012391");
+	}
+
+	@Test
+	void precheckCSV_allEntriesWithoutPartyId(@Load(value = "/testfile/legalIds.csv") final String csv) throws IOException {
+		var multipartFileMock = Mockito.mock(MultipartFile.class);
+		when(multipartFileMock.getInputStream()).thenReturn(new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8)));
+
+		// Mock partyIntegration to throw exception when no partyIds can be found
+		when(partyIntegrationMock.getPartyIds(eq(MUNICIPALITY_ID), anySet()))
+			.thenThrow(Problem.valueOf(BAD_GATEWAY, "Failed to retrieve party IDs"));
+
+		assertThatThrownBy(() -> precheckService.precheckCSV(MUNICIPALITY_ID, multipartFileMock))
+			.isInstanceOf(Problem.class)
+			.hasMessageContaining("Bad Gateway: Failed to retrieve party IDs");
+
+		verify(partyIntegrationMock).getPartyIds(eq(MUNICIPALITY_ID), anySet());
+	}
+
+	@Test
+	void precheckCSV_noValidPartyIds(@Load(value = "/testfile/legalIds.csv") final String csv) throws IOException {
+		var multipartFileMock = Mockito.mock(MultipartFile.class);
+		when(multipartFileMock.getInputStream()).thenReturn(new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8)));
+
+		// Mock partyIntegration - all entries have null partyId
+		final var partyIdMap = new HashMap<String, String>();
+		partyIdMap.put("201901012391", null);
+		partyIdMap.put("201901022382", null);
+		partyIdMap.put("201901032399", null);
+		partyIdMap.put("201901042380", null);
+		partyIdMap.put("201901052397", null);
+		partyIdMap.put("201901062388", null);
+
+		when(partyIntegrationMock.getPartyIds(eq(MUNICIPALITY_ID), anySet())).thenReturn(partyIdMap);
+
+		assertThatThrownBy(() -> precheckService.precheckCSV(MUNICIPALITY_ID, multipartFileMock))
+			.isInstanceOf(Problem.class)
+			.hasMessageContaining("No valid partyIds found");
+
+		verify(partyIntegrationMock).getPartyIds(eq(MUNICIPALITY_ID), anySet());
 	}
 
 }

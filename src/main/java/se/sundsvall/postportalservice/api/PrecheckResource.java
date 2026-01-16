@@ -82,6 +82,6 @@ class PrecheckResource {
 	@PostMapping(value = "/csv", consumes = MULTIPART_FORM_DATA_VALUE, produces = APPLICATION_JSON_VALUE)
 	ResponseEntity<PrecheckCsvResponse> validateCsv(@ValidMunicipalityId @PathVariable final String municipalityId,
 		@RequestPart(name = "csv-file") @ValidCsv final MultipartFile csvFile) {
-		return ok(precheckService.precheckCSV(csvFile));
+		return ok(precheckService.precheckCSV(municipalityId, csvFile));
 	}
 }

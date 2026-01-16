@@ -32,6 +32,9 @@ spring:
           employee:
             authorization-grant-type: client_credentials
             provider: employee
+          party:
+            authorization-grant-type: client_credentials
+            provider: party
 openapi:
   title: Postportalservice
   name: postportalservice
