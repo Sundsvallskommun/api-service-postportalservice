@@ -17,7 +17,6 @@ import static se.sundsvall.postportalservice.TestDataFactory.generateLegalId;
 
 import generated.se.sundsvall.citizen.CitizenAddress;
 import generated.se.sundsvall.citizen.CitizenExtended;
-import generated.se.sundsvall.citizen.PersonGuidBatch;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -108,23 +107,13 @@ class PrecheckServiceTest {
 		when(citizenIntegrationMock.getCitizens(MUNICIPALITY_ID, List.of(snailMailUuid, notEligibleUuid))).thenReturn(citizens);
 
 		// Mock person numbers for age verification
-		final var digitalMailBatch = new PersonGuidBatch()
-			.success(Boolean.TRUE)
-			.personId(UUID.fromString(digitalMailUuid))
-			.personNumber(generateLegalId(30, "2399"));
+		final var partyIdToLegalIdMap = Map.of(
+			digitalMailUuid, generateLegalId(30, "2399"),
+			snailMailUuid, generateLegalId(35, "2398"),
+			notEligibleUuid, generateLegalId(40, "2388"));
 
-		final var snailMailBatch = new PersonGuidBatch()
-			.success(Boolean.TRUE)
-			.personId(UUID.fromString(snailMailUuid))
-			.personNumber(generateLegalId(35, "2398"));
-
-		final var notEligibleBatch = new PersonGuidBatch()
-			.success(Boolean.TRUE)
-			.personId(UUID.fromString(notEligibleUuid))
-			.personNumber(generateLegalId(40, "2388"));
-
-		when(citizenIntegrationMock.getPersonNumbers(MUNICIPALITY_ID, partyIds))
-			.thenReturn(List.of(digitalMailBatch, snailMailBatch, notEligibleBatch));
+		when(partyIntegrationMock.getPersonNumbers(MUNICIPALITY_ID, partyIds))
+			.thenReturn(partyIdToLegalIdMap);
 
 		final var result = precheckService.precheckPartyIds(MUNICIPALITY_ID, partyIds);
 
@@ -137,7 +126,7 @@ class PrecheckServiceTest {
 
 		verify(mailboxStatusServiceMock).checkMailboxStatus(MUNICIPALITY_ID, partyIds);
 		verify(citizenIntegrationMock).getCitizens(MUNICIPALITY_ID, List.of(snailMailUuid, notEligibleUuid));
-		verify(citizenIntegrationMock).getPersonNumbers(MUNICIPALITY_ID, partyIds);
+		verify(partyIntegrationMock).getPersonNumbers(MUNICIPALITY_ID, partyIds);
 	}
 
 	@Test
@@ -160,16 +149,11 @@ class PrecheckServiceTest {
 		final var legalId = generateLegalId(35, "0000");
 		final var partyId = UUID.randomUUID().toString();
 
-		final var personGuidBatch = new PersonGuidBatch()
-			.success(Boolean.TRUE)
-			.personNumber(legalId)
-			.personId(UUID.fromString(partyId));
-
 		final var legalIds = List.of(legalId);
-		final var personGuidBatches = List.of(personGuidBatch);
 		final var partyIds = List.of(partyId);
+		final var legalIdToPartyIdMap = Map.of(legalId, partyId);
 
-		when(citizenIntegrationMock.getPartyIds(MUNICIPALITY_ID, legalIds)).thenReturn(personGuidBatches);
+		when(partyIntegrationMock.getPartyIds(MUNICIPALITY_ID, legalIds)).thenReturn(legalIdToPartyIdMap);
 
 		// Mock mailbox status - digital mailbox available
 		final var mailboxStatus = new MailboxStatus(List.of(partyId), List.of());
@@ -182,7 +166,7 @@ class PrecheckServiceTest {
 			.containsExactly(tuple(partyId, MessageType.DIGITAL_MAIL, "PENDING"));
 
 		// Verify
-		verify(citizenIntegrationMock).getPartyIds(MUNICIPALITY_ID, legalIds);
+		verify(partyIntegrationMock).getPartyIds(MUNICIPALITY_ID, legalIds);
 		verify(mailboxStatusServiceMock).checkMailboxStatus(MUNICIPALITY_ID, partyIds);
 		verify(entityMapperMock).toDigitalMailRecipientEntity(any());
 	}
@@ -192,16 +176,11 @@ class PrecheckServiceTest {
 		final var legalId = generateLegalId(40, "2390");
 		final var partyId = UUID.randomUUID().toString();
 
-		final var personGuidBatch = new PersonGuidBatch()
-			.success(Boolean.TRUE)
-			.personNumber(legalId)
-			.personId(UUID.fromString(partyId));
-
 		final var legalIds = List.of(legalId);
-		final var personGuidBatches = List.of(personGuidBatch);
 		final var partyIds = List.of(partyId);
+		final var legalIdToPartyIdMap = Map.of(legalId, partyId);
 
-		when(citizenIntegrationMock.getPartyIds(MUNICIPALITY_ID, legalIds)).thenReturn(personGuidBatches);
+		when(partyIntegrationMock.getPartyIds(MUNICIPALITY_ID, legalIds)).thenReturn(legalIdToPartyIdMap);
 
 		// Mock mailbox status - no digital mailbox
 		final var unreachableMailbox = new PrecheckUtil.UnreachableMailbox(partyId, "No digital mailbox");
@@ -222,7 +201,7 @@ class PrecheckServiceTest {
 			.extracting(RecipientEntity::getPartyId, RecipientEntity::getMessageType, RecipientEntity::getStatus)
 			.containsExactly(tuple(partyId, MessageType.SNAIL_MAIL, "PENDING"));
 
-		verify(citizenIntegrationMock).getPartyIds(MUNICIPALITY_ID, legalIds);
+		verify(partyIntegrationMock).getPartyIds(MUNICIPALITY_ID, legalIds);
 		verify(mailboxStatusServiceMock).checkMailboxStatus(MUNICIPALITY_ID, partyIds);
 		verify(citizenIntegrationMock).getCitizens(MUNICIPALITY_ID, partyIds);
 		verify(entityMapperMock).toSnailMailRecipientEntity(any());
@@ -233,16 +212,11 @@ class PrecheckServiceTest {
 		final var legalId = generateLegalId(45, "2381");
 		final var partyId = UUID.randomUUID().toString();
 
-		final var personGuidBatch = new PersonGuidBatch()
-			.success(Boolean.TRUE)
-			.personNumber(legalId)
-			.personId(UUID.fromString(partyId));
-
 		final var legalIds = List.of(legalId);
-		final var personGuidBatches = List.of(personGuidBatch);
 		final var partyIds = List.of(partyId);
+		final var legalIdToPartyIdMap = Map.of(legalId, partyId);
 
-		when(citizenIntegrationMock.getPartyIds(MUNICIPALITY_ID, legalIds)).thenReturn(personGuidBatches);
+		when(partyIntegrationMock.getPartyIds(MUNICIPALITY_ID, legalIds)).thenReturn(legalIdToPartyIdMap);
 
 		// Mock mailbox status - no digital mailbox
 		final var unreachableMailbox = new PrecheckUtil.UnreachableMailbox(partyId, "No digital mailbox");
@@ -267,7 +241,7 @@ class PrecheckServiceTest {
 			.containsExactly(tuple(partyId, MessageType.LETTER, "UNDELIVERABLE"));
 
 		// Verify
-		verify(citizenIntegrationMock).getPartyIds(MUNICIPALITY_ID, legalIds);
+		verify(partyIntegrationMock).getPartyIds(MUNICIPALITY_ID, legalIds);
 		verify(mailboxStatusServiceMock).checkMailboxStatus(MUNICIPALITY_ID, partyIds);
 		verify(citizenIntegrationMock).getCitizens(MUNICIPALITY_ID, partyIds);
 		verify(entityMapperMock).toUndeliverableRecipientEntity(any());
@@ -279,17 +253,12 @@ class PrecheckServiceTest {
 		final var legalId = generateLegalId(15, "2387");
 		final var partyId = UUID.randomUUID().toString();
 
-		final var personGuidBatch = new PersonGuidBatch()
-			.success(Boolean.TRUE)
-			.personNumber(legalId)
-			.personId(UUID.fromString(partyId));
-
 		final var legalIds = List.of(legalId);
-		final var personGuidBatches = List.of(personGuidBatch);
 		final var partyIds = List.of(partyId);
+		final var legalIdToPartyIdMap = Map.of(legalId, partyId);
 
 		// Setup mocks
-		when(citizenIntegrationMock.getPartyIds(MUNICIPALITY_ID, legalIds)).thenReturn(personGuidBatches);
+		when(partyIntegrationMock.getPartyIds(MUNICIPALITY_ID, legalIds)).thenReturn(legalIdToPartyIdMap);
 
 		// Mock mailbox status - no digital mailbox
 		final var unreachableMailbox = new PrecheckUtil.UnreachableMailbox(partyId, "No digital mailbox");
@@ -314,34 +283,32 @@ class PrecheckServiceTest {
 			.containsExactly(tuple(partyId, MessageType.LETTER, "INELIGIBLE_MINOR"));
 
 		// Verify
-		verify(citizenIntegrationMock).getPartyIds(MUNICIPALITY_ID, legalIds);
+		verify(partyIntegrationMock).getPartyIds(MUNICIPALITY_ID, legalIds);
 		verify(mailboxStatusServiceMock).checkMailboxStatus(MUNICIPALITY_ID, partyIds);
 		verify(citizenIntegrationMock).getCitizens(MUNICIPALITY_ID, partyIds);
 		verify(entityMapperMock).toIneligibleMinorRecipientEntity(any());
 	}
 
 	@Test
-	void precheckLegalIds_citizenThrows() {
+	void precheckLegalIds_partyIntegrationThrows() {
 		final var legalIds = List.of("201801022383", "201801032390", "201801042381");
-		when(citizenIntegrationMock.getPartyIds(MUNICIPALITY_ID, legalIds)).thenThrow(Problem.valueOf(BAD_GATEWAY, "Failed to retrieve citizen data"));
+		when(partyIntegrationMock.getPartyIds(MUNICIPALITY_ID, legalIds)).thenThrow(Problem.valueOf(BAD_GATEWAY, "Failed to retrieve party data"));
 
 		assertThatThrownBy(() -> precheckService.precheckLegalIds(MUNICIPALITY_ID, legalIds))
 			.isInstanceOf(Problem.class)
-			.hasMessageContaining("Bad Gateway: Failed to retrieve citizen data");
+			.hasMessageContaining("Bad Gateway: Failed to retrieve party data");
 
-		verify(citizenIntegrationMock).getPartyIds(MUNICIPALITY_ID, legalIds);
+		verify(partyIntegrationMock).getPartyIds(MUNICIPALITY_ID, legalIds);
 		verifyNoInteractions(mailboxStatusServiceMock);
 	}
 
 	@Test
 	void precheckLegalIds_mailboxServiceThrows() {
 		final var legalIds = List.of("201801022383", "201801032390", "201801042381");
-		final var batches = List.of(new PersonGuidBatch()
-			.success(Boolean.TRUE)
-			.personNumber(legalIds.getFirst())
-			.personId(UUID.randomUUID()));
+		final var partyId = UUID.randomUUID().toString();
+		final var legalIdToPartyIdMap = Map.of(legalIds.getFirst(), partyId);
 
-		when(citizenIntegrationMock.getPartyIds(MUNICIPALITY_ID, legalIds)).thenReturn(batches);
+		when(partyIntegrationMock.getPartyIds(MUNICIPALITY_ID, legalIds)).thenReturn(legalIdToPartyIdMap);
 		when(mailboxStatusServiceMock.checkMailboxStatus(anyString(), anyList()))
 			.thenThrow(Problem.valueOf(BAD_GATEWAY, "Failed to check mailbox status"));
 
@@ -349,9 +316,9 @@ class PrecheckServiceTest {
 			.isInstanceOf(Problem.class)
 			.hasMessageContaining("Bad Gateway: Failed to check mailbox status");
 
-		verify(citizenIntegrationMock).getPartyIds(MUNICIPALITY_ID, legalIds);
+		verify(partyIntegrationMock).getPartyIds(MUNICIPALITY_ID, legalIds);
 		verify(mailboxStatusServiceMock).checkMailboxStatus(anyString(), anyList());
-		verifyNoMoreInteractions(citizenIntegrationMock, mailboxStatusServiceMock);
+		verifyNoMoreInteractions(partyIntegrationMock, mailboxStatusServiceMock);
 	}
 
 	@Test

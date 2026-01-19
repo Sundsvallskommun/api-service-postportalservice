@@ -7,7 +7,6 @@ import static org.zalando.problem.Status.BAD_REQUEST;
 import static se.sundsvall.postportalservice.Constants.INELIGIBLE_MINOR;
 
 import generated.se.sundsvall.citizen.CitizenExtended;
-import generated.se.sundsvall.citizen.PersonGuidBatch;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -111,21 +110,13 @@ public class PrecheckService {
 	}
 
 	private PartyIdMapping getPartyIdMapping(final String municipalityId, final List<String> partyIds) {
-		// Get partyIds and create mapping that we can use for age verification later on
+		// Get legalIds for partyIds and create mapping that we can use for age verification later on
 		final var partyIdMapping = new PartyIdMapping();
 
-		final var citizens = citizenIntegration.getPersonNumbers(municipalityId, partyIds);
+		final var partyIdToLegalIdMap = partyIntegration.getPersonNumbers(municipalityId, partyIds);
 
 		partyIds.forEach(partyId -> {
-			// Find corresponding person number for the partyId
-			final var matchingLegalId = citizens.stream()
-				.filter(citizen -> Boolean.TRUE.equals(citizen.getSuccess()))
-				.filter(citizen -> citizen.getPersonId() != null)   // Check that we have a personId / UUID
-				.filter(citizen -> partyId.equalsIgnoreCase(citizen.getPersonId().toString()))
-				.findFirst()
-				.map(PersonGuidBatch::getPersonNumber)
-				.orElse(null);
-
+			final var matchingLegalId = partyIdToLegalIdMap.get(partyId);
 			partyIdMapping.addToPartyIdToLegalIdMap(partyId, matchingLegalId);
 		});
 
@@ -138,8 +129,8 @@ public class PrecheckService {
 		}
 
 		// Get partyIds and create mapping that we can use for age verification later on
-		final var batches = citizenIntegration.getPartyIds(municipalityId, legalIds);
-		final var partyIdMapping = PartyIdMappingHelper.extractPartyIdMapping(batches);
+		final var legalIdToPartyIdMap = partyIntegration.getPartyIds(municipalityId, legalIds);
+		final var partyIdMapping = PartyIdMappingHelper.extractPartyIdMappingFromMap(legalIdToPartyIdMap);
 
 		// Check digital mailbox availability
 		final var mailboxStatus = mailboxStatusService.checkMailboxStatus(municipalityId, partyIdMapping.partyIds());

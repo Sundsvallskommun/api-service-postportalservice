@@ -1,15 +1,10 @@
 package se.sundsvall.postportalservice.service.util;
 
-import static java.util.Collections.emptyList;
-
-import generated.se.sundsvall.citizen.PersonGuidBatch;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -20,46 +15,25 @@ public final class PartyIdMappingHelper {
 	private PartyIdMappingHelper() {}
 
 	/**
-	 * Extracts partyIds from PersonGuidBatch responses.
+	 * Creates PartyIdMapping from a legalId to partyId map.
 	 *
-	 * @param  batches the list of PersonGuidBatch objects
-	 * @return         a list of partyIds as strings
+	 * @param  legalIdToPartyIdMap map from legalId to partyId
+	 * @return                     a PartyIdMapping record containing party IDs and reversed mapping
 	 */
-	public static List<String> extractPartyIds(final List<PersonGuidBatch> batches) {
-		return Optional.ofNullable(batches).orElse(emptyList()).stream()
-			.filter(batch -> Boolean.TRUE.equals(batch.getSuccess()))
-			.map(PersonGuidBatch::getPersonId)
+	public static PartyIdMapping extractPartyIdMappingFromMap(final Map<String, String> legalIdToPartyIdMap) {
+		final var partyIds = legalIdToPartyIdMap.values().stream()
 			.filter(Objects::nonNull)
-			.map(UUID::toString)
 			.toList();
-	}
 
-	/**
-	 * Creates a map from partyId to legalId for age verification.
-	 *
-	 * @param  batches the list of PersonGuidBatch objects
-	 * @return         a map of partyId to legalId
-	 */
-	public static Map<String, String> createPartyIdTolegalIdMap(final List<PersonGuidBatch> batches) {
-		return Optional.ofNullable(batches).orElse(emptyList()).stream()
-			.filter(batch -> Boolean.TRUE.equals(batch.getSuccess()))
-			.filter(batch -> batch.getPersonId() != null && batch.getPersonNumber() != null)
+		// Reverse the map: legalId -> partyId becomes partyId -> legalId
+		final var partyIdToLegalIdMap = legalIdToPartyIdMap.entrySet().stream()
+			.filter(entry -> entry.getValue() != null)
 			.collect(Collectors.toMap(
-				batch -> batch.getPersonId().toString(),
-				PersonGuidBatch::getPersonNumber,
+				Map.Entry::getValue,
+				Map.Entry::getKey,
 				(existing, replacement) -> existing));
-	}
 
-	/**
-	 * Extracts both party IDs and creates legalId mapping in one operation.
-	 *
-	 * @param  batches the list of PersonGuidBatch objects
-	 * @return         a PartyIdMapping record containing party IDs and mapping
-	 */
-	public static PartyIdMapping extractPartyIdMapping(final List<PersonGuidBatch> batches) {
-		final var partyIds = extractPartyIds(batches);
-		final var partyIdToLegalIdMap = createPartyIdTolegalIdMap(batches);
-		return new PartyIdMapping(partyIds, partyIdToLegalIdMap);
+		return new PartyIdMapping(new ArrayList<>(partyIds), partyIdToLegalIdMap);
 	}
 
 	/**
@@ -74,7 +48,7 @@ public final class PartyIdMappingHelper {
 			this(new ArrayList<>(), new HashMap<>());
 		}
 
-		public void addToPartyIdToLegalIdMap(String partyId, String legalId) {
+		public void addToPartyIdToLegalIdMap(final String partyId, final String legalId) {
 			this.partyIds.add(partyId);
 			this.partyIdToLegalId.put(partyId, legalId);
 		}
