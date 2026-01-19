@@ -100,10 +100,13 @@ class PrecheckServiceTest {
 		final var notEligibleCitizen = new CitizenExtended()
 			.personId(UUID.fromString(notEligibleUuid))
 			.addresses(List.of(new CitizenAddress().addressType("INVALID_ADDRESS_TYPE")));
+		final var digitalMailCitizen = new CitizenExtended()
+			.personId(UUID.fromString(digitalMailUuid))
+			.addresses(List.of(new CitizenAddress().addressType("POPULATION_REGISTRATION_ADDRESS")));
 
-		final var citizens = List.of(snailMailCitizen, notEligibleCitizen);
+		final var citizens = List.of(digitalMailCitizen, snailMailCitizen, notEligibleCitizen);
 
-		when(citizenIntegrationMock.getCitizens(MUNICIPALITY_ID, List.of(snailMailUuid, notEligibleUuid))).thenReturn(citizens);
+		when(citizenIntegrationMock.getCitizens(MUNICIPALITY_ID, partyIds)).thenReturn(citizens);
 
 		// Mock person numbers for age verification
 		final var partyIdToLegalIdMap = Map.of(
@@ -124,7 +127,7 @@ class PrecheckServiceTest {
 				tuple(notEligibleUuid, DeliveryMethod.DELIVERY_NOT_POSSIBLE));
 
 		verify(mailboxStatusServiceMock).checkMailboxStatus(MUNICIPALITY_ID, partyIds);
-		verify(citizenIntegrationMock).getCitizens(MUNICIPALITY_ID, List.of(snailMailUuid, notEligibleUuid));
+		verify(citizenIntegrationMock).getCitizens(MUNICIPALITY_ID, partyIds);
 		verify(partyIntegrationMock).getLegalIds(MUNICIPALITY_ID, partyIds);
 	}
 
@@ -141,6 +144,51 @@ class PrecheckServiceTest {
 
 		verify(mailboxStatusServiceMock).checkMailboxStatus(MUNICIPALITY_ID, partyIds);
 		verifyNoInteractions(citizenIntegrationMock);
+	}
+
+	@Test
+	void precheckPartyIds_minorWithDigitalMailbox() {
+		final var minorUuid = "1c1b2636-5ffc-467d-95be-156aeb73ec8e"; // Minor with digital mailbox
+		final var adultUuid = "2c1b2636-5ffc-467d-95be-156aeb73ec8e"; // Adult with digital mailbox
+		final var partyIds = List.of(minorUuid, adultUuid);
+
+		// Mock mailbox status - both are reachable via digital mail
+		final var mailboxStatus = new MailboxStatus(List.of(minorUuid, adultUuid), List.of());
+
+		when(mailboxStatusServiceMock.checkMailboxStatus(MUNICIPALITY_ID, partyIds)).thenReturn(mailboxStatus);
+
+		// Mock citizen data for age verification
+		final var minorCitizen = new CitizenExtended()
+			.personId(UUID.fromString(minorUuid))
+			.addresses(List.of(new CitizenAddress().addressType("POPULATION_REGISTRATION_ADDRESS")));
+		final var adultCitizen = new CitizenExtended()
+			.personId(UUID.fromString(adultUuid))
+			.addresses(List.of(new CitizenAddress().addressType("POPULATION_REGISTRATION_ADDRESS")));
+
+		final var citizens = List.of(minorCitizen, adultCitizen);
+
+		when(citizenIntegrationMock.getCitizens(MUNICIPALITY_ID, partyIds)).thenReturn(citizens);
+
+		// Mock person numbers for age verification - minor is 15 years old, adult is 30 years old
+		final var partyIdToLegalIdMap = Map.of(
+			minorUuid, generateLegalId(15, "2399"),
+			adultUuid, generateLegalId(30, "2398"));
+
+		when(partyIntegrationMock.getLegalIds(MUNICIPALITY_ID, partyIds))
+			.thenReturn(partyIdToLegalIdMap);
+
+		final var result = precheckService.precheckPartyIds(MUNICIPALITY_ID, partyIds);
+
+		// Verify that minor is marked as ineligible and adult can use digital mail
+		assertThat(result.precheckRecipients()).hasSize(2)
+			.extracting(PrecheckRecipient::partyId, PrecheckRecipient::deliveryMethod, PrecheckRecipient::reason)
+			.containsExactlyInAnyOrder(
+				tuple(adultUuid, DeliveryMethod.DIGITAL_MAIL, null),
+				tuple(minorUuid, DeliveryMethod.DELIVERY_NOT_POSSIBLE, "INELIGIBLE_MINOR"));
+
+		verify(mailboxStatusServiceMock).checkMailboxStatus(MUNICIPALITY_ID, partyIds);
+		verify(citizenIntegrationMock).getCitizens(MUNICIPALITY_ID, partyIds);
+		verify(partyIntegrationMock).getLegalIds(MUNICIPALITY_ID, partyIds);
 	}
 
 	@Test
@@ -322,7 +370,7 @@ class PrecheckServiceTest {
 
 	@Test
 	void precheckCSV(@Load(value = "/testfile/legalIds.csv") final String csv) throws IOException {
-		var multipartFileMock = Mockito.mock(MultipartFile.class);
+		final var multipartFileMock = Mockito.mock(MultipartFile.class);
 		when(multipartFileMock.getInputStream()).thenReturn(new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8)));
 
 		// Mock partyIntegration - one entry has no partyId
@@ -336,7 +384,7 @@ class PrecheckServiceTest {
 
 		when(partyIntegrationMock.getPartyIds(eq(MUNICIPALITY_ID), anyList())).thenReturn(partyIdMap);
 
-		var result = precheckService.precheckCSV(MUNICIPALITY_ID, multipartFileMock);
+		final var result = precheckService.precheckCSV(MUNICIPALITY_ID, multipartFileMock);
 
 		assertThat(result.duplicateEntries()).isEmpty();
 		assertThat(result.rejectedEntries()).hasSize(1).contains("201901062388");
@@ -346,7 +394,7 @@ class PrecheckServiceTest {
 
 	@Test
 	void precheckCSV_withDuplicates(@Load(value = "/testfile/legalIds-duplicates.csv") final String csv) throws IOException {
-		var multipartFileMock = Mockito.mock(MultipartFile.class);
+		final var multipartFileMock = Mockito.mock(MultipartFile.class);
 		when(multipartFileMock.getInputStream()).thenReturn(new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8)));
 
 		// Mock partyIntegration - all entries have partyIds
@@ -356,7 +404,7 @@ class PrecheckServiceTest {
 
 		when(partyIntegrationMock.getPartyIds(eq(MUNICIPALITY_ID), anyList())).thenReturn(partyIdMap);
 
-		var result = precheckService.precheckCSV(MUNICIPALITY_ID, multipartFileMock);
+		final var result = precheckService.precheckCSV(MUNICIPALITY_ID, multipartFileMock);
 
 		assertThat(result.duplicateEntries()).hasSize(2)
 			.containsEntry("201901012391", 2)
@@ -368,7 +416,7 @@ class PrecheckServiceTest {
 
 	@Test
 	void precheckCSV_withInvalidFormat(@Load(value = "/testfile/legalIds-invalid-format.csv") final String csv) throws IOException {
-		var multipartFileMock = Mockito.mock(MultipartFile.class);
+		final var multipartFileMock = Mockito.mock(MultipartFile.class);
 		when(multipartFileMock.getInputStream()).thenReturn(new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8)));
 
 		assertThatThrownBy(() -> precheckService.precheckCSV(MUNICIPALITY_ID, multipartFileMock))
@@ -378,7 +426,7 @@ class PrecheckServiceTest {
 
 	@Test
 	void precheckCSV_allEntriesWithoutPartyId(@Load(value = "/testfile/legalIds.csv") final String csv) throws IOException {
-		var multipartFileMock = Mockito.mock(MultipartFile.class);
+		final var multipartFileMock = Mockito.mock(MultipartFile.class);
 		when(multipartFileMock.getInputStream()).thenReturn(new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8)));
 
 		// Mock partyIntegration to throw exception when no partyIds can be found
@@ -394,7 +442,7 @@ class PrecheckServiceTest {
 
 	@Test
 	void precheckCSV_noValidPartyIds(@Load(value = "/testfile/legalIds.csv") final String csv) throws IOException {
-		var multipartFileMock = Mockito.mock(MultipartFile.class);
+		final var multipartFileMock = Mockito.mock(MultipartFile.class);
 		when(multipartFileMock.getInputStream()).thenReturn(new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8)));
 
 		// Mock partyIntegration - all entries have null partyId

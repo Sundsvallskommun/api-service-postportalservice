@@ -87,10 +87,11 @@ public class PrecheckService {
 		// Check if we can send using digital mail
 		final var mailboxStatus = mailboxStatusService.checkMailboxStatus(municipalityId, partyIds);
 
-		// Get citizen details for those without digital mailboxes
-		final var citizens = citizenIntegration.getCitizens(municipalityId, mailboxStatus.unreachable());
-
+		// Get legal IDs for all partyIds to enable age verification
 		final var partyIdMapping = getPartyIdMapping(municipalityId, partyIds);
+
+		// Get citizen details for ALL partyIds to perform age verification
+		final var citizens = citizenIntegration.getCitizens(municipalityId, partyIds);
 
 		// Convert CitizenExtended to SimplifiedCitizen and categorize by eligibility
 		final var simplifiedCitizens = CitizenCategorizationHelper.fromCitizenExtended(citizens, partyIdMapping);
@@ -212,17 +213,24 @@ public class PrecheckService {
 	 * @param  categorizedCitizens categorized citizens by eligibility
 	 * @return                     precheck response with recipients and delivery methods
 	 */
-	private PrecheckResponse createPrecheckResponse(MailboxStatusService.MailboxStatus mailboxStatus, final CategorizedCitizens categorizedCitizens) {
+	private PrecheckResponse createPrecheckResponse(final MailboxStatusService.MailboxStatus mailboxStatus, final CategorizedCitizens categorizedCitizens) {
 		// Create map for partyId -> reason lookups
 		final var reasonByPartyId = new LinkedHashMap<String, String>();
 		mailboxStatus.unreachableWithReason().forEach(unreachable -> reasonByPartyId.put(unreachable.partyId(), unreachable.reason()));
 
-		// Map reachable by digital-mail
+		// Create a set of eligible adult partyIds for a quick lookup
+		final var eligibleAdultPartyIds = categorizedCitizens.eligibleAdults().stream()
+			.map(SimplifiedCitizen::partyId)
+			.collect(Collectors.toSet());
+
+		// Map reachable by digital-mail (only adults can use digital mail)
 		final var digitalMailRecipients = mailboxStatus.reachable().stream()
+			.filter(eligibleAdultPartyIds::contains)
 			.map(partyId -> new PrecheckRecipient(null, partyId, DeliveryMethod.DIGITAL_MAIL, null));
 
-		// Map reachable by snail-mail
+		// Map reachable by snail-mail - exclude those with digital mailboxes
 		final var snailMailRecipients = categorizedCitizens.eligibleAdults().stream()
+			.filter(citizen -> !mailboxStatus.reachable().contains(citizen.partyId()))
 			.map(simplifiedCitizen -> new PrecheckRecipient(null, simplifiedCitizen.partyId(), DeliveryMethod.SNAIL_MAIL, null));
 
 		// Map ineligible recipients with reason
@@ -230,7 +238,7 @@ public class PrecheckService {
 			.map(simplifiedCitizen -> new PrecheckRecipient(
 				null, simplifiedCitizen.partyId(), DeliveryMethod.DELIVERY_NOT_POSSIBLE, reasonByPartyId.get(simplifiedCitizen.partyId())));
 
-		// Map ineligible minors with fixed reason
+		// Map ineligible minors with a fixed reason
 		final var ineligibleMinorRecipients = categorizedCitizens.ineligibleMinors().stream()
 			.map(simplifiedCitizen -> new PrecheckRecipient(
 				null, simplifiedCitizen.partyId(), DeliveryMethod.DELIVERY_NOT_POSSIBLE, INELIGIBLE_MINOR));
