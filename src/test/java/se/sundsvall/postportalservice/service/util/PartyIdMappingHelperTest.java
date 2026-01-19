@@ -2,8 +2,8 @@ package se.sundsvall.postportalservice.service.util;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import generated.se.sundsvall.citizen.PersonGuidBatch;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
@@ -15,189 +15,39 @@ class PartyIdMappingHelperTest {
 	private static final String LEGALID_2 = "198501015678";
 
 	@Test
-	void extractPartyIds_withSuccessfulBatches() {
-		final var batch1 = new PersonGuidBatch()
-			.success(Boolean.TRUE)
-			.personNumber(LEGALID_1)
-			.personId(PARTYID_1);
+	void extractPartyIdMappingFromMap_withValidMap() {
+		final var legalIdToPartyIdMap = Map.of(
+			LEGALID_1, PARTYID_1.toString(),
+			LEGALID_2, PARTYID_2.toString());
 
-		final var batch2 = new PersonGuidBatch()
-			.success(Boolean.TRUE)
-			.personNumber(LEGALID_2)
-			.personId(PARTYID_2);
-
-		final var result = PartyIdMappingHelper.extractPartyIds(List.of(batch1, batch2));
-
-		assertThat(result).hasSize(2)
-			.containsExactly(
-				PARTYID_1.toString(),
-				PARTYID_2.toString());
-	}
-
-	@Test
-	void extractPartyIds_withFailedBatches() {
-		final var successBatch = new PersonGuidBatch()
-			.success(Boolean.TRUE)
-			.personNumber(LEGALID_1)
-			.personId(PARTYID_1);
-
-		final var failedBatch = new PersonGuidBatch()
-			.success(Boolean.FALSE)
-			.personNumber(LEGALID_2)
-			.personId(PARTYID_2);
-
-		final var result = PartyIdMappingHelper.extractPartyIds(List.of(successBatch, failedBatch));
-
-		assertThat(result).hasSize(1)
-			.containsExactly(PARTYID_1.toString());
-	}
-
-	@Test
-	void extractPartyIds_withNullPersonId() {
-		final var batch = new PersonGuidBatch()
-			.success(Boolean.TRUE)
-			.personNumber(LEGALID_1)
-			.personId(null);
-
-		final var result = PartyIdMappingHelper.extractPartyIds(List.of(batch));
-
-		assertThat(result).isEmpty();
-	}
-
-	@Test
-	void extractPartyIds_withNullBatches() {
-		final var result = PartyIdMappingHelper.extractPartyIds(null);
-
-		assertThat(result).isEmpty();
-	}
-
-	@Test
-	void extractPartyIds_withEmptyList() {
-		final var result = PartyIdMappingHelper.extractPartyIds(List.of());
-
-		assertThat(result).isEmpty();
-	}
-
-	@Test
-	void createPartyIdToPersonnummerMap_withSuccessfulBatches() {
-		final var batch1 = new PersonGuidBatch()
-			.success(Boolean.TRUE)
-			.personNumber(LEGALID_1)
-			.personId(PARTYID_1);
-
-		final var batch2 = new PersonGuidBatch()
-			.success(Boolean.TRUE)
-			.personNumber(LEGALID_2)
-			.personId(PARTYID_2);
-
-		final var result = PartyIdMappingHelper.createPartyIdTolegalIdMap(List.of(batch1, batch2));
-
-		assertThat(result).hasSize(2)
-			.containsEntry(PARTYID_1.toString(), LEGALID_1)
-			.containsEntry(PARTYID_2.toString(), LEGALID_2);
-	}
-
-	@Test
-	void createPartyIdToPersonnummerMap_withFailedBatches() {
-		final var successBatch = new PersonGuidBatch()
-			.success(Boolean.TRUE)
-			.personNumber(LEGALID_1)
-			.personId(PARTYID_1);
-
-		final var failedBatch = new PersonGuidBatch()
-			.success(Boolean.FALSE)
-			.personNumber(LEGALID_2)
-			.personId(PARTYID_2);
-
-		final var result = PartyIdMappingHelper.createPartyIdTolegalIdMap(List.of(successBatch, failedBatch));
-
-		assertThat(result).hasSize(1)
-			.containsEntry(PARTYID_1.toString(), LEGALID_1);
-	}
-
-	@Test
-	void createPartyIdToPersonnummerMap_withNullPersonId() {
-		final var batch = new PersonGuidBatch()
-			.success(Boolean.TRUE)
-			.personNumber(LEGALID_1)
-			.personId(null);
-
-		final var result = PartyIdMappingHelper.createPartyIdTolegalIdMap(List.of(batch));
-
-		assertThat(result).isEmpty();
-	}
-
-	@Test
-	void createPartyIdToPersonnummerMap_withNullPersonNumber() {
-		final var batch = new PersonGuidBatch()
-			.success(Boolean.TRUE)
-			.personNumber(null)
-			.personId(PARTYID_1);
-
-		final var result = PartyIdMappingHelper.createPartyIdTolegalIdMap(List.of(batch));
-
-		assertThat(result).isEmpty();
-	}
-
-	@Test
-	void createPartyIdToPersonnummerMap_withDuplicatePartyIds() {
-		final var batch1 = new PersonGuidBatch()
-			.success(Boolean.TRUE)
-			.personNumber(LEGALID_1)
-			.personId(PARTYID_1);
-
-		final var batch2 = new PersonGuidBatch()
-			.success(Boolean.TRUE)
-			.personNumber(LEGALID_2)
-			.personId(PARTYID_1);
-
-		final var result = PartyIdMappingHelper.createPartyIdTolegalIdMap(List.of(batch1, batch2));
-
-		assertThat(result).hasSize(1)
-			.containsEntry(PARTYID_1.toString(), LEGALID_1);
-	}
-
-	@Test
-	void createPartyIdToPersonnummerMap_withNullBatches() {
-		final var result = PartyIdMappingHelper.createPartyIdTolegalIdMap(null);
-
-		assertThat(result).isEmpty();
-	}
-
-	@Test
-	void createPartyIdToPersonnummerMap_withEmptyList() {
-		final var result = PartyIdMappingHelper.createPartyIdTolegalIdMap(List.of());
-
-		assertThat(result).isEmpty();
-	}
-
-	@Test
-	void extractPartyIdMapping_withSuccessfulBatches() {
-		final var batch1 = new PersonGuidBatch()
-			.success(Boolean.TRUE)
-			.personNumber(LEGALID_1)
-			.personId(PARTYID_1);
-
-		final var batch2 = new PersonGuidBatch()
-			.success(Boolean.TRUE)
-			.personNumber(LEGALID_2)
-			.personId(PARTYID_2);
-
-		final var result = PartyIdMappingHelper.extractPartyIdMapping(List.of(batch1, batch2));
+		final var result = PartyIdMappingHelper.extractPartyIdMappingFromMap(legalIdToPartyIdMap);
 
 		assertThat(result).isNotNull();
 		assertThat(result.partyIds()).hasSize(2)
-			.containsExactly(
-				PARTYID_1.toString(),
-				PARTYID_2.toString());
+			.containsExactlyInAnyOrder(PARTYID_1.toString(), PARTYID_2.toString());
 		assertThat(result.partyIdToLegalId()).hasSize(2)
 			.containsEntry(PARTYID_1.toString(), LEGALID_1)
 			.containsEntry(PARTYID_2.toString(), LEGALID_2);
 	}
 
 	@Test
-	void extractPartyIdMapping_withNullBatches() {
-		final var result = PartyIdMappingHelper.extractPartyIdMapping(null);
+	void extractPartyIdMappingFromMap_withNullValues() {
+		final var legalIdToPartyIdMap = new HashMap<String, String>();
+		legalIdToPartyIdMap.put(LEGALID_1, PARTYID_1.toString());
+		legalIdToPartyIdMap.put(LEGALID_2, null);
+
+		final var result = PartyIdMappingHelper.extractPartyIdMappingFromMap(legalIdToPartyIdMap);
+
+		assertThat(result).isNotNull();
+		assertThat(result.partyIds()).hasSize(1)
+			.containsExactly(PARTYID_1.toString());
+		assertThat(result.partyIdToLegalId()).hasSize(1)
+			.containsEntry(PARTYID_1.toString(), LEGALID_1);
+	}
+
+	@Test
+	void extractPartyIdMappingFromMap_withEmptyMap() {
+		final var result = PartyIdMappingHelper.extractPartyIdMappingFromMap(Map.of());
 
 		assertThat(result).isNotNull();
 		assertThat(result.partyIds()).isEmpty();
@@ -205,11 +55,18 @@ class PartyIdMappingHelperTest {
 	}
 
 	@Test
-	void extractPartyIdMapping_withEmptyList() {
-		final var result = PartyIdMappingHelper.extractPartyIdMapping(List.of());
+	void extractPartyIdMappingFromMap_withDuplicatePartyIds() {
+		// Two different legalIds mapping to the same partyId - first one wins
+		final var legalIdToPartyIdMap = new HashMap<String, String>();
+		legalIdToPartyIdMap.put(LEGALID_1, PARTYID_1.toString());
+		legalIdToPartyIdMap.put(LEGALID_2, PARTYID_1.toString());
+
+		final var result = PartyIdMappingHelper.extractPartyIdMappingFromMap(legalIdToPartyIdMap);
 
 		assertThat(result).isNotNull();
-		assertThat(result.partyIds()).isEmpty();
-		assertThat(result.partyIdToLegalId()).isEmpty();
+		assertThat(result.partyIds()).hasSize(2)
+			.containsExactlyInAnyOrder(PARTYID_1.toString(), PARTYID_1.toString());
+		assertThat(result.partyIdToLegalId()).hasSize(1)
+			.containsKey(PARTYID_1.toString());
 	}
 }

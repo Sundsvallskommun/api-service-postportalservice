@@ -8,9 +8,7 @@ import static org.mockito.Mockito.when;
 
 import generated.se.sundsvall.citizen.CitizenAddress;
 import generated.se.sundsvall.citizen.CitizenExtended;
-import generated.se.sundsvall.citizen.PersonGuidBatch;
 import java.util.List;
-import java.util.UUID;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -25,9 +23,6 @@ class CitizenIntegrationTest {
 	private static final List<String> PARTY_IDS = List.of(
 		"28fba79e-73aa-4ecb-939f-301f326d2d4c",
 		"f560865a-51f0-4e96-bca1-55d57a0d3f68");
-	private static final List<String> PERSON_IDS = List.of(
-		"191111-1111",
-		"192222-2222");
 
 	@Mock
 	private CitizenClient citizenClientMock;
@@ -58,62 +53,6 @@ class CitizenIntegrationTest {
 	@Test
 	void getCitizens_shouldReturnEmptyList_whenPartyIdsAreNull() {
 		final var result = citizenIntegration.getCitizens(MUNICIPALITY_ID, null);
-
-		assertThat(result).isNotNull().isEmpty();
-	}
-
-	@Test
-	void getPartyIds() {
-		final var personGuidBatch1 = new PersonGuidBatch();
-		final var personGuidBatch2 = new PersonGuidBatch();
-
-		personGuidBatch1.setPersonId(UUID.fromString("28fba79e-73aa-4ecb-939f-301f326d2d4c"));
-		personGuidBatch2.setPersonId(UUID.fromString("f560865a-51f0-4e96-bca1-55d57a0d3f68"));
-
-		final var personGuidBatches = List.of(
-			personGuidBatch1,
-			personGuidBatch2);
-
-		when(citizenClientMock.getPartyIds(MUNICIPALITY_ID, PERSON_IDS)).thenReturn(personGuidBatches);
-
-		final var result = citizenIntegration.getPartyIds(MUNICIPALITY_ID, PERSON_IDS);
-
-		assertThat(result).hasSize(2);
-		assertThat(result).isEqualTo(personGuidBatches);
-		verify(citizenClientMock).getPartyIds(MUNICIPALITY_ID, PERSON_IDS);
-	}
-
-	@Test
-	void getPartyIds_shouldReturnEmptyList_whenPersonIdsAreNull() {
-		final var result = citizenIntegration.getPartyIds(MUNICIPALITY_ID, null);
-
-		assertThat(result).isNotNull().isEmpty();
-	}
-
-	@Test
-	void getPersonNumbers() {
-		final var personGuidBatch1 = new PersonGuidBatch();
-		final var personGuidBatch2 = new PersonGuidBatch();
-
-		personGuidBatch1.setPersonId(UUID.fromString("28fba79e-73aa-4ecb-939f-301f326d2d4c"));
-		personGuidBatch2.setPersonId(UUID.fromString("f560865a-51f0-4e96-bca1-55d57a0d3f68"));
-
-		final var personGuidBatches = List.of(
-			personGuidBatch1,
-			personGuidBatch2);
-
-		when(citizenClientMock.getLegalIds(MUNICIPALITY_ID, PARTY_IDS)).thenReturn(personGuidBatches);
-
-		final var result = citizenIntegration.getPersonNumbers(MUNICIPALITY_ID, PARTY_IDS);
-
-		assertThat(result).hasSize(2);
-		assertThat(result).isEqualTo(personGuidBatches);
-		verify(citizenClientMock).getLegalIds(MUNICIPALITY_ID, PARTY_IDS);
-	}
-
-	@Test
-	void getPersonNumbers_shouldReturnEmptyList_whenPartyIdsAreNull() {
-		final var result = citizenIntegration.getPersonNumbers(MUNICIPALITY_ID, null);
 
 		assertThat(result).isNotNull().isEmpty();
 	}
