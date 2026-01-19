@@ -54,13 +54,11 @@ public final class CitizenCategorizationHelper {
 	 * @param  partyIdToLegalId map from party ID to legal ID
 	 * @return                  list of SimplifiedCitizen records
 	 */
-	public static List<SimplifiedCitizen> fromCitizenExtended(
-		final List<CitizenExtended> citizens,
-		final PartyIdMapping partyIdToLegalId) {
+	public static List<SimplifiedCitizen> fromCitizenExtended(final List<CitizenExtended> citizens, final PartyIdMapping partyIdToLegalId) {
 
 		return ofNullable(citizens).orElse(emptyList()).stream()
 			.map(citizen -> {
-				// Get the partyId so we can lookup the legalId
+				// Get the partyId so we can look up the legalId
 				final var partyId = Optional.ofNullable(citizen.getPersonId())
 					.map(UUID::toString)
 					.orElse(null);

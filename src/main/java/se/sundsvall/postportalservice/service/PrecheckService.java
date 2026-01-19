@@ -8,11 +8,11 @@ import static se.sundsvall.postportalservice.Constants.INELIGIBLE_MINOR;
 
 import generated.se.sundsvall.citizen.CitizenExtended;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -62,29 +62,22 @@ public class PrecheckService {
 
 		// Returns a map with personal identity numbers as keys and their occurrence counts as values
 		final var occurrenceMap = CsvUtil.validateCSV(csvFile);
+		final var legalIds = occurrenceMap.keySet();
 
 		// Filter the map to include only entries with more than one occurrence
 		final var duplicateEntriesMap = occurrenceMap.entrySet().stream()
 			.filter(entry -> entry.getValue() > 1)
 			.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
-		final var legalIds = new HashSet<>(occurrenceMap.keySet());
-
 		// Get partyIds for all legalIds
-		final var partyIdMap = partyIntegration.getPartyIds(municipalityId, legalIds);
+		final var legalIdToPartyIdMap = partyIntegration.getPartyIds(municipalityId, new ArrayList<>(legalIds));
 
-		// Validate that at least one key has a non-null value
-		final var hasAtLeastOneValidPartyId = partyIdMap.values().stream()
-			.anyMatch(Objects::nonNull);
-
-		if (!hasAtLeastOneValidPartyId) {
+		if (legalIdToPartyIdMap.isEmpty()) {
 			throw Problem.valueOf(BAD_REQUEST, "No valid partyIds found for the provided legal IDs");
 		}
 
-		// Extract all keys (legalIds) whose value (partyId) is null
-		final var legalIdsWithoutPartyId = partyIdMap.entrySet().stream()
-			.filter(entry -> entry.getValue() == null)
-			.map(Map.Entry::getKey)
+		final var legalIdsWithoutPartyId = legalIds.stream()
+			.filter(legalId -> Optional.ofNullable(legalIdToPartyIdMap.get(legalId)).isEmpty())
 			.collect(Collectors.toSet());
 
 		return new PrecheckCsvResponse(duplicateEntriesMap, legalIdsWithoutPartyId);
@@ -113,7 +106,7 @@ public class PrecheckService {
 		// Get legalIds for partyIds and create mapping that we can use for age verification later on
 		final var partyIdMapping = new PartyIdMapping();
 
-		final var partyIdToLegalIdMap = partyIntegration.getPersonNumbers(municipalityId, partyIds);
+		final var partyIdToLegalIdMap = partyIntegration.getLegalIds(municipalityId, partyIds);
 
 		partyIds.forEach(partyId -> {
 			final var matchingLegalId = partyIdToLegalIdMap.get(partyId);

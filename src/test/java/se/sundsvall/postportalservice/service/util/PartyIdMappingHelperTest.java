@@ -9,40 +9,40 @@ import org.junit.jupiter.api.Test;
 
 class PartyIdMappingHelperTest {
 
-	private static final UUID PARTYID_1 = UUID.randomUUID();
-	private static final UUID PARTYID_2 = UUID.randomUUID();
-	private static final String LEGALID_1 = "199001011234";
-	private static final String LEGALID_2 = "198501015678";
+	private static final UUID PARTY_ID_1 = UUID.randomUUID();
+	private static final UUID PARTY_ID_2 = UUID.randomUUID();
+	private static final String LEGAL_ID_1 = "199001011234";
+	private static final String LEGAL_ID_2 = "198501015678";
 
 	@Test
 	void extractPartyIdMappingFromMap_withValidMap() {
 		final var legalIdToPartyIdMap = Map.of(
-			LEGALID_1, PARTYID_1.toString(),
-			LEGALID_2, PARTYID_2.toString());
+			LEGAL_ID_1, PARTY_ID_1.toString(),
+			LEGAL_ID_2, PARTY_ID_2.toString());
 
 		final var result = PartyIdMappingHelper.extractPartyIdMappingFromMap(legalIdToPartyIdMap);
 
 		assertThat(result).isNotNull();
 		assertThat(result.partyIds()).hasSize(2)
-			.containsExactlyInAnyOrder(PARTYID_1.toString(), PARTYID_2.toString());
+			.containsExactlyInAnyOrder(PARTY_ID_1.toString(), PARTY_ID_2.toString());
 		assertThat(result.partyIdToLegalId()).hasSize(2)
-			.containsEntry(PARTYID_1.toString(), LEGALID_1)
-			.containsEntry(PARTYID_2.toString(), LEGALID_2);
+			.containsEntry(PARTY_ID_1.toString(), LEGAL_ID_1)
+			.containsEntry(PARTY_ID_2.toString(), LEGAL_ID_2);
 	}
 
 	@Test
 	void extractPartyIdMappingFromMap_withNullValues() {
 		final var legalIdToPartyIdMap = new HashMap<String, String>();
-		legalIdToPartyIdMap.put(LEGALID_1, PARTYID_1.toString());
-		legalIdToPartyIdMap.put(LEGALID_2, null);
+		legalIdToPartyIdMap.put(LEGAL_ID_1, PARTY_ID_1.toString());
+		legalIdToPartyIdMap.put(LEGAL_ID_2, null);
 
 		final var result = PartyIdMappingHelper.extractPartyIdMappingFromMap(legalIdToPartyIdMap);
 
 		assertThat(result).isNotNull();
 		assertThat(result.partyIds()).hasSize(1)
-			.containsExactly(PARTYID_1.toString());
+			.containsExactly(PARTY_ID_1.toString());
 		assertThat(result.partyIdToLegalId()).hasSize(1)
-			.containsEntry(PARTYID_1.toString(), LEGALID_1);
+			.containsEntry(PARTY_ID_1.toString(), LEGAL_ID_1);
 	}
 
 	@Test
@@ -58,15 +58,15 @@ class PartyIdMappingHelperTest {
 	void extractPartyIdMappingFromMap_withDuplicatePartyIds() {
 		// Two different legalIds mapping to the same partyId - first one wins
 		final var legalIdToPartyIdMap = new HashMap<String, String>();
-		legalIdToPartyIdMap.put(LEGALID_1, PARTYID_1.toString());
-		legalIdToPartyIdMap.put(LEGALID_2, PARTYID_1.toString());
+		legalIdToPartyIdMap.put(LEGAL_ID_1, PARTY_ID_1.toString());
+		legalIdToPartyIdMap.put(LEGAL_ID_2, PARTY_ID_1.toString());
 
 		final var result = PartyIdMappingHelper.extractPartyIdMappingFromMap(legalIdToPartyIdMap);
 
 		assertThat(result).isNotNull();
 		assertThat(result.partyIds()).hasSize(2)
-			.containsExactlyInAnyOrder(PARTYID_1.toString(), PARTYID_1.toString());
+			.containsExactlyInAnyOrder(PARTY_ID_1.toString(), PARTY_ID_1.toString());
 		assertThat(result.partyIdToLegalId()).hasSize(1)
-			.containsKey(PARTYID_1.toString());
+			.containsKey(PARTY_ID_1.toString());
 	}
 }

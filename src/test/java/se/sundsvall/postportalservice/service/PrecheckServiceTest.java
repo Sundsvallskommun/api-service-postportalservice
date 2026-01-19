@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.ArgumentMatchers.anySet;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
@@ -112,7 +111,7 @@ class PrecheckServiceTest {
 			snailMailUuid, generateLegalId(35, "2398"),
 			notEligibleUuid, generateLegalId(40, "2388"));
 
-		when(partyIntegrationMock.getPersonNumbers(MUNICIPALITY_ID, partyIds))
+		when(partyIntegrationMock.getLegalIds(MUNICIPALITY_ID, partyIds))
 			.thenReturn(partyIdToLegalIdMap);
 
 		final var result = precheckService.precheckPartyIds(MUNICIPALITY_ID, partyIds);
@@ -126,7 +125,7 @@ class PrecheckServiceTest {
 
 		verify(mailboxStatusServiceMock).checkMailboxStatus(MUNICIPALITY_ID, partyIds);
 		verify(citizenIntegrationMock).getCitizens(MUNICIPALITY_ID, List.of(snailMailUuid, notEligibleUuid));
-		verify(partyIntegrationMock).getPersonNumbers(MUNICIPALITY_ID, partyIds);
+		verify(partyIntegrationMock).getLegalIds(MUNICIPALITY_ID, partyIds);
 	}
 
 	@Test
@@ -335,14 +334,14 @@ class PrecheckServiceTest {
 		partyIdMap.put("201901052397", UUID.randomUUID().toString());
 		partyIdMap.put("201901062388", null); // No partyId for this entry
 
-		when(partyIntegrationMock.getPartyIds(eq(MUNICIPALITY_ID), anySet())).thenReturn(partyIdMap);
+		when(partyIntegrationMock.getPartyIds(eq(MUNICIPALITY_ID), anyList())).thenReturn(partyIdMap);
 
 		var result = precheckService.precheckCSV(MUNICIPALITY_ID, multipartFileMock);
 
 		assertThat(result.duplicateEntries()).isEmpty();
 		assertThat(result.rejectedEntries()).hasSize(1).contains("201901062388");
 
-		verify(partyIntegrationMock).getPartyIds(eq(MUNICIPALITY_ID), anySet());
+		verify(partyIntegrationMock).getPartyIds(eq(MUNICIPALITY_ID), anyList());
 	}
 
 	@Test
@@ -355,7 +354,7 @@ class PrecheckServiceTest {
 			"201901012391", UUID.randomUUID().toString(),
 			"201901012392", UUID.randomUUID().toString());
 
-		when(partyIntegrationMock.getPartyIds(eq(MUNICIPALITY_ID), anySet())).thenReturn(partyIdMap);
+		when(partyIntegrationMock.getPartyIds(eq(MUNICIPALITY_ID), anyList())).thenReturn(partyIdMap);
 
 		var result = precheckService.precheckCSV(MUNICIPALITY_ID, multipartFileMock);
 
@@ -364,7 +363,7 @@ class PrecheckServiceTest {
 			.containsEntry("201901012392", 2);
 		assertThat(result.rejectedEntries()).isEmpty();
 
-		verify(partyIntegrationMock).getPartyIds(eq(MUNICIPALITY_ID), anySet());
+		verify(partyIntegrationMock).getPartyIds(eq(MUNICIPALITY_ID), anyList());
 	}
 
 	@Test
@@ -383,14 +382,14 @@ class PrecheckServiceTest {
 		when(multipartFileMock.getInputStream()).thenReturn(new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8)));
 
 		// Mock partyIntegration to throw exception when no partyIds can be found
-		when(partyIntegrationMock.getPartyIds(eq(MUNICIPALITY_ID), anySet()))
+		when(partyIntegrationMock.getPartyIds(eq(MUNICIPALITY_ID), anyList()))
 			.thenThrow(Problem.valueOf(BAD_GATEWAY, "Failed to retrieve party IDs"));
 
 		assertThatThrownBy(() -> precheckService.precheckCSV(MUNICIPALITY_ID, multipartFileMock))
 			.isInstanceOf(Problem.class)
 			.hasMessageContaining("Bad Gateway: Failed to retrieve party IDs");
 
-		verify(partyIntegrationMock).getPartyIds(eq(MUNICIPALITY_ID), anySet());
+		verify(partyIntegrationMock).getPartyIds(eq(MUNICIPALITY_ID), anyList());
 	}
 
 	@Test
@@ -400,20 +399,14 @@ class PrecheckServiceTest {
 
 		// Mock partyIntegration - all entries have null partyId
 		final var partyIdMap = new HashMap<String, String>();
-		partyIdMap.put("201901012391", null);
-		partyIdMap.put("201901022382", null);
-		partyIdMap.put("201901032399", null);
-		partyIdMap.put("201901042380", null);
-		partyIdMap.put("201901052397", null);
-		partyIdMap.put("201901062388", null);
 
-		when(partyIntegrationMock.getPartyIds(eq(MUNICIPALITY_ID), anySet())).thenReturn(partyIdMap);
+		when(partyIntegrationMock.getPartyIds(eq(MUNICIPALITY_ID), anyList())).thenReturn(partyIdMap);
 
 		assertThatThrownBy(() -> precheckService.precheckCSV(MUNICIPALITY_ID, multipartFileMock))
 			.isInstanceOf(Problem.class)
 			.hasMessageContaining("No valid partyIds found");
 
-		verify(partyIntegrationMock).getPartyIds(eq(MUNICIPALITY_ID), anySet());
+		verify(partyIntegrationMock).getPartyIds(eq(MUNICIPALITY_ID), anyList());
 	}
 
 }
