@@ -2,10 +2,8 @@ package se.sundsvall.postportalservice.integration.party;
 
 import static java.util.Collections.emptyMap;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -17,10 +15,13 @@ public class PartyIntegration {
 		this.partyClient = partyClient;
 	}
 
-	public Map<String, String> getPartyIds(final String municipalityId, final Set<String> legalIds) {
-		return partyClient.getPartyIds(municipalityId, new ArrayList<>(legalIds));
-	}
-
+	/**
+	 * Get partyIds for the provided legalIds.
+	 *
+	 * @param  municipalityId the municipality id
+	 * @param  legalIds       the legalIds
+	 * @return                a map of legalId to partyId
+	 */
 	public Map<String, String> getPartyIds(final String municipalityId, final List<String> legalIds) {
 		if (legalIds == null || legalIds.isEmpty()) {
 			return emptyMap();
@@ -28,7 +29,14 @@ public class PartyIntegration {
 		return partyClient.getPartyIds(municipalityId, legalIds);
 	}
 
-	public Map<String, String> getPersonNumbers(final String municipalityId, final List<String> partyIds) {
+	/**
+	 * Get legalIds for the provided partyIds.
+	 *
+	 * @param  municipalityId the municipality id
+	 * @param  partyIds       the partyIds
+	 * @return                a map of partyId to legalId
+	 */
+	public Map<String, String> getLegalIds(final String municipalityId, final List<String> partyIds) {
 		if (partyIds == null || partyIds.isEmpty()) {
 			return emptyMap();
 		}
