@@ -1,27 +1,40 @@
 package se.sundsvall.postportalservice.integration.messagingsettings;
 
-import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
+import static org.zalando.problem.Status.BAD_GATEWAY;
+import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.CONTACT_INFORMATION_EMAIL;
+import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.CONTACT_INFORMATION_PHONE_NUMBER;
+import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.CONTACT_INFORMATION_URL;
+import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.DEPARTMENT_ID;
+import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.DEPARTMENT_NAME;
+import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.FOLDER_NAME;
+import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.ORGANIZATION_NUMBER;
+import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.SMS_SENDER;
+import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.SUPPORT_TEXT;
 
-import generated.se.sundsvall.messagingsettings.SenderInfoResponse;
+import generated.se.sundsvall.messagingsettings.MessagingSettingValue;
+import generated.se.sundsvall.messagingsettings.MessagingSettings;
 import java.util.List;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.zalando.problem.Problem;
+import se.sundsvall.dept44.support.Identifier;
 
 @ExtendWith(MockitoExtension.class)
 class MessagingSettingsIntegrationTest {
 
 	private static final String MUNICIPALITY_ID = "2281";
-	private static final String DEPARTMENT_ID = "dept44";
+	private static final String USERNAME = "testuser";
+	private static final String HEADER_VALUE = "testuser; type=AD_ACCOUNT";
 
 	@Mock
 	private MessagingSettingsClient messagingSettingsClient;
@@ -29,91 +42,136 @@ class MessagingSettingsIntegrationTest {
 	@InjectMocks
 	private MessagingSettingsIntegration messagingSettingsIntegration;
 
+	@BeforeEach
+	void setup() {
+		Identifier.set(Identifier.create()
+			.withType(Identifier.Type.AD_ACCOUNT)
+			.withValue(USERNAME)
+			.withTypeString("AD_ACCOUNT"));
+	}
+
 	@AfterEach
-	void noMoreInteractions() {
+	void tearDown() {
+		Identifier.remove();
 		verifyNoMoreInteractions(messagingSettingsClient);
 	}
 
 	@Test
-	void getSenderInfo() {
-		final var senderInfo = new SenderInfoResponse();
+	void getMessagingSettingsForUser_success() {
+		final var messagingSettings = createValidMessagingSettings();
+		when(messagingSettingsClient.getMessagingSettingsForUser(HEADER_VALUE, MUNICIPALITY_ID))
+			.thenReturn(List.of(messagingSettings));
 
-		when(messagingSettingsClient.getSenderInfo(MUNICIPALITY_ID, DEPARTMENT_ID)).thenReturn(List.of(senderInfo));
+		final var result = messagingSettingsIntegration.getMessagingSettingsForUser(MUNICIPALITY_ID);
 
-		var result = messagingSettingsIntegration.getSenderInfo(MUNICIPALITY_ID, DEPARTMENT_ID);
+		assertThat(result)
+			.hasSize(9)
+			.containsEntry(ORGANIZATION_NUMBER, "123456789")
+			.containsEntry(FOLDER_NAME, "TestFolder")
+			.containsEntry(SMS_SENDER, "Sundsvall")
+			.containsEntry(SUPPORT_TEXT, "Support text")
+			.containsEntry(CONTACT_INFORMATION_URL, "https://example.com")
+			.containsEntry(CONTACT_INFORMATION_PHONE_NUMBER, "0123456789")
+			.containsEntry(CONTACT_INFORMATION_EMAIL, "test@example.com")
+			.containsEntry(DEPARTMENT_NAME, "Department 44")
+			.containsEntry(DEPARTMENT_ID, "dept44");
 
-		assertThat(result).isNotNull();
-		assertThat(result).isEqualTo(senderInfo);
-		verify(messagingSettingsClient).getSenderInfo(MUNICIPALITY_ID, DEPARTMENT_ID);
+		verify(messagingSettingsClient).getMessagingSettingsForUser(HEADER_VALUE, MUNICIPALITY_ID);
 	}
 
 	@Test
-	void getSenderInfo_withNoMatch() {
-		when(messagingSettingsClient.getSenderInfo(MUNICIPALITY_ID, DEPARTMENT_ID)).thenReturn(emptyList());
+	void getMessagingSettingsForUser_emptySettings() {
+		when(messagingSettingsClient.getMessagingSettingsForUser(HEADER_VALUE, MUNICIPALITY_ID))
+			.thenReturn(List.of());
 
-		assertThatThrownBy(() -> messagingSettingsIntegration.getSenderInfo(MUNICIPALITY_ID, DEPARTMENT_ID))
+		assertThatThrownBy(() -> messagingSettingsIntegration.getMessagingSettingsForUser(MUNICIPALITY_ID))
 			.isInstanceOf(Problem.class)
-			.hasMessage("Bad Gateway: Found no sender info for departmentId " + DEPARTMENT_ID);
+			.hasFieldOrPropertyWithValue("status", BAD_GATEWAY)
+			.hasMessage("Bad Gateway: No messaging settings found for user '%s' in municipalityId '%s'"
+				.formatted(USERNAME, MUNICIPALITY_ID));
 
-		verify(messagingSettingsClient).getSenderInfo(MUNICIPALITY_ID, DEPARTMENT_ID);
+		verify(messagingSettingsClient).getMessagingSettingsForUser(HEADER_VALUE, MUNICIPALITY_ID);
 	}
 
 	@Test
-	void getOrganizationNumber() {
-		final var organizationNumber = "162021005489";
-		final var senderInfo = new SenderInfoResponse();
+	void getMessagingSettingsForUser_multipleSettings() {
+		final var messagingSettings1 = createValidMessagingSettings();
+		final var messagingSettings2 = createValidMessagingSettings();
+		when(messagingSettingsClient.getMessagingSettingsForUser(HEADER_VALUE, MUNICIPALITY_ID))
+			.thenReturn(List.of(messagingSettings1, messagingSettings2));
 
-		senderInfo.setOrganizationNumber(organizationNumber);
-
-		when(messagingSettingsClient.getSenderInfo(MUNICIPALITY_ID, DEPARTMENT_ID)).thenReturn(List.of(senderInfo));
-
-		final var result = messagingSettingsIntegration.getOrganizationNumber(MUNICIPALITY_ID, DEPARTMENT_ID);
-
-		assertThat(result).contains(organizationNumber);
-		verify(messagingSettingsClient).getSenderInfo(MUNICIPALITY_ID, DEPARTMENT_ID);
-	}
-
-	@Test
-	void getOrganizationNumber_withNoMatch() {
-		when(messagingSettingsClient.getSenderInfo(MUNICIPALITY_ID, DEPARTMENT_ID)).thenReturn(emptyList());
-
-		assertThatThrownBy(() -> messagingSettingsIntegration.getOrganizationNumber(MUNICIPALITY_ID, DEPARTMENT_ID))
+		assertThatThrownBy(() -> messagingSettingsIntegration.getMessagingSettingsForUser(MUNICIPALITY_ID))
 			.isInstanceOf(Problem.class)
-			.hasMessage("Not Found: Organization number not found for municipalityId '%s' and departmentId '%s'".formatted(MUNICIPALITY_ID, DEPARTMENT_ID));
+			.hasFieldOrPropertyWithValue("status", BAD_GATEWAY)
+			.hasMessage("Bad Gateway: Found multiple messaging settings for user '%s' in municipalityId '%s', can't determine which one to use"
+				.formatted(USERNAME, MUNICIPALITY_ID));
 
-		verify(messagingSettingsClient).getSenderInfo(MUNICIPALITY_ID, DEPARTMENT_ID);
+		verify(messagingSettingsClient).getMessagingSettingsForUser(HEADER_VALUE, MUNICIPALITY_ID);
 	}
 
 	@Test
-	void getOrganizationNumber_withNullValue() {
-		final var senderInfo = new SenderInfoResponse();
+	void getMessagingSettingsForUser_missingRequiredKey() {
+		final var messagingSettings = new MessagingSettings().values(List.of(
+			new MessagingSettingValue().key(ORGANIZATION_NUMBER).value("123456789"),
+			new MessagingSettingValue().key(FOLDER_NAME).value("TestFolder"),
+			new MessagingSettingValue().key(SMS_SENDER).value("Sundsvall"),
+			new MessagingSettingValue().key(SUPPORT_TEXT).value("Support text"),
+			new MessagingSettingValue().key(CONTACT_INFORMATION_URL).value("https://example.com"),
+			new MessagingSettingValue().key(CONTACT_INFORMATION_PHONE_NUMBER).value("0123456789"),
+			new MessagingSettingValue().key(CONTACT_INFORMATION_EMAIL).value("test@example.com"),
+			// DEPARTMENT_NAME is missing
+			new MessagingSettingValue().key(DEPARTMENT_ID).value("dept44")));
 
-		when(messagingSettingsClient.getSenderInfo(MUNICIPALITY_ID, DEPARTMENT_ID)).thenReturn(List.of(senderInfo));
+		when(messagingSettingsClient.getMessagingSettingsForUser(HEADER_VALUE, MUNICIPALITY_ID))
+			.thenReturn(List.of(messagingSettings));
 
-		assertThatThrownBy(() -> messagingSettingsIntegration.getOrganizationNumber(MUNICIPALITY_ID, DEPARTMENT_ID))
+		// Act & Assert
+		assertThatThrownBy(() -> messagingSettingsIntegration.getMessagingSettingsForUser(MUNICIPALITY_ID))
 			.isInstanceOf(Problem.class)
-			.hasMessage("Not Found: Organization number not found for municipalityId '%s' and departmentId '%s'".formatted(MUNICIPALITY_ID, DEPARTMENT_ID));
+			.hasFieldOrPropertyWithValue("status", BAD_GATEWAY)
+			.hasMessage("Bad Gateway: Required messaging setting attribute '%s' is missing for user '%s' in municipalityId '%s'"
+				.formatted(DEPARTMENT_NAME, USERNAME, MUNICIPALITY_ID));
 
-		verify(messagingSettingsClient).getSenderInfo(MUNICIPALITY_ID, DEPARTMENT_ID);
+		verify(messagingSettingsClient).getMessagingSettingsForUser(HEADER_VALUE, MUNICIPALITY_ID);
 	}
 
 	@Test
-	void getSenderInfo_picksFirstWhenMultiple() {
-		final var first = new SenderInfoResponse();
-		first.setSupportText("first");
-		first.setOrganizationNumber("1111111111");
+	void getMessagingSettingsForUser_invalidOrganizationNumber() {
+		// Arrange - Create settings with invalid organization_number (contains non-digits)
+		final var messagingSettings = new MessagingSettings().values(List.of(
+			new MessagingSettingValue().key(ORGANIZATION_NUMBER).value("ABC-123"),
+			new MessagingSettingValue().key(FOLDER_NAME).value("TestFolder"),
+			new MessagingSettingValue().key(SMS_SENDER).value("Sundsvall"),
+			new MessagingSettingValue().key(SUPPORT_TEXT).value("Support text"),
+			new MessagingSettingValue().key(CONTACT_INFORMATION_URL).value("https://example.com"),
+			new MessagingSettingValue().key(CONTACT_INFORMATION_PHONE_NUMBER).value("0123456789"),
+			new MessagingSettingValue().key(CONTACT_INFORMATION_EMAIL).value("test@example.com"),
+			new MessagingSettingValue().key(DEPARTMENT_NAME).value("Department 44"),
+			new MessagingSettingValue().key(DEPARTMENT_ID).value("dept44")));
 
-		final var second = new SenderInfoResponse();
-		second.setSupportText("second");
-		second.setOrganizationNumber("2222222222");
+		when(messagingSettingsClient.getMessagingSettingsForUser(HEADER_VALUE, MUNICIPALITY_ID))
+			.thenReturn(List.of(messagingSettings));
 
-		when(messagingSettingsClient.getSenderInfo(MUNICIPALITY_ID, DEPARTMENT_ID))
-			.thenReturn(List.of(first, second));
+		assertThatThrownBy(() -> messagingSettingsIntegration.getMessagingSettingsForUser(MUNICIPALITY_ID))
+			.isInstanceOf(Problem.class)
+			.hasFieldOrPropertyWithValue("status", BAD_GATEWAY)
+			.hasMessage("Bad Gateway: Invalid format for messaging setting attribute '%s' for user '%s' in municipalityId '%s'"
+				.formatted(ORGANIZATION_NUMBER, USERNAME, MUNICIPALITY_ID));
 
-		final var result = messagingSettingsIntegration.getSenderInfo(MUNICIPALITY_ID, DEPARTMENT_ID);
-
-		assertThat(result.getSupportText()).isEqualTo("first");
-		assertThat(result.getOrganizationNumber()).isEqualTo("1111111111");
-		verify(messagingSettingsClient).getSenderInfo(MUNICIPALITY_ID, DEPARTMENT_ID);
+		verify(messagingSettingsClient).getMessagingSettingsForUser(HEADER_VALUE, MUNICIPALITY_ID);
 	}
+
+	private MessagingSettings createValidMessagingSettings() {
+		return new MessagingSettings().values(List.of(
+			new MessagingSettingValue().key(ORGANIZATION_NUMBER).value("123456789"),
+			new MessagingSettingValue().key(FOLDER_NAME).value("TestFolder"),
+			new MessagingSettingValue().key(SMS_SENDER).value("Sundsvall"),
+			new MessagingSettingValue().key(SUPPORT_TEXT).value("Support text"),
+			new MessagingSettingValue().key(CONTACT_INFORMATION_URL).value("https://example.com"),
+			new MessagingSettingValue().key(CONTACT_INFORMATION_PHONE_NUMBER).value("0123456789"),
+			new MessagingSettingValue().key(CONTACT_INFORMATION_EMAIL).value("test@example.com"),
+			new MessagingSettingValue().key(DEPARTMENT_NAME).value("Department 44"),
+			new MessagingSettingValue().key(DEPARTMENT_ID).value("dept44")));
+	}
+
 }
