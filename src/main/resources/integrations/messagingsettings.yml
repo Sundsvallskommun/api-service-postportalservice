@@ -1,13 +1,13 @@
 openapi: 3.1.0
 info:
-  title: api-service-messaging-settings
+  title: messaging-settings
   contact: { }
   license:
     name: MIT License
     url: https://opensource.org/licenses/MIT
-  version: "2.0"
+  version: "3.0"
 servers:
-  - url: http://localhost:63463
+  - url: https://messaging-settings-af-messaging-settings.apps.ocp201.sundsvall.se
     description: Generated server url
 paths:
   /{municipalityId}:
@@ -56,15 +56,12 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/Problem"
-  /{municipalityId}/{namespace}/{departmentName}/sender-info:
-    get:
+    post:
       tags:
         - Messaging Settings
-      summary: Get sender info
-      description: "Get sender information for a given municipality, namespace and\
-        \ department name (the resource is deprecated, use /sender-info with parameters\
-        \ instead)."
-      operationId: getSenderInfoByNamespaceAndDepartmentName
+      summary: Create messaging setting
+      description: Create a new messaging setting
+      operationId: createMessagingSetting
       parameters:
         - name: municipalityId
           in: path
@@ -73,21 +70,20 @@ paths:
           schema:
             type: string
           example: 2281
-        - name: namespace
-          in: path
-          description: Namespace
-          required: true
-          schema:
-            type: string
-          example: SKM
-        - name: departmentName
-          in: path
-          description: Department name
-          required: true
-          schema:
-            type: string
-          example: Sundsvalls kommun
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MessagingSettingsRequest"
+        required: true
       responses:
+        "201":
+          description: Created
+          headers:
+            Location:
+              style: simple
+              schema:
+                type: string
         "400":
           description: Bad Request
           content:
@@ -102,15 +98,13 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/Problem"
-      deprecated: true
-  /{municipalityId}/{namespace}/sender-infos:
+  /{municipalityId}/{id}:
     get:
       tags:
         - Messaging Settings
-      summary: Get sender info
-      description: "Get sender information for a given municipality and namespace\
-        \ (the resource is deprecated, use /sender-info with parameters instead)."
-      operationId: getSenderInfoByNamespace
+      summary: Get messaging setting by ID
+      description: Get a specific messaging setting by ID
+      operationId: getMessagingSettingById
       parameters:
         - name: municipalityId
           in: path
@@ -119,77 +113,20 @@ paths:
           schema:
             type: string
           example: 2281
-        - name: namespace
+        - name: id
           in: path
-          description: Namespace
+          description: Messaging setting ID
           required: true
           schema:
             type: string
-          example: SKM
-      responses:
-        "400":
-          description: Bad Request
-          content:
-            application/problem+json:
-              schema:
-                oneOf:
-                  - $ref: "#/components/schemas/Problem"
-                  - $ref: "#/components/schemas/ConstraintViolationProblem"
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/SenderInfoResponse"
-        "500":
-          description: Internal Server Error
-          content:
-            application/problem+json:
-              schema:
-                $ref: "#/components/schemas/Problem"
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/SenderInfoResponse"
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/SenderInfoResponse"
-      deprecated: true
-  /{municipalityId}/{departmentId}/sender-info:
-    get:
-      tags:
-        - Messaging Settings
-      summary: Get sender info
-      description: "Get sender info for given department and municipality (the resource\
-        \ is deprecated, use /sender-info with parameters instead)."
-      operationId: getSenderInfo
-      parameters:
-        - name: municipalityId
-          in: path
-          description: Municipality ID
-          required: true
-          schema:
-            type: string
-          example: 2281
-        - name: departmentId
-          in: path
-          description: Department ID
-          required: true
-          schema:
-            type: string
-          example: SKM
+          example: c9383d10-6fb5-4fc1-bd0a-50bf5a24d5b7
       responses:
         "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/SenderInfoResponse"
+                $ref: "#/components/schemas/MessagingSettings"
         "404":
           description: Not Found
           content:
@@ -210,14 +147,12 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/Problem"
-      deprecated: true
-  /{municipalityId}/{departmentId}/callback-email:
-    get:
+    delete:
       tags:
         - Messaging Settings
-      summary: Get callback email
-      description: Get callback e-mail for given department and municipality.
-      operationId: getCallbackEmail
+      summary: Delete messaging setting
+      description: Delete a messaging setting by ID
+      operationId: deleteMessagingSetting
       parameters:
         - name: municipalityId
           in: path
@@ -226,21 +161,16 @@ paths:
           schema:
             type: string
           example: 2281
-        - name: departmentId
+        - name: id
           in: path
-          description: Department ID
+          description: Messaging setting ID
           required: true
           schema:
             type: string
-            minLength: 1
-          example: SKM
+          example: c9383d10-6fb5-4fc1-bd0a-50bf5a24d5b7
       responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/CallbackEmailResponse"
+        "204":
+          description: No Content
         "404":
           description: Not Found
           content:
@@ -261,7 +191,60 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/Problem"
-      deprecated: true
+    patch:
+      tags:
+        - Messaging Settings
+      summary: Update messaging setting
+      description: Update an existing messaging setting
+      operationId: updateMessagingSetting
+      parameters:
+        - name: municipalityId
+          in: path
+          description: Municipality ID
+          required: true
+          schema:
+            type: string
+          example: 2281
+        - name: id
+          in: path
+          description: Messaging setting ID
+          required: true
+          schema:
+            type: string
+          example: c9383d10-6fb5-4fc1-bd0a-50bf5a24d5b7
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MessagingSettingsRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessagingSettings"
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/Problem"
+                  - $ref: "#/components/schemas/ConstraintViolationProblem"
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
   /{municipalityId}/user:
     get:
       tags:
@@ -314,14 +297,29 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/Problem"
-  /{municipalityId}/sender-info:
+  /api-docs:
     get:
       tags:
+        - API
+      summary: OpenAPI
+      operationId: getApiDocs
+      responses:
+        "200":
+          description: OK
+          content:
+            application/yaml:
+              schema:
+                type: string
+      x-auth-type: None
+      x-throttling-tier: Unlimited
+      x-wso2-mutual-ssl: Optional
+  /{municipalityId}/{id}/key/{key}:
+    delete:
+      tags:
         - Messaging Settings
-      summary: Get sender info
-      description: "Get sender info, optionally filtered by any combination of department\
-        \ id, department name and namespace."
-      operationId: getSenderInfo_1
+      summary: Delete messaging setting key
+      description: Delete a specific key from a messaging setting
+      operationId: deleteMessagingSettingKey
       parameters:
         - name: municipalityId
           in: path
@@ -330,73 +328,23 @@ paths:
           schema:
             type: string
           example: 2281
-        - name: departmentId
-          in: query
-          description: Department ID
-          required: false
-          schema:
-            type: string
-          example: 28
-        - name: departmentName
-          in: query
-          description: Department name
-          required: false
-          schema:
-            type: string
-          example: Sundsvalls kommun
-        - name: namespace
-          in: query
-          description: Namespace
-          required: false
-          schema:
-            type: string
-          example: Namespace 1
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/SenderInfoResponse"
-        "400":
-          description: Bad Request
-          content:
-            application/problem+json:
-              schema:
-                oneOf:
-                  - $ref: "#/components/schemas/Problem"
-                  - $ref: "#/components/schemas/ConstraintViolationProblem"
-        "500":
-          description: Internal Server Error
-          content:
-            application/problem+json:
-              schema:
-                $ref: "#/components/schemas/Problem"
-      deprecated: true
-  /{municipalityId}/portal-settings:
-    get:
-      tags:
-        - Messaging Settings
-      summary: Get portal settings
-      description: Get portal settings for given department.
-      operationId: getPortalSettings
-      parameters:
-        - name: municipalityId
+        - name: id
           in: path
-          description: Municipality ID
+          description: Messaging setting ID
           required: true
           schema:
             type: string
-          example: 2281
+          example: c9383d10-6fb5-4fc1-bd0a-50bf5a24d5b7
+        - name: key
+          in: path
+          description: Key to delete
+          required: true
+          schema:
+            type: string
+          example: department_name
       responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/PortalSettingsResponse"
+        "204":
+          description: No Content
         "404":
           description: Not Found
           content:
@@ -417,34 +365,11 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/Problem"
-      deprecated: true
-  /api-docs:
-    get:
-      tags:
-        - API
-      summary: OpenAPI
-      operationId: getApiDocs
-      responses:
-        "200":
-          description: OK
-          content:
-            application/yaml:
-              schema:
-                type: string
-      x-auth-type: None
-      x-throttling-tier: Unlimited
-      x-wso2-mutual-ssl: Optional
 components:
   schemas:
     Problem:
       type: object
       properties:
-        status:
-          $ref: "#/components/schemas/StatusType"
-        title:
-          type: string
-        detail:
-          type: string
         instance:
           type: string
           format: uri
@@ -454,6 +379,12 @@ components:
         parameters:
           type: object
           additionalProperties: { }
+        status:
+          $ref: "#/components/schemas/StatusType"
+        title:
+          type: string
+        detail:
+          type: string
     StatusType:
       type: object
       properties:
@@ -502,14 +433,14 @@ components:
           type: string
         message:
           type: string
-        detail:
-          type: string
         instance:
           type: string
           format: uri
         parameters:
           type: object
           additionalProperties: { }
+        detail:
+          type: string
         suppressed:
           type: array
           items:
@@ -571,12 +502,6 @@ components:
                 type: boolean
         message:
           type: string
-        status:
-          $ref: "#/components/schemas/StatusType"
-        title:
-          type: string
-        detail:
-          type: string
         instance:
           type: string
           format: uri
@@ -586,6 +511,12 @@ components:
         parameters:
           type: object
           additionalProperties: { }
+        status:
+          $ref: "#/components/schemas/StatusType"
+        title:
+          type: string
+        detail:
+          type: string
         suppressed:
           type: array
           items:
@@ -626,6 +557,44 @@ components:
           type: string
         message:
           type: string
+    MessagingSettingValueRequest:
+      type: object
+      description: Messaging setting value request model
+      properties:
+        key:
+          type: string
+          description: Identifier key for the value setting
+          examples:
+            - department_name
+          minLength: 1
+        value:
+          type: string
+          description: Stored value for the value setting
+          examples:
+            - Department 44
+          minLength: 1
+        type:
+          type: string
+          description: "Type of data for the stored value. Can be one of [STRING|NUMERIC|BOOLEAN]"
+          examples:
+            - STRING
+          minLength: 1
+      required:
+        - key
+        - type
+        - value
+    MessagingSettingsRequest:
+      type: object
+      description: Messaging settings request model
+      properties:
+        values:
+          type: array
+          description: Values for the messaging setting
+          items:
+            $ref: "#/components/schemas/MessagingSettingValueRequest"
+          minItems: 1
+      required:
+        - values
     MessagingSettingValue:
       type: object
       description: Messaging setting value model
@@ -685,99 +654,4 @@ components:
           description: Values connected to the messaging setting instance
           items:
             $ref: "#/components/schemas/MessagingSettingValue"
-    SenderInfoResponse:
-      type: object
-      description: SenderInfo response
-      properties:
-        organizationNumber:
-          type: string
-          description: Organization number of the organization connected to the information
-          examples:
-            - "162021005489"
-        supportText:
-          type: string
-          description: Descriptive support text
-          examples:
-            - Kontakta oss via epost eller telefon
-        contactInformationUrl:
-          type: string
-          description: Contact information URL
-          examples:
-            - https://sundsvall.se/
-        contactInformationPhoneNumber:
-          type: string
-          description: Contact information phone number
-          examples:
-            - 060-19 10 00
-        contactInformationEmail:
-          type: string
-          description: Contact information e-mail address
-          examples:
-            - sundsvalls.kommun@sundsvall.se
-        contactInformationEmailName:
-          type: string
-          description: Name of contact information e-mail sender
-          examples:
-            - Sundsvalls kommun
-        smsSender:
-          type: string
-          description: Name of SMS sender
-          examples:
-            - Sundsvall
-        folderName:
-          type: string
-          description: Folder name
-          examples:
-            - Foo
-    CallbackEmailResponse:
-      type: object
-      description: CallbackEmail response
-      properties:
-        organizationNumber:
-          type: string
-          description: Organization number of the organization connected to the information
-          examples:
-            - "162021005489"
-        callbackEmail:
-          type: string
-          description: Callback e-mail address
-          examples:
-            - no-reply@domain.tld
-    PortalSettingsResponse:
-      type: object
-      description: PortalSettings response
-      properties:
-        organizationNumber:
-          type: string
-          description: Organization number of the organization connected to the information
-          examples:
-            - "162021005489"
-        municipalityId:
-          type: string
-          description: Municipality ID
-          examples:
-            - "2281"
-        departmentName:
-          type: string
-          description: Department name
-          examples:
-            - SKM
-        snailMailMethod:
-          type: string
-          description: Method of delivery
-          enum:
-            - EMAIL
-            - SC_ADMIN
-          examples:
-            - EMAIL
-        smsEnabled:
-          type: boolean
-          description: Indicates if sms is enabled for the given department
-          examples:
-            - "true"
-        rekEnabled:
-          type: boolean
-          description: Indicates if rek is enabled for the given department
-          examples:
-            - "true"
   securitySchemes: { }
