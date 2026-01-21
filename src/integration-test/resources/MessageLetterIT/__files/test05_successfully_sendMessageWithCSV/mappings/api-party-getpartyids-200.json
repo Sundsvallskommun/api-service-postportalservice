@@ -1,7 +1,22 @@
 {
 	"request": {
 		"method": "POST",
-		"url": "/api-party/2281/PRIVATE/partyIds"
+		"url": "/api-party/2281/PRIVATE/partyIds",
+		"headers": {
+			"Authorization": {
+				"equalTo": "Bearer 0000000000000000AAAAAAAAAAAAAAAA"
+			}
+		},
+		"bodyPatterns": [
+			{
+				"equalToJson": [
+					"198001072381",
+					"198001062382",
+					"198001072399"
+				],
+				"ignoreExtraElements": true
+			}
+		]
 	},
 	"response": {
 		"status": 200,
