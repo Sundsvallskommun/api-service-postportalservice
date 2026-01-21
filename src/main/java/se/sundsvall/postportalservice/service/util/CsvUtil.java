@@ -78,7 +78,7 @@ public final class CsvUtil {
 				}
 
 				var columns = line.split(";");
-				var legalId = columns[0].trim();
+				var legalId = columns[0].trim().replace("-", "");
 
 				if (!legalId.isEmpty()) {
 					legalIds.add(legalId);
