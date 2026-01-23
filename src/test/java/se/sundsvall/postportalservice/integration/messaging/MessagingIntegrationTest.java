@@ -8,6 +8,7 @@ import static org.mockito.Mockito.when;
 import static se.sundsvall.postportalservice.Constants.ORIGIN;
 import static se.sundsvall.postportalservice.TestDataFactory.MOBILE_NUMBER;
 import static se.sundsvall.postportalservice.TestDataFactory.MUNICIPALITY_ID;
+import static se.sundsvall.postportalservice.TestDataFactory.SUNDSVALL_MUNICIPALITY_ORG_NO;
 
 import generated.se.sundsvall.messaging.DeliveryResult;
 import generated.se.sundsvall.messaging.DigitalMailAttachment;
@@ -67,6 +68,7 @@ class MessagingIntegrationTest {
 
 		var departmentEntity = DepartmentEntity.create()
 			.withName("Jönssonligan")
+			.withOrganizationNumber(SUNDSVALL_MUNICIPALITY_ORG_NO)
 			.withOrganizationId("123");
 		var userEntity = UserEntity.create()
 			.withUsername("John Wick");
@@ -86,7 +88,7 @@ class MessagingIntegrationTest {
 
 		var messageBatchResult = new MessageBatchResult();
 
-		when(messagingClientMock.sendDigitalMail(eq(HEADER_VALUE), eq(ORIGIN), eq(MUNICIPALITY_ID), digitalMailRequestArgumentCaptor.capture()))
+		when(messagingClientMock.sendDigitalMail(eq(HEADER_VALUE), eq(ORIGIN), eq(MUNICIPALITY_ID), eq(SUNDSVALL_MUNICIPALITY_ORG_NO), digitalMailRequestArgumentCaptor.capture()))
 			.thenReturn(messageBatchResult);
 
 		var result = messagingIntegration.sendDigitalMail(messageEntity, recipientEntity);
@@ -101,7 +103,7 @@ class MessagingIntegrationTest {
 		});
 
 		assertThat(result).isNotNull().isEqualTo(messageBatchResult);
-		verify(messagingClientMock).sendDigitalMail(HEADER_VALUE, ORIGIN, MUNICIPALITY_ID, digitalMailRequest);
+		verify(messagingClientMock).sendDigitalMail(HEADER_VALUE, ORIGIN, MUNICIPALITY_ID, SUNDSVALL_MUNICIPALITY_ORG_NO, digitalMailRequest);
 	}
 
 	@Test

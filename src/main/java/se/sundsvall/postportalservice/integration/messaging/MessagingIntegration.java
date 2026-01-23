@@ -31,6 +31,7 @@ public class MessagingIntegration {
 		return client.sendDigitalMail(getIdentifierHeaderValue(messageEntity.getUser().getUsername()),
 			ORIGIN,
 			messageEntity.getMunicipalityId(),
+			messageEntity.getDepartment().getOrganizationNumber(),
 			digitalMailRequest);
 	}
 

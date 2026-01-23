@@ -28,11 +28,12 @@ import se.sundsvall.postportalservice.integration.messaging.configuration.Messag
 @CircuitBreaker(name = CLIENT_ID)
 public interface MessagingClient {
 
-	@PostMapping(path = "/{municipalityId}/digital-mail", consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
+	@PostMapping(path = "/{municipalityId}/{organizationNumber}/digital-mail", consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
 	MessageBatchResult sendDigitalMail(
 		@RequestHeader(Identifier.HEADER_NAME) String identifier,
 		@RequestHeader("x-origin") final String origin,
 		@PathVariable final String municipalityId,
+		@PathVariable final String organizationNumber,
 		@RequestBody final DigitalMailRequest request);
 
 	@PostMapping(path = "/{municipalityId}/sms", consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
