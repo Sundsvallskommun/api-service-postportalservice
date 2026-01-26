@@ -49,6 +49,7 @@ import se.sundsvall.postportalservice.integration.db.RecipientEntity;
 import se.sundsvall.postportalservice.integration.db.UserEntity;
 import se.sundsvall.postportalservice.integration.db.dao.DepartmentRepository;
 import se.sundsvall.postportalservice.integration.db.dao.MessageRepository;
+import se.sundsvall.postportalservice.integration.db.dao.RecipientRepository;
 import se.sundsvall.postportalservice.integration.db.dao.UserRepository;
 import se.sundsvall.postportalservice.integration.digitalregisteredletter.DigitalRegisteredLetterIntegration;
 import se.sundsvall.postportalservice.integration.messaging.MessagingIntegration;
@@ -76,6 +77,7 @@ public class MessageService {
 	private final DepartmentRepository departmentRepository;
 	private final UserRepository userRepository;
 	private final MessageRepository messageRepository;
+	private final RecipientRepository recipientRepository;
 
 	public MessageService(
 		final DigitalRegisteredLetterIntegration digitalRegisteredLetterIntegration,
@@ -86,7 +88,8 @@ public class MessageService {
 		final EntityMapper entityMapper,
 		final DepartmentRepository departmentRepository,
 		final UserRepository userRepository,
-		final MessageRepository messageRepository) {
+		final MessageRepository messageRepository,
+		final RecipientRepository recipientRepository) {
 		this.digitalRegisteredLetterIntegration = digitalRegisteredLetterIntegration;
 		this.messagingIntegration = messagingIntegration;
 		this.messagingSettingsIntegration = messagingSettingsIntegration;
@@ -96,6 +99,7 @@ public class MessageService {
 		this.departmentRepository = departmentRepository;
 		this.userRepository = userRepository;
 		this.messageRepository = messageRepository;
+		this.recipientRepository = recipientRepository;
 	}
 
 	public String processDigitalRegisteredLetterRequest(final String municipalityId, final DigitalRegisteredLetterRequest request, final List<MultipartFile> attachments) {
@@ -196,7 +200,7 @@ public class MessageService {
 			.toArray(CompletableFuture[]::new);
 
 		return CompletableFuture.allOf(futures)
-			.handle((v, throwable) -> {
+			.handle((_, throwable) -> {
 				final var triggerSnailmailBatch = messageEntity.getRecipients().stream()
 					.anyMatch(recipientEntity -> recipientEntity.getMessageType() == SNAIL_MAIL);
 				if (triggerSnailmailBatch) {
@@ -242,6 +246,7 @@ public class MessageService {
 				LOG.error("Failed to send SMS to recipient with id {}", recipientEntity.getId(), throwable);
 				recipientEntity.setStatus(FAILED);
 				recipientEntity.setStatusDetail(throwable.getMessage());
+				recipientRepository.save(recipientEntity);
 				RecipientId.reset();
 				return null;
 			});
@@ -265,6 +270,7 @@ public class MessageService {
 				LOG.error("Failed to send digital mail to recipient with id {}", recipientEntity.getId(), throwable);
 				recipientEntity.setStatus(FAILED);
 				recipientEntity.setStatusDetail(throwable.getMessage());
+				recipientRepository.save(recipientEntity);
 				RecipientId.reset();
 				return null;
 			});
@@ -287,6 +293,7 @@ public class MessageService {
 				LOG.error("Failed to send snail mail to recipient with id {}", recipientEntity.getId(), throwable);
 				recipientEntity.setStatus(FAILED);
 				recipientEntity.setStatusDetail(throwable.getMessage());
+				recipientRepository.save(recipientEntity);
 				RecipientId.reset();
 				return null;
 			});
@@ -308,6 +315,7 @@ public class MessageService {
 		LOG.info("Updating recipient with id {}, Status: {}, ExternalId: {}", recipientEntity.getId(), status, messageId);
 		recipientEntity.setStatus(status.toString());
 		recipientEntity.setExternalId(String.valueOf(messageId));
+		recipientRepository.save(recipientEntity);
 	}
 
 	UserEntity getOrCreateUser(final String userName) {
