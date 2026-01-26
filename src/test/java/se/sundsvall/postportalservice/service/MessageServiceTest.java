@@ -26,6 +26,7 @@ import static se.sundsvall.postportalservice.integration.messagingsettings.Messa
 import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.SUPPORT_TEXT;
 
 import generated.se.sundsvall.messaging.DeliveryResult;
+import generated.se.sundsvall.messaging.MessageBatchResult;
 import generated.se.sundsvall.messaging.MessageResult;
 import generated.se.sundsvall.messaging.MessageStatus;
 import java.util.List;
@@ -59,6 +60,7 @@ import se.sundsvall.postportalservice.integration.db.UserEntity;
 import se.sundsvall.postportalservice.integration.db.converter.MessageType;
 import se.sundsvall.postportalservice.integration.db.dao.DepartmentRepository;
 import se.sundsvall.postportalservice.integration.db.dao.MessageRepository;
+import se.sundsvall.postportalservice.integration.db.dao.RecipientRepository;
 import se.sundsvall.postportalservice.integration.db.dao.UserRepository;
 import se.sundsvall.postportalservice.integration.digitalregisteredletter.DigitalRegisteredLetterIntegration;
 import se.sundsvall.postportalservice.integration.messaging.MessagingIntegration;
@@ -100,6 +102,9 @@ class MessageServiceTest {
 	private MessageRepository messageRepositoryMock;
 
 	@Mock
+	private RecipientRepository recipientRepositoryMock;
+
+	@Mock
 	private MessagingSettingsIntegration messagingSettingsIntegrationMock;
 
 	@Mock
@@ -126,7 +131,7 @@ class MessageServiceTest {
 		verifyNoMoreInteractions(attachmentMapperMock, entityMapperMock,
 			messagingIntegrationMock,
 			departmentRepositoryMock, userRepositoryMock,
-			messageRepositoryMock, digitalRegisteredLetterIntegrationMock);
+			messageRepositoryMock, recipientRepositoryMock, digitalRegisteredLetterIntegrationMock);
 	}
 
 	/**
@@ -479,6 +484,7 @@ class MessageServiceTest {
 		assertThat(recipient1.getStatus()).isEqualTo(MessageStatus.SENT.toString());
 		assertThat(recipient1.getExternalId()).isEqualTo(uuid.toString());
 		verify(messagingIntegrationMock).sendSms(messageEntity, recipient1);
+		verify(recipientRepositoryMock).save(recipient1);
 	}
 
 	@Test
@@ -495,6 +501,89 @@ class MessageServiceTest {
 		assertThat(recipient1.getStatus()).isEqualTo(MessageStatus.FAILED.toString());
 		assertThat(recipient1.getStatusDetail()).isEqualTo("java.lang.RuntimeException: Simulated exception");
 		verify(messagingIntegrationMock).sendSms(messageEntity, recipient1);
+		verify(recipientRepositoryMock).save(recipient1);
+	}
+
+	@Test
+	void sendDigitalMailToRecipient_success() {
+		final var spy = Mockito.spy(messageService);
+		final var recipient1 = new RecipientEntity().withFirstName("john");
+		final var messageEntity = MessageEntity.create().withRecipients(List.of(recipient1));
+		final var uuid = UUID.randomUUID();
+		final var messageResult = new MessageResult()
+			.messageId(uuid)
+			.deliveries(List.of(new DeliveryResult()
+				.status(MessageStatus.SENT)));
+		final var messageBatchResult = new MessageBatchResult()
+			.messages(List.of(messageResult));
+
+		when(messagingIntegrationMock.sendDigitalMail(messageEntity, recipient1)).thenReturn(messageBatchResult);
+		doCallRealMethod().when(spy).updateRecipient(messageResult, recipient1);
+
+		final var completableFuture = spy.sendDigitalMailToRecipient(messageEntity, recipient1);
+
+		completableFuture.join();
+		assertThat(recipient1.getStatus()).isEqualTo(MessageStatus.SENT.toString());
+		assertThat(recipient1.getExternalId()).isEqualTo(uuid.toString());
+		verify(messagingIntegrationMock).sendDigitalMail(messageEntity, recipient1);
+		verify(recipientRepositoryMock).save(recipient1);
+	}
+
+	@Test
+	void sendDigitalMailToRecipient_exception() {
+		final var spy = Mockito.spy(messageService);
+		final var recipient1 = new RecipientEntity().withFirstName("john");
+		final var messageEntity = MessageEntity.create().withRecipients(List.of(recipient1));
+
+		when(messagingIntegrationMock.sendDigitalMail(messageEntity, recipient1)).thenThrow(new RuntimeException("Simulated exception"));
+
+		final var completableFuture = spy.sendDigitalMailToRecipient(messageEntity, recipient1);
+
+		completableFuture.join();
+		assertThat(recipient1.getStatus()).isEqualTo(MessageStatus.FAILED.toString());
+		assertThat(recipient1.getStatusDetail()).isEqualTo("java.lang.RuntimeException: Simulated exception");
+		verify(messagingIntegrationMock).sendDigitalMail(messageEntity, recipient1);
+		verify(recipientRepositoryMock).save(recipient1);
+	}
+
+	@Test
+	void sendSnailMailToRecipient_success() {
+		final var spy = Mockito.spy(messageService);
+		final var recipient1 = new RecipientEntity().withFirstName("john");
+		final var messageEntity = MessageEntity.create().withRecipients(List.of(recipient1));
+		final var uuid = UUID.randomUUID();
+		final var messageResult = new MessageResult()
+			.messageId(uuid)
+			.deliveries(List.of(new DeliveryResult()
+				.status(MessageStatus.SENT)));
+
+		when(messagingIntegrationMock.sendSnailMail(messageEntity, recipient1)).thenReturn(messageResult);
+		doCallRealMethod().when(spy).updateRecipient(messageResult, recipient1);
+
+		final var completableFuture = spy.sendSnailMailToRecipient(messageEntity, recipient1);
+
+		completableFuture.join();
+		assertThat(recipient1.getStatus()).isEqualTo(MessageStatus.SENT.toString());
+		assertThat(recipient1.getExternalId()).isEqualTo(uuid.toString());
+		verify(messagingIntegrationMock).sendSnailMail(messageEntity, recipient1);
+		verify(recipientRepositoryMock).save(recipient1);
+	}
+
+	@Test
+	void sendSnailMailToRecipient_exception() {
+		final var spy = Mockito.spy(messageService);
+		final var recipient1 = new RecipientEntity().withFirstName("john");
+		final var messageEntity = MessageEntity.create().withRecipients(List.of(recipient1));
+
+		when(messagingIntegrationMock.sendSnailMail(messageEntity, recipient1)).thenThrow(new RuntimeException("Simulated exception"));
+
+		final var completableFuture = spy.sendSnailMailToRecipient(messageEntity, recipient1);
+
+		completableFuture.join();
+		assertThat(recipient1.getStatus()).isEqualTo(MessageStatus.FAILED.toString());
+		assertThat(recipient1.getStatusDetail()).isEqualTo("java.lang.RuntimeException: Simulated exception");
+		verify(messagingIntegrationMock).sendSnailMail(messageEntity, recipient1);
+		verify(recipientRepositoryMock).save(recipient1);
 	}
 
 	@Test
