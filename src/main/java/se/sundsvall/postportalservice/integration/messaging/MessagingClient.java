@@ -1,5 +1,6 @@
 package se.sundsvall.postportalservice.integration.messaging;
 
+import static org.springframework.http.MediaType.ALL_VALUE;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static se.sundsvall.postportalservice.integration.messaging.configuration.MessagingConfiguration.CLIENT_ID;
 
@@ -58,7 +59,7 @@ public interface MessagingClient {
 		@RequestBody final SnailmailRequest request,
 		@RequestParam final String batchId);
 
-	@PostMapping(path = "/{municipalityId}/snail-mail/batch/{batchId}")
+	@PostMapping(path = "/{municipalityId}/snail-mail/batch/{batchId}", consumes = ALL_VALUE)
 	void triggerSnailMailBatchProcessing(
 		@PathVariable final String municipalityId,
 		@PathVariable final String batchId);
