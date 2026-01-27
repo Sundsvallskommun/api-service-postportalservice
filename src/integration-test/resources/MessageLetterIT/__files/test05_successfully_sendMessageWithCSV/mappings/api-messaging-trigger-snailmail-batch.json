@@ -5,6 +5,9 @@
 		"headers": {
 			"Authorization": {
 				"equalTo": "Bearer 0000000000000000AAAAAAAAAAAAAAAA"
+			},
+			"Content-Type": {
+				"equalTo": "*/*"
 			}
 		}
 	},
