@@ -1,5 +1,5 @@
 {
 	"title": "Bad Request",
 	"status": 400,
-	"detail": "CSV header is invalid. Expected 'Personnummer' but found: invalid-header"
+	"detail": "Invalid CSV format. CSV may contain an optional 'Personnummer' header. Each data row must contain 12 digits, an optional hyphen between digit 8 and 9 are acceptable. Invalid entry: invalid-header"
 }

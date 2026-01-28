@@ -18,6 +18,8 @@ public final class CsvUtil {
 
 	private CsvUtil() {}
 
+	private static final String VALID_ENTRY_REGEX = "^\\d{8}-?\\d{4}$";
+
 	/**
 	 * Validates that a given CSV file has a header line with "Personnummer" and that each data row contains exactly 12
 	 * digits. Returns a map with the counts of each unique personal identity number found in the CSV.
@@ -35,18 +37,20 @@ public final class CsvUtil {
 			while ((line = reader.readLine()) != null) {
 				var trimmed = line.trim();
 
-				if (!headerRead) {
-					// Header must be exactly "Personnummer"
-					if (!"Personnummer".equals(trimmed)) {
-						throw Problem.valueOf(BAD_REQUEST, "CSV header is invalid. Expected 'Personnummer' but found: " + trimmed);
-					}
+				if (!headerRead && "Personnummer".equals(trimmed)) {
 					headerRead = true;
+					// Skip header line
 					continue;
+				} else {
+					// Even if not the correct header (it might be a legalId), we consider it read after the first line
+					// If the header is something else than "Personnummer", we still process it, if it's not a valid entry it will be caught
+					// by the validation below
+					headerRead = true;
 				}
 
 				// Validate that the line contains exactly 12 digits, with an optional hyphen between digit 8 and 9
-				if (!trimmed.isEmpty() && !trimmed.matches("^\\d{8}-?\\d{4}$")) {
-					throw Problem.valueOf(BAD_REQUEST, "Invalid CSV format. Each data row must contain 12 digits, an optional hyphen between digit 8 and 9 are acceptable. Invalid entry: " + trimmed);
+				if (!trimmed.isEmpty() && !trimmed.matches(VALID_ENTRY_REGEX)) {
+					throw Problem.valueOf(BAD_REQUEST, "Invalid CSV format. CSV may contain an optional 'Personnummer' header. Each data row must contain 12 digits, an optional hyphen between digit 8 and 9 are acceptable. Invalid entry: " + trimmed);
 				}
 
 				if (!trimmed.isEmpty()) {
