@@ -7,6 +7,7 @@ import static org.mockito.Mockito.when;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
@@ -31,6 +32,59 @@ class CsvUtilTest {
 		assertThat(result).containsExactlyInAnyOrder(
 			"201901012391", "201901022382", "201901032399",
 			"201901042380", "201901052397", "201901062388");
+	}
+
+	@Test
+	void validateCsvToLegalIdsWithoutHeader(@Load(value = "/testfile/legalIds-without-header.csv") final String csv) throws IOException {
+		var multipartFileMock = Mockito.mock(MultipartFile.class);
+
+		when(multipartFileMock.getInputStream()).thenReturn(new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8)));
+		when(multipartFileMock.getContentType()).thenReturn("text/csv");
+		when(multipartFileMock.getOriginalFilename()).thenReturn("legalIds.csv");
+
+		var result = CsvUtil.validateCSV(multipartFileMock);
+
+		assertCsvContent(result);
+	}
+
+	@Test
+	void validateCsvToLegalIdsWithHeader(@Load(value = "/testfile/legalIds.csv") final String csv) throws IOException {
+		var multipartFileMock = Mockito.mock(MultipartFile.class);
+
+		when(multipartFileMock.getInputStream()).thenReturn(new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8)));
+		when(multipartFileMock.getContentType()).thenReturn("text/csv");
+		when(multipartFileMock.getOriginalFilename()).thenReturn("legalIds.csv");
+
+		var result = CsvUtil.validateCSV(multipartFileMock);
+
+		assertCsvContent(result);
+	}
+
+	private void assertCsvContent(final Map<String, Integer> values) {
+		assertThat(values).containsExactlyInAnyOrderEntriesOf(
+			java.util.Map.of(
+				"201901012391", 1,
+				"201901022382", 1,
+				"201901032399", 1,
+				"201901042380", 1,
+				"201901052397", 1,
+				"201901062388", 1));
+	}
+
+	@Test
+	void validateCsvToLegalIdsWithDuplicates(@Load(value = "/testfile/legalIds-duplicates.csv") final String csv) throws IOException {
+		var multipartFileMock = Mockito.mock(MultipartFile.class);
+
+		when(multipartFileMock.getInputStream()).thenReturn(new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8)));
+		when(multipartFileMock.getContentType()).thenReturn("text/csv");
+		when(multipartFileMock.getOriginalFilename()).thenReturn("legalIds.csv");
+
+		var result = CsvUtil.validateCSV(multipartFileMock);
+
+		assertThat(result).containsExactlyInAnyOrderEntriesOf(
+			java.util.Map.of(
+				"201901012391", 2,
+				"201901012392", 2));
 	}
 
 	@Test
