@@ -25,6 +25,7 @@ import static se.sundsvall.postportalservice.integration.messagingsettings.Messa
 import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.SMS_SENDER;
 import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.SUPPORT_TEXT;
 
+import generated.se.sundsvall.citizen.CitizenExtended;
 import generated.se.sundsvall.messaging.DeliveryResult;
 import generated.se.sundsvall.messaging.MessageBatchResult;
 import generated.se.sundsvall.messaging.MessageResult;
@@ -52,6 +53,7 @@ import se.sundsvall.postportalservice.TestDataFactory;
 import se.sundsvall.postportalservice.api.model.Address;
 import se.sundsvall.postportalservice.api.model.Recipient;
 import se.sundsvall.postportalservice.api.model.SmsRecipient;
+import se.sundsvall.postportalservice.integration.citizen.CitizenIntegration;
 import se.sundsvall.postportalservice.integration.db.AttachmentEntity;
 import se.sundsvall.postportalservice.integration.db.DepartmentEntity;
 import se.sundsvall.postportalservice.integration.db.MessageEntity;
@@ -110,6 +112,9 @@ class MessageServiceTest {
 	@Mock
 	private DigitalRegisteredLetterIntegration digitalRegisteredLetterIntegrationMock;
 
+	@Mock
+	private CitizenIntegration citizenIntegrationMock;
+
 	@Captor
 	private ArgumentCaptor<MessageEntity> messageEntityCaptor;
 
@@ -131,7 +136,8 @@ class MessageServiceTest {
 		verifyNoMoreInteractions(attachmentMapperMock, entityMapperMock,
 			messagingIntegrationMock,
 			departmentRepositoryMock, userRepositoryMock,
-			messageRepositoryMock, recipientRepositoryMock, digitalRegisteredLetterIntegrationMock);
+			messageRepositoryMock, recipientRepositoryMock, digitalRegisteredLetterIntegrationMock,
+			citizenIntegrationMock);
 	}
 
 	/**
@@ -153,7 +159,7 @@ class MessageServiceTest {
 			.hasMessage("Bad Gateway: No messaging settings found for user '%s' in municipalityId '%s'".formatted("test01user", MUNICIPALITY_ID));
 
 		verify(messagingSettingsIntegrationMock).getMessagingSettingsForUser(MUNICIPALITY_ID);
-		verifyNoInteractions(messagingIntegrationMock, departmentRepositoryMock, userRepositoryMock, messageRepositoryMock);
+		verifyNoInteractions(messagingIntegrationMock, departmentRepositoryMock, userRepositoryMock, messageRepositoryMock, citizenIntegrationMock);
 	}
 
 	/**
@@ -169,8 +175,10 @@ class MessageServiceTest {
 		final var multipartFiles = List.of(multipartFile);
 
 		final var attachmentEntities = List.of(new AttachmentEntity(), new AttachmentEntity());
+		final var citizen = new CitizenExtended().givenname("John").lastname("Doe");
 
 		when(messagingSettingsIntegrationMock.getMessagingSettingsForUser(MUNICIPALITY_ID)).thenReturn(SETTINGS_MAP);
+		when(citizenIntegrationMock.getCitizens(MUNICIPALITY_ID, List.of(request.getPartyId()))).thenReturn(List.of(citizen));
 		when(messageRepositoryMock.save(any())).thenAnswer(invocation -> invocation.getArgument(0, MessageEntity.class).withId("messageId"));
 		doAnswer(inv -> {
 			final var recipientEntity = inv.getArgument(1, RecipientEntity.class);
@@ -186,6 +194,7 @@ class MessageServiceTest {
 
 		assertThat(result).isNotNull().isEqualTo("messageId");
 
+		verify(citizenIntegrationMock).getCitizens(MUNICIPALITY_ID, List.of(request.getPartyId()));
 		verify(userRepositoryMock).findByUsernameIgnoreCase(USERNAME);
 		verify(departmentRepositoryMock).findByOrganizationId("departmentId");
 		verify(digitalRegisteredLetterIntegrationMock).sendLetter(any(), any());
@@ -207,6 +216,8 @@ class MessageServiceTest {
 		});
 		assertThat(messageEntity.getRecipients().getFirst()).isNotNull().isInstanceOf(RecipientEntity.class).satisfies(recipientEntity -> {
 			assertThat(recipientEntity.getPartyId()).isEqualTo(request.getPartyId());
+			assertThat(recipientEntity.getFirstName()).isEqualTo("John");
+			assertThat(recipientEntity.getLastName()).isEqualTo("Doe");
 			assertThat(recipientEntity.getMessageType()).isEqualTo(MessageType.DIGITAL_REGISTERED_LETTER);
 			assertThat(recipientEntity.getStatus()).isEqualTo(FAILED);
 			assertThat(recipientEntity.getStatusDetail()).isEqualTo("Something when wrong");
@@ -227,9 +238,10 @@ class MessageServiceTest {
 		final var attachmentEntities = List.of(new AttachmentEntity(), new AttachmentEntity());
 		final var userEntity = new UserEntity().withUsername(USERNAME).withId("userId");
 		final var departmentEntity = new DepartmentEntity().withName("departmentName").withOrganizationId("departmentId").withId("departmentId");
+		final var citizen = new CitizenExtended().givenname("Jane").lastname("Smith");
 
 		when(messagingSettingsIntegrationMock.getMessagingSettingsForUser(MUNICIPALITY_ID)).thenReturn(SETTINGS_MAP);
-
+		when(citizenIntegrationMock.getCitizens(MUNICIPALITY_ID, List.of(request.getPartyId()))).thenReturn(List.of(citizen));
 		when(messageRepositoryMock.save(any())).thenAnswer(invocation -> invocation.getArgument(0, MessageEntity.class).withId("messageId"));
 		doAnswer(inv -> {
 			final var recipientEntity = inv.getArgument(1, RecipientEntity.class);
@@ -245,6 +257,7 @@ class MessageServiceTest {
 
 		assertThat(result).isNotNull().isEqualTo("messageId");
 
+		verify(citizenIntegrationMock).getCitizens(MUNICIPALITY_ID, List.of(request.getPartyId()));
 		verify(userRepositoryMock).findByUsernameIgnoreCase(USERNAME);
 		verify(departmentRepositoryMock).findByOrganizationId("departmentId");
 		verify(digitalRegisteredLetterIntegrationMock).sendLetter(any(), any());
@@ -266,6 +279,8 @@ class MessageServiceTest {
 		});
 		assertThat(messageEntity.getRecipients().getFirst()).isNotNull().isInstanceOf(RecipientEntity.class).satisfies(recipientEntity -> {
 			assertThat(recipientEntity.getPartyId()).isEqualTo(request.getPartyId());
+			assertThat(recipientEntity.getFirstName()).isEqualTo("Jane");
+			assertThat(recipientEntity.getLastName()).isEqualTo("Smith");
 			assertThat(recipientEntity.getMessageType()).isEqualTo(MessageType.DIGITAL_REGISTERED_LETTER);
 			assertThat(recipientEntity.getStatus()).isEqualTo(SENT);
 			assertThat(recipientEntity.getExternalId()).isEqualTo("229a3e3e-17ae-423a-9a14-671b5b1bbd17");

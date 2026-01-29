@@ -1,0 +1,12 @@
+[
+	{
+		"personId": "6d0773d6-3e7f-4552-81bc-f0007af95adf",
+		"givenname": "John",
+		"lastname": "Doe",
+		"addresses": [
+			{
+				"addressType": "POPULATION_REGISTRATION_ADDRESS"
+			}
+		]
+	}
+]

@@ -1,0 +1,21 @@
+{
+	"request": {
+		"method": "POST",
+		"url": "/api-citizen/2281/batch",
+		"bodyPatterns": [
+			{
+				"equalToJson": [
+					"6d0773d6-3e7f-4552-81bc-f0007af95adf"
+				],
+				"ignoreExtraElements": true
+			}
+		]
+	},
+	"response": {
+		"status": 200,
+		"headers": {
+			"Content-Type": "application/json"
+		},
+		"bodyFileName": "test02_unsuccessfully_sendDigitalRegisteredLetter/responses/api-citizen-getcitizens.json"
+	}
+}

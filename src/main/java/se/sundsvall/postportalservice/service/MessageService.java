@@ -43,6 +43,7 @@ import se.sundsvall.postportalservice.api.model.DigitalRegisteredLetterRequest;
 import se.sundsvall.postportalservice.api.model.LetterCsvRequest;
 import se.sundsvall.postportalservice.api.model.LetterRequest;
 import se.sundsvall.postportalservice.api.model.SmsRequest;
+import se.sundsvall.postportalservice.integration.citizen.CitizenIntegration;
 import se.sundsvall.postportalservice.integration.db.DepartmentEntity;
 import se.sundsvall.postportalservice.integration.db.MessageEntity;
 import se.sundsvall.postportalservice.integration.db.RecipientEntity;
@@ -78,6 +79,7 @@ public class MessageService {
 	private final UserRepository userRepository;
 	private final MessageRepository messageRepository;
 	private final RecipientRepository recipientRepository;
+	private final CitizenIntegration citizenIntegration;
 
 	public MessageService(
 		final DigitalRegisteredLetterIntegration digitalRegisteredLetterIntegration,
@@ -89,7 +91,7 @@ public class MessageService {
 		final DepartmentRepository departmentRepository,
 		final UserRepository userRepository,
 		final MessageRepository messageRepository,
-		final RecipientRepository recipientRepository) {
+		final RecipientRepository recipientRepository, final CitizenIntegration citizenIntegration) {
 		this.digitalRegisteredLetterIntegration = digitalRegisteredLetterIntegration;
 		this.messagingIntegration = messagingIntegration;
 		this.messagingSettingsIntegration = messagingSettingsIntegration;
@@ -100,6 +102,7 @@ public class MessageService {
 		this.userRepository = userRepository;
 		this.messageRepository = messageRepository;
 		this.recipientRepository = recipientRepository;
+		this.citizenIntegration = citizenIntegration;
 	}
 
 	public String processDigitalRegisteredLetterRequest(final String municipalityId, final DigitalRegisteredLetterRequest request, final List<MultipartFile> attachments) {
@@ -109,7 +112,11 @@ public class MessageService {
 		message.setSubject(request.getSubject());
 		message.setMessageType(DIGITAL_REGISTERED_LETTER);
 
+		final var citizens = citizenIntegration.getCitizens(municipalityId, List.of(request.getPartyId())).getFirst();
+
 		final var recipient = RecipientEntity.create()
+			.withFirstName(citizens.getGivenname())
+			.withLastName(citizens.getLastname())
 			.withPartyId(request.getPartyId())
 			.withStatus(PENDING)
 			.withMessageType(DIGITAL_REGISTERED_LETTER);
