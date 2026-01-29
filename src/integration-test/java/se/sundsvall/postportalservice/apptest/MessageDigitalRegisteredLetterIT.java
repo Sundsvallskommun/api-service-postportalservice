@@ -31,7 +31,8 @@ class MessageDigitalRegisteredLetterIT extends AbstractAppTest {
 
 	@Test
 	void test01_successfully_sendDigitalRegisteredLetter() throws FileNotFoundException {
-		final var location = setupCall()
+		final var appTest = setupCall();
+		final var location = appTest
 			.withServicePath("/%s/messages/registered-letter".formatted(MUNICIPALITY_ID))
 			.withHttpMethod(POST)
 			.withHeader(Identifier.HEADER_NAME, IDENTIFIER)
@@ -55,11 +56,13 @@ class MessageDigitalRegisteredLetterIT extends AbstractAppTest {
 				assertThat(recipientEntity.getExternalId()).isEqualTo("drl-external-id-123");
 				assertThat(recipientEntity.getMessageType()).isEqualTo(DIGITAL_REGISTERED_LETTER);
 			});
+		appTest.verifyAllStubs();
 	}
 
 	@Test
 	void test02_unsuccessfully_sendDigitalRegisteredLetter() throws FileNotFoundException {
-		final var location = setupCall()
+		final var appTest = setupCall();
+		final var location = appTest
 			.withServicePath("/%s/messages/registered-letter".formatted(MUNICIPALITY_ID))
 			.withHttpMethod(POST)
 			.withHeader(Identifier.HEADER_NAME, IDENTIFIER)
@@ -83,6 +86,7 @@ class MessageDigitalRegisteredLetterIT extends AbstractAppTest {
 				assertThat(recipientEntity.getExternalId()).isEqualTo("drl-external-id-123");
 				assertThat(recipientEntity.getMessageType()).isEqualTo(DIGITAL_REGISTERED_LETTER);
 			});
+		appTest.verifyAllStubs();
 	}
 
 }

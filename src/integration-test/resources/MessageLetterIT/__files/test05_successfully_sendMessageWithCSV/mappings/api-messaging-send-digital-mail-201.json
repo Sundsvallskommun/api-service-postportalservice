@@ -1,6 +1,6 @@
 {
 	"request": {
-		"url": "/api-messaging/2281/digital-mail",
+		"url": "/api-messaging/2281/1234567890/digital-mail",
 		"method": "POST",
 		"headers": {
 			"Authorization": {

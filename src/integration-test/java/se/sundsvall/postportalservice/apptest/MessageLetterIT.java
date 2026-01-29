@@ -37,7 +37,8 @@ class MessageLetterIT extends AbstractAppTest {
 
 	@Test
 	void test01_successfully_sendDigitalMail() throws FileNotFoundException {
-		var location = setupCall()
+		final var appTest = setupCall();
+		final var location = appTest
 			.withServicePath("/%s/messages/letter".formatted(MUNICIPALITY_ID))
 			.withHttpMethod(POST)
 			.withHeader(Identifier.HEADER_NAME, IDENTIFIER)
@@ -65,11 +66,13 @@ class MessageLetterIT extends AbstractAppTest {
 						assertThat(recipientEntity.getMessageType()).isEqualTo(DIGITAL_MAIL);
 					});
 			});
+		appTest.verifyAllStubs();
 	}
 
 	@Test
 	void test02_successfully_sendSnailMail() throws FileNotFoundException {
-		var location = setupCall()
+		final var appTest = setupCall();
+		final var location = appTest
 			.withServicePath("/%s/messages/letter".formatted(MUNICIPALITY_ID))
 			.withHttpMethod(POST)
 			.withHeader(Identifier.HEADER_NAME, IDENTIFIER)
@@ -97,11 +100,13 @@ class MessageLetterIT extends AbstractAppTest {
 						assertThat(recipientEntity.getMessageType()).isEqualTo(SNAIL_MAIL);
 					});
 			});
+		appTest.verifyAllStubs();
 	}
 
 	@Test
 	void test03_successfully_sendSnailMailAndDigitalMail() throws FileNotFoundException {
-		var location = setupCall()
+		final var appTest = setupCall();
+		final var location = appTest
 			.withServicePath("/%s/messages/letter".formatted(MUNICIPALITY_ID))
 			.withHttpMethod(POST)
 			.withHeader(Identifier.HEADER_NAME, IDENTIFIER)
@@ -130,11 +135,13 @@ class MessageLetterIT extends AbstractAppTest {
 				assertThat(message.getRecipients())
 					.allSatisfy(recipientEntity -> assertThat(recipientEntity.getStatus()).isEqualTo(SENT));
 			});
+		appTest.verifyAllStubs();
 	}
 
 	@Test
 	void test04_successfully_snailMailToAddress() throws FileNotFoundException {
-		var location = setupCall()
+		final var appTest = setupCall();
+		final var location = appTest
 			.withServicePath("/%s/messages/letter".formatted(MUNICIPALITY_ID))
 			.withHttpMethod(POST)
 			.withHeader(Identifier.HEADER_NAME, IDENTIFIER)
@@ -159,11 +166,13 @@ class MessageLetterIT extends AbstractAppTest {
 				assertThat(message.getRecipients())
 					.allSatisfy(recipientEntity -> assertThat(recipientEntity.getStatus()).isEqualTo(SENT));
 			});
+		appTest.verifyAllStubs();
 	}
 
 	@Test
 	void test05_successfully_sendMessageWithCSV() throws FileNotFoundException {
-		var location = setupCall()
+		final var appTest = setupCall();
+		final var location = appTest
 			.withServicePath("/%s/messages/letter/csv".formatted(MUNICIPALITY_ID))
 			.withHttpMethod(POST)
 			.withHeader(Identifier.HEADER_NAME, IDENTIFIER)
@@ -192,6 +201,7 @@ class MessageLetterIT extends AbstractAppTest {
 						tuple("22222222-2222-2222-2222-222222222222", SNAIL_MAIL, "SENT"),
 						tuple("33333333-3333-3333-3333-333333333333", LETTER, "UNDELIVERABLE"));
 			});
+		appTest.verifyAllStubs();
 	}
 
 }

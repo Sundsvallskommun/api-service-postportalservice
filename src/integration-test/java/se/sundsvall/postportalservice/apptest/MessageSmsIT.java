@@ -31,7 +31,8 @@ class MessageSmsIT extends AbstractAppTest {
 
 	@Test
 	void test01_successfully_sendSingleSms() {
-		final var location = setupCall()
+		final var appTest = setupCall();
+		final var location = appTest
 			.withServicePath("/%s/messages/sms".formatted(MUNICIPALITY_ID))
 			.withHttpMethod(POST)
 			.withHeader(Identifier.HEADER_NAME, IDENTIFIER)
@@ -54,12 +55,13 @@ class MessageSmsIT extends AbstractAppTest {
 				assertThat(message.getRecipients())
 					.allSatisfy(r -> assertThat(r.getStatus()).isEqualTo(SENT));
 			});
-
+		appTest.verifyAllStubs();
 	}
 
 	@Test
 	void test02_successfully_sendMultipleSms() {
-		final var location = setupCall()
+		final var appTest = setupCall();
+		final var location = appTest
 			.withServicePath("/%s/messages/sms".formatted(MUNICIPALITY_ID))
 			.withHttpMethod(POST)
 			.withHeader(Identifier.HEADER_NAME, IDENTIFIER)
@@ -84,12 +86,13 @@ class MessageSmsIT extends AbstractAppTest {
 					assertThat(recipient.getMessageType()).isEqualTo(SMS);
 				});
 			});
-
+		appTest.verifyAllStubs();
 	}
 
 	@Test
 	void test03_unsuccessfully_sendSingleSms() {
-		final var location = setupCall()
+		final var appTest = setupCall();
+		final var location = appTest
 			.withServicePath("/%s/messages/sms".formatted(MUNICIPALITY_ID))
 			.withHttpMethod(POST)
 			.withHeader(Identifier.HEADER_NAME, IDENTIFIER)
@@ -114,12 +117,13 @@ class MessageSmsIT extends AbstractAppTest {
 					assertThat(recipient.getMessageType()).isEqualTo(SMS);
 				});
 			});
-
+		appTest.verifyAllStubs();
 	}
 
 	@Test
 	void test04_unsuccessfully_sendMultipleSms() {
-		final var location = setupCall()
+		final var appTest = setupCall();
+		final var location = appTest
 			.withServicePath("/%s/messages/sms".formatted(MUNICIPALITY_ID))
 			.withHttpMethod(POST)
 			.withHeader(Identifier.HEADER_NAME, IDENTIFIER)
@@ -144,12 +148,13 @@ class MessageSmsIT extends AbstractAppTest {
 					assertThat(recipient.getMessageType()).isEqualTo(SMS);
 				});
 			});
-
+		appTest.verifyAllStubs();
 	}
 
 	@Test
 	void test05_partially_successful_sendMultipleSms() {
-		final var location = setupCall()
+		final var appTest = setupCall();
+		final var location = appTest
 			.withServicePath("/%s/messages/sms".formatted(MUNICIPALITY_ID))
 			.withHttpMethod(POST)
 			.withHeader(Identifier.HEADER_NAME, IDENTIFIER)
@@ -176,6 +181,7 @@ class MessageSmsIT extends AbstractAppTest {
 					.filteredOn(recipient -> recipient.getStatus().equals(FAILED))
 					.hasSize(2);
 			});
+		appTest.verifyAllStubs();
 	}
 
 }
