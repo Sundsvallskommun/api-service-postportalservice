@@ -17,6 +17,8 @@
 	"recipients": [
 		{
 			"name": "John Doe",
+			"partyId": "11111111-1111-1111-1111-111111111111",
+			"legalId": "198001011111",
 			"mobileNumber": "+46701740605",
 			"streetAddress": "Testgatan 12",
 			"zipCode": "12345",
@@ -26,6 +28,8 @@
 		},
 		{
 			"name": "John Doe",
+			"partyId": "22222222-2222-2222-2222-222222222222",
+			"legalId": "198001022222",
 			"mobileNumber": "+46701740605",
 			"streetAddress": "Testgatan 13",
 			"zipCode": "12345",
@@ -35,6 +39,8 @@
 		},
 		{
 			"name": "John Doe",
+			"partyId": "33333333-3333-3333-3333-333333333333",
+			"legalId": "198001033333",
 			"mobileNumber": "+46701740605",
 			"streetAddress": "Testgatan 14",
 			"zipCode": "12345",
@@ -44,6 +50,8 @@
 		},
 		{
 			"name": "John Doe",
+			"partyId": "44444444-4444-4444-4444-444444444444",
+			"legalId": "198001044444",
 			"mobileNumber": "+46701740605",
 			"streetAddress": "Testgatan 15",
 			"zipCode": "12345",
@@ -53,6 +61,8 @@
 		},
 		{
 			"name": "John Doe",
+			"partyId": "55555555-5555-5555-5555-555555555555",
+			"legalId": "198001055555",
 			"mobileNumber": "+46701740605",
 			"streetAddress": "Testgatan 16",
 			"zipCode": "12345",
@@ -62,6 +72,8 @@
 		},
 		{
 			"name": "John Doe",
+			"partyId": "66666666-6666-6666-6666-666666666666",
+			"legalId": "198001066666",
 			"mobileNumber": "+46701740605",
 			"streetAddress": "Testgatan 17",
 			"zipCode": "12345",
@@ -71,6 +83,8 @@
 		},
 		{
 			"name": "John Doe",
+			"partyId": "77777777-7777-7777-7777-777777777777",
+			"legalId": "198001077777",
 			"mobileNumber": "+46701740605",
 			"streetAddress": "Testgatan 18",
 			"zipCode": "12345",
@@ -80,6 +94,8 @@
 		},
 		{
 			"name": "John Doe",
+			"partyId": "88888888-8888-8888-8888-888888888888",
+			"legalId": "198001088888",
 			"streetAddress": "Testgatan 121",
 			"zipCode": "12345",
 			"city": "Testsvall",
@@ -88,6 +104,8 @@
 		},
 		{
 			"name": "John Doe",
+			"partyId": "99999999-9999-9999-9999-999999999999",
+			"legalId": "198001099999",
 			"mobileNumber": "+46701740605",
 			"streetAddress": "Testgatan 19",
 			"zipCode": "12345",
@@ -97,6 +115,8 @@
 		},
 		{
 			"name": "Alex Doe",
+			"partyId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+			"legalId": "198001101010",
 			"mobileNumber": "+46701740605",
 			"streetAddress": "Testgatan 122",
 			"zipCode": "12345",
@@ -106,6 +126,8 @@
 		},
 		{
 			"name": "Alex Doe",
+			"partyId": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
+			"legalId": "198001111111",
 			"mobileNumber": "+46701740605",
 			"streetAddress": "Testgatan 123",
 			"zipCode": "12345",
@@ -115,6 +137,8 @@
 		},
 		{
 			"name": "Alex Doe",
+			"partyId": "cccccccc-cccc-cccc-cccc-cccccccccccc",
+			"legalId": "198001121212",
 			"mobileNumber": "+46701740605",
 			"streetAddress": "Testgatan 124",
 			"zipCode": "12345",
@@ -124,6 +148,8 @@
 		},
 		{
 			"name": "Alex Doe",
+			"partyId": "dddddddd-dddd-dddd-dddd-dddddddddddd",
+			"legalId": "198001131313",
 			"streetAddress": "Testgatan 12",
 			"zipCode": "12345",
 			"city": "Testsvall",
@@ -132,6 +158,8 @@
 		},
 		{
 			"name": "Alex Doe",
+			"partyId": "eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee",
+			"legalId": "198001141414",
 			"mobileNumber": "+46701740605",
 			"streetAddress": "Testgatan 125",
 			"zipCode": "12345",
@@ -141,6 +169,8 @@
 		},
 		{
 			"name": "Alex Doe",
+			"partyId": "ffffffff-ffff-ffff-ffff-ffffffffffff",
+			"legalId": "198001151515",
 			"mobileNumber": "+46701740605",
 			"streetAddress": "Testgatan 126",
 			"zipCode": "12345",
@@ -150,6 +180,8 @@
 		},
 		{
 			"name": "Alex Doe",
+			"partyId": "10101010-1010-1010-1010-101010101010",
+			"legalId": "198001161616",
 			"mobileNumber": "+46701740605",
 			"streetAddress": "Testgatan 127",
 			"zipCode": "12345",
@@ -159,6 +191,8 @@
 		},
 		{
 			"name": "Jane Doe",
+			"partyId": "20202020-2020-2020-2020-202020202020",
+			"legalId": "198001171717",
 			"mobileNumber": "+46701740605",
 			"streetAddress": "Testgatan 128",
 			"zipCode": "12345",
@@ -168,6 +202,8 @@
 		},
 		{
 			"name": "Jane Doe",
+			"partyId": "30303030-3030-3030-3030-303030303030",
+			"legalId": "198001181818",
 			"streetAddress": "Testgatan 129",
 			"zipCode": "12345",
 			"city": "Testsvall",
@@ -176,6 +212,8 @@
 		},
 		{
 			"name": "Jane Doe",
+			"partyId": "40404040-4040-4040-4040-404040404040",
+			"legalId": "198001191919",
 			"mobileNumber": "+46701740605",
 			"streetAddress": "Testgatan 120",
 			"zipCode": "12345",
@@ -185,6 +223,8 @@
 		},
 		{
 			"name": "Jane Doe",
+			"partyId": "50505050-5050-5050-5050-505050505050",
+			"legalId": "198001202020",
 			"mobileNumber": "+46701740605",
 			"streetAddress": "Testgatan 112",
 			"zipCode": "12345",
@@ -194,6 +234,8 @@
 		},
 		{
 			"name": "Jane Doe",
+			"partyId": "60606060-6060-6060-6060-606060606060",
+			"legalId": "198001212121",
 			"mobileNumber": "+46701740605",
 			"streetAddress": "Testgatan 1122",
 			"zipCode": "12345",
@@ -203,6 +245,8 @@
 		},
 		{
 			"name": "Jane Doe",
+			"partyId": "70707070-7070-7070-7070-707070707070",
+			"legalId": "198001222222",
 			"mobileNumber": "+46701740605",
 			"streetAddress": "Testgatan 122",
 			"zipCode": "12345",
@@ -212,6 +256,8 @@
 		},
 		{
 			"name": "Jane Doe",
+			"partyId": "80808080-8080-8080-8080-808080808080",
+			"legalId": "198001232323",
 			"mobileNumber": "+46701740605",
 			"streetAddress": "Testgatan 132",
 			"zipCode": "12345",
@@ -221,6 +267,8 @@
 		},
 		{
 			"name": "Jane Doe",
+			"partyId": "90909090-9090-9090-9090-909090909090",
+			"legalId": "198001242424",
 			"mobileNumber": "+46701740605",
 			"streetAddress": "Testgatan 131",
 			"zipCode": "12345",
@@ -230,6 +278,8 @@
 		},
 		{
 			"name": "Jane Doe",
+			"partyId": "a1a1a1a1-a1a1-a1a1-a1a1-a1a1a1a1a1a1",
+			"legalId": "198001252525",
 			"streetAddress": "Testgatan 182",
 			"zipCode": "12345",
 			"city": "Testsvall",
@@ -238,26 +288,36 @@
 		},
 		{
 			"name": "John Wick",
+			"partyId": "b2b2b2b2-b2b2-b2b2-b2b2-b2b2b2b2b2b2",
+			"legalId": "198001262626",
 			"messageType": "DIGITAL_MAIL",
 			"status": "SENT"
 		},
 		{
 			"name": "John Wick",
+			"partyId": "c3c3c3c3-c3c3-c3c3-c3c3-c3c3c3c3c3c3",
+			"legalId": "198001272727",
 			"messageType": "DIGITAL_MAIL",
 			"status": "FAILED"
 		},
 		{
 			"name": "John Wick",
+			"partyId": "d4d4d4d4-d4d4-d4d4-d4d4-d4d4d4d4d4d4",
+			"legalId": "198001282828",
 			"messageType": "DIGITAL_MAIL",
 			"status": "SENT"
 		},
 		{
 			"name": "John Wick",
+			"partyId": "e5e5e5e5-e5e5-e5e5-e5e5-e5e5e5e5e5e5",
+			"legalId": "198001292929",
 			"messageType": "DIGITAL_MAIL",
 			"status": "SENT"
 		},
 		{
 			"name": "John Wick",
+			"partyId": "f6f6f6f6-f6f6-f6f6-f6f6-f6f6f6f6f6f6",
+			"legalId": "198001303030",
 			"messageType": "DIGITAL_MAIL",
 			"status": "SENT"
 		},

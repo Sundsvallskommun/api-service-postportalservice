@@ -378,7 +378,7 @@ class HistoryMapperTest {
 		final var result = HISTORY_MAPPER.toRecipient(recipientEntity);
 
 		// Assert
-		assertThat(result).isNotNull().hasNoNullFieldsOrProperties();
+		assertThat(result).isNotNull().hasNoNullFieldsOrPropertiesExcept("legalId");
 		assertThat(result.getCity()).isEqualTo(city);
 		assertThat(result.getMessageType()).isEqualTo(messageType.name());
 		assertThat(result.getMobileNumber()).isEqualTo(phoneNumber);

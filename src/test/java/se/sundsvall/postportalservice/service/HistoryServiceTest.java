@@ -18,6 +18,7 @@ import static se.sundsvall.postportalservice.integration.db.converter.MessageTyp
 import generated.se.sundsvall.digitalregisteredletter.LetterStatus;
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -40,6 +41,7 @@ import se.sundsvall.postportalservice.integration.db.RecipientEntity;
 import se.sundsvall.postportalservice.integration.db.converter.MessageType;
 import se.sundsvall.postportalservice.integration.db.dao.MessageRepository;
 import se.sundsvall.postportalservice.integration.digitalregisteredletter.DigitalRegisteredLetterIntegration;
+import se.sundsvall.postportalservice.integration.party.PartyIntegration;
 import se.sundsvall.postportalservice.service.mapper.HistoryMapper;
 
 @ExtendWith(MockitoExtension.class)
@@ -57,12 +59,15 @@ class HistoryServiceTest {
 	@Mock
 	private DigitalRegisteredLetterIntegration digitalRegisteredLetterIntegrationMock;
 
+	@Mock
+	private PartyIntegration partyIntegrationMock;
+
 	@InjectMocks
 	private HistoryService historyService;
 
 	@AfterEach
 	void ensureNoUnexpectedMockInteractions() {
-		verifyNoMoreInteractions(messageRepositoryMock, pageMock, historyMapperMock, digitalRegisteredLetterIntegrationMock);
+		verifyNoMoreInteractions(messageRepositoryMock, pageMock, historyMapperMock, digitalRegisteredLetterIntegrationMock, partyIntegrationMock);
 	}
 
 	@ParameterizedTest
@@ -229,13 +234,15 @@ class HistoryServiceTest {
 	void getMessageDetails() {
 		final var messageId = "messageId";
 		final var userId = "userId";
+		final var partyId = "partyId123";
 		final var message = MessageEntity.create()
 			.withSubject("subject")
 			.withCreated(OffsetDateTime.now())
 			.withAttachments(List.of())
-			.withRecipients(List.of());
+			.withRecipients(List.of(new RecipientEntity().withPartyId(partyId)));
 
 		when(messageRepositoryMock.findByMunicipalityIdAndIdAndUserUsernameIgnoreCase(MUNICIPALITY_ID, messageId, userId)).thenReturn(Optional.of(message));
+		when(partyIntegrationMock.getLegalIds(MUNICIPALITY_ID, List.of(partyId))).thenReturn(Map.of(partyId, "legalId123"));
 
 		final var result = historyService.getMessageDetails(MUNICIPALITY_ID, userId, messageId);
 
@@ -243,12 +250,18 @@ class HistoryServiceTest {
 			assertThat(messageDetails.getSubject()).isEqualTo(message.getSubject());
 			assertThat(messageDetails.getSentAt()).isEqualTo(message.getCreated().toLocalDateTime());
 			assertThat(messageDetails.getAttachments()).isEmpty();
-			assertThat(messageDetails.getRecipients()).isEmpty();
+			assertThat(messageDetails.getRecipients()).hasSize(1).allSatisfy(recipient -> {
+				assertThat(recipient.getPartyId()).isEqualTo(partyId);
+				assertThat(recipient.getLegalId()).isEqualTo("legalId123");
+			});
 		});
+
 		verify(messageRepositoryMock).findByMunicipalityIdAndIdAndUserUsernameIgnoreCase(MUNICIPALITY_ID, messageId, userId);
+		verify(partyIntegrationMock).getLegalIds(MUNICIPALITY_ID, List.of(partyId));
 		verify(historyMapperMock).toMessageDetails(message);
 		verify(historyMapperMock).toAttachmentList(message.getAttachments());
 		verify(historyMapperMock).toRecipientList(message.getRecipients());
+		verify(historyMapperMock).toRecipient(message.getRecipients().getFirst());
 	}
 
 	@Test
@@ -269,10 +282,11 @@ class HistoryServiceTest {
 	void getMessageDetails_withDigitalRegisteredLetterAndSigningStatus() {
 		final var messageId = "messageId";
 		final var letterId = "letterId123";
+		final var partyId = "partyId123";
 		final var userId = "userId";
 		final var letterState = "letterState";
 		final var signingProcessState = "signingProcessState";
-		final var recipientEntity = new RecipientEntity().withExternalId(letterId);
+		final var recipientEntity = new RecipientEntity().withPartyId(partyId).withExternalId(letterId);
 		final var message = MessageEntity.create()
 			.withSubject("subject")
 			.withCreated(OffsetDateTime.now())
@@ -305,6 +319,7 @@ class HistoryServiceTest {
 		});
 		verify(messageRepositoryMock).findByMunicipalityIdAndIdAndUserUsernameIgnoreCase(MUNICIPALITY_ID, messageId, userId);
 		verify(digitalRegisteredLetterIntegrationMock).getLetterStatuses(MUNICIPALITY_ID, List.of(letterId));
+		verify(partyIntegrationMock).getLegalIds(MUNICIPALITY_ID, List.of(partyId));
 		verify(historyMapperMock).toMessageDetails(message);
 		verify(historyMapperMock).toAttachmentList(message.getAttachments());
 		verify(historyMapperMock).toRecipientList(message.getRecipients());
@@ -317,7 +332,8 @@ class HistoryServiceTest {
 		final var messageId = "messageId";
 		final var letterId = "letterId123";
 		final var userId = "userId";
-		final var recipientEntity = new RecipientEntity().withExternalId(letterId);
+		final var partyId = "partyId123";
+		final var recipientEntity = new RecipientEntity().withPartyId(partyId).withExternalId(letterId);
 		final var message = MessageEntity.create()
 			.withSubject("subject")
 			.withCreated(OffsetDateTime.now())
@@ -338,12 +354,136 @@ class HistoryServiceTest {
 			assertThat(messageDetails.getRecipients()).hasSize(1);
 			assertThat(messageDetails.getSigningStatus()).isNull();
 		});
+		verify(partyIntegrationMock).getLegalIds(MUNICIPALITY_ID, List.of(partyId));
 		verify(messageRepositoryMock).findByMunicipalityIdAndIdAndUserUsernameIgnoreCase(MUNICIPALITY_ID, messageId, userId);
 		verify(digitalRegisteredLetterIntegrationMock).getLetterStatuses(MUNICIPALITY_ID, List.of(letterId));
 		verify(historyMapperMock).toMessageDetails(message);
 		verify(historyMapperMock).toAttachmentList(message.getAttachments());
 		verify(historyMapperMock).toRecipientList(message.getRecipients());
 		verify(historyMapperMock).toRecipient(recipientEntity);
+	}
+
+	@Test
+	void getMessageDetails_withMixOfRecipientsWithAndWithoutPartyIds() {
+		final var messageId = "messageId";
+		final var userId = "userId";
+		final var partyId1 = "partyId1";
+		final var partyId2 = "partyId2";
+		// Recipient with partyId (SNAIL_MAIL/DIGITAL_MAIL)
+		final var recipientWithPartyId1 = new RecipientEntity().withPartyId(partyId1);
+		final var recipientWithPartyId2 = new RecipientEntity().withPartyId(partyId2);
+		// Recipient without partyId (SMS)
+		final var recipientWithoutPartyId = new RecipientEntity().withPartyId(null).withPhoneNumber("+46701234567");
+		final var message = MessageEntity.create()
+			.withSubject("subject")
+			.withCreated(OffsetDateTime.now())
+			.withAttachments(List.of())
+			.withRecipients(List.of(recipientWithPartyId1, recipientWithoutPartyId, recipientWithPartyId2));
+
+		when(messageRepositoryMock.findByMunicipalityIdAndIdAndUserUsernameIgnoreCase(MUNICIPALITY_ID, messageId, userId)).thenReturn(Optional.of(message));
+		// Only partyIds that are non-null should be sent to party integration
+		when(partyIntegrationMock.getLegalIds(MUNICIPALITY_ID, List.of(partyId1, partyId2))).thenReturn(Map.of(
+			partyId1, "legalId1",
+			partyId2, "legalId2"));
+
+		final var result = historyService.getMessageDetails(MUNICIPALITY_ID, userId, messageId);
+
+		assertThat(result).isNotNull().satisfies(messageDetails -> {
+			assertThat(messageDetails.getRecipients()).hasSize(3);
+			// Verify recipient with partyId1 has legalId
+			assertThat(messageDetails.getRecipients().getFirst().getPartyId()).isEqualTo(partyId1);
+			assertThat(messageDetails.getRecipients().getFirst().getLegalId()).isEqualTo("legalId1");
+			// Verify recipient without partyId has no legalId
+			assertThat(messageDetails.getRecipients().get(1).getPartyId()).isNull();
+			assertThat(messageDetails.getRecipients().get(1).getLegalId()).isNull();
+			// Verify recipient with partyId2 has legalId
+			assertThat(messageDetails.getRecipients().getLast().getPartyId()).isEqualTo(partyId2);
+			assertThat(messageDetails.getRecipients().getLast().getLegalId()).isEqualTo("legalId2");
+		});
+
+		verify(messageRepositoryMock).findByMunicipalityIdAndIdAndUserUsernameIgnoreCase(MUNICIPALITY_ID, messageId, userId);
+		verify(partyIntegrationMock).getLegalIds(MUNICIPALITY_ID, List.of(partyId1, partyId2));
+		verify(historyMapperMock).toMessageDetails(message);
+		verify(historyMapperMock).toAttachmentList(message.getAttachments());
+		verify(historyMapperMock).toRecipientList(message.getRecipients());
+		verify(historyMapperMock).toRecipient(recipientWithPartyId1);
+		verify(historyMapperMock).toRecipient(recipientWithoutPartyId);
+		verify(historyMapperMock).toRecipient(recipientWithPartyId2);
+	}
+
+	@Test
+	void getMessageDetails_withNoRecipientsHavingPartyIds() {
+		final var messageId = "messageId";
+		final var userId = "userId";
+		// All recipients are SMS (no partyIds)
+		final var smsRecipient1 = new RecipientEntity().withPartyId(null).withPhoneNumber("+46701234567");
+		final var smsRecipient2 = new RecipientEntity().withPartyId(null).withPhoneNumber("+46709876543");
+		final var message = MessageEntity.create()
+			.withSubject("subject")
+			.withCreated(OffsetDateTime.now())
+			.withAttachments(List.of())
+			.withRecipients(List.of(smsRecipient1, smsRecipient2));
+
+		when(messageRepositoryMock.findByMunicipalityIdAndIdAndUserUsernameIgnoreCase(MUNICIPALITY_ID, messageId, userId)).thenReturn(Optional.of(message));
+		// Empty list should be sent to party integration when no partyIds
+		when(partyIntegrationMock.getLegalIds(MUNICIPALITY_ID, emptyList())).thenReturn(Map.of());
+
+		final var result = historyService.getMessageDetails(MUNICIPALITY_ID, userId, messageId);
+
+		assertThat(result).isNotNull().satisfies(messageDetails -> {
+			assertThat(messageDetails.getRecipients()).hasSize(2);
+			assertThat(messageDetails.getRecipients()).allSatisfy(recipient -> {
+				assertThat(recipient.getPartyId()).isNull();
+				assertThat(recipient.getLegalId()).isNull();
+			});
+		});
+
+		verify(messageRepositoryMock).findByMunicipalityIdAndIdAndUserUsernameIgnoreCase(MUNICIPALITY_ID, messageId, userId);
+		verify(partyIntegrationMock).getLegalIds(MUNICIPALITY_ID, emptyList());
+		verify(historyMapperMock).toMessageDetails(message);
+		verify(historyMapperMock).toAttachmentList(message.getAttachments());
+		verify(historyMapperMock).toRecipientList(message.getRecipients());
+		verify(historyMapperMock).toRecipient(smsRecipient1);
+		verify(historyMapperMock).toRecipient(smsRecipient2);
+	}
+
+	@Test
+	void getMessageDetails_withPartyIdNotFoundInLegalIdMap() {
+		final var messageId = "messageId";
+		final var userId = "userId";
+		final var partyId1 = "partyId1";
+		final var partyId2 = "partyId2";
+		final var recipient1 = new RecipientEntity().withPartyId(partyId1);
+		final var recipient2 = new RecipientEntity().withPartyId(partyId2);
+		final var message = MessageEntity.create()
+			.withSubject("subject")
+			.withCreated(OffsetDateTime.now())
+			.withAttachments(List.of())
+			.withRecipients(List.of(recipient1, recipient2));
+
+		when(messageRepositoryMock.findByMunicipalityIdAndIdAndUserUsernameIgnoreCase(MUNICIPALITY_ID, messageId, userId)).thenReturn(Optional.of(message));
+		// Party integration returns only one of the partyIds
+		when(partyIntegrationMock.getLegalIds(MUNICIPALITY_ID, List.of(partyId1, partyId2))).thenReturn(Map.of(partyId1, "legalId1"));
+
+		final var result = historyService.getMessageDetails(MUNICIPALITY_ID, userId, messageId);
+
+		assertThat(result).isNotNull().satisfies(messageDetails -> {
+			assertThat(messageDetails.getRecipients()).hasSize(2);
+			// First recipient should have legalId
+			assertThat(messageDetails.getRecipients().getFirst().getPartyId()).isEqualTo(partyId1);
+			assertThat(messageDetails.getRecipients().getFirst().getLegalId()).isEqualTo("legalId1");
+			// Second recipient should have null legalId (not found in map)
+			assertThat(messageDetails.getRecipients().getLast().getPartyId()).isEqualTo(partyId2);
+			assertThat(messageDetails.getRecipients().getLast().getLegalId()).isNull();
+		});
+
+		verify(messageRepositoryMock).findByMunicipalityIdAndIdAndUserUsernameIgnoreCase(MUNICIPALITY_ID, messageId, userId);
+		verify(partyIntegrationMock).getLegalIds(MUNICIPALITY_ID, List.of(partyId1, partyId2));
+		verify(historyMapperMock).toMessageDetails(message);
+		verify(historyMapperMock).toAttachmentList(message.getAttachments());
+		verify(historyMapperMock).toRecipientList(message.getRecipients());
+		verify(historyMapperMock).toRecipient(recipient1);
+		verify(historyMapperMock).toRecipient(recipient2);
 	}
 
 	@Test

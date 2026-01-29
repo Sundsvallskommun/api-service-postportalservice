@@ -195,7 +195,7 @@ class MessageDetailsTest {
 	@Test
 	void MessageDetails_RecipientDetails_constructorTest() {
 		assertThat(new MessageDetails.RecipientDetails()).hasAllNullFieldsOrProperties();
-		assertThat(new MessageDetails.RecipientDetails()).hasOnlyFields("name", "partyId", "mobileNumber", "streetAddress", "zipCode", "city", "messageType", "status");
+		assertThat(new MessageDetails.RecipientDetails()).hasOnlyFields("name", "partyId", "legalId", "mobileNumber", "streetAddress", "zipCode", "city", "messageType", "status");
 	}
 
 }

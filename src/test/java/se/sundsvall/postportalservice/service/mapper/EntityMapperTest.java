@@ -27,11 +27,11 @@ class EntityMapperTest {
 
 	@Test
 	void toRecipientEntity_smsRecipient() {
-		var smsRecipient = new SmsRecipient()
+		final var smsRecipient = new SmsRecipient()
 			.withPartyId(UUID.randomUUID().toString())
 			.withPhoneNumber(MOBILE_NUMBER);
 
-		var result = entityMapper.toRecipientEntity(smsRecipient);
+		final var result = entityMapper.toRecipientEntity(smsRecipient);
 
 		assertThat(result).isNotNull();
 		assertThat(result.getPartyId()).isEqualTo(smsRecipient.getPartyId());
@@ -42,11 +42,11 @@ class EntityMapperTest {
 
 	@Test
 	void toRecipientEntity_recipient_digitalMail() {
-		var recipient = new Recipient()
+		final var recipient = new Recipient()
 			.withPartyId(UUID.randomUUID().toString())
 			.withDeliveryMethod(Recipient.DeliveryMethod.DIGITAL_MAIL);
 
-		var result = entityMapper.toRecipientEntity(recipient);
+		final var result = entityMapper.toRecipientEntity(recipient);
 
 		assertThat(result).isNotNull();
 		assertThat(result.getPartyId()).isEqualTo(recipient.getPartyId());
@@ -64,7 +64,7 @@ class EntityMapperTest {
 
 	@Test
 	void toRecipientEntity_recipient_snailMail() {
-		var address = new Address()
+		final var address = new Address()
 			.withFirstName("First")
 			.withLastName("Last")
 			.withStreet("Street 1")
@@ -73,12 +73,12 @@ class EntityMapperTest {
 			.withZipCode("12345")
 			.withCity("City")
 			.withCountry("Country");
-		var recipient = new Recipient()
+		final var recipient = new Recipient()
 			.withPartyId(UUID.randomUUID().toString())
 			.withAddress(address)
 			.withDeliveryMethod(Recipient.DeliveryMethod.SNAIL_MAIL);
 
-		var result = entityMapper.toRecipientEntity(recipient);
+		final var result = entityMapper.toRecipientEntity(recipient);
 
 		assertThat(result).isNotNull();
 		assertThat(result.getPartyId()).isEqualTo(recipient.getPartyId());
@@ -119,7 +119,7 @@ class EntityMapperTest {
 
 	@Test
 	void toRecipientEntity_fromAddress() {
-		var address = new Address()
+		final var address = new Address()
 			.withFirstName("john")
 			.withLastName("doe")
 			.withStreet("Main street 1")
@@ -129,7 +129,7 @@ class EntityMapperTest {
 			.withCity("Town")
 			.withCountry("Countryland");
 
-		var result = entityMapper.toRecipientEntity(address);
+		final var result = entityMapper.toRecipientEntity(address);
 
 		assertThat(result).isNotNull();
 		assertThat(result.getFirstName()).isEqualTo(address.getFirstName());
@@ -146,19 +146,24 @@ class EntityMapperTest {
 
 	@Test
 	void toDigitalMailRecipientEntity() {
-		var partyId = UUID.randomUUID().toString();
+		final var citizenExtended = new CitizenExtended()
+			.givenname("John")
+			.lastname("Doe");
+		final var partyId = UUID.randomUUID().toString();
 
-		var result = entityMapper.toDigitalMailRecipientEntity(partyId);
+		final var result = entityMapper.toDigitalMailRecipientEntity(partyId, citizenExtended);
 
 		assertThat(result).isNotNull();
 		assertThat(result.getPartyId()).isEqualTo(partyId);
 		assertThat(result.getMessageType()).isEqualTo(MessageType.DIGITAL_MAIL);
 		assertThat(result.getStatus()).isEqualTo(PENDING);
+		assertThat(result.getFirstName()).isEqualTo("John");
+		assertThat(result.getLastName()).isEqualTo("Doe");
 	}
 
 	@Test
 	void toSnailMailRecipientEntity() {
-		var citizenExtended = new CitizenExtended()
+		final var citizenExtended = new CitizenExtended()
 			.addresses(List.of(new CitizenAddress()
 				.addressType("POPULATION_REGISTRATION_ADDRESS")
 				.status("ACTIVE")
@@ -171,7 +176,7 @@ class EntityMapperTest {
 			.givenname("John")
 			.lastname("Doe");
 
-		var result = entityMapper.toSnailMailRecipientEntity(citizenExtended);
+		final var result = entityMapper.toSnailMailRecipientEntity(citizenExtended);
 
 		assertThat(result).isNotNull();
 		assertThat(result.getFirstName()).isEqualTo("John");
@@ -188,7 +193,7 @@ class EntityMapperTest {
 
 	@Test
 	void toSnailMailRecipientEntity_noValidAddress() {
-		var citizenExtended = new CitizenExtended()
+		final var citizenExtended = new CitizenExtended()
 			.addresses(List.of(new CitizenAddress()
 				.addressType("INVALID_ADDRESS")
 				.status("ACTIVE")
@@ -201,18 +206,18 @@ class EntityMapperTest {
 			.givenname("John")
 			.lastname("Doe");
 
-		var result = entityMapper.toSnailMailRecipientEntity(citizenExtended);
+		final var result = entityMapper.toSnailMailRecipientEntity(citizenExtended);
 
 		assertThat(result).isNull();
 	}
 
 	@Test
 	void toUndeliverableRecipientEntity() {
-		var partyId = UUID.randomUUID();
-		var citizenExtended = new CitizenExtended()
+		final var partyId = UUID.randomUUID();
+		final var citizenExtended = new CitizenExtended()
 			.personId(partyId);
 
-		var result = entityMapper.toUndeliverableRecipientEntity(citizenExtended);
+		final var result = entityMapper.toUndeliverableRecipientEntity(citizenExtended);
 
 		assertThat(result).isNotNull();
 		assertThat(result.getPartyId()).isEqualTo(partyId.toString());

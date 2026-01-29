@@ -1,0 +1,13 @@
+{
+	"request": {
+		"method": "POST",
+		"url": "/api-party/2281/PRIVATE/legalIds"
+	},
+	"response": {
+		"status": 200,
+		"headers": {
+			"Content-Type": "application/json"
+		},
+		"bodyFileName": "test06_getMessageDetailsForDigitalRegisteredLetterWithSigningStatus/responses/api-party-getpersonnumbers.json"
+	}
+}

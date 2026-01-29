@@ -154,6 +154,15 @@ class PrecheckServiceTest {
 
 		when(partyIntegrationMock.getPartyIds(MUNICIPALITY_ID, legalIds)).thenReturn(legalIdToPartyIdMap);
 
+		final var citizenExtended = new CitizenExtended()
+			.personId(UUID.fromString(partyId))
+			.givenname("givenName")
+			.lastname("lastName")
+			.addresses(List.of(new CitizenAddress()
+				.addressType("POPULATION_REGISTRATION_ADDRESS")));
+
+		when(citizenIntegrationMock.getCitizens(MUNICIPALITY_ID, partyIds)).thenReturn(List.of(citizenExtended));
+
 		// Mock mailbox status - digital mailbox available
 		final var mailboxStatus = new MailboxStatus(List.of(partyId), List.of());
 		when(mailboxStatusServiceMock.checkMailboxStatus(MUNICIPALITY_ID, partyIds)).thenReturn(mailboxStatus);
@@ -161,13 +170,14 @@ class PrecheckServiceTest {
 		final var result = precheckService.precheckLegalIds(MUNICIPALITY_ID, legalIds);
 
 		assertThat(result).hasSize(1)
-			.extracting(RecipientEntity::getPartyId, RecipientEntity::getMessageType, RecipientEntity::getStatus)
-			.containsExactly(tuple(partyId, MessageType.DIGITAL_MAIL, "PENDING"));
+			.extracting(RecipientEntity::getPartyId, RecipientEntity::getMessageType, RecipientEntity::getStatus, RecipientEntity::getFirstName, RecipientEntity::getLastName)
+			.containsExactly(tuple(partyId, MessageType.DIGITAL_MAIL, "PENDING", "givenName", "lastName"));
 
 		// Verify
 		verify(partyIntegrationMock).getPartyIds(MUNICIPALITY_ID, legalIds);
 		verify(mailboxStatusServiceMock).checkMailboxStatus(MUNICIPALITY_ID, partyIds);
-		verify(entityMapperMock).toDigitalMailRecipientEntity(any());
+		verify(entityMapperMock).toDigitalMailRecipientEntity(any(), any());
+		verify(citizenIntegrationMock).getCitizens(MUNICIPALITY_ID, partyIds);
 	}
 
 	@Test
@@ -322,7 +332,7 @@ class PrecheckServiceTest {
 
 	@Test
 	void precheckCSV(@Load(value = "/testfile/legalIds.csv") final String csv) throws IOException {
-		var multipartFileMock = Mockito.mock(MultipartFile.class);
+		final var multipartFileMock = Mockito.mock(MultipartFile.class);
 		when(multipartFileMock.getInputStream()).thenReturn(new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8)));
 
 		// Mock partyIntegration - one entry has no partyId
@@ -336,7 +346,7 @@ class PrecheckServiceTest {
 
 		when(partyIntegrationMock.getPartyIds(eq(MUNICIPALITY_ID), anyList())).thenReturn(partyIdMap);
 
-		var result = precheckService.precheckCSV(MUNICIPALITY_ID, multipartFileMock);
+		final var result = precheckService.precheckCSV(MUNICIPALITY_ID, multipartFileMock);
 
 		assertThat(result.duplicateEntries()).isEmpty();
 		assertThat(result.rejectedEntries()).hasSize(1).contains("201901062388");
@@ -346,7 +356,7 @@ class PrecheckServiceTest {
 
 	@Test
 	void precheckCSV_withDuplicates(@Load(value = "/testfile/legalIds-duplicates.csv") final String csv) throws IOException {
-		var multipartFileMock = Mockito.mock(MultipartFile.class);
+		final var multipartFileMock = Mockito.mock(MultipartFile.class);
 		when(multipartFileMock.getInputStream()).thenReturn(new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8)));
 
 		// Mock partyIntegration - all entries have partyIds
@@ -356,7 +366,7 @@ class PrecheckServiceTest {
 
 		when(partyIntegrationMock.getPartyIds(eq(MUNICIPALITY_ID), anyList())).thenReturn(partyIdMap);
 
-		var result = precheckService.precheckCSV(MUNICIPALITY_ID, multipartFileMock);
+		final var result = precheckService.precheckCSV(MUNICIPALITY_ID, multipartFileMock);
 
 		assertThat(result.duplicateEntries()).hasSize(2)
 			.containsEntry("201901012391", 2)
@@ -368,7 +378,7 @@ class PrecheckServiceTest {
 
 	@Test
 	void precheckCSV_withInvalidFormat(@Load(value = "/testfile/legalIds-invalid-format.csv") final String csv) throws IOException {
-		var multipartFileMock = Mockito.mock(MultipartFile.class);
+		final var multipartFileMock = Mockito.mock(MultipartFile.class);
 		when(multipartFileMock.getInputStream()).thenReturn(new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8)));
 
 		assertThatThrownBy(() -> precheckService.precheckCSV(MUNICIPALITY_ID, multipartFileMock))
@@ -378,7 +388,7 @@ class PrecheckServiceTest {
 
 	@Test
 	void precheckCSV_allEntriesWithoutPartyId(@Load(value = "/testfile/legalIds.csv") final String csv) throws IOException {
-		var multipartFileMock = Mockito.mock(MultipartFile.class);
+		final var multipartFileMock = Mockito.mock(MultipartFile.class);
 		when(multipartFileMock.getInputStream()).thenReturn(new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8)));
 
 		// Mock partyIntegration to throw exception when no partyIds can be found
@@ -394,7 +404,7 @@ class PrecheckServiceTest {
 
 	@Test
 	void precheckCSV_noValidPartyIds(@Load(value = "/testfile/legalIds.csv") final String csv) throws IOException {
-		var multipartFileMock = Mockito.mock(MultipartFile.class);
+		final var multipartFileMock = Mockito.mock(MultipartFile.class);
 		when(multipartFileMock.getInputStream()).thenReturn(new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8)));
 
 		// Mock partyIntegration - all entries have null partyId

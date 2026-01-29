@@ -128,14 +128,15 @@ public class PrecheckService {
 		// Check digital mailbox availability
 		final var mailboxStatus = mailboxStatusService.checkMailboxStatus(municipalityId, partyIdMapping.partyIds());
 
-		List<CitizenExtended> citizens = new ArrayList<>();
-		// Get citizen details for those without digital mailboxes
-		if (!mailboxStatus.unreachable().isEmpty()) {  // No need to call if we have no unreachable partyIds
-			citizens = citizenIntegration.getCitizens(municipalityId, mailboxStatus.unreachable());
-		}
+		// Get citizen details for all partyIds
+		final var citizens = citizenIntegration.getCitizens(municipalityId, partyIdMapping.partyIds());
 
-		// Convert CitizenExtended to SimplifiedCitizen and categorize by eligibility
-		final var simplifiedCitizens = CitizenCategorizationHelper.fromCitizenExtended(citizens, partyIdMapping);
+		// Convert CitizenExtended to SimplifiedCitizen and categorize by eligibility, filtering only unreachable ones as the
+		// others are handled directly
+		final var simplifiedCitizens = CitizenCategorizationHelper.fromCitizenExtended(citizens.stream()
+			.filter(citizenExtended -> mailboxStatus.unreachable().contains(String.valueOf(citizenExtended.getPersonId())))
+			.toList(), partyIdMapping);
+
 		final var categorized = CitizenCategorizationHelper.categorizeCitizens(simplifiedCitizens);
 
 		// Convert categorized citizens to recipient entities
@@ -151,6 +152,7 @@ public class PrecheckService {
 	 *
 	 * @param  digitalMailPartyIds partyIds eligible for digital mail
 	 * @param  categorized         categorized citizens
+	 * @param  allCitizens         all retrieved citizen details
 	 * @return                     list of recipient entities
 	 */
 	private List<RecipientEntity> createRecipientEntities(final List<String> digitalMailPartyIds, final CategorizedCitizens categorized, final List<CitizenExtended> allCitizens) {
@@ -162,7 +164,7 @@ public class PrecheckService {
 				Function.identity(),
 				(existing, _) -> existing));
 
-		final var digitalMailRecipients = createDigitalMailRecipients(digitalMailPartyIds);
+		final var digitalMailRecipients = createDigitalMailRecipients(digitalMailPartyIds, citizenByPartyId);
 		final var snailMailRecipients = createSnailMailRecipients(categorized.eligibleAdults(), citizenByPartyId);
 		final var ineligibleMinorRecipients = createIneligibleMinorRecipients(categorized.ineligibleMinors(), citizenByPartyId);
 		final var undeliverableRecipients = createUndeliverableRecipients(categorized.notRegisteredInSweden(), citizenByPartyId);
@@ -172,9 +174,9 @@ public class PrecheckService {
 			.toList();
 	}
 
-	private Stream<RecipientEntity> createDigitalMailRecipients(final List<String> partyIds) {
+	private Stream<RecipientEntity> createDigitalMailRecipients(final List<String> partyIds, final Map<String, CitizenExtended> citizenByPartyId) {
 		return of(partyIds).orElse(emptyList()).stream()
-			.map(entityMapper::toDigitalMailRecipientEntity)
+			.map(partyId -> entityMapper.toDigitalMailRecipientEntity(partyId, citizenByPartyId.get(partyId)))
 			.filter(Objects::nonNull);
 	}
 
@@ -212,7 +214,7 @@ public class PrecheckService {
 	 * @param  categorizedCitizens categorized citizens by eligibility
 	 * @return                     precheck response with recipients and delivery methods
 	 */
-	private PrecheckResponse createPrecheckResponse(MailboxStatusService.MailboxStatus mailboxStatus, final CategorizedCitizens categorizedCitizens) {
+	private PrecheckResponse createPrecheckResponse(final MailboxStatusService.MailboxStatus mailboxStatus, final CategorizedCitizens categorizedCitizens) {
 		// Create map for partyId -> reason lookups
 		final var reasonByPartyId = new LinkedHashMap<String, String>();
 		mailboxStatus.unreachableWithReason().forEach(unreachable -> reasonByPartyId.put(unreachable.partyId(), unreachable.reason()));
