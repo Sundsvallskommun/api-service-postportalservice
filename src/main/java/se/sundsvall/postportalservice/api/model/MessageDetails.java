@@ -222,6 +222,9 @@ public class MessageDetails {
 		@Schema(description = "The recipients party ID", accessMode = Schema.AccessMode.READ_ONLY, examples = "1234567890")
 		private String partyId;
 
+		@Schema(description = "The recipients legal ID", accessMode = Schema.AccessMode.READ_ONLY, examples = "198001011234")
+		private String legalId;
+
 		@Schema(description = "Mobile number", accessMode = Schema.AccessMode.READ_ONLY, examples = "+46701234567")
 		private String mobileNumber;
 
@@ -300,6 +303,19 @@ public class MessageDetails {
 			return this;
 		}
 
+		public String getLegalId() {
+			return legalId;
+		}
+
+		public void setLegalId(final String legalId) {
+			this.legalId = legalId;
+		}
+
+		public RecipientDetails withLegalId(final String legalId) {
+			this.legalId = legalId;
+			return this;
+		}
+
 		public String getStreetAddress() {
 			return streetAddress;
 		}
@@ -353,10 +369,25 @@ public class MessageDetails {
 		}
 
 		@Override
+		public boolean equals(final Object o) {
+			if (o == null || getClass() != o.getClass())
+				return false;
+			final RecipientDetails that = (RecipientDetails) o;
+			return Objects.equals(name, that.name) && Objects.equals(partyId, that.partyId) && Objects.equals(legalId, that.legalId) && Objects.equals(mobileNumber, that.mobileNumber) && Objects.equals(
+				streetAddress, that.streetAddress) && Objects.equals(zipCode, that.zipCode) && Objects.equals(city, that.city) && Objects.equals(messageType, that.messageType) && Objects.equals(status, that.status);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(name, partyId, legalId, mobileNumber, streetAddress, zipCode, city, messageType, status);
+		}
+
+		@Override
 		public String toString() {
 			return "RecipientDetails{" +
 				"name='" + name + '\'' +
 				", partyId='" + partyId + '\'' +
+				", legalId='" + legalId + '\'' +
 				", mobileNumber='" + mobileNumber + '\'' +
 				", streetAddress='" + streetAddress + '\'' +
 				", zipCode='" + zipCode + '\'' +
@@ -365,20 +396,5 @@ public class MessageDetails {
 				", status='" + status + '\'' +
 				'}';
 		}
-
-		@Override
-		public boolean equals(final Object o) {
-			if (o == null || getClass() != o.getClass())
-				return false;
-			final RecipientDetails that = (RecipientDetails) o;
-			return Objects.equals(name, that.name) && Objects.equals(partyId, that.partyId) && Objects.equals(mobileNumber, that.mobileNumber) && Objects.equals(streetAddress, that.streetAddress) && Objects.equals(
-				zipCode, that.zipCode) && Objects.equals(city, that.city) && Objects.equals(messageType, that.messageType) && Objects.equals(status, that.status);
-		}
-
-		@Override
-		public int hashCode() {
-			return Objects.hash(name, partyId, mobileNumber, streetAddress, zipCode, city, messageType, status);
-		}
 	}
-
 }

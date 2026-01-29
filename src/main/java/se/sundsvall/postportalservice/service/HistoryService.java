@@ -6,6 +6,7 @@ import static se.sundsvall.postportalservice.integration.db.converter.MessageTyp
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.springframework.data.domain.Page;
@@ -22,6 +23,7 @@ import se.sundsvall.postportalservice.api.model.SigningInformation;
 import se.sundsvall.postportalservice.integration.db.MessageEntity;
 import se.sundsvall.postportalservice.integration.db.dao.MessageRepository;
 import se.sundsvall.postportalservice.integration.digitalregisteredletter.DigitalRegisteredLetterIntegration;
+import se.sundsvall.postportalservice.integration.party.PartyIntegration;
 import se.sundsvall.postportalservice.service.mapper.HistoryMapper;
 
 @Service
@@ -29,14 +31,16 @@ public class HistoryService {
 	private final DigitalRegisteredLetterIntegration digitalRegisteredLetterIntegration;
 	private final MessageRepository messageRepository;
 	private final HistoryMapper historyMapper;
+	private final PartyIntegration partyIntegration;
 
 	public HistoryService(
 		final DigitalRegisteredLetterIntegration digitalRegisteredLetterIntegration,
 		final MessageRepository messageRepository,
-		final HistoryMapper historyMapper) {
+		final HistoryMapper historyMapper, final PartyIntegration partyIntegration) {
 		this.digitalRegisteredLetterIntegration = digitalRegisteredLetterIntegration;
 		this.messageRepository = messageRepository;
 		this.historyMapper = historyMapper;
+		this.partyIntegration = partyIntegration;
 	}
 
 	public Messages getUserMessages(final String municipalityId, final String username, final Pageable pageable) {
@@ -81,6 +85,16 @@ public class HistoryService {
 			.orElseThrow(() -> Problem.valueOf(NOT_FOUND, "Message with id '%s' and municipalityId '%s' for user with username '%s' not found".formatted(messageId, municipalityId, username)));
 
 		final var messageDetails = historyMapper.toMessageDetails(messageEntity);
+
+		// Decorate recipients with legalIds since they are not stored in the message entity
+		final var partyIds = messageDetails.getRecipients().stream()
+			.map(MessageDetails.RecipientDetails::getPartyId)
+			.filter(Objects::nonNull)
+			.toList();
+		final var partyIdLegalIdMap = partyIntegration.getLegalIds(municipalityId, partyIds);
+		messageDetails.getRecipients().stream()
+			.filter(recipient -> recipient.getPartyId() != null)
+			.forEach(recipient -> recipient.setLegalId(partyIdLegalIdMap.get(recipient.getPartyId())));
 
 		// Decorate with signing information if this is a digital registered letter
 		if (DIGITAL_REGISTERED_LETTER.equals(messageEntity.getMessageType())) {

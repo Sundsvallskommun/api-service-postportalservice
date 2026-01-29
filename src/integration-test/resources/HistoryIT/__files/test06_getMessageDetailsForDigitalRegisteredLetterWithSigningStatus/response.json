@@ -8,6 +8,8 @@
 	"attachments": [],
 	"recipients": [
 		{
+			"partyId": "f2f2f2f2-f2f2-f2f2-f2f2-f2f2f2f2f2f2",
+			"legalId": "198001363636",
 			"messageType": "DIGITAL_REGISTERED_LETTER",
 			"status": "SENT"
 		}

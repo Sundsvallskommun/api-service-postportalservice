@@ -9,7 +9,7 @@
 	</parent>
 	<groupId>se.sundsvall.postportalservice</groupId>
 	<artifactId>api-service-postportalservice</artifactId>
-	<version>1.4</version>
+	<version>1.5</version>
 	<name>api-service-postportalservice</name>
 	<properties>
 		<generated-sources-path>${project.build.directory}/generated-sources</generated-sources-path>

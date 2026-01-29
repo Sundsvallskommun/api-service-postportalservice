@@ -31,27 +31,28 @@ public class EntityMapper {
 		if (recipient == null) {
 			return null;
 		}
-		var messageType = switch (recipient.getDeliveryMethod()) {
+		final var messageType = switch (recipient.getDeliveryMethod()) {
 			case DIGITAL_MAIL -> MessageType.DIGITAL_MAIL;
 			case SNAIL_MAIL -> MessageType.SNAIL_MAIL;
 			default -> null;
 		};
 
-		var recipientEntity = new RecipientEntity();
+		final var recipientEntity = new RecipientEntity();
+		final var address = recipient.getAddress();
 
-		if (messageType == MessageType.SNAIL_MAIL) {
+		if (messageType == MessageType.SNAIL_MAIL && address != null) {
 			recipientEntity
-				.withFirstName(recipient.getAddress().getFirstName())
-				.withLastName(recipient.getAddress().getLastName())
-				.withStreetAddress(recipient.getAddress().getStreet())
-				.withApartmentNumber(recipient.getAddress().getApartmentNumber())
-				.withCareOf(recipient.getAddress().getCareOf())
-				.withZipCode(recipient.getAddress().getZipCode())
-				.withCity(recipient.getAddress().getCity())
-				.withCountry(recipient.getAddress().getCountry());
+				.withStreetAddress(address.getStreet())
+				.withApartmentNumber(address.getApartmentNumber())
+				.withCareOf(address.getCareOf())
+				.withZipCode(address.getZipCode())
+				.withCity(address.getCity())
+				.withCountry(address.getCountry());
 		}
 
 		return recipientEntity
+			.withFirstName(Optional.ofNullable(address).map(Address::getFirstName).orElse(null))
+			.withLastName(Optional.ofNullable(address).map(Address::getLastName).orElse(null))
 			.withMessageType(messageType)
 			.withStatus(PENDING)
 			.withPartyId(recipient.getPartyId());
@@ -73,8 +74,10 @@ public class EntityMapper {
 
 	}
 
-	public RecipientEntity toDigitalMailRecipientEntity(final String partyId) {
+	public RecipientEntity toDigitalMailRecipientEntity(final String partyId, final CitizenExtended citizenExtended) {
 		return Optional.ofNullable(partyId).map(id -> RecipientEntity.create()
+			.withFirstName(Optional.ofNullable(citizenExtended).map(CitizenExtended::getGivenname).orElse(null))
+			.withLastName(Optional.ofNullable(citizenExtended).map(CitizenExtended::getLastname).orElse(null))
 			.withPartyId(id)
 			.withMessageType(MessageType.DIGITAL_MAIL)
 			.withStatus(PENDING))
@@ -82,7 +85,7 @@ public class EntityMapper {
 	}
 
 	public RecipientEntity toSnailMailRecipientEntity(final CitizenExtended citizenExtended) {
-		var address = Optional.ofNullable(citizenExtended)
+		final var address = Optional.ofNullable(citizenExtended)
 			.map(CitizenExtended::getAddresses)
 			.orElse(emptyList())
 			.stream()
