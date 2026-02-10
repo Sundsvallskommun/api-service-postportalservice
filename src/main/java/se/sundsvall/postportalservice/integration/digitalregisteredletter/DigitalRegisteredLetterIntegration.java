@@ -11,6 +11,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Optional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
@@ -23,6 +25,8 @@ import se.sundsvall.postportalservice.service.util.RecipientId;
 
 @Component
 public class DigitalRegisteredLetterIntegration {
+
+	private static final Logger LOGGER = LoggerFactory.getLogger(DigitalRegisteredLetterIntegration.class);
 
 	private final DigitalRegisteredLetterClient client;
 	private final DigitalRegisteredLetterMapper mapper;
@@ -60,6 +64,7 @@ public class DigitalRegisteredLetterIntegration {
 
 	public void sendLetter(final MessageEntity messageEntity, final RecipientEntity recipientEntity) {
 		RecipientId.init(recipientEntity.getId());
+		LOGGER.info("Sending digital registered letter for recipientId: {} in municipalityId: {}", recipientEntity.getId(), messageEntity.getMunicipalityId());
 		try {
 			final var request = mapper.toLetterRequest(messageEntity, recipientEntity);
 			final var multipartFiles = mapper.toMultipartFiles(messageEntity.getAttachments());
@@ -69,9 +74,11 @@ public class DigitalRegisteredLetterIntegration {
 				multipartFiles);
 			recipientEntity.setExternalId(letter.getId());
 			recipientEntity.setStatus(letter.getStatus());
+			LOGGER.info("Successfully sent digital registered letter for recipientId: {}, externalId: {}, status: {}", recipientEntity.getId(), letter.getId(), letter.getStatus());
 		} catch (final Exception e) {
+			LOGGER.error("Failed to send digital registered letter for recipientId: {} in messageId: {}", recipientEntity.getId(), messageEntity.getId(), e);
 			recipientEntity.setStatus(FAILED);
-			recipientEntity.setStatusDetail(e.getMessage());
+			recipientEntity.setStatusDetail(e.getClass().getSimpleName() + ": " + e.getMessage());
 		}
 	}
 
