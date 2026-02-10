@@ -3,6 +3,7 @@ package se.sundsvall.postportalservice.integration.digitalregisteredletter;
 import static java.util.Collections.emptyList;
 import static org.springframework.util.CollectionUtils.isEmpty;
 import static org.zalando.problem.Status.INTERNAL_SERVER_ERROR;
+import static se.sundsvall.dept44.util.LogUtils.sanitizeForLogging;
 import static se.sundsvall.postportalservice.Constants.FAILED;
 import static se.sundsvall.postportalservice.service.util.IdentifierUtil.getIdentifierHeaderValue;
 
@@ -64,7 +65,7 @@ public class DigitalRegisteredLetterIntegration {
 
 	public void sendLetter(final MessageEntity messageEntity, final RecipientEntity recipientEntity) {
 		RecipientId.init(recipientEntity.getId());
-		LOGGER.info("Sending digital registered letter for recipientId: {} in municipalityId: {}", recipientEntity.getId(), messageEntity.getMunicipalityId());
+		LOGGER.info("Sending digital registered letter for recipientId: {} in municipalityId: {}", sanitizeForLogging(recipientEntity.getId()), sanitizeForLogging(messageEntity.getMunicipalityId()));
 		try {
 			final var request = mapper.toLetterRequest(messageEntity, recipientEntity);
 			final var multipartFiles = mapper.toMultipartFiles(messageEntity.getAttachments());
@@ -74,9 +75,9 @@ public class DigitalRegisteredLetterIntegration {
 				multipartFiles);
 			recipientEntity.setExternalId(letter.getId());
 			recipientEntity.setStatus(letter.getStatus());
-			LOGGER.info("Successfully sent digital registered letter for recipientId: {}, externalId: {}, status: {}", recipientEntity.getId(), letter.getId(), letter.getStatus());
+			LOGGER.info("Successfully sent digital registered letter for recipientId: {}, externalId: {}, status: {}", sanitizeForLogging(recipientEntity.getId()), sanitizeForLogging(letter.getId()), sanitizeForLogging(letter.getStatus()));
 		} catch (final Exception e) {
-			LOGGER.error("Failed to send digital registered letter for recipientId: {} in messageId: {}", recipientEntity.getId(), messageEntity.getId(), e);
+			LOGGER.error("Failed to send digital registered letter for recipientId: {} in messageId: {}", sanitizeForLogging(recipientEntity.getId()), sanitizeForLogging(messageEntity.getId()), e);
 			recipientEntity.setStatus(FAILED);
 			recipientEntity.setStatusDetail(e.getClass().getSimpleName() + ": " + e.getMessage());
 		}
