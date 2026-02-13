@@ -1,6 +1,6 @@
 {
 	"request": {
-		"url": "/api-digitalregisteredletter/2281/letters",
+		"urlPattern": "/api-digitalregisteredletter/2281/[^/]+/letters",
 		"method": "POST",
 		"headers": {
 			"Authorization": {

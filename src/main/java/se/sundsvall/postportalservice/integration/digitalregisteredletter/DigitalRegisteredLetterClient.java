@@ -33,9 +33,10 @@ import se.sundsvall.postportalservice.integration.digitalregisteredletter.config
 @CircuitBreaker(name = CLIENT_ID)
 public interface DigitalRegisteredLetterClient {
 
-	@PostMapping(path = "/{municipalityId}/eligibility/kivra", consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
+	@PostMapping(path = "/{municipalityId}/{organizationNumber}/eligibility/kivra", consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
 	List<String> checkKivraEligibility(
 		@PathVariable final String municipalityId,
+		@PathVariable final String organizationNumber,
 		@RequestBody final EligibilityRequest request);
 
 	@GetMapping(path = "/{municipalityId}/letters", produces = APPLICATION_JSON_VALUE)
@@ -45,10 +46,11 @@ public interface DigitalRegisteredLetterClient {
 	Letter getLetterById(@PathVariable final String municipalityId,
 		@PathVariable final String letterId);
 
-	@PostMapping(value = "/{municipalityId}/letters", consumes = MULTIPART_FORM_DATA_VALUE, produces = APPLICATION_JSON_VALUE)
+	@PostMapping(value = "/{municipalityId}/{organizationNumber}/letters", consumes = MULTIPART_FORM_DATA_VALUE, produces = APPLICATION_JSON_VALUE)
 	Letter sendLetter(
 		@RequestHeader(Identifier.HEADER_NAME) String identifier,
 		@PathVariable final String municipalityId,
+		@PathVariable final String organizationNumber,
 		@RequestPart(name = "letter") final LetterRequest letterRequest,
 		@RequestPart(name = "letterAttachments") final List<MultipartFile> files);
 

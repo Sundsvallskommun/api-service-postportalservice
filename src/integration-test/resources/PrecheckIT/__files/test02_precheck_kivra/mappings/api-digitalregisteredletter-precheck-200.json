@@ -1,6 +1,6 @@
 {
 	"request": {
-		"url": "/api-digitalregisteredletter/2281/eligibility/kivra",
+		"urlPattern": "/api-digitalregisteredletter/2281/[^/]+/eligibility/kivra",
 		"method": "POST",
 		"headers": {
 			"Authorization": {

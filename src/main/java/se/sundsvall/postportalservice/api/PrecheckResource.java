@@ -70,8 +70,10 @@ class PrecheckResource {
 	})
 	@PostMapping(value = "/kivra", consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
 	ResponseEntity<List<String>> checkKivraEligibility(
+		@RequestHeader(Identifier.HEADER_NAME) @ValidIdentifier final String xSentBy,
 		@ValidMunicipalityId @PathVariable final String municipalityId,
 		@RequestBody @Valid final KivraEligibilityRequest request) {
+		Identifier.set(Identifier.parse(xSentBy));
 		final var result = precheckService.precheckKivra(municipalityId, request);
 		return ok(result);
 	}

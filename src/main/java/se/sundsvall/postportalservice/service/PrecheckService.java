@@ -5,6 +5,7 @@ import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
 import static org.zalando.problem.Status.BAD_REQUEST;
 import static se.sundsvall.postportalservice.Constants.INELIGIBLE_MINOR;
+import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.ORGANIZATION_NUMBER;
 
 import generated.se.sundsvall.citizen.CitizenExtended;
 import java.util.ArrayList;
@@ -27,6 +28,7 @@ import se.sundsvall.postportalservice.api.model.PrecheckResponse.PrecheckRecipie
 import se.sundsvall.postportalservice.integration.citizen.CitizenIntegration;
 import se.sundsvall.postportalservice.integration.db.RecipientEntity;
 import se.sundsvall.postportalservice.integration.digitalregisteredletter.DigitalRegisteredLetterIntegration;
+import se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration;
 import se.sundsvall.postportalservice.integration.party.PartyIntegration;
 import se.sundsvall.postportalservice.service.mapper.EntityMapper;
 import se.sundsvall.postportalservice.service.util.CitizenCategorizationHelper;
@@ -44,18 +46,21 @@ public class PrecheckService {
 	private final MailboxStatusService mailboxStatusService;
 	private final EntityMapper entityMapper;
 	private final PartyIntegration partyIntegration;
+	private final MessagingSettingsIntegration messagingSettingsIntegration;
 
 	public PrecheckService(
 		final DigitalRegisteredLetterIntegration digitalRegisteredLetterIntegration,
 		final CitizenIntegration citizenIntegration,
 		final MailboxStatusService mailboxStatusService,
 		final EntityMapper entityMapper,
-		final PartyIntegration partyIntegration) {
+		final PartyIntegration partyIntegration,
+		final MessagingSettingsIntegration messagingSettingsIntegration) {
 		this.digitalRegisteredLetterIntegration = digitalRegisteredLetterIntegration;
 		this.citizenIntegration = citizenIntegration;
 		this.mailboxStatusService = mailboxStatusService;
 		this.entityMapper = entityMapper;
 		this.partyIntegration = partyIntegration;
+		this.messagingSettingsIntegration = messagingSettingsIntegration;
 	}
 
 	public PrecheckCsvResponse precheckCSV(final String municipalityId, final MultipartFile csvFile) {
@@ -144,7 +149,10 @@ public class PrecheckService {
 	}
 
 	public List<String> precheckKivra(final String municipalityId, final KivraEligibilityRequest request) {
-		return digitalRegisteredLetterIntegration.checkKivraEligibility(municipalityId, request.getPartyIds());
+		final var settingsMap = messagingSettingsIntegration.getMessagingSettingsForUser(municipalityId);
+		final var organizationNumber = Optional.ofNullable(settingsMap.get(ORGANIZATION_NUMBER)).orElseThrow(() -> Problem.valueOf(BAD_REQUEST, "Organization number is missing in messaging settings for municipalityId '%s'".formatted(municipalityId)));
+
+		return digitalRegisteredLetterIntegration.checkKivraEligibility(municipalityId, organizationNumber, request.getPartyIds());
 	}
 
 	/**

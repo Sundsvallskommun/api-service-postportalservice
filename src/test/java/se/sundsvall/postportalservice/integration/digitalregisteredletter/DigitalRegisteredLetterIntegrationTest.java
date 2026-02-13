@@ -22,6 +22,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,6 +38,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.multipart.MultipartFile;
 import org.zalando.problem.ThrowableProblem;
 import se.sundsvall.postportalservice.api.model.SigningInformation;
+import se.sundsvall.postportalservice.integration.db.DepartmentEntity;
 import se.sundsvall.postportalservice.integration.db.MessageEntity;
 import se.sundsvall.postportalservice.integration.db.RecipientEntity;
 import se.sundsvall.postportalservice.integration.db.UserEntity;
@@ -49,6 +51,7 @@ class DigitalRegisteredLetterIntegrationTest {
 	private static final String PARTY_ID_2 = "123e4567-e89b-12d3-a456-426614174002";
 	private static final String PARTY_ID_3 = "123e4567-e89b-12d3-a456-426614174003";
 	private static final String LETTER_ID = "123e4567-e89b-12d3-a456-426614174001";
+	private static final String ORGANIZATION_NUMBER = "5591628136";
 
 	@Mock
 	private DigitalRegisteredLetterClient clientMock;
@@ -65,27 +68,59 @@ class DigitalRegisteredLetterIntegrationTest {
 	}
 
 	@Test
-	void checkKivraEligibility() {
+	void checkKivraEligibility_AllEligible() {
+		final var partyIds = List.of(PARTY_ID_1, PARTY_ID_2, PARTY_ID_3);
+		final var eligibilityRequest = new EligibilityRequest();
+
+		when(digitalRegisteredLetterMapperMock.toEligibilityRequest(partyIds)).thenReturn(eligibilityRequest);
+		when(clientMock.checkKivraEligibility(MUNICIPALITY_ID, ORGANIZATION_NUMBER, eligibilityRequest)).thenReturn(partyIds);
+
+		final var result = digitalRegisteredLetterIntegration.checkKivraEligibility(MUNICIPALITY_ID, ORGANIZATION_NUMBER, partyIds);
+
+		assertThat(result).hasSameElementsAs(partyIds);
+		verify(digitalRegisteredLetterMapperMock).toEligibilityRequest(partyIds);
+		verify(clientMock).checkKivraEligibility(MUNICIPALITY_ID, ORGANIZATION_NUMBER, eligibilityRequest);
+	}
+
+	@Test
+	void checkKivraEligibility_NoneEligible() {
+		final var partyIds = List.of(PARTY_ID_1, PARTY_ID_2, PARTY_ID_3);
+		final var eligibilityRequest = new EligibilityRequest();
+
+		when(digitalRegisteredLetterMapperMock.toEligibilityRequest(partyIds)).thenReturn(eligibilityRequest);
+		when(clientMock.checkKivraEligibility(MUNICIPALITY_ID, ORGANIZATION_NUMBER, eligibilityRequest)).thenReturn(Collections.emptyList());
+
+		final var result = digitalRegisteredLetterIntegration.checkKivraEligibility(MUNICIPALITY_ID, ORGANIZATION_NUMBER, partyIds);
+
+		assertThat(result).isEmpty();
+		verify(digitalRegisteredLetterMapperMock).toEligibilityRequest(partyIds);
+		verify(clientMock).checkKivraEligibility(MUNICIPALITY_ID, ORGANIZATION_NUMBER, eligibilityRequest);
+	}
+
+	@Test
+	void checkKivraEligibility_SomeEligible() {
 		final var partyIds = List.of(PARTY_ID_1, PARTY_ID_2, PARTY_ID_3);
 		final var eligibilityRequest = new EligibilityRequest();
 		final var eligiblePartyIds = List.of(PARTY_ID_1, PARTY_ID_2);
 
 		when(digitalRegisteredLetterMapperMock.toEligibilityRequest(partyIds)).thenReturn(eligibilityRequest);
-		when(clientMock.checkKivraEligibility(MUNICIPALITY_ID, eligibilityRequest)).thenReturn(eligiblePartyIds);
+		when(clientMock.checkKivraEligibility(MUNICIPALITY_ID, ORGANIZATION_NUMBER, eligibilityRequest)).thenReturn(eligiblePartyIds);
 
-		final var result = digitalRegisteredLetterIntegration.checkKivraEligibility(MUNICIPALITY_ID, partyIds);
+		final var result = digitalRegisteredLetterIntegration.checkKivraEligibility(MUNICIPALITY_ID, ORGANIZATION_NUMBER, partyIds);
 
 		assertThat(result).isEqualTo(eligiblePartyIds);
 		verify(digitalRegisteredLetterMapperMock).toEligibilityRequest(partyIds);
-		verify(clientMock).checkKivraEligibility(MUNICIPALITY_ID, eligibilityRequest);
+		verify(clientMock).checkKivraEligibility(MUNICIPALITY_ID, ORGANIZATION_NUMBER, eligibilityRequest);
 	}
 
 	@Test
 	void sendLetter_happyCase() {
 		final var userEntity = new UserEntity().withUsername("John Wick");
+		final var departmentEntity = new DepartmentEntity().withOrganizationNumber(ORGANIZATION_NUMBER);
 		final var messageEntity = new MessageEntity()
 			.withUser(userEntity)
-			.withMunicipalityId(MUNICIPALITY_ID);
+			.withMunicipalityId(MUNICIPALITY_ID)
+			.withDepartment(departmentEntity);
 		final var recipientEntity = new RecipientEntity();
 
 		final var letterRequest = new LetterRequest();
@@ -97,7 +132,7 @@ class DigitalRegisteredLetterIntegrationTest {
 		final var multipartList = List.of(multipartMock);
 		when(digitalRegisteredLetterMapperMock.toLetterRequest(messageEntity, recipientEntity)).thenReturn(letterRequest);
 		when(digitalRegisteredLetterMapperMock.toMultipartFiles(any())).thenReturn(multipartList);
-		when(clientMock.sendLetter(HEADER_VALUE, MUNICIPALITY_ID, letterRequest, multipartList)).thenReturn(letter);
+		when(clientMock.sendLetter(HEADER_VALUE, MUNICIPALITY_ID, ORGANIZATION_NUMBER, letterRequest, multipartList)).thenReturn(letter);
 
 		digitalRegisteredLetterIntegration.sendLetter(messageEntity, recipientEntity);
 
@@ -106,15 +141,17 @@ class DigitalRegisteredLetterIntegrationTest {
 
 		verify(digitalRegisteredLetterMapperMock).toLetterRequest(messageEntity, recipientEntity);
 		verify(digitalRegisteredLetterMapperMock).toMultipartFiles(any());
-		verify(clientMock).sendLetter(HEADER_VALUE, MUNICIPALITY_ID, letterRequest, multipartList);
+		verify(clientMock).sendLetter(HEADER_VALUE, MUNICIPALITY_ID, ORGANIZATION_NUMBER, letterRequest, multipartList);
 	}
 
 	@Test
 	void sendLetter_clientThrowsException() {
 		final var userEntity = new UserEntity().withUsername("John Wick");
+		final var departmentEntity = new DepartmentEntity().withOrganizationNumber(ORGANIZATION_NUMBER);
 		final var messageEntity = new MessageEntity()
 			.withUser(userEntity)
-			.withMunicipalityId(MUNICIPALITY_ID);
+			.withMunicipalityId(MUNICIPALITY_ID)
+			.withDepartment(departmentEntity);
 		final var recipientEntity = new RecipientEntity();
 
 		final var letterRequest = new LetterRequest();
@@ -123,7 +160,7 @@ class DigitalRegisteredLetterIntegrationTest {
 		final var multipartList = List.of(multipartMock);
 		when(digitalRegisteredLetterMapperMock.toLetterRequest(messageEntity, recipientEntity)).thenReturn(letterRequest);
 		when(digitalRegisteredLetterMapperMock.toMultipartFiles(any())).thenReturn(multipartList);
-		when(clientMock.sendLetter(HEADER_VALUE, MUNICIPALITY_ID, letterRequest, multipartList)).thenThrow(new RuntimeException("Some error"));
+		when(clientMock.sendLetter(HEADER_VALUE, MUNICIPALITY_ID, ORGANIZATION_NUMBER, letterRequest, multipartList)).thenThrow(new RuntimeException("Some error"));
 
 		digitalRegisteredLetterIntegration.sendLetter(messageEntity, recipientEntity);
 
@@ -132,7 +169,7 @@ class DigitalRegisteredLetterIntegrationTest {
 
 		verify(digitalRegisteredLetterMapperMock).toLetterRequest(messageEntity, recipientEntity);
 		verify(digitalRegisteredLetterMapperMock).toMultipartFiles(any());
-		verify(clientMock).sendLetter(HEADER_VALUE, MUNICIPALITY_ID, letterRequest, multipartList);
+		verify(clientMock).sendLetter(HEADER_VALUE, MUNICIPALITY_ID, ORGANIZATION_NUMBER, letterRequest, multipartList);
 	}
 
 	@Test
@@ -221,8 +258,9 @@ class DigitalRegisteredLetterIntegrationTest {
 		final var response = digitalRegisteredLetterIntegration.getLetterReceipt(MUNICIPALITY_ID, LETTER_ID);
 		final var outputStream = new ByteArrayOutputStream();
 
-		assertThat(response.getBody()).isNotNull();
-		assertThatThrownBy(() -> response.getBody().writeTo(outputStream))
+		final var body = response.getBody();
+		assertThat(body).isNotNull();
+		assertThatThrownBy(() -> body.writeTo(outputStream))
 			.isInstanceOf(ThrowableProblem.class)
 			.hasMessageContaining("Could not stream letter receipt: Stream error")
 			.hasFieldOrPropertyWithValue("status", INTERNAL_SERVER_ERROR);
