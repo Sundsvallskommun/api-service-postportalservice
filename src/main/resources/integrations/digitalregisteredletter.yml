@@ -5,9 +5,9 @@ info:
   license:
     name: MIT License
     url: https://opensource.org/licenses/MIT
-  version: "2.6"
+  version: "3.0"
 servers:
-  - url: http://localhost:52417
+  - url: http://localhost:63475
     description: Generated server url
 tags:
   - name: Scheduler Resource
@@ -426,6 +426,36 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/Problem"
+  /{municipalityId}/scheduler/certificate-health:
+    post:
+      tags:
+        - Scheduler Resource
+      summary: Trigger certificate health check
+      description: Triggers the task that checks the Kivra certificate health
+      operationId: checkCertificateHealth
+      parameters:
+        - name: municipalityId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Successful Operation - OK
+        "400":
+          description: Bad request
+          content:
+            application/problem+json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/Problem"
+                  - $ref: "#/components/schemas/ConstraintViolationProblem"
+        "500":
+          description: Internal Server error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
   /{municipalityId}/letters:
     get:
       tags:
@@ -530,111 +560,6 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/Problem"
-    post:
-      tags:
-        - Letter Resource
-      summary: Send letter
-      description: Send a digital registered letter using Kivra
-      operationId: sendLetterLegacy
-      parameters:
-        - name: X-Sent-By
-          in: header
-          required: true
-          schema:
-            type: string
-        - name: municipalityId
-          in: path
-          required: true
-          schema:
-            type: string
-      requestBody:
-        content:
-          multipart/form-data:
-            schema:
-              type: object
-              properties:
-                letter:
-                  $ref: "#/components/schemas/LetterRequest"
-                letterAttachments:
-                  type: array
-                  items:
-                    type: string
-                    format: binary
-              required:
-                - letter
-                - letterAttachments
-      responses:
-        "201":
-          description: Successful operation - Created
-          headers:
-            Location:
-              style: simple
-              schema:
-                type: string
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Letter"
-        "400":
-          description: Bad request
-          content:
-            application/problem+json:
-              schema:
-                oneOf:
-                  - $ref: "#/components/schemas/Problem"
-                  - $ref: "#/components/schemas/ConstraintViolationProblem"
-        "500":
-          description: Internal Server error
-          content:
-            application/problem+json:
-              schema:
-                $ref: "#/components/schemas/Problem"
-      deprecated: true
-  /{municipalityId}/eligibility/kivra:
-    post:
-      tags:
-        - Eligibility Resource
-      summary: Check if the given partyIds are eligible for receiving digital registered
-        letters with Kivra
-      description: Returns a list of party IDs that are eligible for Kivra based on
-        the provided municipality ID and party IDs
-      operationId: checkKivraEligibilityLegacy
-      parameters:
-        - name: municipalityId
-          in: path
-          required: true
-          schema:
-            type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/EligibilityRequest"
-        required: true
-      responses:
-        "200":
-          description: Successful operation
-          content:
-            '*/*':
-              schema:
-                type: array
-                items:
-                  type: string
-        "400":
-          description: Bad request
-          content:
-            application/problem+json:
-              schema:
-                oneOf:
-                  - $ref: "#/components/schemas/Problem"
-                  - $ref: "#/components/schemas/ConstraintViolationProblem"
-        "500":
-          description: Internal Server error
-          content:
-            application/problem+json:
-              schema:
-                $ref: "#/components/schemas/Problem"
-      deprecated: true
   /{municipalityId}/letters/{letterId}:
     get:
       tags:
@@ -834,12 +759,12 @@ components:
     Problem:
       type: object
       properties:
-        status:
-          $ref: "#/components/schemas/StatusType"
         title:
           type: string
         detail:
           type: string
+        status:
+          $ref: "#/components/schemas/StatusType"
         instance:
           type: string
           format: uri
@@ -852,11 +777,11 @@ components:
     StatusType:
       type: object
       properties:
+        reasonPhrase:
+          type: string
         statusCode:
           type: integer
           format: int32
-        reasonPhrase:
-          type: string
     Tenant:
       type: object
       description: Tenant model
@@ -992,12 +917,12 @@ components:
                 type: boolean
         message:
           type: string
-        status:
-          $ref: "#/components/schemas/StatusType"
         title:
           type: string
         detail:
           type: string
+        status:
+          $ref: "#/components/schemas/StatusType"
         instance:
           type: string
           format: uri
