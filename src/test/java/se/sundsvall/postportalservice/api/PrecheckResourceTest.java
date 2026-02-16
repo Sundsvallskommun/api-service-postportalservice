@@ -45,6 +45,7 @@ import se.sundsvall.postportalservice.api.model.PrecheckRequest;
 import se.sundsvall.postportalservice.api.model.PrecheckResponse;
 import se.sundsvall.postportalservice.api.model.PrecheckResponse.DeliveryMethod;
 import se.sundsvall.postportalservice.api.model.PrecheckResponse.PrecheckRecipient;
+import se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration;
 import se.sundsvall.postportalservice.service.PrecheckService;
 
 @SpringBootTest(classes = Application.class, webEnvironment = RANDOM_PORT)
@@ -54,8 +55,38 @@ class PrecheckResourceTest {
 	@MockitoBean
 	private PrecheckService precheckServiceMock;
 
+	@MockitoBean
+	private MessagingSettingsIntegration messagingSettingsIntegrationMock;
+
 	@Autowired
 	private WebTestClient webTestClient;
+
+	private static Stream<Arguments> precheckRecipientsBadBodyContentProvider() {
+
+		return Stream.of(
+			Arguments.of("Empty request", "{}", List.of(
+				new Violation("partyIds", "must not be empty"))),
+
+			Arguments.of("Empty party id list", new PrecheckRequest(emptyList()), List.of(
+				new Violation("partyIds", "must not be empty"))),
+
+			Arguments.of("Invalid party id in list", new PrecheckRequest(List.of("invalid")), List.of(
+				new Violation("partyIds[0]", "not a valid UUID")))
+
+		);
+	}
+
+	private static Stream<Arguments> checkKivraEligibilityBadBodyContentProvider() {
+		return Stream.of(
+			Arguments.of("Empty request", KivraEligibilityRequest.create(), List.of(
+				new Violation("partyIds", "must not be empty"))),
+
+			Arguments.of("Empty party id list", KivraEligibilityRequest.create().withPartyIds(emptyList()), List.of(
+				new Violation("partyIds", "must not be empty"))),
+
+			Arguments.of("Invalid party id in list", KivraEligibilityRequest.create().withPartyIds(List.of("invalid")), List.of(
+				new Violation("partyIds[0]", "not a valid UUID"))));
+	}
 
 	@AfterEach
 	void verifyNoUnexpectedMockInteractions() {
@@ -183,7 +214,7 @@ class PrecheckResourceTest {
 
 	@ParameterizedTest(name = "{0}")
 	@MethodSource("precheckRecipientsBadBodyContentProvider")
-	void precheckRecipients_BadBodyContent(String testDescription, Object request, List<Violation> expectedViolations) {
+	void precheckRecipients_BadBodyContent(final String testDescription, final Object request, final List<Violation> expectedViolations) {
 		final var response = webTestClient.post()
 			.uri("/{municipalityId}/precheck", MUNICIPALITY_ID)
 			.header(Identifier.HEADER_NAME, "type=adAccount; joe01doe")
@@ -202,26 +233,12 @@ class PrecheckResourceTest {
 		verifyNoInteractions(precheckServiceMock);
 	}
 
-	private static Stream<Arguments> precheckRecipientsBadBodyContentProvider() {
-
-		return Stream.of(
-			Arguments.of("Empty request", "{}", List.of(
-				new Violation("partyIds", "must not be empty"))),
-
-			Arguments.of("Empty party id list", new PrecheckRequest(emptyList()), List.of(
-				new Violation("partyIds", "must not be empty"))),
-
-			Arguments.of("Invalid party id in list", new PrecheckRequest(List.of("invalid")), List.of(
-				new Violation("partyIds[0]", "not a valid UUID")))
-
-		);
-	}
-
 	@Test
 	void checkKivraEligibility() {
 		final var partyId1 = "56652549-4f96-4a8f-94f1-07d581ebbb36";
 		final var partyId2 = "da03b33e-9de2-45ac-8291-31a88de59410";
-		final var request = new KivraEligibilityRequest().withPartyIds(List.of(partyId1, partyId2));
+		final var request = new KivraEligibilityRequest()
+			.withPartyIds(List.of(partyId1, partyId2));
 
 		when(precheckServiceMock.precheckKivra(MUNICIPALITY_ID, request)).thenReturn(List.of(partyId1, partyId2));
 
@@ -244,7 +261,8 @@ class PrecheckResourceTest {
 
 	@Test
 	void checkKivraEligibility_BadPathContent() {
-		final var request = new PrecheckRequest(List.of("b46f0ca2-d2ad-43e8-8d50-3aeb949e3604"));
+		final var request = new KivraEligibilityRequest()
+			.withPartyIds(List.of("b46f0ca2-d2ad-43e8-8d50-3aeb949e3604"));
 
 		final var response = webTestClient.post()
 			.uri("/{municipalityId}/precheck/kivra", INVALID_MUNICIPALITY_ID)
@@ -269,7 +287,7 @@ class PrecheckResourceTest {
 
 	@ParameterizedTest(name = "{0}")
 	@MethodSource("checkKivraEligibilityBadBodyContentProvider")
-	void checkKivraEligibility_BadBodyContent(String testDescription, Object request, List<Violation> expectedViolations) {
+	void checkKivraEligibility_BadBodyContent(final String testDescription, final Object request, final List<Violation> expectedViolations) {
 		final var response = webTestClient.post()
 			.uri("/{municipalityId}/precheck/kivra", MUNICIPALITY_ID)
 			.header(Identifier.HEADER_NAME, "type=adAccount; joe01doe")
@@ -286,17 +304,5 @@ class PrecheckResourceTest {
 		assertThat(response.getViolations()).usingRecursiveComparison().ignoringCollectionOrder().isEqualTo(expectedViolations);
 
 		verifyNoInteractions(precheckServiceMock);
-	}
-
-	private static Stream<Arguments> checkKivraEligibilityBadBodyContentProvider() {
-		return Stream.of(
-			Arguments.of("Empty request", KivraEligibilityRequest.create(), List.of(
-				new Violation("partyIds", "must not be empty"))),
-
-			Arguments.of("Empty party id list", KivraEligibilityRequest.create().withPartyIds(emptyList()), List.of(
-				new Violation("partyIds", "must not be empty"))),
-
-			Arguments.of("Invalid party id in list", KivraEligibilityRequest.create().withPartyIds(List.of("invalid")), List.of(
-				new Violation("partyIds[0]", "not a valid UUID"))));
 	}
 }

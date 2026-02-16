@@ -71,6 +71,11 @@ paths:
         letters with Kivra
       operationId: checkKivraEligibility
       parameters:
+        - name: X-Sent-By
+          in: header
+          required: true
+          schema:
+            type: string
         - name: municipalityId
           in: path
           required: true

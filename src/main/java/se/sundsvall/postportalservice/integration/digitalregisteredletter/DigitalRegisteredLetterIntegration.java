@@ -44,9 +44,9 @@ public class DigitalRegisteredLetterIntegration {
 	 * @param  partyIds       the party ids to check
 	 * @return                a list of eligible partyIds
 	 */
-	public List<String> checkKivraEligibility(final String municipalityId, final List<String> partyIds) {
+	public List<String> checkKivraEligibility(final String municipalityId, final String organizationNumber, final List<String> partyIds) {
 		final var request = mapper.toEligibilityRequest(partyIds);
-		return client.checkKivraEligibility(municipalityId, request);
+		return client.checkKivraEligibility(municipalityId, organizationNumber, request);
 	}
 
 	public SigningInformation getSigningInformation(final String municipalityId, final String letterId) {
@@ -65,17 +65,22 @@ public class DigitalRegisteredLetterIntegration {
 
 	public void sendLetter(final MessageEntity messageEntity, final RecipientEntity recipientEntity) {
 		RecipientId.init(recipientEntity.getId());
-		LOGGER.info("Sending digital registered letter for recipientId: {} in municipalityId: {}", sanitizeForLogging(recipientEntity.getId()), sanitizeForLogging(messageEntity.getMunicipalityId()));
+		final var id = sanitizeForLogging(recipientEntity.getId());
+		final var municipalityId = sanitizeForLogging(messageEntity.getMunicipalityId());
+		LOGGER.info("Sending digital registered letter for recipientId: {} in municipalityId: {}", id, municipalityId);
 		try {
 			final var request = mapper.toLetterRequest(messageEntity, recipientEntity);
 			final var multipartFiles = mapper.toMultipartFiles(messageEntity.getAttachments());
 			final var letter = client.sendLetter(getIdentifierHeaderValue(messageEntity.getUser().getUsername()),
 				messageEntity.getMunicipalityId(),
+				messageEntity.getDepartment().getOrganizationNumber(),
 				request,
 				multipartFiles);
 			recipientEntity.setExternalId(letter.getId());
 			recipientEntity.setStatus(letter.getStatus());
-			LOGGER.info("Successfully sent digital registered letter for recipientId: {}, externalId: {}, status: {}", sanitizeForLogging(recipientEntity.getId()), sanitizeForLogging(letter.getId()), sanitizeForLogging(letter.getStatus()));
+			if (LOGGER.isInfoEnabled()) {
+				LOGGER.info("Successfully sent digital registered letter for recipientId: {}, externalId: {}, status: {}", id, sanitizeForLogging(letter.getId()), sanitizeForLogging(letter.getStatus()));
+			}
 		} catch (final Exception e) {
 			LOGGER.error("Failed to send digital registered letter for recipientId: {} in messageId: {}", sanitizeForLogging(recipientEntity.getId()), sanitizeForLogging(messageEntity.getId()), e);
 			recipientEntity.setStatus(FAILED);

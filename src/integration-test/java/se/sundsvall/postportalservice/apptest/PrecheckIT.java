@@ -37,6 +37,7 @@ class PrecheckIT extends AbstractAppTest {
 		setupCall()
 			.withHttpMethod(POST)
 			.withServicePath("/2281/precheck/kivra")
+			.withHeader(Identifier.HEADER_NAME, "type=adAccount; joe01doe")
 			.withContentType(APPLICATION_JSON)
 			.withRequest(REQUEST_FILE)
 			.withExpectedResponseStatus(OK)
