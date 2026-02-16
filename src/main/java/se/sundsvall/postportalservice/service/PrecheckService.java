@@ -150,7 +150,7 @@ public class PrecheckService {
 
 	public List<String> precheckKivra(final String municipalityId, final KivraEligibilityRequest request) {
 		final var settingsMap = messagingSettingsIntegration.getMessagingSettingsForUser(municipalityId);
-		final var organizationNumber = Optional.ofNullable(settingsMap.get(ORGANIZATION_NUMBER)).orElseThrow(() -> Problem.valueOf(BAD_REQUEST, "Organization number is missing in messaging settings for municipalityId '%s'".formatted(municipalityId)));
+		final var organizationNumber = settingsMap.get(ORGANIZATION_NUMBER);
 
 		return digitalRegisteredLetterIntegration.checkKivraEligibility(municipalityId, organizationNumber, request.getPartyIds());
 	}
