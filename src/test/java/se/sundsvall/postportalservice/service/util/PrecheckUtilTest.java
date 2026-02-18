@@ -1,10 +1,10 @@
 package se.sundsvall.postportalservice.service.util;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import generated.se.sundsvall.messaging.Mailbox;
 import java.util.List;
 import org.junit.jupiter.api.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 class PrecheckUtilTest {
 

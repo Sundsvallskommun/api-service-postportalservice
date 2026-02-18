@@ -1,11 +1,11 @@
 package se.sundsvall.postportalservice.integration.citizen;
 
-import static java.util.Collections.emptyList;
-import static java.util.Optional.ofNullable;
-
 import generated.se.sundsvall.citizen.CitizenExtended;
 import java.util.List;
 import org.springframework.stereotype.Component;
+
+import static java.util.Collections.emptyList;
+import static java.util.Optional.ofNullable;
 
 @Component
 public class CitizenIntegration {

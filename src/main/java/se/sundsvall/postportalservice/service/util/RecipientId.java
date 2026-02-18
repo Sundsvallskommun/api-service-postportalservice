@@ -1,11 +1,11 @@
 package se.sundsvall.postportalservice.service.util;
 
+import java.util.UUID;
+import org.slf4j.MDC;
+
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.math.NumberUtils.INTEGER_ZERO;
-
-import java.util.UUID;
-import org.slf4j.MDC;
 
 public class RecipientId {
 

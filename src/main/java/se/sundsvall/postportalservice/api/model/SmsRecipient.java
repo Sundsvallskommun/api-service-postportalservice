@@ -1,11 +1,11 @@
 package se.sundsvall.postportalservice.api.model;
 
-import static io.swagger.v3.oas.annotations.media.Schema.RequiredMode.NOT_REQUIRED;
-import static io.swagger.v3.oas.annotations.media.Schema.RequiredMode.REQUIRED;
-
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.Objects;
 import se.sundsvall.dept44.common.validators.annotation.ValidMSISDN;
+
+import static io.swagger.v3.oas.annotations.media.Schema.RequiredMode.NOT_REQUIRED;
+import static io.swagger.v3.oas.annotations.media.Schema.RequiredMode.REQUIRED;
 
 @Schema(description = "SMS recipient model")
 public class SmsRecipient {

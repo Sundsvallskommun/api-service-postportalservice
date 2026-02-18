@@ -1,13 +1,13 @@
 package se.sundsvall.postportalservice.service.util;
 
+import generated.se.sundsvall.messaging.Mailbox;
+import java.util.List;
+import java.util.Objects;
+
 import static java.lang.Boolean.FALSE;
 import static java.lang.Boolean.TRUE;
 import static java.util.Collections.emptyList;
 import static java.util.Optional.ofNullable;
-
-import generated.se.sundsvall.messaging.Mailbox;
-import java.util.List;
-import java.util.Objects;
 
 public final class PrecheckUtil {
 

@@ -1,8 +1,5 @@
 package se.sundsvall.postportalservice.integration.messaging;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static se.sundsvall.postportalservice.TestDataFactory.MOBILE_NUMBER;
-
 import generated.se.sundsvall.messaging.DigitalMailAttachment;
 import generated.se.sundsvall.messaging.DigitalMailRequest;
 import generated.se.sundsvall.messaging.SmsBatchRequest;
@@ -16,6 +13,9 @@ import se.sundsvall.postportalservice.integration.db.AttachmentEntity;
 import se.sundsvall.postportalservice.integration.db.DepartmentEntity;
 import se.sundsvall.postportalservice.integration.db.MessageEntity;
 import se.sundsvall.postportalservice.integration.db.RecipientEntity;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static se.sundsvall.postportalservice.TestDataFactory.MOBILE_NUMBER;
 
 @ExtendWith(MockitoExtension.class)
 class MessagingMapperTest {

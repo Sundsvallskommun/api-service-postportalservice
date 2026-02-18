@@ -1,11 +1,5 @@
 package se.sundsvall.postportalservice.integration.messaging;
 
-import static se.sundsvall.postportalservice.Constants.ORIGIN;
-import static se.sundsvall.postportalservice.integration.messaging.MessagingMapper.toDigitalMailRequest;
-import static se.sundsvall.postportalservice.integration.messaging.MessagingMapper.toSmsRequest;
-import static se.sundsvall.postportalservice.integration.messaging.MessagingMapper.toSnailmailRequest;
-import static se.sundsvall.postportalservice.service.util.IdentifierUtil.getIdentifierHeaderValue;
-
 import generated.se.sundsvall.messaging.Mailbox;
 import generated.se.sundsvall.messaging.MessageBatchResult;
 import generated.se.sundsvall.messaging.MessageResult;
@@ -14,6 +8,12 @@ import org.springframework.stereotype.Component;
 import se.sundsvall.postportalservice.integration.db.MessageEntity;
 import se.sundsvall.postportalservice.integration.db.RecipientEntity;
 import se.sundsvall.postportalservice.service.util.RecipientId;
+
+import static se.sundsvall.postportalservice.Constants.ORIGIN;
+import static se.sundsvall.postportalservice.integration.messaging.MessagingMapper.toDigitalMailRequest;
+import static se.sundsvall.postportalservice.integration.messaging.MessagingMapper.toSmsRequest;
+import static se.sundsvall.postportalservice.integration.messaging.MessagingMapper.toSnailmailRequest;
+import static se.sundsvall.postportalservice.service.util.IdentifierUtil.getIdentifierHeaderValue;
 
 @Component
 public class MessagingIntegration {

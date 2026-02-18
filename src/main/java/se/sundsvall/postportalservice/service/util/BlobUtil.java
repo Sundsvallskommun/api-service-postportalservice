@@ -1,8 +1,5 @@
 package se.sundsvall.postportalservice.service.util;
 
-import static org.zalando.fauxpas.FauxPas.throwingFunction;
-import static org.zalando.problem.Status.INTERNAL_SERVER_ERROR;
-
 import jakarta.persistence.EntityManager;
 import java.io.ByteArrayInputStream;
 import java.sql.Blob;
@@ -12,6 +9,9 @@ import org.hibernate.Session;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 import org.zalando.problem.Problem;
+
+import static org.zalando.fauxpas.FauxPas.throwingFunction;
+import static org.zalando.problem.Status.INTERNAL_SERVER_ERROR;
 
 @Component
 public class BlobUtil {

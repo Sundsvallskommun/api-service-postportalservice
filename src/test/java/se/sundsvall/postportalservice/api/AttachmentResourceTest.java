@@ -1,13 +1,5 @@
 package se.sundsvall.postportalservice.api;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.when;
-import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
-import static se.sundsvall.postportalservice.TestDataFactory.INVALID_MUNICIPALITY_ID;
-import static se.sundsvall.postportalservice.TestDataFactory.MUNICIPALITY_ID;
-
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +13,14 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
 import org.zalando.problem.violations.ConstraintViolationProblem;
 import se.sundsvall.postportalservice.Application;
 import se.sundsvall.postportalservice.service.AttachmentService;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
+import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
+import static se.sundsvall.postportalservice.TestDataFactory.INVALID_MUNICIPALITY_ID;
+import static se.sundsvall.postportalservice.TestDataFactory.MUNICIPALITY_ID;
 
 @SpringBootTest(classes = Application.class, webEnvironment = RANDOM_PORT)
 @ActiveProfiles("junit")

@@ -1,24 +1,5 @@
 package se.sundsvall.postportalservice.api;
 
-import static java.util.Collections.emptyList;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.when;
-import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
-import static org.springframework.http.MediaType.ALL_VALUE;
-import static org.springframework.http.MediaType.APPLICATION_JSON;
-import static org.springframework.http.MediaType.APPLICATION_PDF;
-import static org.springframework.http.MediaType.APPLICATION_XML;
-import static org.springframework.http.MediaType.MULTIPART_FORM_DATA;
-import static org.springframework.web.reactive.function.BodyInserters.fromMultipartData;
-import static se.sundsvall.postportalservice.TestDataFactory.INVALID_MUNICIPALITY_ID;
-import static se.sundsvall.postportalservice.TestDataFactory.MUNICIPALITY_ID;
-import static se.sundsvall.postportalservice.TestDataFactory.createValidDigitalRegisteredLetterRequest;
-import static se.sundsvall.postportalservice.TestDataFactory.createValidLetterRequest;
-import static se.sundsvall.postportalservice.TestDataFactory.createValidSmsRequest;
-
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Stream;
@@ -48,6 +29,25 @@ import se.sundsvall.postportalservice.api.model.Recipient.DeliveryMethod;
 import se.sundsvall.postportalservice.api.model.SmsRecipient;
 import se.sundsvall.postportalservice.api.model.SmsRequest;
 import se.sundsvall.postportalservice.service.MessageService;
+
+import static java.util.Collections.emptyList;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
+import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
+import static org.springframework.http.MediaType.ALL_VALUE;
+import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.http.MediaType.APPLICATION_PDF;
+import static org.springframework.http.MediaType.APPLICATION_XML;
+import static org.springframework.http.MediaType.MULTIPART_FORM_DATA;
+import static org.springframework.web.reactive.function.BodyInserters.fromMultipartData;
+import static se.sundsvall.postportalservice.TestDataFactory.INVALID_MUNICIPALITY_ID;
+import static se.sundsvall.postportalservice.TestDataFactory.MUNICIPALITY_ID;
+import static se.sundsvall.postportalservice.TestDataFactory.createValidDigitalRegisteredLetterRequest;
+import static se.sundsvall.postportalservice.TestDataFactory.createValidLetterRequest;
+import static se.sundsvall.postportalservice.TestDataFactory.createValidSmsRequest;
 
 @SpringBootTest(classes = Application.class, webEnvironment = RANDOM_PORT)
 @ActiveProfiles("junit")

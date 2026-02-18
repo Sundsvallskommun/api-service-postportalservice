@@ -1,7 +1,5 @@
 package se.sundsvall.postportalservice;
 
-import static org.springframework.http.MediaType.TEXT_PLAIN_VALUE;
-
 import generated.se.sundsvall.messaging.Mailbox;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -13,6 +11,8 @@ import se.sundsvall.postportalservice.api.model.LetterRequest;
 import se.sundsvall.postportalservice.api.model.Recipient;
 import se.sundsvall.postportalservice.api.model.SmsRecipient;
 import se.sundsvall.postportalservice.api.model.SmsRequest;
+
+import static org.springframework.http.MediaType.TEXT_PLAIN_VALUE;
 
 public final class TestDataFactory {
 

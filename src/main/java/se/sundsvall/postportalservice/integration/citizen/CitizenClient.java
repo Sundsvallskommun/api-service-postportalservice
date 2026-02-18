@@ -1,8 +1,5 @@
 package se.sundsvall.postportalservice.integration.citizen;
 
-import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
-import static se.sundsvall.postportalservice.integration.citizen.configuration.CitizenConfiguration.CLIENT_ID;
-
 import generated.se.sundsvall.citizen.CitizenExtended;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import java.util.List;
@@ -11,6 +8,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import se.sundsvall.postportalservice.integration.citizen.configuration.CitizenConfiguration;
+
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
+import static se.sundsvall.postportalservice.integration.citizen.configuration.CitizenConfiguration.CLIENT_ID;
 
 @CircuitBreaker(name = CLIENT_ID)
 @FeignClient(

@@ -1,9 +1,5 @@
 package se.sundsvall.postportalservice.service.util;
 
-import static java.util.Collections.emptyList;
-import static java.util.Optional.ofNullable;
-import static se.sundsvall.postportalservice.integration.citizen.CitizenIntegration.POPULATION_REGISTRATION_ADDRESS;
-
 import generated.se.sundsvall.citizen.CitizenExtended;
 import java.util.List;
 import java.util.Optional;
@@ -11,6 +7,10 @@ import java.util.UUID;
 import java.util.function.Predicate;
 import se.sundsvall.postportalservice.service.util.PartyIdMappingHelper.PartyIdMapping;
 import se.sundsvall.postportalservice.util.LegalIdUtil;
+
+import static java.util.Collections.emptyList;
+import static java.util.Optional.ofNullable;
+import static se.sundsvall.postportalservice.integration.citizen.CitizenIntegration.POPULATION_REGISTRATION_ADDRESS;
 
 /**
  * Utility class for categorizing citizens by eligibility criteria (age, registration status).

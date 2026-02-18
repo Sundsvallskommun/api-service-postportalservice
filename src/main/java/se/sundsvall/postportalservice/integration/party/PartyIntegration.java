@@ -1,10 +1,10 @@
 package se.sundsvall.postportalservice.integration.party;
 
-import static java.util.Collections.emptyMap;
-
 import java.util.List;
 import java.util.Map;
 import org.springframework.stereotype.Component;
+
+import static java.util.Collections.emptyMap;
 
 @Component
 public class PartyIntegration {

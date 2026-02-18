@@ -1,8 +1,5 @@
 package se.sundsvall.postportalservice.service.mapper;
 
-import static java.util.Collections.emptyList;
-import static se.sundsvall.postportalservice.service.util.BlobUtil.convertBlobToBase64String;
-
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -10,6 +7,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 import se.sundsvall.postportalservice.integration.db.AttachmentEntity;
 import se.sundsvall.postportalservice.service.util.BlobUtil;
+
+import static java.util.Collections.emptyList;
+import static se.sundsvall.postportalservice.service.util.BlobUtil.convertBlobToBase64String;
 
 @Component
 public final class AttachmentMapper {

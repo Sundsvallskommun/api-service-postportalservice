@@ -1,12 +1,5 @@
 package se.sundsvall.postportalservice.integration.digitalregisteredletter;
 
-import static java.util.Collections.emptyList;
-import static org.springframework.util.CollectionUtils.isEmpty;
-import static org.zalando.problem.Status.INTERNAL_SERVER_ERROR;
-import static se.sundsvall.dept44.util.LogUtils.sanitizeForLogging;
-import static se.sundsvall.postportalservice.Constants.FAILED;
-import static se.sundsvall.postportalservice.service.util.IdentifierUtil.getIdentifierHeaderValue;
-
 import generated.se.sundsvall.digitalregisteredletter.LetterStatus;
 import java.io.IOException;
 import java.io.InputStream;
@@ -23,6 +16,13 @@ import se.sundsvall.postportalservice.api.model.SigningInformation;
 import se.sundsvall.postportalservice.integration.db.MessageEntity;
 import se.sundsvall.postportalservice.integration.db.RecipientEntity;
 import se.sundsvall.postportalservice.service.util.RecipientId;
+
+import static java.util.Collections.emptyList;
+import static org.springframework.util.CollectionUtils.isEmpty;
+import static org.zalando.problem.Status.INTERNAL_SERVER_ERROR;
+import static se.sundsvall.dept44.util.LogUtils.sanitizeForLogging;
+import static se.sundsvall.postportalservice.Constants.FAILED;
+import static se.sundsvall.postportalservice.service.util.IdentifierUtil.getIdentifierHeaderValue;
 
 @Component
 public class DigitalRegisteredLetterIntegration {

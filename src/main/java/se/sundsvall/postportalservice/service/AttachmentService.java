@@ -1,10 +1,5 @@
 package se.sundsvall.postportalservice.service;
 
-import static java.util.Optional.ofNullable;
-import static org.springframework.http.MediaType.APPLICATION_OCTET_STREAM;
-import static org.zalando.problem.Status.INTERNAL_SERVER_ERROR;
-import static org.zalando.problem.Status.NOT_FOUND;
-
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
@@ -18,6 +13,11 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
 import org.zalando.problem.Problem;
 import se.sundsvall.postportalservice.integration.db.AttachmentEntity;
 import se.sundsvall.postportalservice.integration.db.dao.AttachmentRepository;
+
+import static java.util.Optional.ofNullable;
+import static org.springframework.http.MediaType.APPLICATION_OCTET_STREAM;
+import static org.zalando.problem.Status.INTERNAL_SERVER_ERROR;
+import static org.zalando.problem.Status.NOT_FOUND;
 
 @Service
 public class AttachmentService {

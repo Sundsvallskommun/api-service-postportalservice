@@ -1,30 +1,5 @@
 package se.sundsvall.postportalservice.service;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.doCallRealMethod;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.when;
-import static org.zalando.problem.Status.BAD_GATEWAY;
-import static se.sundsvall.postportalservice.Constants.FAILED;
-import static se.sundsvall.postportalservice.Constants.SENT;
-import static se.sundsvall.postportalservice.TestDataFactory.MUNICIPALITY_ID;
-import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.CONTACT_INFORMATION_EMAIL;
-import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.CONTACT_INFORMATION_PHONE_NUMBER;
-import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.CONTACT_INFORMATION_URL;
-import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.DEPARTMENT_ID;
-import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.DEPARTMENT_NAME;
-import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.FOLDER_NAME;
-import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.ORGANIZATION_NUMBER;
-import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.SMS_SENDER;
-import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.SUPPORT_TEXT;
-
 import generated.se.sundsvall.citizen.CitizenExtended;
 import generated.se.sundsvall.messaging.DeliveryResult;
 import generated.se.sundsvall.messaging.MessageBatchResult;
@@ -69,6 +44,31 @@ import se.sundsvall.postportalservice.integration.messaging.MessagingIntegration
 import se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration;
 import se.sundsvall.postportalservice.service.mapper.AttachmentMapper;
 import se.sundsvall.postportalservice.service.mapper.EntityMapper;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doCallRealMethod;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
+import static org.zalando.problem.Status.BAD_GATEWAY;
+import static se.sundsvall.postportalservice.Constants.FAILED;
+import static se.sundsvall.postportalservice.Constants.SENT;
+import static se.sundsvall.postportalservice.TestDataFactory.MUNICIPALITY_ID;
+import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.CONTACT_INFORMATION_EMAIL;
+import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.CONTACT_INFORMATION_PHONE_NUMBER;
+import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.CONTACT_INFORMATION_URL;
+import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.DEPARTMENT_ID;
+import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.DEPARTMENT_NAME;
+import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.FOLDER_NAME;
+import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.ORGANIZATION_NUMBER;
+import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.SMS_SENDER;
+import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.SUPPORT_TEXT;
 
 @ExtendWith(MockitoExtension.class)
 class MessageServiceTest {

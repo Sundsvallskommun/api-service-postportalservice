@@ -1,11 +1,5 @@
 package se.sundsvall.postportalservice.service.mapper;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static se.sundsvall.postportalservice.Constants.PENDING;
-import static se.sundsvall.postportalservice.Constants.UNDELIVERABLE;
-import static se.sundsvall.postportalservice.TestDataFactory.MOBILE_NUMBER;
-import static se.sundsvall.postportalservice.integration.db.converter.MessageType.LETTER;
-
 import generated.se.sundsvall.citizen.CitizenAddress;
 import generated.se.sundsvall.citizen.CitizenExtended;
 import java.util.List;
@@ -18,6 +12,12 @@ import se.sundsvall.postportalservice.api.model.Address;
 import se.sundsvall.postportalservice.api.model.Recipient;
 import se.sundsvall.postportalservice.api.model.SmsRecipient;
 import se.sundsvall.postportalservice.integration.db.converter.MessageType;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static se.sundsvall.postportalservice.Constants.PENDING;
+import static se.sundsvall.postportalservice.Constants.UNDELIVERABLE;
+import static se.sundsvall.postportalservice.TestDataFactory.MOBILE_NUMBER;
+import static se.sundsvall.postportalservice.integration.db.converter.MessageType.LETTER;
 
 @ExtendWith(MockitoExtension.class)
 class EntityMapperTest {

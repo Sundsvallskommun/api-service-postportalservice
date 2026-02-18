@@ -1,26 +1,5 @@
 package se.sundsvall.postportalservice.service;
 
-import static java.util.Collections.emptyList;
-import static java.util.Optional.ofNullable;
-import static java.util.concurrent.CompletableFuture.supplyAsync;
-import static se.sundsvall.postportalservice.Constants.FAILED;
-import static se.sundsvall.postportalservice.Constants.PENDING;
-import static se.sundsvall.postportalservice.integration.db.converter.MessageType.DIGITAL_REGISTERED_LETTER;
-import static se.sundsvall.postportalservice.integration.db.converter.MessageType.LETTER;
-import static se.sundsvall.postportalservice.integration.db.converter.MessageType.SMS;
-import static se.sundsvall.postportalservice.integration.db.converter.MessageType.SNAIL_MAIL;
-import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.CONTACT_INFORMATION_EMAIL;
-import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.CONTACT_INFORMATION_PHONE_NUMBER;
-import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.CONTACT_INFORMATION_URL;
-import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.DEPARTMENT_ID;
-import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.DEPARTMENT_NAME;
-import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.FOLDER_NAME;
-import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.ORGANIZATION_NUMBER;
-import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.SMS_SENDER;
-import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.SUPPORT_TEXT;
-import static se.sundsvall.postportalservice.service.util.CsvUtil.parseCsvToLegalIds;
-import static se.sundsvall.postportalservice.service.util.SemaphoreUtil.withPermit;
-
 import generated.se.sundsvall.messaging.DeliveryResult;
 import generated.se.sundsvall.messaging.MessageResult;
 import java.util.ArrayList;
@@ -58,6 +37,27 @@ import se.sundsvall.postportalservice.integration.messagingsettings.MessagingSet
 import se.sundsvall.postportalservice.service.mapper.AttachmentMapper;
 import se.sundsvall.postportalservice.service.mapper.EntityMapper;
 import se.sundsvall.postportalservice.service.util.RecipientId;
+
+import static java.util.Collections.emptyList;
+import static java.util.Optional.ofNullable;
+import static java.util.concurrent.CompletableFuture.supplyAsync;
+import static se.sundsvall.postportalservice.Constants.FAILED;
+import static se.sundsvall.postportalservice.Constants.PENDING;
+import static se.sundsvall.postportalservice.integration.db.converter.MessageType.DIGITAL_REGISTERED_LETTER;
+import static se.sundsvall.postportalservice.integration.db.converter.MessageType.LETTER;
+import static se.sundsvall.postportalservice.integration.db.converter.MessageType.SMS;
+import static se.sundsvall.postportalservice.integration.db.converter.MessageType.SNAIL_MAIL;
+import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.CONTACT_INFORMATION_EMAIL;
+import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.CONTACT_INFORMATION_PHONE_NUMBER;
+import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.CONTACT_INFORMATION_URL;
+import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.DEPARTMENT_ID;
+import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.DEPARTMENT_NAME;
+import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.FOLDER_NAME;
+import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.ORGANIZATION_NUMBER;
+import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.SMS_SENDER;
+import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.SUPPORT_TEXT;
+import static se.sundsvall.postportalservice.service.util.CsvUtil.parseCsvToLegalIds;
+import static se.sundsvall.postportalservice.service.util.SemaphoreUtil.withPermit;
 
 @Service
 public class MessageService {
