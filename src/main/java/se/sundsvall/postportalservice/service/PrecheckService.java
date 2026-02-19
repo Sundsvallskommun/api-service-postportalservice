@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-import org.zalando.problem.Problem;
+import se.sundsvall.dept44.problem.Problem;
 import se.sundsvall.postportalservice.api.model.KivraEligibilityRequest;
 import se.sundsvall.postportalservice.api.model.PrecheckCsvResponse;
 import se.sundsvall.postportalservice.api.model.PrecheckResponse;
@@ -34,7 +34,7 @@ import se.sundsvall.postportalservice.service.util.PartyIdMappingHelper.PartyIdM
 import static java.util.Collections.emptyList;
 import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
-import static org.zalando.problem.Status.BAD_REQUEST;
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static se.sundsvall.postportalservice.Constants.INELIGIBLE_MINOR;
 import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.ORGANIZATION_NUMBER;
 

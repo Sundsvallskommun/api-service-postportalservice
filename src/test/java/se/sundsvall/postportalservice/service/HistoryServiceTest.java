@@ -18,7 +18,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
-import org.zalando.problem.Problem;
+import se.sundsvall.dept44.problem.Problem;
 import se.sundsvall.postportalservice.api.model.SigningInformation;
 import se.sundsvall.postportalservice.api.model.SigningStatus;
 import se.sundsvall.postportalservice.integration.db.MessageEntity;
