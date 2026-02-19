@@ -7,8 +7,10 @@ import static org.springframework.http.MediaType.APPLICATION_PDF_VALUE;
 
 import java.io.IOException;
 import java.util.List;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.test.context.jdbc.Sql;
+
 import se.sundsvall.dept44.test.AbstractAppTest;
 import se.sundsvall.dept44.test.annotation.wiremock.WireMockAppTestSuite;
 import se.sundsvall.postportalservice.Application;
@@ -18,7 +20,7 @@ import se.sundsvall.postportalservice.Application;
 	"/db/script/testdata.sql"
 })
 @WireMockAppTestSuite(files = "classpath:/AttachmentIT/", classes = Application.class)
-public class AttachmentIT extends AbstractAppTest {
+class AttachmentIT extends AbstractAppTest {
 
 	private static final String FILE_NAME = "attachment.pdf";
 

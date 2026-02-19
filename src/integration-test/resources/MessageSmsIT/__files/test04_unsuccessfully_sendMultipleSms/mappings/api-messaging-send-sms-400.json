@@ -10,7 +10,7 @@
 				"equalTo": "PostPortalService"
 			},
 			"X-Sent-By": {
-				"equalTo": "TestUser; type=adAccount"
+				"equalTo": "joe01doe; type=adAccount"
 			},
 			"Content-Type": {
 				"equalTo": "application/json"

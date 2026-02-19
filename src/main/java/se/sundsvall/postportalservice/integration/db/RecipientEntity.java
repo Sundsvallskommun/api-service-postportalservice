@@ -2,6 +2,8 @@ package se.sundsvall.postportalservice.integration.db;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -64,6 +66,7 @@ public class RecipientEntity {
 	private String status;
 
 	@Column(name = "type", columnDefinition = "VARCHAR(50)")
+	@Enumerated(EnumType.STRING)
 	private MessageType messageType;
 
 	@Column(name = "status_detail", columnDefinition = "TEXT")

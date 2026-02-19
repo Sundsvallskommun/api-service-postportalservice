@@ -9,14 +9,15 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.webtestclient.autoconfigure.AutoConfigureWebTestClient;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
-import org.zalando.problem.Problem;
-import org.zalando.problem.violations.ConstraintViolationProblem;
-import org.zalando.problem.violations.Violation;
+import se.sundsvall.dept44.problem.Problem;
+import se.sundsvall.dept44.problem.violations.ConstraintViolationProblem;
+import se.sundsvall.dept44.problem.violations.Violation;
 import se.sundsvall.postportalservice.Application;
 import se.sundsvall.postportalservice.service.StatisticsService;
 
@@ -30,6 +31,7 @@ import static se.sundsvall.postportalservice.TestDataFactory.MUNICIPALITY_ID;
 
 @SpringBootTest(classes = Application.class, webEnvironment = RANDOM_PORT)
 @ActiveProfiles("junit")
+@AutoConfigureWebTestClient
 class StatisticsResourceTest {
 
 	@MockitoBean
@@ -71,8 +73,8 @@ class StatisticsResourceTest {
 
 		assertThat(response.getTitle()).isEqualTo("Constraint Violation");
 		assertThat(response.getViolations()).hasSize(1).satisfiesExactly(violation -> {
-			assertThat(violation.getField()).isEqualTo("getStatisticsByDepartment.municipalityId");
-			assertThat(violation.getMessage()).isEqualTo("not a valid municipality ID");
+			assertThat(violation.field()).isEqualTo("getStatisticsByDepartment.municipalityId");
+			assertThat(violation.message()).isEqualTo("not a valid municipality ID");
 		});
 
 		verifyNoInteractions(statisticsServiceMock);
@@ -99,8 +101,8 @@ class StatisticsResourceTest {
 
 	private static Stream<Arguments> getStatisticsByDepartmentMissingParametersProvider() {
 		return Stream.of(
-			Arguments.of("Missing year parameter", new LinkedMultiValueMap<>(Map.of("month", List.of("12"))), "Required request parameter 'year' for method parameter type String is not present"),
-			Arguments.of("Missing month parameter", new LinkedMultiValueMap<>(Map.of("year", List.of("9999"))), "Required request parameter 'month' for method parameter type String is not present"));
+			Arguments.of("Missing year parameter", new LinkedMultiValueMap<>(Map.of("month", List.of("12"))), "Required parameter 'year' is not present."),
+			Arguments.of("Missing month parameter", new LinkedMultiValueMap<>(Map.of("year", List.of("9999"))), "Required parameter 'month' is not present."));
 	}
 
 	@ParameterizedTest(name = "{0}")

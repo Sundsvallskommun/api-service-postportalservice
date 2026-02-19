@@ -3,6 +3,8 @@ package se.sundsvall.postportalservice.integration.db;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.ForeignKey;
 import jakarta.persistence.GeneratedValue;
@@ -44,6 +46,7 @@ public class MessageEntity {
 	private String displayName;
 
 	@Column(name = "message_type", columnDefinition = "VARCHAR(50)")
+	@Enumerated(EnumType.STRING)
 	private MessageType messageType;
 
 	@Column(name = "body", columnDefinition = "TEXT")

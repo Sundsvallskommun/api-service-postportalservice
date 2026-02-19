@@ -60,6 +60,7 @@ class HistoryIT extends AbstractAppTest {
 			.sendRequestAndVerifyResponse();
 	}
 
+	// TODO: Replace base64 in mappings-file with the actual file when dept44 releases a new version.
 	@Test
 	void test05_readLetterReceipt() {
 		setupCall()

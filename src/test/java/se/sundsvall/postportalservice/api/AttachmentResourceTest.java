@@ -4,13 +4,14 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.webtestclient.autoconfigure.AutoConfigureWebTestClient;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
-import org.zalando.problem.violations.ConstraintViolationProblem;
+import se.sundsvall.dept44.problem.violations.ConstraintViolationProblem;
 import se.sundsvall.postportalservice.Application;
 import se.sundsvall.postportalservice.service.AttachmentService;
 
@@ -24,6 +25,7 @@ import static se.sundsvall.postportalservice.TestDataFactory.MUNICIPALITY_ID;
 
 @SpringBootTest(classes = Application.class, webEnvironment = RANDOM_PORT)
 @ActiveProfiles("junit")
+@AutoConfigureWebTestClient
 class AttachmentResourceTest {
 
 	@MockitoBean
@@ -76,11 +78,11 @@ class AttachmentResourceTest {
 
 		assertThat(response.getTitle()).isEqualTo("Constraint Violation");
 		assertThat(response.getViolations()).satisfiesExactlyInAnyOrder(violation -> {
-			assertThat(violation.getField()).isEqualTo("downloadAttachment.municipalityId");
-			assertThat(violation.getMessage()).isEqualTo("not a valid municipality ID");
+			assertThat(violation.field()).isEqualTo("downloadAttachment.municipalityId");
+			assertThat(violation.message()).isEqualTo("not a valid municipality ID");
 		}, violation -> {
-			assertThat(violation.getField()).isEqualTo("downloadAttachment.attachmentId");
-			assertThat(violation.getMessage()).isEqualTo("not a valid UUID");
+			assertThat(violation.field()).isEqualTo("downloadAttachment.attachmentId");
+			assertThat(violation.message()).isEqualTo("not a valid UUID");
 		});
 	}
 }

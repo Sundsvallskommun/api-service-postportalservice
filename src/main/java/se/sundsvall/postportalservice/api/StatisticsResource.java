@@ -21,6 +21,7 @@ import se.sundsvall.dept44.problem.Problem;
 import se.sundsvall.postportalservice.api.model.Statistics;
 import se.sundsvall.postportalservice.service.StatisticsService;
 
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.http.MediaType.APPLICATION_PROBLEM_JSON_VALUE;
 import static org.springframework.http.ResponseEntity.ok;
 
@@ -44,7 +45,7 @@ class StatisticsResource {
 	@Operation(summary = "Get general statistics for each department within the municipality", responses = {
 		@ApiResponse(responseCode = "200", description = "OK", useReturnTypeSchema = true)
 	})
-	@GetMapping("/departments")
+	@GetMapping(value = "/departments", produces = APPLICATION_JSON_VALUE)
 	ResponseEntity<List<Statistics>> getStatisticsByDepartment(
 		@Parameter(name = "municipalityId", description = "Municipality ID", example = "2281") @ValidMunicipalityId @PathVariable final String municipalityId,
 		@Parameter(name = "year", description = "Filter statistics by year") @RequestParam @Pattern(regexp = "[0-9]{4}", message = "must be a value between 0 and 9999") final String year,
