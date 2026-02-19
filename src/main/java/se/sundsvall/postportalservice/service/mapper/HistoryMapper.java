@@ -1,9 +1,5 @@
 package se.sundsvall.postportalservice.service.mapper;
 
-import static java.util.Collections.emptyList;
-import static java.util.Optional.ofNullable;
-import static se.sundsvall.postportalservice.service.util.StringUtil.calculateFullName;
-
 import generated.se.sundsvall.digitalregisteredletter.LetterStatus;
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -16,6 +12,10 @@ import se.sundsvall.postportalservice.integration.db.AttachmentEntity;
 import se.sundsvall.postportalservice.integration.db.MessageEntity;
 import se.sundsvall.postportalservice.integration.db.RecipientEntity;
 import se.sundsvall.postportalservice.integration.db.converter.MessageType;
+
+import static java.util.Collections.emptyList;
+import static java.util.Optional.ofNullable;
+import static se.sundsvall.postportalservice.service.util.StringUtil.calculateFullName;
 
 @Component
 public class HistoryMapper {

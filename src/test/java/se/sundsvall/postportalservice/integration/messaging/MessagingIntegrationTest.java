@@ -1,15 +1,5 @@
 package se.sundsvall.postportalservice.integration.messaging;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.when;
-import static se.sundsvall.postportalservice.Constants.ORIGIN;
-import static se.sundsvall.postportalservice.TestDataFactory.MOBILE_NUMBER;
-import static se.sundsvall.postportalservice.TestDataFactory.MUNICIPALITY_ID;
-import static se.sundsvall.postportalservice.TestDataFactory.SUNDSVALL_MUNICIPALITY_ORG_NO;
-
 import generated.se.sundsvall.messaging.DeliveryResult;
 import generated.se.sundsvall.messaging.DigitalMailAttachment;
 import generated.se.sundsvall.messaging.DigitalMailRequest;
@@ -36,6 +26,16 @@ import se.sundsvall.postportalservice.integration.db.MessageEntity;
 import se.sundsvall.postportalservice.integration.db.RecipientEntity;
 import se.sundsvall.postportalservice.integration.db.UserEntity;
 import se.sundsvall.postportalservice.integration.db.converter.MessageType;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
+import static se.sundsvall.postportalservice.Constants.ORIGIN;
+import static se.sundsvall.postportalservice.TestDataFactory.MOBILE_NUMBER;
+import static se.sundsvall.postportalservice.TestDataFactory.MUNICIPALITY_ID;
+import static se.sundsvall.postportalservice.TestDataFactory.SUNDSVALL_MUNICIPALITY_ORG_NO;
 
 @ExtendWith(MockitoExtension.class)
 class MessagingIntegrationTest {

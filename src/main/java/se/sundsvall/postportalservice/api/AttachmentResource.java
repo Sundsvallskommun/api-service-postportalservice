@@ -1,9 +1,5 @@
 package se.sundsvall.postportalservice.api;
 
-import static org.springframework.http.MediaType.ALL_VALUE;
-import static org.springframework.http.MediaType.APPLICATION_PROBLEM_JSON_VALUE;
-import static org.springframework.http.ResponseEntity.ok;
-
 import generated.se.sundsvall.messaging.ConstraintViolationProblem;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -21,6 +17,10 @@ import org.zalando.problem.Problem;
 import se.sundsvall.dept44.common.validators.annotation.ValidMunicipalityId;
 import se.sundsvall.dept44.common.validators.annotation.ValidUuid;
 import se.sundsvall.postportalservice.service.AttachmentService;
+
+import static org.springframework.http.MediaType.ALL_VALUE;
+import static org.springframework.http.MediaType.APPLICATION_PROBLEM_JSON_VALUE;
+import static org.springframework.http.ResponseEntity.ok;
 
 @Validated
 @RestController

@@ -1,13 +1,5 @@
 package se.sundsvall.postportalservice.api;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
-import static se.sundsvall.postportalservice.TestDataFactory.INVALID_MUNICIPALITY_ID;
-import static se.sundsvall.postportalservice.TestDataFactory.MUNICIPALITY_ID;
-
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -27,6 +19,14 @@ import org.zalando.problem.violations.ConstraintViolationProblem;
 import org.zalando.problem.violations.Violation;
 import se.sundsvall.postportalservice.Application;
 import se.sundsvall.postportalservice.service.StatisticsService;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
+import static se.sundsvall.postportalservice.TestDataFactory.INVALID_MUNICIPALITY_ID;
+import static se.sundsvall.postportalservice.TestDataFactory.MUNICIPALITY_ID;
 
 @SpringBootTest(classes = Application.class, webEnvironment = RANDOM_PORT)
 @ActiveProfiles("junit")

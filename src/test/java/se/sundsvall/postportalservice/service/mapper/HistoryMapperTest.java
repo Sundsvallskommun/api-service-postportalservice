@@ -1,8 +1,5 @@
 package se.sundsvall.postportalservice.service.mapper;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static se.sundsvall.postportalservice.integration.db.converter.MessageType.DIGITAL_MAIL;
-
 import generated.se.sundsvall.digitalregisteredletter.LetterStatus;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -11,6 +8,9 @@ import org.junit.jupiter.api.Test;
 import se.sundsvall.postportalservice.integration.db.AttachmentEntity;
 import se.sundsvall.postportalservice.integration.db.MessageEntity;
 import se.sundsvall.postportalservice.integration.db.RecipientEntity;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static se.sundsvall.postportalservice.integration.db.converter.MessageType.DIGITAL_MAIL;
 
 class HistoryMapperTest {
 

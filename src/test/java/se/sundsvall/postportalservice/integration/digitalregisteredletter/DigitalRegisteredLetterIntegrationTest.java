@@ -1,15 +1,5 @@
 package se.sundsvall.postportalservice.integration.digitalregisteredletter;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.when;
-import static org.zalando.problem.Status.INTERNAL_SERVER_ERROR;
-import static se.sundsvall.postportalservice.TestDataFactory.MUNICIPALITY_ID;
-
 import feign.Response;
 import generated.se.sundsvall.digitalregisteredletter.EligibilityRequest;
 import generated.se.sundsvall.digitalregisteredletter.Letter;
@@ -42,6 +32,16 @@ import se.sundsvall.postportalservice.integration.db.DepartmentEntity;
 import se.sundsvall.postportalservice.integration.db.MessageEntity;
 import se.sundsvall.postportalservice.integration.db.RecipientEntity;
 import se.sundsvall.postportalservice.integration.db.UserEntity;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
+import static org.zalando.problem.Status.INTERNAL_SERVER_ERROR;
+import static se.sundsvall.postportalservice.TestDataFactory.MUNICIPALITY_ID;
 
 @ExtendWith(MockitoExtension.class)
 class DigitalRegisteredLetterIntegrationTest {

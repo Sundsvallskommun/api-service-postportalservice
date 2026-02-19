@@ -1,12 +1,5 @@
 package se.sundsvall.postportalservice.service;
 
-import static java.util.Collections.emptyList;
-import static java.util.Optional.of;
-import static java.util.Optional.ofNullable;
-import static org.zalando.problem.Status.BAD_REQUEST;
-import static se.sundsvall.postportalservice.Constants.INELIGIBLE_MINOR;
-import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.ORGANIZATION_NUMBER;
-
 import generated.se.sundsvall.citizen.CitizenExtended;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -37,6 +30,13 @@ import se.sundsvall.postportalservice.service.util.CitizenCategorizationHelper.S
 import se.sundsvall.postportalservice.service.util.CsvUtil;
 import se.sundsvall.postportalservice.service.util.PartyIdMappingHelper;
 import se.sundsvall.postportalservice.service.util.PartyIdMappingHelper.PartyIdMapping;
+
+import static java.util.Collections.emptyList;
+import static java.util.Optional.of;
+import static java.util.Optional.ofNullable;
+import static org.zalando.problem.Status.BAD_REQUEST;
+import static se.sundsvall.postportalservice.Constants.INELIGIBLE_MINOR;
+import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.ORGANIZATION_NUMBER;
 
 @Service
 public class PrecheckService {

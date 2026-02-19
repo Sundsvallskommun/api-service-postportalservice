@@ -1,8 +1,5 @@
 package se.sundsvall.postportalservice.integration.messaging;
 
-import static java.util.Collections.emptyList;
-import static org.apache.commons.lang3.ObjectUtils.anyNull;
-
 import generated.se.sundsvall.messaging.Address;
 import generated.se.sundsvall.messaging.DigitalMailAttachment;
 import generated.se.sundsvall.messaging.DigitalMailParty;
@@ -22,6 +19,9 @@ import java.util.UUID;
 import se.sundsvall.postportalservice.integration.db.AttachmentEntity;
 import se.sundsvall.postportalservice.integration.db.MessageEntity;
 import se.sundsvall.postportalservice.integration.db.RecipientEntity;
+
+import static java.util.Collections.emptyList;
+import static org.apache.commons.lang3.ObjectUtils.anyNull;
 
 public final class MessagingMapper {
 

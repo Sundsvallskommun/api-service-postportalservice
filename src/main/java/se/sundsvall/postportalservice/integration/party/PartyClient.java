@@ -1,8 +1,5 @@
 package se.sundsvall.postportalservice.integration.party;
 
-import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
-import static se.sundsvall.postportalservice.integration.party.configuration.PartyConfiguration.CLIENT_ID;
-
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import java.util.List;
 import java.util.Map;
@@ -11,6 +8,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import se.sundsvall.postportalservice.integration.party.configuration.PartyConfiguration;
+
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
+import static se.sundsvall.postportalservice.integration.party.configuration.PartyConfiguration.CLIENT_ID;
 
 @FeignClient(
 	name = CLIENT_ID,

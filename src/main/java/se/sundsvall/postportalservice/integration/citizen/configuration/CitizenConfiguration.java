@@ -1,7 +1,5 @@
 package se.sundsvall.postportalservice.integration.citizen.configuration;
 
-import static org.springframework.http.HttpStatus.NOT_FOUND;
-
 import java.util.List;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.openfeign.FeignBuilderCustomizer;
@@ -11,6 +9,8 @@ import org.springframework.security.oauth2.client.registration.ClientRegistratio
 import se.sundsvall.dept44.configuration.feign.FeignConfiguration;
 import se.sundsvall.dept44.configuration.feign.FeignMultiCustomizer;
 import se.sundsvall.dept44.configuration.feign.decoder.ProblemErrorDecoder;
+
+import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 @EnableConfigurationProperties(CitizenProperties.class)
 @Import(FeignConfiguration.class)

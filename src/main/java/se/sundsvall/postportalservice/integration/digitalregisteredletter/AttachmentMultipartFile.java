@@ -1,7 +1,5 @@
 package se.sundsvall.postportalservice.integration.digitalregisteredletter;
 
-import static java.nio.file.Files.write;
-
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
@@ -9,6 +7,8 @@ import java.io.InputStream;
 import java.sql.Blob;
 import java.sql.SQLException;
 import org.springframework.web.multipart.MultipartFile;
+
+import static java.nio.file.Files.write;
 
 public class AttachmentMultipartFile implements MultipartFile {
 

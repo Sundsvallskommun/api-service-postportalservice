@@ -1,17 +1,5 @@
 package se.sundsvall.postportalservice.api;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.when;
-import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
-import static org.springframework.http.ResponseEntity.ok;
-import static org.zalando.problem.Status.NOT_FOUND;
-import static se.sundsvall.postportalservice.TestDataFactory.INVALID_MUNICIPALITY_ID;
-import static se.sundsvall.postportalservice.TestDataFactory.MUNICIPALITY_ID;
-
 import java.time.OffsetDateTime;
 import java.util.UUID;
 import org.junit.jupiter.api.AfterEach;
@@ -33,6 +21,18 @@ import se.sundsvall.postportalservice.api.model.Messages;
 import se.sundsvall.postportalservice.api.model.SigningInformation;
 import se.sundsvall.postportalservice.api.model.SigningStatus;
 import se.sundsvall.postportalservice.service.HistoryService;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
+import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
+import static org.springframework.http.ResponseEntity.ok;
+import static org.zalando.problem.Status.NOT_FOUND;
+import static se.sundsvall.postportalservice.TestDataFactory.INVALID_MUNICIPALITY_ID;
+import static se.sundsvall.postportalservice.TestDataFactory.MUNICIPALITY_ID;
 
 @SpringBootTest(classes = Application.class, webEnvironment = RANDOM_PORT)
 @ActiveProfiles("junit")

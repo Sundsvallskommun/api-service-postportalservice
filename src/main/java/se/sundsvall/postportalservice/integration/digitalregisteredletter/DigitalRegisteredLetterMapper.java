@@ -1,10 +1,5 @@
 package se.sundsvall.postportalservice.integration.digitalregisteredletter;
 
-import static java.util.Collections.emptyList;
-import static java.util.Optional.ofNullable;
-import static org.apache.commons.lang3.ObjectUtils.anyNull;
-import static org.zalando.fauxpas.FauxPas.throwingFunction;
-
 import generated.se.sundsvall.digitalregisteredletter.Device;
 import generated.se.sundsvall.digitalregisteredletter.EligibilityRequest;
 import generated.se.sundsvall.digitalregisteredletter.LetterRequest;
@@ -24,6 +19,11 @@ import se.sundsvall.postportalservice.integration.db.AttachmentEntity;
 import se.sundsvall.postportalservice.integration.db.DepartmentEntity;
 import se.sundsvall.postportalservice.integration.db.MessageEntity;
 import se.sundsvall.postportalservice.integration.db.RecipientEntity;
+
+import static java.util.Collections.emptyList;
+import static java.util.Optional.ofNullable;
+import static org.apache.commons.lang3.ObjectUtils.anyNull;
+import static org.zalando.fauxpas.FauxPas.throwingFunction;
 
 @Component
 public class DigitalRegisteredLetterMapper {

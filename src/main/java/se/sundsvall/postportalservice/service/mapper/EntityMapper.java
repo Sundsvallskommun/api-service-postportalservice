@@ -1,10 +1,5 @@
 package se.sundsvall.postportalservice.service.mapper;
 
-import static java.util.Collections.emptyList;
-import static se.sundsvall.postportalservice.Constants.INELIGIBLE_MINOR;
-import static se.sundsvall.postportalservice.Constants.PENDING;
-import static se.sundsvall.postportalservice.Constants.UNDELIVERABLE;
-
 import generated.se.sundsvall.citizen.CitizenExtended;
 import java.util.Optional;
 import java.util.UUID;
@@ -14,6 +9,11 @@ import se.sundsvall.postportalservice.api.model.Recipient;
 import se.sundsvall.postportalservice.api.model.SmsRecipient;
 import se.sundsvall.postportalservice.integration.db.RecipientEntity;
 import se.sundsvall.postportalservice.integration.db.converter.MessageType;
+
+import static java.util.Collections.emptyList;
+import static se.sundsvall.postportalservice.Constants.INELIGIBLE_MINOR;
+import static se.sundsvall.postportalservice.Constants.PENDING;
+import static se.sundsvall.postportalservice.Constants.UNDELIVERABLE;
 
 @Component
 public class EntityMapper {

@@ -1,9 +1,5 @@
 package se.sundsvall.postportalservice.integration.messaging;
 
-import static org.springframework.http.MediaType.ALL_VALUE;
-import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
-import static se.sundsvall.postportalservice.integration.messaging.configuration.MessagingConfiguration.CLIENT_ID;
-
 import generated.se.sundsvall.messaging.DigitalMailRequest;
 import generated.se.sundsvall.messaging.Mailbox;
 import generated.se.sundsvall.messaging.MessageBatchResult;
@@ -21,6 +17,10 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 import se.sundsvall.dept44.support.Identifier;
 import se.sundsvall.postportalservice.integration.messaging.configuration.MessagingConfiguration;
+
+import static org.springframework.http.MediaType.ALL_VALUE;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
+import static se.sundsvall.postportalservice.integration.messaging.configuration.MessagingConfiguration.CLIENT_ID;
 
 @FeignClient(
 	name = CLIENT_ID,

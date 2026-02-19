@@ -1,10 +1,5 @@
 package se.sundsvall.postportalservice.api;
 
-import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
-import static org.springframework.http.MediaType.APPLICATION_PROBLEM_JSON_VALUE;
-import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;
-import static org.springframework.http.ResponseEntity.ok;
-
 import generated.se.sundsvall.messaging.ConstraintViolationProblem;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -34,6 +29,11 @@ import se.sundsvall.postportalservice.api.model.PrecheckResponse;
 import se.sundsvall.postportalservice.api.validation.ValidCsv;
 import se.sundsvall.postportalservice.api.validation.ValidIdentifier;
 import se.sundsvall.postportalservice.service.PrecheckService;
+
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
+import static org.springframework.http.MediaType.APPLICATION_PROBLEM_JSON_VALUE;
+import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;
+import static org.springframework.http.ResponseEntity.ok;
 
 @Validated
 @RestController

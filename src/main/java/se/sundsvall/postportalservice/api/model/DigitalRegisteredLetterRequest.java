@@ -1,13 +1,13 @@
 package se.sundsvall.postportalservice.api.model;
 
-import static org.springframework.http.MediaType.TEXT_HTML_VALUE;
-import static org.springframework.http.MediaType.TEXT_PLAIN_VALUE;
-
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import java.util.Objects;
 import se.sundsvall.dept44.common.validators.annotation.OneOf;
 import se.sundsvall.dept44.common.validators.annotation.ValidUuid;
+
+import static org.springframework.http.MediaType.TEXT_HTML_VALUE;
+import static org.springframework.http.MediaType.TEXT_PLAIN_VALUE;
 
 @Schema(description = "Digital registered letter request model")
 public class DigitalRegisteredLetterRequest {

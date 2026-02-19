@@ -1,8 +1,5 @@
 package se.sundsvall.postportalservice.integration.digitalregisteredletter;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.when;
-
 import generated.se.sundsvall.digitalregisteredletter.Device;
 import generated.se.sundsvall.digitalregisteredletter.SigningInfo;
 import generated.se.sundsvall.digitalregisteredletter.StepUp;
@@ -23,6 +20,9 @@ import se.sundsvall.postportalservice.integration.db.AttachmentEntity;
 import se.sundsvall.postportalservice.integration.db.DepartmentEntity;
 import se.sundsvall.postportalservice.integration.db.MessageEntity;
 import se.sundsvall.postportalservice.integration.db.RecipientEntity;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class DigitalRegisteredLetterMapperTest {

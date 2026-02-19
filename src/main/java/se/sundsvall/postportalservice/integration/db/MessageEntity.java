@@ -1,7 +1,5 @@
 package se.sundsvall.postportalservice.integration.db;
 
-import static org.hibernate.annotations.TimeZoneStorageType.NORMALIZE;
-
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -22,6 +20,8 @@ import java.util.List;
 import java.util.Objects;
 import org.hibernate.annotations.TimeZoneStorage;
 import se.sundsvall.postportalservice.integration.db.converter.MessageType;
+
+import static org.hibernate.annotations.TimeZoneStorageType.NORMALIZE;
 
 @Entity
 @Table(name = "message", indexes = {

@@ -1,8 +1,5 @@
 package se.sundsvall.postportalservice.service;
 
-import static org.zalando.problem.Status.NOT_FOUND;
-import static se.sundsvall.postportalservice.integration.db.converter.MessageType.DIGITAL_REGISTERED_LETTER;
-
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,6 +22,9 @@ import se.sundsvall.postportalservice.integration.db.dao.MessageRepository;
 import se.sundsvall.postportalservice.integration.digitalregisteredletter.DigitalRegisteredLetterIntegration;
 import se.sundsvall.postportalservice.integration.party.PartyIntegration;
 import se.sundsvall.postportalservice.service.mapper.HistoryMapper;
+
+import static org.zalando.problem.Status.NOT_FOUND;
+import static se.sundsvall.postportalservice.integration.db.converter.MessageType.DIGITAL_REGISTERED_LETTER;
 
 @Service
 public class HistoryService {
