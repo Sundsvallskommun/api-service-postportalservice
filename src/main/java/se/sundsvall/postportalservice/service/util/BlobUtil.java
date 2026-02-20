@@ -8,10 +8,10 @@ import java.util.Optional;
 import org.hibernate.Session;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
-import org.zalando.problem.Problem;
+import se.sundsvall.dept44.problem.Problem;
 
+import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
 import static org.zalando.fauxpas.FauxPas.throwingFunction;
-import static org.zalando.problem.Status.INTERNAL_SERVER_ERROR;
 
 @Component
 public class BlobUtil {

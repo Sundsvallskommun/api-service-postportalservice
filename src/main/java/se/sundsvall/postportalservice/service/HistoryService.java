@@ -11,8 +11,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
-import org.zalando.problem.Problem;
 import se.sundsvall.dept44.models.api.paging.PagingAndSortingMetaData;
+import se.sundsvall.dept44.problem.Problem;
 import se.sundsvall.postportalservice.api.model.Message;
 import se.sundsvall.postportalservice.api.model.MessageDetails;
 import se.sundsvall.postportalservice.api.model.Messages;
@@ -23,7 +23,7 @@ import se.sundsvall.postportalservice.integration.digitalregisteredletter.Digita
 import se.sundsvall.postportalservice.integration.party.PartyIntegration;
 import se.sundsvall.postportalservice.service.mapper.HistoryMapper;
 
-import static org.zalando.problem.Status.NOT_FOUND;
+import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static se.sundsvall.postportalservice.integration.db.converter.MessageType.DIGITAL_REGISTERED_LETTER;
 
 @Service

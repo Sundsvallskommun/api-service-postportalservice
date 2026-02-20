@@ -13,9 +13,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
-import org.zalando.problem.Problem;
 import se.sundsvall.dept44.common.validators.annotation.ValidMunicipalityId;
 import se.sundsvall.dept44.common.validators.annotation.ValidUuid;
+import se.sundsvall.dept44.problem.Problem;
 import se.sundsvall.postportalservice.service.AttachmentService;
 
 import static org.springframework.http.MediaType.ALL_VALUE;

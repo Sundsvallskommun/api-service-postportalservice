@@ -7,14 +7,15 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.webtestclient.autoconfigure.AutoConfigureWebTestClient;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
-import org.zalando.problem.Problem;
-import org.zalando.problem.violations.ConstraintViolationProblem;
+import se.sundsvall.dept44.problem.Problem;
+import se.sundsvall.dept44.problem.violations.ConstraintViolationProblem;
 import se.sundsvall.postportalservice.Application;
 import se.sundsvall.postportalservice.api.model.MessageDetails;
 import se.sundsvall.postportalservice.api.model.Messages;
@@ -29,13 +30,14 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
+import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.http.ResponseEntity.ok;
-import static org.zalando.problem.Status.NOT_FOUND;
 import static se.sundsvall.postportalservice.TestDataFactory.INVALID_MUNICIPALITY_ID;
 import static se.sundsvall.postportalservice.TestDataFactory.MUNICIPALITY_ID;
 
 @SpringBootTest(classes = Application.class, webEnvironment = RANDOM_PORT)
 @ActiveProfiles("junit")
+@AutoConfigureWebTestClient
 class HistoryResourceTest {
 
 	@MockitoBean
@@ -137,12 +139,12 @@ class HistoryResourceTest {
 		assertThat(response.getTitle()).isEqualTo("Constraint Violation");
 		assertThat(response.getViolations()).hasSize(2).satisfiesExactlyInAnyOrder(
 			violation -> {
-				assertThat(violation.getField()).isEqualTo("getMessageDetails.municipalityId");
-				assertThat(violation.getMessage()).isEqualTo("not a valid municipality ID");
+				assertThat(violation.field()).isEqualTo("getMessageDetails.municipalityId");
+				assertThat(violation.message()).isEqualTo("not a valid municipality ID");
 			},
 			violation -> {
-				assertThat(violation.getField()).isEqualTo("getMessageDetails.messageId");
-				assertThat(violation.getMessage()).isEqualTo("not a valid UUID");
+				assertThat(violation.field()).isEqualTo("getMessageDetails.messageId");
+				assertThat(violation.message()).isEqualTo("not a valid UUID");
 			});
 	}
 
@@ -180,8 +182,8 @@ class HistoryResourceTest {
 		assertThat(response.getTitle()).isEqualTo("Constraint Violation");
 		assertThat(response.getViolations()).hasSize(1).satisfiesExactlyInAnyOrder(
 			violation -> {
-				assertThat(violation.getField()).isEqualTo("getUserMessages.municipalityId");
-				assertThat(violation.getMessage()).isEqualTo("not a valid municipality ID");
+				assertThat(violation.field()).isEqualTo("getUserMessages.municipalityId");
+				assertThat(violation.message()).isEqualTo("not a valid municipality ID");
 			});
 	}
 
@@ -237,12 +239,12 @@ class HistoryResourceTest {
 		assertThat(response.getTitle()).isEqualTo("Constraint Violation");
 		assertThat(response.getViolations()).hasSize(2).satisfiesExactlyInAnyOrder(
 			violation -> {
-				assertThat(violation.getField()).isEqualTo("getSigningInformation.municipalityId");
-				assertThat(violation.getMessage()).isEqualTo("not a valid municipality ID");
+				assertThat(violation.field()).isEqualTo("getSigningInformation.municipalityId");
+				assertThat(violation.message()).isEqualTo("not a valid municipality ID");
 			},
 			violation -> {
-				assertThat(violation.getField()).isEqualTo("getSigningInformation.messageId");
-				assertThat(violation.getMessage()).isEqualTo("not a valid UUID");
+				assertThat(violation.field()).isEqualTo("getSigningInformation.messageId");
+				assertThat(violation.message()).isEqualTo("not a valid UUID");
 			});
 
 	}
@@ -296,12 +298,12 @@ class HistoryResourceTest {
 		assertThat(response.getTitle()).isEqualTo("Constraint Violation");
 		assertThat(response.getViolations()).hasSize(2).satisfiesExactlyInAnyOrder(
 			violation -> {
-				assertThat(violation.getField()).isEqualTo("readLetterReceipt.municipalityId");
-				assertThat(violation.getMessage()).isEqualTo("not a valid municipality ID");
+				assertThat(violation.field()).isEqualTo("readLetterReceipt.municipalityId");
+				assertThat(violation.message()).isEqualTo("not a valid municipality ID");
 			},
 			violation -> {
-				assertThat(violation.getField()).isEqualTo("readLetterReceipt.messageId");
-				assertThat(violation.getMessage()).isEqualTo("not a valid UUID");
+				assertThat(violation.field()).isEqualTo("readLetterReceipt.messageId");
+				assertThat(violation.message()).isEqualTo("not a valid UUID");
 			});
 	}
 

@@ -11,6 +11,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.webtestclient.autoconfigure.AutoConfigureWebTestClient;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.MultipartBodyBuilder;
@@ -18,9 +19,9 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.web.multipart.MultipartFile;
-import org.zalando.problem.Problem;
-import org.zalando.problem.violations.ConstraintViolationProblem;
-import org.zalando.problem.violations.Violation;
+import se.sundsvall.dept44.problem.Problem;
+import se.sundsvall.dept44.problem.violations.ConstraintViolationProblem;
+import se.sundsvall.dept44.problem.violations.Violation;
 import se.sundsvall.dept44.support.Identifier;
 import se.sundsvall.postportalservice.Application;
 import se.sundsvall.postportalservice.api.model.KivraEligibilityRequest;
@@ -50,6 +51,7 @@ import static se.sundsvall.postportalservice.TestDataFactory.MUNICIPALITY_ID;
 
 @SpringBootTest(classes = Application.class, webEnvironment = RANDOM_PORT)
 @ActiveProfiles("junit")
+@AutoConfigureWebTestClient
 class PrecheckResourceTest {
 
 	@MockitoBean
@@ -184,7 +186,7 @@ class PrecheckResourceTest {
 			.getResponseBody();
 
 		assertThat(response.getTitle()).isEqualTo("Bad Request");
-		assertThat(response.getDetail()).isEqualTo("Required request header 'X-Sent-By' for method parameter type String is not present");
+		assertThat(response.getDetail()).isEqualTo("Required header 'X-Sent-By' is not present.");
 	}
 
 	@Test
@@ -205,8 +207,8 @@ class PrecheckResourceTest {
 
 		assertThat(response.getTitle()).isEqualTo("Constraint Violation");
 		assertThat(response.getViolations()).hasSize(1).satisfiesExactly(violation -> {
-			assertThat(violation.getField()).isEqualTo("precheckRecipients.municipalityId");
-			assertThat(violation.getMessage()).isEqualTo("not a valid municipality ID");
+			assertThat(violation.field()).isEqualTo("precheckRecipients.municipalityId");
+			assertThat(violation.message()).isEqualTo("not a valid municipality ID");
 		});
 
 		verifyNoInteractions(precheckServiceMock);
@@ -278,8 +280,8 @@ class PrecheckResourceTest {
 
 		assertThat(response.getTitle()).isEqualTo("Constraint Violation");
 		assertThat(response.getViolations()).hasSize(1).satisfiesExactly(violation -> {
-			assertThat(violation.getField()).isEqualTo("checkKivraEligibility.municipalityId");
-			assertThat(violation.getMessage()).isEqualTo("not a valid municipality ID");
+			assertThat(violation.field()).isEqualTo("checkKivraEligibility.municipalityId");
+			assertThat(violation.message()).isEqualTo("not a valid municipality ID");
 		});
 
 		verifyNoInteractions(precheckServiceMock);

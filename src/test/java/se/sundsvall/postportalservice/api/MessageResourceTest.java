@@ -5,21 +5,24 @@ import java.util.UUID;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.webtestclient.autoconfigure.AutoConfigureWebTestClient;
 import org.springframework.http.client.MultipartBodyBuilder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.web.multipart.MultipartFile;
-import org.zalando.problem.Problem;
-import org.zalando.problem.violations.ConstraintViolationProblem;
-import org.zalando.problem.violations.Violation;
+import se.sundsvall.dept44.problem.Problem;
+import se.sundsvall.dept44.problem.violations.ConstraintViolationProblem;
+import se.sundsvall.dept44.problem.violations.Violation;
 import se.sundsvall.postportalservice.Application;
 import se.sundsvall.postportalservice.api.model.Address;
 import se.sundsvall.postportalservice.api.model.DigitalRegisteredLetterRequest;
@@ -51,6 +54,8 @@ import static se.sundsvall.postportalservice.TestDataFactory.createValidSmsReque
 
 @SpringBootTest(classes = Application.class, webEnvironment = RANDOM_PORT)
 @ActiveProfiles("junit")
+@AutoConfigureWebTestClient
+@ExtendWith(MockitoExtension.class)
 class MessageResourceTest {
 
 	@MockitoBean
@@ -124,7 +129,7 @@ class MessageResourceTest {
 			.getResponseBody();
 
 		assertThat(response.getTitle()).isEqualTo("Bad Request");
-		assertThat(response.getDetail()).isEqualTo("Required request header 'X-Sent-By' for method parameter type String is not present");
+		assertThat(response.getDetail()).isEqualTo("Required header 'X-Sent-By' is not present.");
 	}
 
 	@Test
@@ -147,8 +152,8 @@ class MessageResourceTest {
 
 		assertThat(response.getTitle()).isEqualTo("Constraint Violation");
 		assertThat(response.getViolations()).hasSize(1).satisfiesExactly(violation -> {
-			assertThat(violation.getField()).isEqualTo("sendLetter.municipalityId");
-			assertThat(violation.getMessage()).isEqualTo("not a valid municipality ID");
+			assertThat(violation.field()).isEqualTo("sendLetter.municipalityId");
+			assertThat(violation.message()).isEqualTo("not a valid municipality ID");
 		});
 	}
 
@@ -279,8 +284,8 @@ class MessageResourceTest {
 
 		assertThat(response.getTitle()).isEqualTo("Constraint Violation");
 		assertThat(response.getViolations()).satisfiesExactly(violation -> {
-			assertThat(violation.getField()).isEqualTo("sendLetter.attachments");
-			assertThat(violation.getMessage()).isEqualTo("no duplicate file names allowed in the list of files");
+			assertThat(violation.field()).isEqualTo("sendLetter.attachments");
+			assertThat(violation.message()).isEqualTo("no duplicate file names allowed in the list of files");
 		});
 	}
 
@@ -335,7 +340,7 @@ class MessageResourceTest {
 			.getResponseBody();
 
 		assertThat(response.getTitle()).isEqualTo("Bad Request");
-		assertThat(response.getDetail()).isEqualTo("Required request header 'X-Sent-By' for method parameter type String is not present");
+		assertThat(response.getDetail()).isEqualTo("Required header 'X-Sent-By' is not present.");
 	}
 
 	@Test
@@ -357,8 +362,8 @@ class MessageResourceTest {
 
 		assertThat(response.getTitle()).isEqualTo("Constraint Violation");
 		assertThat(response.getViolations()).hasSize(1).satisfiesExactly(violation -> {
-			assertThat(violation.getField()).isEqualTo("sendDigitalRegisteredLetter.municipalityId");
-			assertThat(violation.getMessage()).isEqualTo("not a valid municipality ID");
+			assertThat(violation.field()).isEqualTo("sendDigitalRegisteredLetter.municipalityId");
+			assertThat(violation.message()).isEqualTo("not a valid municipality ID");
 		});
 	}
 
@@ -445,8 +450,8 @@ class MessageResourceTest {
 
 		assertThat(response.getTitle()).isEqualTo("Constraint Violation");
 		assertThat(response.getViolations()).satisfiesExactly(violation -> {
-			assertThat(violation.getField()).isEqualTo("sendDigitalRegisteredLetter.attachments");
-			assertThat(violation.getMessage()).isEqualTo("no duplicate file names allowed in the list of files");
+			assertThat(violation.field()).isEqualTo("sendDigitalRegisteredLetter.attachments");
+			assertThat(violation.message()).isEqualTo("no duplicate file names allowed in the list of files");
 		});
 	}
 
@@ -469,8 +474,8 @@ class MessageResourceTest {
 
 		assertThat(response.getTitle()).isEqualTo("Constraint Violation");
 		assertThat(response.getViolations()).satisfiesExactly(violation -> {
-			assertThat(violation.getField()).isEqualTo("sendDigitalRegisteredLetter.attachments");
-			assertThat(violation.getMessage()).isEqualTo("content type must be application/pdf");
+			assertThat(violation.field()).isEqualTo("sendDigitalRegisteredLetter.attachments");
+			assertThat(violation.message()).isEqualTo("content type must be application/pdf");
 		});
 	}
 
@@ -507,7 +512,7 @@ class MessageResourceTest {
 			.getResponseBody();
 
 		assertThat(response.getTitle()).isEqualTo("Bad Request");
-		assertThat(response.getDetail()).isEqualTo("Required request header 'X-Sent-By' for method parameter type String is not present");
+		assertThat(response.getDetail()).isEqualTo("Required header 'X-Sent-By' is not present.");
 	}
 
 	@Test
@@ -524,8 +529,8 @@ class MessageResourceTest {
 
 		assertThat(response.getTitle()).isEqualTo("Constraint Violation");
 		assertThat(response.getViolations()).hasSize(1).satisfiesExactly(violation -> {
-			assertThat(violation.getField()).isEqualTo("sendSms.municipalityId");
-			assertThat(violation.getMessage()).isEqualTo("not a valid municipality ID");
+			assertThat(violation.field()).isEqualTo("sendSms.municipalityId");
+			assertThat(violation.message()).isEqualTo("not a valid municipality ID");
 		});
 	}
 

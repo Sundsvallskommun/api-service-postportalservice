@@ -14,8 +14,9 @@ import java.nio.file.Path;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureTestRestTemplate;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.boot.resttestclient.TestRestTemplate;
 import org.springframework.core.io.Resource;
 import org.springframework.test.context.ActiveProfiles;
 import se.sundsvall.postportalservice.Application;
@@ -27,6 +28,7 @@ import se.sundsvall.postportalservice.Application;
 	"logging.level.se.sundsvall.dept44.payload=OFF"
 })
 @ActiveProfiles("it")
+@AutoConfigureTestRestTemplate
 class OpenApiSpecificationIT {
 
 	private static final YAMLMapper YAML_MAPPER = new YAMLMapper();
