@@ -5,11 +5,14 @@ import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Answers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -228,6 +231,52 @@ class HistoryServiceTest {
 		verify(historyMapperMock).toMessageList(messageEntities);
 		verify(historyMapperMock).toMessage(messageEntity);
 		verify(pageMock, times(2)).getContent();
+	}
+
+	private static Stream<Arguments> missingRecipientDataProvider() {
+		return Stream.of(
+			Arguments.of("recipients is null", null),
+			Arguments.of("recipients is empty", List.of()),
+			Arguments.of("externalId is null", List.of(new RecipientEntity().withExternalId(null))));
+	}
+
+	@ParameterizedTest(name = "{0}")
+	@MethodSource("missingRecipientDataProvider")
+	void getUserMessages_digitalRegisteredLetterWithMissingRecipientData(final String description, final List<RecipientEntity> recipients) {
+		final var username = "username";
+		final var messageEntity = MessageEntity.create()
+			.withCreated(OffsetDateTime.now())
+			.withSubject("subject")
+			.withMessageType(MessageType.DIGITAL_REGISTERED_LETTER)
+			.withId("messageId")
+			.withRecipients(recipients);
+		final var messageEntities = List.of(messageEntity);
+
+		when(messageRepositoryMock.findAllByMunicipalityIdAndUserUsernameIgnoreCase(eq(MUNICIPALITY_ID), eq(username), any(Pageable.class))).thenReturn(pageMock);
+		when(pageMock.getContent()).thenReturn(messageEntities);
+		when(pageMock.getSort()).thenReturn(Sort.unsorted());
+		when(pageMock.getSize()).thenReturn(1);
+		when(pageMock.getNumber()).thenReturn(0);
+		when(pageMock.getNumberOfElements()).thenReturn(1);
+		when(pageMock.getTotalElements()).thenReturn(1L);
+		when(pageMock.getTotalPages()).thenReturn(1);
+
+		final var messages = historyService.getUserMessages(MUNICIPALITY_ID, username, Pageable.unpaged());
+
+		assertThat(messages).isNotNull().satisfies(result -> {
+			assertThat(result.getMessages()).allSatisfy(message -> {
+				assertThat(message.getMessageId()).isEqualTo(messageEntity.getId());
+				assertThat(message.getSubject()).isEqualTo(messageEntity.getSubject());
+				assertThat(message.getSentAt()).isEqualTo(messageEntity.getCreated().toLocalDateTime());
+				assertThat(message.getType()).isEqualTo(messageEntity.getMessageType().toString());
+				assertThat(message.getSigningStatus()).isNull();
+			});
+		});
+		verify(messageRepositoryMock).findAllByMunicipalityIdAndUserUsernameIgnoreCase(eq(MUNICIPALITY_ID), eq(username), any(Pageable.class));
+		verify(historyMapperMock).toMessageList(messageEntities);
+		verify(historyMapperMock).toMessage(messageEntity);
+		verify(pageMock, times(2)).getContent();
+		verifyNoInteractions(digitalRegisteredLetterIntegrationMock);
 	}
 
 	@Test
