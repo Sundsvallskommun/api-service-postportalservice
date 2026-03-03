@@ -59,8 +59,10 @@ public class HistoryService {
 
 		final var letterIdToMessageMap = page.getContent().stream()
 			.filter(entity -> DIGITAL_REGISTERED_LETTER.equals(entity.getMessageType()))
+			.filter(entity -> entity.getRecipients() != null
+				&& !entity.getRecipients().isEmpty()
+				&& entity.getRecipients().getFirst().getExternalId() != null)
 			.map(entity -> Map.entry(entity.getRecipients().getFirst().getExternalId(), entity.getId()))
-			.filter(entry -> entry.getKey() != null)
 			.collect(Collectors.toMap(
 				Map.Entry::getKey,
 				entry -> messageById.get(entry.getValue()),
