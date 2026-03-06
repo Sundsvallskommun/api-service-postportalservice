@@ -1,13 +1,13 @@
 openapi: 3.1.0
 info:
   title: Postportalservice
-  contact: {}
+  contact: { }
   license:
     name: MIT License
     url: https://opensource.org/licenses/MIT
   version: "1.5"
 servers:
-  - url: http://localhost:55374
+  - url: http://localhost:61272
     description: Generated server url
 paths:
   /{municipalityId}/precheck:
@@ -814,7 +814,7 @@ components:
           format: uri
         parameters:
           type: object
-          additionalProperties: {}
+          additionalProperties: { }
         detail:
           type: string
         suppressed:
@@ -865,7 +865,7 @@ components:
     ThrowableProblem:
       type: object
       properties:
-        cause: {}
+        cause: { }
         stackTrace:
           type: array
           items:
@@ -880,7 +880,7 @@ components:
           format: uri
         parameters:
           type: object
-          additionalProperties: {}
+          additionalProperties: { }
         title:
           type: string
         detail:
@@ -1099,6 +1099,7 @@ components:
           description: The subject of the letter
           examples:
             - This is the subject of the letter
+          minLength: 1
         body:
           type: string
           description: The body of the letter
@@ -1523,4 +1524,4 @@ components:
         surname:
           type: string
           description: Last name of the signing party
-  securitySchemes: {}
+  securitySchemes: { }
