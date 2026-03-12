@@ -2,6 +2,9 @@ package se.sundsvall.postportalservice.integration.party;
 
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -12,6 +15,9 @@ import se.sundsvall.dept44.problem.Problem;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -101,5 +107,47 @@ class PartyIntegrationTest {
 			.hasMessageContaining("Bad Gateway");
 
 		verify(partyClientMock).getPersonNumbers(MUNICIPALITY_ID, PARTY_IDS);
+	}
+
+	@Test
+	void getLegalIdsInChunksWhenPartyIdsExceedMaxPerCall() {
+		final var numberOfPartyIds = 2345;
+		final var partyIds = IntStream.range(0, numberOfPartyIds)
+			.mapToObj(i -> "partyId-" + i)
+			.toList();
+
+		when(partyClientMock.getPersonNumbers(anyString(), anyList()))
+			.thenAnswer(invocation -> {
+				final var ids = invocation.<List<String>>getArgument(1);
+				return ids.stream()
+					.collect(Collectors.toMap(Function.identity(), id -> "legalId-" + id));
+			});
+
+		final var result = partyIntegration.getLegalIds(MUNICIPALITY_ID, partyIds);
+
+		assertThat(result).hasSize(numberOfPartyIds);
+		verify(partyClientMock, times(3)).getPersonNumbers(anyString(), anyList());
+		verifyNoMoreInteractions(partyClientMock);
+	}
+
+	@Test
+	void getPartyIdsInChunksWhenLegalIdsExceedMaxPerCall() {
+		final var numberOfPartyIds = 2345;
+		final var partyIds = IntStream.range(0, numberOfPartyIds)
+			.mapToObj(i -> "legalId-" + i)
+			.toList();
+
+		when(partyClientMock.getPartyIds(anyString(), anyList()))
+			.thenAnswer(invocation -> {
+				final var ids = invocation.<List<String>>getArgument(1);
+				return ids.stream()
+					.collect(Collectors.toMap(Function.identity(), id -> "partyId-" + id));
+			});
+
+		final var result = partyIntegration.getPartyIds(MUNICIPALITY_ID, partyIds);
+
+		assertThat(result).hasSize(numberOfPartyIds);
+		verify(partyClientMock, times(3)).getPartyIds(anyString(), anyList());
+		verifyNoMoreInteractions(partyClientMock);
 	}
 }
