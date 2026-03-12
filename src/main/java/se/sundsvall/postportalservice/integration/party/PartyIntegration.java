@@ -4,19 +4,19 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.springframework.stereotype.Component;
+import se.sundsvall.postportalservice.integration.party.configuration.PartyProperties;
 
 import static java.util.Collections.emptyMap;
 
 @Component
 public class PartyIntegration {
 
-	private static final int MAX_PARTY_IDS_PER_CALL = 1000;
-	private static final int MAX_LEGAL_IDS_PER_CALL = 1000;
-
 	private final PartyClient partyClient;
+	private final PartyProperties partyProperties;
 
-	public PartyIntegration(final PartyClient partyClient) {
+	public PartyIntegration(final PartyClient partyClient, PartyProperties partyProperties) {
 		this.partyClient = partyClient;
+		this.partyProperties = partyProperties;
 	}
 
 	/**
@@ -33,8 +33,8 @@ public class PartyIntegration {
 
 		final var batchResult = new HashMap<String, String>();
 
-		for (var i = 0; i < legalIds.size(); i += MAX_LEGAL_IDS_PER_CALL) {
-			final var partyIdsChunk = legalIds.subList(i, Math.min(i + MAX_LEGAL_IDS_PER_CALL, legalIds.size()));
+		for (var i = 0; i < legalIds.size(); i += partyProperties.maxLegalIdsPerCall()) {
+			final var partyIdsChunk = legalIds.subList(i, Math.min(i + partyProperties.maxLegalIdsPerCall(), legalIds.size()));
 			batchResult.putAll(partyClient.getPartyIds(municipalityId, partyIdsChunk));
 		}
 
@@ -55,8 +55,8 @@ public class PartyIntegration {
 
 		final var batchResult = new HashMap<String, String>();
 
-		for (var i = 0; i < partyIds.size(); i += MAX_PARTY_IDS_PER_CALL) {
-			final var partyIdsChunk = partyIds.subList(i, Math.min(i + MAX_PARTY_IDS_PER_CALL, partyIds.size()));
+		for (var i = 0; i < partyIds.size(); i += partyProperties.maxPartyIdsPerCall()) {
+			final var partyIdsChunk = partyIds.subList(i, Math.min(i + partyProperties.maxPartyIdsPerCall(), partyIds.size()));
 			batchResult.putAll(partyClient.getPersonNumbers(municipalityId, partyIdsChunk));
 		}
 

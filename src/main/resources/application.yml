@@ -1,5 +1,9 @@
+integration:
+  party:
+    chunk:
+      maxLegalIdsPerCall: 1000
+      maxPartyIdsPerCall: 1000
 spring:
-
   main:
     banner-mode: off
   application:

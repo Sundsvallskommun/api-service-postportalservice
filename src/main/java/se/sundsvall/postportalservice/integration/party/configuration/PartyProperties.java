@@ -6,5 +6,7 @@ import org.springframework.boot.context.properties.bind.DefaultValue;
 @ConfigurationProperties("integration.party")
 public record PartyProperties(
 	@DefaultValue("5") int connectTimeout,
-	@DefaultValue("30") int readTimeout) {
+	@DefaultValue("30") int readTimeout,
+	@DefaultValue("1000") int maxPartyIdsPerCall,
+	@DefaultValue("1000") int maxLegalIdsPerCall) {
 }

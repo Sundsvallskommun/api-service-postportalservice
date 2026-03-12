@@ -19,5 +19,7 @@ class PartyPropertiesTest {
 	void testProperties() {
 		assertThat(properties.connectTimeout()).isEqualTo(10);
 		assertThat(properties.readTimeout()).isEqualTo(20);
+		assertThat(properties.maxLegalIdsPerCall()).isEqualTo(20);
+		assertThat(properties.maxPartyIdsPerCall()).isEqualTo(30);
 	}
 }

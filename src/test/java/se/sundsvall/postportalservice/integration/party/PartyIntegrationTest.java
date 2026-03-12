@@ -12,6 +12,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import se.sundsvall.dept44.problem.Problem;
+import se.sundsvall.postportalservice.integration.party.configuration.PartyProperties;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -33,12 +34,15 @@ class PartyIntegrationTest {
 	@Mock
 	private PartyClient partyClientMock;
 
+	@Mock
+	private PartyProperties partyPropertiesMock;
+
 	@InjectMocks
 	private PartyIntegration partyIntegration;
 
 	@AfterEach
 	void verifyInteractions() {
-		verifyNoMoreInteractions(partyClientMock);
+		verifyNoMoreInteractions(partyClientMock, partyPropertiesMock);
 	}
 
 	@Test
@@ -48,11 +52,13 @@ class PartyIntegrationTest {
 			"192222222222", "f560865a-51f0-4e96-bca1-55d57a0d3f68");
 
 		when(partyClientMock.getPartyIds(MUNICIPALITY_ID, LEGAL_IDS_LIST)).thenReturn(expectedResult);
+		when(partyPropertiesMock.maxLegalIdsPerCall()).thenReturn(10);
 
 		final var result = partyIntegration.getPartyIds(MUNICIPALITY_ID, LEGAL_IDS_LIST);
 
 		assertThat(result).isEqualTo(expectedResult);
 		verify(partyClientMock).getPartyIds(MUNICIPALITY_ID, LEGAL_IDS_LIST);
+		verify(partyPropertiesMock, times(2)).maxLegalIdsPerCall();
 	}
 
 	@Test
@@ -76,11 +82,13 @@ class PartyIntegrationTest {
 			"f560865a-51f0-4e96-bca1-55d57a0d3f68", "192222222222");
 
 		when(partyClientMock.getPersonNumbers(MUNICIPALITY_ID, PARTY_IDS)).thenReturn(expectedResult);
+		when(partyPropertiesMock.maxPartyIdsPerCall()).thenReturn(10);
 
 		final var result = partyIntegration.getLegalIds(MUNICIPALITY_ID, PARTY_IDS);
 
 		assertThat(result).isEqualTo(expectedResult);
 		verify(partyClientMock).getPersonNumbers(MUNICIPALITY_ID, PARTY_IDS);
+		verify(partyPropertiesMock, times(2)).maxPartyIdsPerCall();
 	}
 
 	@Test
@@ -99,6 +107,7 @@ class PartyIntegrationTest {
 
 	@Test
 	void getLegalIds_clientThrows() {
+		when(partyPropertiesMock.maxPartyIdsPerCall()).thenReturn(10);
 		when(partyClientMock.getPersonNumbers(MUNICIPALITY_ID, PARTY_IDS))
 			.thenThrow(Problem.valueOf(BAD_GATEWAY, "Service unavailable"));
 
@@ -107,6 +116,7 @@ class PartyIntegrationTest {
 			.hasMessageContaining("Bad Gateway");
 
 		verify(partyClientMock).getPersonNumbers(MUNICIPALITY_ID, PARTY_IDS);
+		verify(partyPropertiesMock, times(1)).maxPartyIdsPerCall();
 	}
 
 	@Test
@@ -116,6 +126,7 @@ class PartyIntegrationTest {
 			.mapToObj(i -> "partyId-" + i)
 			.toList();
 
+		when(partyPropertiesMock.maxPartyIdsPerCall()).thenReturn(1000);
 		when(partyClientMock.getPersonNumbers(anyString(), anyList()))
 			.thenAnswer(invocation -> {
 				final var ids = invocation.<List<String>>getArgument(1);
@@ -127,7 +138,7 @@ class PartyIntegrationTest {
 
 		assertThat(result).hasSize(numberOfPartyIds);
 		verify(partyClientMock, times(3)).getPersonNumbers(anyString(), anyList());
-		verifyNoMoreInteractions(partyClientMock);
+		verify(partyPropertiesMock, times(6)).maxPartyIdsPerCall();
 	}
 
 	@Test
@@ -137,6 +148,7 @@ class PartyIntegrationTest {
 			.mapToObj(i -> "legalId-" + i)
 			.toList();
 
+		when(partyPropertiesMock.maxLegalIdsPerCall()).thenReturn(1000);
 		when(partyClientMock.getPartyIds(anyString(), anyList()))
 			.thenAnswer(invocation -> {
 				final var ids = invocation.<List<String>>getArgument(1);
@@ -148,6 +160,6 @@ class PartyIntegrationTest {
 
 		assertThat(result).hasSize(numberOfPartyIds);
 		verify(partyClientMock, times(3)).getPartyIds(anyString(), anyList());
-		verifyNoMoreInteractions(partyClientMock);
+		verify(partyPropertiesMock, times(6)).maxLegalIdsPerCall();
 	}
 }

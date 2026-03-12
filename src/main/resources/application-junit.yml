@@ -83,3 +83,5 @@ integration:
     url: http://party.local
     connect-timeout: 10
     read-timeout: 20
+    max-legal-ids-per-call: 20
+    max-party-ids-per-call: 30
