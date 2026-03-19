@@ -6,6 +6,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mockito;
 import org.springframework.web.multipart.MultipartFile;
 import se.sundsvall.dept44.problem.Problem;
@@ -34,21 +36,12 @@ class CsvUtilTest {
 			"201901042380", "201901052397", "201901062388");
 	}
 
-	@Test
-	void validateLetterCsvToLegalIdsWithoutHeader(@Load(value = "/testfile/legalIds-without-header.csv") final String csv) throws IOException {
-		var multipartFileMock = Mockito.mock(MultipartFile.class);
-
-		when(multipartFileMock.getInputStream()).thenReturn(new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8)));
-		when(multipartFileMock.getContentType()).thenReturn("text/csv");
-		when(multipartFileMock.getOriginalFilename()).thenReturn("legalIds.csv");
-
-		var result = CsvUtil.validateLetterCsv(multipartFileMock);
-
-		assertCsvContent(result);
-	}
-
-	@Test
-	void validateLetterCsvToLegalIdsWithHeader(@Load(value = "/testfile/legalIds.csv") final String csv) throws IOException {
+	@ParameterizedTest
+	@ValueSource(strings = {
+		"/testfile/legalIds-without-header.csv", "/testfile/legalIds.csv"
+	})
+	void validateLetterCsvToLegalIds(final String resourcePath) throws IOException {
+		var csv = new String(getClass().getResourceAsStream(resourcePath).readAllBytes(), StandardCharsets.UTF_8);
 		var multipartFileMock = Mockito.mock(MultipartFile.class);
 
 		when(multipartFileMock.getInputStream()).thenReturn(new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8)));
@@ -96,7 +89,7 @@ class CsvUtilTest {
 
 		assertThatThrownBy(() -> CsvUtil.parseCsvToLegalIds(multipartFileMock))
 			.isInstanceOf(Problem.class)
-			.hasMessageContaining("Internal Server Error: Error reading CSV file: %s".formatted(customExceptionMessage));
+			.hasMessageContaining("Internal Server Error: Could not read CSV file: %s".formatted(customExceptionMessage));
 	}
 
 	@Test
@@ -173,7 +166,7 @@ class CsvUtilTest {
 
 		assertThatThrownBy(() -> CsvUtil.validateSmsCsv(multipartFileMock))
 			.isInstanceOf(Problem.class)
-			.hasMessageContaining("Internal Server Error: Error reading CSV file: %s".formatted(customExceptionMessage));
+			.hasMessageContaining("Internal Server Error: Could not read CSV file: %s".formatted(customExceptionMessage));
 	}
 
 }

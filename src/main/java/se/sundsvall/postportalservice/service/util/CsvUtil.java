@@ -18,15 +18,16 @@ public final class CsvUtil {
 
 	private CsvUtil() {}
 
+	private static final String COULD_NOT_READ_CSV_FILE = "Could not read CSV file: %s";
 	private static final Set<String> VALID_HEADERS = Set.of("Phonenumber", "Telefonnummer", "Mobilnummer");
 	private static final String VALID_PHONE_NUMBER_REGEX = "^\\+[1-9][\\d]{3,14}$";
 	private static final String DEFAULT_COUNTRY_CODE = "+46";
-
 	private static final String VALID_LEGAL_ID_REGEX = "^\\d{8}-?\\d{4}$";
 
 	public record SmsCsvValidationResult(
 		Map<String, Integer> validEntries,
-		Set<String> invalidEntries) {}
+		Set<String> invalidEntries) {
+	}
 
 	public static SmsCsvValidationResult validateSmsCsv(final MultipartFile csvFile) {
 		Map<String, Integer> validEntries = new LinkedHashMap<>();
@@ -59,7 +60,7 @@ public final class CsvUtil {
 			return new SmsCsvValidationResult(validEntries, invalidEntries);
 
 		} catch (IOException e) {
-			throw Problem.valueOf(INTERNAL_SERVER_ERROR, "Error reading CSV file: " + e.getMessage());
+			throw Problem.valueOf(INTERNAL_SERVER_ERROR, COULD_NOT_READ_CSV_FILE.formatted(e.getMessage()));
 		}
 	}
 
@@ -114,7 +115,7 @@ public final class CsvUtil {
 			return counts;
 
 		} catch (IOException e) {
-			throw Problem.valueOf(INTERNAL_SERVER_ERROR, "Error reading CSV file: " + e.getMessage());
+			throw Problem.valueOf(INTERNAL_SERVER_ERROR, COULD_NOT_READ_CSV_FILE.formatted(e.getMessage()));
 		}
 	}
 
@@ -143,7 +144,7 @@ public final class CsvUtil {
 				}
 			}
 		} catch (IOException e) {
-			throw Problem.valueOf(INTERNAL_SERVER_ERROR, "Error reading CSV file: " + e.getMessage());
+			throw Problem.valueOf(INTERNAL_SERVER_ERROR, COULD_NOT_READ_CSV_FILE.formatted(e.getMessage()));
 		}
 
 		return legalIds;
