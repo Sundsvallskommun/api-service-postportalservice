@@ -63,10 +63,20 @@ public class PrecheckService {
 		this.messagingSettingsIntegration = messagingSettingsIntegration;
 	}
 
-	public PrecheckCsvResponse precheckCSV(final String municipalityId, final MultipartFile csvFile) {
+	public PrecheckCsvResponse precheckSmsCsv(final MultipartFile csvFile) {
+		final var result = CsvUtil.validateSmsCsv(csvFile);
+
+		final var duplicateEntriesMap = result.validEntries().entrySet().stream()
+			.filter(entry -> entry.getValue() > 1)
+			.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+
+		return new PrecheckCsvResponse(duplicateEntriesMap, result.invalidEntries());
+	}
+
+	public PrecheckCsvResponse precheckLetterCsv(final String municipalityId, final MultipartFile csvFile) {
 
 		// Returns a map with personal identity numbers as keys and their occurrence counts as values
-		final var occurrenceMap = CsvUtil.validateCSV(csvFile);
+		final var occurrenceMap = CsvUtil.validateLetterCsv(csvFile);
 		final var legalIds = occurrenceMap.keySet();
 
 		// Filter the map to include only entries with more than one occurrence

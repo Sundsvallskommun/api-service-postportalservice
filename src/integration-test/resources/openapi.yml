@@ -5,9 +5,9 @@ info:
   license:
     name: MIT License
     url: https://opensource.org/licenses/MIT
-  version: "1.5"
+  version: "1.6"
 servers:
-  - url: http://localhost:61272
+  - url: http://localhost:57650
     description: Generated server url
 paths:
   /{municipalityId}/precheck:
@@ -122,7 +122,58 @@ paths:
         - Precheck Resources
       summary: Check if a given csv is properly formatted. Also returns information
         about any duplicate entries
-      operationId: validateCsv
+      operationId: precheckLetterCsv
+      parameters:
+        - name: municipalityId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                csv-file:
+                  type: string
+                  format: binary
+              required:
+                - csv-file
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PrecheckCsvResponse"
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/Problem"
+                  - $ref: "#/components/schemas/ConstraintViolationProblem"
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "502":
+          description: Bad Gateway
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+  /{municipalityId}/precheck/csv/sms:
+    post:
+      tags:
+        - Precheck Resources
+      summary: Check if a given csv is properly formatted for SMS. Also returns information
+        about any duplicate entries
+      operationId: precheckSmsCsv
       parameters:
         - name: municipalityId
           in: path
@@ -774,16 +825,16 @@ components:
     Problem:
       type: object
       properties:
-        title:
-          type: string
-        detail:
-          type: string
         instance:
           type: string
           format: uri
         type:
           type: string
           format: uri
+        detail:
+          type: string
+        title:
+          type: string
         status:
           type: integer
           format: int32

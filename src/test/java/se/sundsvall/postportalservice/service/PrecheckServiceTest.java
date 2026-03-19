@@ -331,7 +331,7 @@ class PrecheckServiceTest {
 	}
 
 	@Test
-	void precheckCSV(@Load(value = "/testfile/legalIds.csv") final String csv) throws IOException {
+	void precheckLetterCsv(@Load(value = "/testfile/legalIds.csv") final String csv) throws IOException {
 		final var multipartFileMock = Mockito.mock(MultipartFile.class);
 		when(multipartFileMock.getInputStream()).thenReturn(new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8)));
 
@@ -346,7 +346,7 @@ class PrecheckServiceTest {
 
 		when(partyIntegrationMock.getPartyIds(eq(MUNICIPALITY_ID), anyList())).thenReturn(partyIdMap);
 
-		final var result = precheckService.precheckCSV(MUNICIPALITY_ID, multipartFileMock);
+		final var result = precheckService.precheckLetterCsv(MUNICIPALITY_ID, multipartFileMock);
 
 		assertThat(result.duplicateEntries()).isEmpty();
 		assertThat(result.rejectedEntries()).hasSize(1).contains("201901062388");
@@ -355,7 +355,7 @@ class PrecheckServiceTest {
 	}
 
 	@Test
-	void precheckCSV_withDuplicates(@Load(value = "/testfile/legalIds-duplicates.csv") final String csv) throws IOException {
+	void precheckCSV_Letter_withDuplicates(@Load(value = "/testfile/legalIds-duplicates.csv") final String csv) throws IOException {
 		final var multipartFileMock = Mockito.mock(MultipartFile.class);
 		when(multipartFileMock.getInputStream()).thenReturn(new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8)));
 
@@ -366,7 +366,7 @@ class PrecheckServiceTest {
 
 		when(partyIntegrationMock.getPartyIds(eq(MUNICIPALITY_ID), anyList())).thenReturn(partyIdMap);
 
-		final var result = precheckService.precheckCSV(MUNICIPALITY_ID, multipartFileMock);
+		final var result = precheckService.precheckLetterCsv(MUNICIPALITY_ID, multipartFileMock);
 
 		assertThat(result.duplicateEntries()).hasSize(2)
 			.containsEntry("201901012391", 2)
@@ -377,17 +377,17 @@ class PrecheckServiceTest {
 	}
 
 	@Test
-	void precheckCSV_withInvalidFormat(@Load(value = "/testfile/legalIds-invalid-format.csv") final String csv) throws IOException {
+	void precheckCSV_Letter_withInvalidFormat(@Load(value = "/testfile/legalIds-invalid-format.csv") final String csv) throws IOException {
 		final var multipartFileMock = Mockito.mock(MultipartFile.class);
 		when(multipartFileMock.getInputStream()).thenReturn(new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8)));
 
-		assertThatThrownBy(() -> precheckService.precheckCSV(MUNICIPALITY_ID, multipartFileMock))
+		assertThatThrownBy(() -> precheckService.precheckLetterCsv(MUNICIPALITY_ID, multipartFileMock))
 			.isInstanceOf(Problem.class)
 			.hasMessageContaining("Bad Request: Invalid CSV format. CSV may contain an optional 'Personnummer' header. Each data row must contain 12 digits, an optional hyphen between digit 8 and 9 are acceptable. Invalid entry: 20190--1012391");
 	}
 
 	@Test
-	void precheckCSV_allEntriesWithoutPartyId(@Load(value = "/testfile/legalIds.csv") final String csv) throws IOException {
+	void precheckCSV_Letter_allEntriesWithoutPartyId(@Load(value = "/testfile/legalIds.csv") final String csv) throws IOException {
 		final var multipartFileMock = Mockito.mock(MultipartFile.class);
 		when(multipartFileMock.getInputStream()).thenReturn(new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8)));
 
@@ -395,7 +395,7 @@ class PrecheckServiceTest {
 		when(partyIntegrationMock.getPartyIds(eq(MUNICIPALITY_ID), anyList()))
 			.thenThrow(Problem.valueOf(BAD_GATEWAY, "Failed to retrieve party IDs"));
 
-		assertThatThrownBy(() -> precheckService.precheckCSV(MUNICIPALITY_ID, multipartFileMock))
+		assertThatThrownBy(() -> precheckService.precheckLetterCsv(MUNICIPALITY_ID, multipartFileMock))
 			.isInstanceOf(Problem.class)
 			.hasMessageContaining("Bad Gateway: Failed to retrieve party IDs");
 
@@ -403,7 +403,7 @@ class PrecheckServiceTest {
 	}
 
 	@Test
-	void precheckCSV_noValidPartyIds(@Load(value = "/testfile/legalIds.csv") final String csv) throws IOException {
+	void precheckCSV_Letter_noValidPartyIds(@Load(value = "/testfile/legalIds.csv") final String csv) throws IOException {
 		final var multipartFileMock = Mockito.mock(MultipartFile.class);
 		when(multipartFileMock.getInputStream()).thenReturn(new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8)));
 
@@ -412,11 +412,57 @@ class PrecheckServiceTest {
 
 		when(partyIntegrationMock.getPartyIds(eq(MUNICIPALITY_ID), anyList())).thenReturn(partyIdMap);
 
-		assertThatThrownBy(() -> precheckService.precheckCSV(MUNICIPALITY_ID, multipartFileMock))
+		assertThatThrownBy(() -> precheckService.precheckLetterCsv(MUNICIPALITY_ID, multipartFileMock))
 			.isInstanceOf(Problem.class)
 			.hasMessageContaining("No valid partyIds found");
 
 		verify(partyIntegrationMock).getPartyIds(eq(MUNICIPALITY_ID), anyList());
+	}
+
+	@Test
+	void precheckSmsCsv_validNoDuplicatesNoInvalid(@Load(value = "/testfile/phoneNumbers.csv") final String csv) throws IOException {
+		final var multipartFileMock = Mockito.mock(MultipartFile.class);
+		when(multipartFileMock.getInputStream()).thenReturn(new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8)));
+
+		final var result = precheckService.precheckSmsCsv(multipartFileMock);
+
+		assertThat(result.duplicateEntries()).isEmpty();
+		assertThat(result.rejectedEntries()).isEmpty();
+	}
+
+	@Test
+	void precheckSmsCsv_withDuplicates(@Load(value = "/testfile/phoneNumbers-duplicates.csv") final String csv) throws IOException {
+		final var multipartFileMock = Mockito.mock(MultipartFile.class);
+		when(multipartFileMock.getInputStream()).thenReturn(new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8)));
+
+		final var result = precheckService.precheckSmsCsv(multipartFileMock);
+
+		assertThat(result.duplicateEntries()).hasSize(2)
+			.containsEntry("+46701234567", 2)
+			.containsEntry("+46709876543", 3);
+		assertThat(result.rejectedEntries()).isEmpty();
+	}
+
+	@Test
+	void precheckSmsCsv_withInvalidNumbers(@Load(value = "/testfile/phoneNumbers-all-invalid.csv") final String csv) throws IOException {
+		final var multipartFileMock = Mockito.mock(MultipartFile.class);
+		when(multipartFileMock.getInputStream()).thenReturn(new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8)));
+
+		final var result = precheckService.precheckSmsCsv(multipartFileMock);
+
+		assertThat(result.duplicateEntries()).isEmpty();
+		assertThat(result.rejectedEntries()).containsExactlyInAnyOrder("notanumber", "abc123", "12345");
+	}
+
+	@Test
+	void precheckSmsCsv_withDuplicatesAndInvalid(@Load(value = "/testfile/phoneNumbers-mixed.csv") final String csv) throws IOException {
+		final var multipartFileMock = Mockito.mock(MultipartFile.class);
+		when(multipartFileMock.getInputStream()).thenReturn(new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8)));
+
+		final var result = precheckService.precheckSmsCsv(multipartFileMock);
+
+		assertThat(result.duplicateEntries()).isEmpty();
+		assertThat(result.rejectedEntries()).containsExactlyInAnyOrder("notanumber", "abc123");
 	}
 
 }

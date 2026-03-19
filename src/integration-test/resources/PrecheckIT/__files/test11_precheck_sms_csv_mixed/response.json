@@ -1,0 +1,9 @@
+{
+	"duplicateEntries": {
+		"+46701234567": 2
+	},
+	"rejectedEntries": [
+		"notanumber",
+		"abc123"
+	]
+}

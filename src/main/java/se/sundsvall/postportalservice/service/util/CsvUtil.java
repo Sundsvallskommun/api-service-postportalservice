@@ -18,7 +18,62 @@ public final class CsvUtil {
 
 	private CsvUtil() {}
 
-	private static final String VALID_ENTRY_REGEX = "^\\d{8}-?\\d{4}$";
+	private static final Set<String> VALID_HEADERS = Set.of("Phonenumber", "Telefonnummer", "Mobilnummer");
+	private static final String VALID_PHONE_NUMBER_REGEX = "^\\+[1-9][\\d]{3,14}$";
+	private static final String DEFAULT_COUNTRY_CODE = "+46";
+
+	private static final String VALID_LEGAL_ID_REGEX = "^\\d{8}-?\\d{4}$";
+
+	public record SmsCsvValidationResult(
+		Map<String, Integer> validEntries,
+		Set<String> invalidEntries) {}
+
+	public static SmsCsvValidationResult validateSmsCsv(final MultipartFile csvFile) {
+		Map<String, Integer> validEntries = new LinkedHashMap<>();
+		Set<String> invalidEntries = new HashSet<>();
+		boolean headerRead = false;
+
+		try (var reader = new BufferedReader(new InputStreamReader(csvFile.getInputStream(), StandardCharsets.UTF_8))) {
+			String line;
+			while ((line = reader.readLine()) != null) {
+				var trimmed = line.trim();
+
+				if (!headerRead) {
+					headerRead = true;
+					if (VALID_HEADERS.contains(trimmed)) {
+						continue;
+					}
+				}
+
+				if (trimmed.isEmpty()) {
+					continue;
+				}
+
+				var normalized = normalizeToMsisdn(trimmed);
+				if (!normalized.matches(VALID_PHONE_NUMBER_REGEX)) {
+					invalidEntries.add(trimmed);
+				} else {
+					validEntries.merge(normalized, 1, Integer::sum);
+				}
+			}
+			return new SmsCsvValidationResult(validEntries, invalidEntries);
+
+		} catch (IOException e) {
+			throw Problem.valueOf(INTERNAL_SERVER_ERROR, "Error reading CSV file: " + e.getMessage());
+		}
+	}
+
+	private static String normalizeToMsisdn(String input) {
+		// Strip all whitespace and hyphens
+		var stripped = input.replaceAll("[\\s-]", "");
+
+		// Replace the leading 0 with country code (e.g., 0701740605 -> +46701740605)
+		if (stripped.startsWith("0")) {
+			stripped = DEFAULT_COUNTRY_CODE + stripped.substring(1);
+		}
+
+		return stripped;
+	}
 
 	/**
 	 * Validates that a given CSV file has a header line with "Personnummer" and that each data row contains exactly 12
@@ -27,35 +82,34 @@ public final class CsvUtil {
 	 * @param  csvFile the CSV file to validate
 	 * @return         a map with personal identity numbers as keys and their counts as values
 	 */
-	public static Map<String, Integer> validateCSV(final MultipartFile csvFile) {
+	public static Map<String, Integer> validateLetterCsv(final MultipartFile csvFile) {
 		Map<String, Integer> counts = new LinkedHashMap<>();
-
-		String line;
 		boolean headerRead = false;
 
 		try (var reader = new BufferedReader(new InputStreamReader(csvFile.getInputStream(), StandardCharsets.UTF_8))) {
+			String line;
 			while ((line = reader.readLine()) != null) {
 				var trimmed = line.trim();
 
-				if (!headerRead && "Personnummer".equals(trimmed)) {
+				if (!headerRead) {
 					headerRead = true;
-					// Skip header line
+					if ("Personnummer".equals(trimmed)) {
+						// If the header was "Personnummer", we skip it and process the next line.
+						continue;
+					}
+				}
+				if (trimmed.isEmpty()) {
+					// If the line is empty, skip and process the next line.
 					continue;
-				} else {
-					// Even if not the correct header (it might be a legalId), we consider it read after the first line
-					// If the header is something else than "Personnummer", we still process it, if it's not a valid entry it will be caught
-					// by the validation below
-					headerRead = true;
 				}
 
 				// Validate that the line contains exactly 12 digits, with an optional hyphen between digit 8 and 9
-				if (!trimmed.isEmpty() && !trimmed.matches(VALID_ENTRY_REGEX)) {
+				if (!trimmed.matches(VALID_LEGAL_ID_REGEX)) {
 					throw Problem.valueOf(BAD_REQUEST, "Invalid CSV format. CSV may contain an optional 'Personnummer' header. Each data row must contain 12 digits, an optional hyphen between digit 8 and 9 are acceptable. Invalid entry: " + trimmed);
 				}
 
-				if (!trimmed.isEmpty()) {
-					counts.merge(trimmed.replace("-", ""), 1, Integer::sum);
-				}
+				counts.merge(trimmed.replace("-", ""), 1, Integer::sum);
+
 			}
 			return counts;
 

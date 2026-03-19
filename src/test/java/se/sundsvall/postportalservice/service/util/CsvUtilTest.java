@@ -35,27 +35,27 @@ class CsvUtilTest {
 	}
 
 	@Test
-	void validateCsvToLegalIdsWithoutHeader(@Load(value = "/testfile/legalIds-without-header.csv") final String csv) throws IOException {
+	void validateLetterCsvToLegalIdsWithoutHeader(@Load(value = "/testfile/legalIds-without-header.csv") final String csv) throws IOException {
 		var multipartFileMock = Mockito.mock(MultipartFile.class);
 
 		when(multipartFileMock.getInputStream()).thenReturn(new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8)));
 		when(multipartFileMock.getContentType()).thenReturn("text/csv");
 		when(multipartFileMock.getOriginalFilename()).thenReturn("legalIds.csv");
 
-		var result = CsvUtil.validateCSV(multipartFileMock);
+		var result = CsvUtil.validateLetterCsv(multipartFileMock);
 
 		assertCsvContent(result);
 	}
 
 	@Test
-	void validateCsvToLegalIdsWithHeader(@Load(value = "/testfile/legalIds.csv") final String csv) throws IOException {
+	void validateLetterCsvToLegalIdsWithHeader(@Load(value = "/testfile/legalIds.csv") final String csv) throws IOException {
 		var multipartFileMock = Mockito.mock(MultipartFile.class);
 
 		when(multipartFileMock.getInputStream()).thenReturn(new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8)));
 		when(multipartFileMock.getContentType()).thenReturn("text/csv");
 		when(multipartFileMock.getOriginalFilename()).thenReturn("legalIds.csv");
 
-		var result = CsvUtil.validateCSV(multipartFileMock);
+		var result = CsvUtil.validateLetterCsv(multipartFileMock);
 
 		assertCsvContent(result);
 	}
@@ -72,14 +72,14 @@ class CsvUtilTest {
 	}
 
 	@Test
-	void validateCsvToLegalIdsWithDuplicates(@Load(value = "/testfile/legalIds-duplicates.csv") final String csv) throws IOException {
+	void validateLetterCsvToLegalIdsWithDuplicates(@Load(value = "/testfile/legalIds-duplicates.csv") final String csv) throws IOException {
 		var multipartFileMock = Mockito.mock(MultipartFile.class);
 
 		when(multipartFileMock.getInputStream()).thenReturn(new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8)));
 		when(multipartFileMock.getContentType()).thenReturn("text/csv");
 		when(multipartFileMock.getOriginalFilename()).thenReturn("legalIds.csv");
 
-		var result = CsvUtil.validateCSV(multipartFileMock);
+		var result = CsvUtil.validateLetterCsv(multipartFileMock);
 
 		assertThat(result).containsExactlyInAnyOrderEntriesOf(
 			java.util.Map.of(
@@ -95,6 +95,83 @@ class CsvUtilTest {
 		when(multipartFileMock.getInputStream()).thenThrow(new IOException(customExceptionMessage));
 
 		assertThatThrownBy(() -> CsvUtil.parseCsvToLegalIds(multipartFileMock))
+			.isInstanceOf(Problem.class)
+			.hasMessageContaining("Internal Server Error: Error reading CSV file: %s".formatted(customExceptionMessage));
+	}
+
+	@Test
+	void validateSmsCsvWithHeader(@Load(value = "/testfile/phoneNumbers.csv") final String csv) throws IOException {
+		var multipartFileMock = Mockito.mock(MultipartFile.class);
+		when(multipartFileMock.getInputStream()).thenReturn(new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8)));
+
+		var result = CsvUtil.validateSmsCsv(multipartFileMock);
+
+		assertThat(result.validEntries()).containsExactlyInAnyOrderEntriesOf(Map.of(
+			"+46701234567", 1,
+			"+46709876543", 1,
+			"+46731112233", 1));
+		assertThat(result.invalidEntries()).isEmpty();
+	}
+
+	@Test
+	void validateSmsCsvWithoutHeader(@Load(value = "/testfile/phoneNumbers-without-header.csv") final String csv) throws IOException {
+		var multipartFileMock = Mockito.mock(MultipartFile.class);
+		when(multipartFileMock.getInputStream()).thenReturn(new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8)));
+
+		var result = CsvUtil.validateSmsCsv(multipartFileMock);
+
+		assertThat(result.validEntries()).containsExactlyInAnyOrderEntriesOf(Map.of(
+			"+46701234567", 1,
+			"+46709876543", 1,
+			"+46731112233", 1));
+		assertThat(result.invalidEntries()).isEmpty();
+	}
+
+	@Test
+	void validateSmsCsvWithDuplicates(@Load(value = "/testfile/phoneNumbers-duplicates.csv") final String csv) throws IOException {
+		var multipartFileMock = Mockito.mock(MultipartFile.class);
+		when(multipartFileMock.getInputStream()).thenReturn(new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8)));
+
+		var result = CsvUtil.validateSmsCsv(multipartFileMock);
+
+		assertThat(result.validEntries()).containsExactlyInAnyOrderEntriesOf(Map.of(
+			"+46701234567", 2,
+			"+46709876543", 3));
+		assertThat(result.invalidEntries()).isEmpty();
+	}
+
+	@Test
+	void validateSmsCsvWithMixedValidAndInvalid(@Load(value = "/testfile/phoneNumbers-mixed.csv") final String csv) throws IOException {
+		var multipartFileMock = Mockito.mock(MultipartFile.class);
+		when(multipartFileMock.getInputStream()).thenReturn(new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8)));
+
+		var result = CsvUtil.validateSmsCsv(multipartFileMock);
+
+		assertThat(result.validEntries()).containsExactlyInAnyOrderEntriesOf(Map.of(
+			"+46701234567", 1,
+			"+46709876543", 1));
+		assertThat(result.invalidEntries()).containsExactlyInAnyOrder("notanumber", "abc123");
+	}
+
+	@Test
+	void validateSmsCsvAllInvalid(@Load(value = "/testfile/phoneNumbers-all-invalid.csv") final String csv) throws IOException {
+		var multipartFileMock = Mockito.mock(MultipartFile.class);
+		when(multipartFileMock.getInputStream()).thenReturn(new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8)));
+
+		var result = CsvUtil.validateSmsCsv(multipartFileMock);
+
+		assertThat(result.validEntries()).isEmpty();
+		assertThat(result.invalidEntries()).containsExactlyInAnyOrder("notanumber", "abc123", "12345");
+	}
+
+	@Test
+	void validateSmsCsvIOException() throws IOException {
+		var multipartFileMock = Mockito.mock(MultipartFile.class);
+
+		var customExceptionMessage = "Test exception";
+		when(multipartFileMock.getInputStream()).thenThrow(new IOException(customExceptionMessage));
+
+		assertThatThrownBy(() -> CsvUtil.validateSmsCsv(multipartFileMock))
 			.isInstanceOf(Problem.class)
 			.hasMessageContaining("Internal Server Error: Error reading CSV file: %s".formatted(customExceptionMessage));
 	}
