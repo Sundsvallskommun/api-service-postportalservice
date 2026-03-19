@@ -422,7 +422,7 @@ class HistoryServiceTest {
 		final var recipientWithPartyId1 = new RecipientEntity().withPartyId(partyId1);
 		final var recipientWithPartyId2 = new RecipientEntity().withPartyId(partyId2);
 		// Recipient without partyId (SMS)
-		final var recipientWithoutPartyId = new RecipientEntity().withPartyId(null).withPhoneNumber("+46701234567");
+		final var recipientWithoutPartyId = new RecipientEntity().withPartyId(null).withPhoneNumber("+46701740610");
 		final var message = MessageEntity.create()
 			.withSubject("subject")
 			.withCreated(OffsetDateTime.now())
@@ -465,8 +465,8 @@ class HistoryServiceTest {
 		final var messageId = "messageId";
 		final var userId = "userId";
 		// All recipients are SMS (no partyIds)
-		final var smsRecipient1 = new RecipientEntity().withPartyId(null).withPhoneNumber("+46701234567");
-		final var smsRecipient2 = new RecipientEntity().withPartyId(null).withPhoneNumber("+46709876543");
+		final var smsRecipient1 = new RecipientEntity().withPartyId(null).withPhoneNumber("+46701740610");
+		final var smsRecipient2 = new RecipientEntity().withPartyId(null).withPhoneNumber("+46701740620");
 		final var message = MessageEntity.create()
 			.withSubject("subject")
 			.withCreated(OffsetDateTime.now())

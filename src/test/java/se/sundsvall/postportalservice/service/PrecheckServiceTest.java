@@ -438,8 +438,8 @@ class PrecheckServiceTest {
 		final var result = precheckService.precheckSmsCsv(multipartFileMock);
 
 		assertThat(result.duplicateEntries()).hasSize(2)
-			.containsEntry("+46701234567", 2)
-			.containsEntry("+46709876543", 3);
+			.containsEntry("+46701740610", 2)
+			.containsEntry("+46701740620", 3);
 		assertThat(result.rejectedEntries()).isEmpty();
 	}
 

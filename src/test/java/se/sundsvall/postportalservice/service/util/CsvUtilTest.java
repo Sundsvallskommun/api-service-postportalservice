@@ -107,9 +107,9 @@ class CsvUtilTest {
 		var result = CsvUtil.validateSmsCsv(multipartFileMock);
 
 		assertThat(result.validEntries()).containsExactlyInAnyOrderEntriesOf(Map.of(
-			"+46701234567", 1,
-			"+46709876543", 1,
-			"+46731112233", 1));
+			"+46701740610", 1,
+			"+46701740620", 1,
+			"+46701740630", 1));
 		assertThat(result.invalidEntries()).isEmpty();
 	}
 
@@ -121,9 +121,9 @@ class CsvUtilTest {
 		var result = CsvUtil.validateSmsCsv(multipartFileMock);
 
 		assertThat(result.validEntries()).containsExactlyInAnyOrderEntriesOf(Map.of(
-			"+46701234567", 1,
-			"+46709876543", 1,
-			"+46731112233", 1));
+			"+46701740610", 1,
+			"+46701740620", 1,
+			"+46701740630", 1));
 		assertThat(result.invalidEntries()).isEmpty();
 	}
 
@@ -135,8 +135,8 @@ class CsvUtilTest {
 		var result = CsvUtil.validateSmsCsv(multipartFileMock);
 
 		assertThat(result.validEntries()).containsExactlyInAnyOrderEntriesOf(Map.of(
-			"+46701234567", 2,
-			"+46709876543", 3));
+			"+46701740610", 2,
+			"+46701740620", 3));
 		assertThat(result.invalidEntries()).isEmpty();
 	}
 
@@ -148,8 +148,8 @@ class CsvUtilTest {
 		var result = CsvUtil.validateSmsCsv(multipartFileMock);
 
 		assertThat(result.validEntries()).containsExactlyInAnyOrderEntriesOf(Map.of(
-			"+46701234567", 1,
-			"+46709876543", 1));
+			"+46701740610", 1,
+			"+46701740620", 1));
 		assertThat(result.invalidEntries()).containsExactlyInAnyOrder("notanumber", "abc123");
 	}
 

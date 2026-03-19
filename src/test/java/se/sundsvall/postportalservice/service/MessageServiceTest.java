@@ -367,8 +367,8 @@ class MessageServiceTest {
 		final var messageId = "adc63e5c-b92f-4c75-b14f-819473cef5b6";
 
 		final var validEntries = new LinkedHashMap<String, Integer>();
-		validEntries.put("+46701234567", 1);
-		validEntries.put("+46709876543", 1);
+		validEntries.put("+46701740610", 1);
+		validEntries.put("+46701740620", 1);
 		final var validationResult = new CsvUtil.SmsCsvValidationResult(validEntries, Set.of());
 
 		when(messagingSettingsIntegrationMock.getMessagingSettingsForUser(MUNICIPALITY_ID)).thenReturn(SETTINGS_MAP);
@@ -399,7 +399,7 @@ class MessageServiceTest {
 		assertThat(capturedMessage.getRecipients()).allSatisfy(recipient -> {
 			assertThat(recipient.getMessageType()).isEqualTo(MessageType.SMS);
 			assertThat(recipient.getStatus()).isEqualTo("PENDING");
-			assertThat(recipient.getPhoneNumber()).isIn("+46701234567", "+46709876543");
+			assertThat(recipient.getPhoneNumber()).isIn("+46701740610", "+46701740620");
 		});
 	}
 
