@@ -26,6 +26,7 @@ import se.sundsvall.dept44.support.Identifier;
 import se.sundsvall.postportalservice.api.model.DigitalRegisteredLetterRequest;
 import se.sundsvall.postportalservice.api.model.LetterCsvRequest;
 import se.sundsvall.postportalservice.api.model.LetterRequest;
+import se.sundsvall.postportalservice.api.model.SmsCsvRequest;
 import se.sundsvall.postportalservice.api.model.SmsRequest;
 import se.sundsvall.postportalservice.api.validation.NoDuplicateFileNames;
 import se.sundsvall.postportalservice.api.validation.ValidCsv;
@@ -127,6 +128,25 @@ class MessageResource {
 		Identifier.set(Identifier.parse(xSentBy));
 
 		final var messageId = messageService.processSmsRequest(municipalityId, request);
+
+		return created(fromPath(MESSAGE_HISTORY_PATH)
+			.buildAndExpand(municipalityId, Identifier.get().getValue(), messageId).toUri())
+			.header(CONTENT_TYPE, ALL_VALUE)
+			.build();
+	}
+
+	@Operation(summary = "Send SMS to recipients from a CSV file", responses = {
+		@ApiResponse(responseCode = "200", description = "OK", useReturnTypeSchema = true)
+	})
+	@PostMapping(value = "/sms/csv", produces = ALL_VALUE, consumes = MULTIPART_FORM_DATA_VALUE)
+	ResponseEntity<Void> sendSmsCsv(
+		@RequestHeader(value = Identifier.HEADER_NAME) @ValidIdentifier final String xSentBy,
+		@Parameter(name = "municipalityId", description = "Municipality ID", example = "2281") @ValidMunicipalityId @PathVariable final String municipalityId,
+		@RequestPart(name = "request") @Valid final SmsCsvRequest request,
+		@RequestPart(name = "csv-file") @ValidCsv final MultipartFile csvFile) {
+		Identifier.set(Identifier.parse(xSentBy));
+
+		final var messageId = messageService.processCsvSmsRequest(municipalityId, request, csvFile);
 
 		return created(fromPath(MESSAGE_HISTORY_PATH)
 			.buildAndExpand(municipalityId, Identifier.get().getValue(), messageId).toUri())

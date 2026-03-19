@@ -1,0 +1,27 @@
+{
+	"request": {
+		"url": "/api-messaging/2281/sms",
+		"method": "POST",
+		"headers": {
+			"Authorization": {
+				"equalTo": "Bearer 0000000000000000AAAAAAAAAAAAAAAA"
+			},
+			"x-origin": {
+				"equalTo": "PostPortalService"
+			},
+			"X-Sent-By": {
+				"equalTo": "joe01doe; type=adAccount"
+			},
+			"Content-Type": {
+				"equalTo": "application/json"
+			}
+		}
+	},
+	"response": {
+		"status": 201,
+		"headers": {
+			"Content-Type": "application/json"
+		},
+		"bodyFileName": "test06_successfully_sendSmsCsv/responses/messaging-send-sms.json"
+	}
+}

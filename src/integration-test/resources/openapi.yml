@@ -7,7 +7,7 @@ info:
     url: https://opensource.org/licenses/MIT
   version: "1.6"
 servers:
-  - url: http://localhost:57650
+  - url: http://localhost:57036
     description: Generated server url
 paths:
   /{municipalityId}/precheck:
@@ -243,6 +243,62 @@ paths:
             schema:
               $ref: "#/components/schemas/SmsRequest"
         required: true
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/Problem"
+                  - $ref: "#/components/schemas/ConstraintViolationProblem"
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "502":
+          description: Bad Gateway
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+  /{municipalityId}/messages/sms/csv:
+    post:
+      tags:
+        - Message Resources
+      summary: Send SMS to recipients from a CSV file
+      operationId: sendSmsCsv
+      parameters:
+        - name: X-Sent-By
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: municipalityId
+          in: path
+          description: Municipality ID
+          required: true
+          schema:
+            type: string
+          example: 2281
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                request:
+                  $ref: "#/components/schemas/SmsCsvRequest"
+                csv-file:
+                  type: string
+                  format: binary
+              required:
+                - csv-file
+                - request
       responses:
         "200":
           description: OK
@@ -831,9 +887,9 @@ components:
         type:
           type: string
           format: uri
-        detail:
-          type: string
         title:
+          type: string
+        detail:
           type: string
         status:
           type: integer
@@ -1055,6 +1111,18 @@ components:
       required:
         - message
         - recipients
+    SmsCsvRequest:
+      type: object
+      description: SMS CSV request model
+      properties:
+        message:
+          type: string
+          description: The message to be sent
+          examples:
+            - This is the message to be sent
+          minLength: 1
+      required:
+        - message
     DigitalRegisteredLetterRequest:
       type: object
       description: Digital registered letter request model
