@@ -5,9 +5,11 @@ import generated.se.sundsvall.messaging.DeliveryResult;
 import generated.se.sundsvall.messaging.MessageBatchResult;
 import generated.se.sundsvall.messaging.MessageResult;
 import generated.se.sundsvall.messaging.MessageStatus;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import org.junit.jupiter.api.AfterEach;
@@ -19,6 +21,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.multipart.MultipartFile;
@@ -44,6 +47,7 @@ import se.sundsvall.postportalservice.integration.messaging.MessagingIntegration
 import se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration;
 import se.sundsvall.postportalservice.service.mapper.AttachmentMapper;
 import se.sundsvall.postportalservice.service.mapper.EntityMapper;
+import se.sundsvall.postportalservice.service.util.CsvUtil;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -351,6 +355,52 @@ class MessageServiceTest {
 		verify(entityMapperMock).toRecipientEntity(any(SmsRecipient.class));
 		verify(spy).processRecipients(any());
 		verify(messageRepositoryMock).save(any());
+	}
+
+	@Test
+	void processCsvSmsRequest() {
+		final var spy = Mockito.spy(messageService);
+		final var smsCsvRequest = TestDataFactory.createValidSmsCsvRequest();
+		final var csvFile = Mockito.mock(MultipartFile.class);
+		final var userEntity = new UserEntity().withUsername("username");
+		final var departmentEntity = new DepartmentEntity().withName("departmentName").withOrganizationId("departmentId");
+		final var messageId = "adc63e5c-b92f-4c75-b14f-819473cef5b6";
+
+		final var validEntries = new LinkedHashMap<String, Integer>();
+		validEntries.put("+46701740610", 1);
+		validEntries.put("+46701740620", 1);
+		final var validationResult = new CsvUtil.SmsCsvValidationResult(validEntries, Set.of());
+
+		when(messagingSettingsIntegrationMock.getMessagingSettingsForUser(MUNICIPALITY_ID)).thenReturn(SETTINGS_MAP);
+		when(userRepositoryMock.findByUsernameIgnoreCase(Identifier.get().getValue())).thenReturn(Optional.of(userEntity));
+		when(departmentRepositoryMock.findByOrganizationId(SETTINGS_MAP.get(DEPARTMENT_ID))).thenReturn(Optional.of(departmentEntity));
+		doReturn(new CompletableFuture<>()).when(spy).processRecipients(any());
+		when(messageRepositoryMock.save(any())).thenAnswer(invocation -> invocation.getArgument(0, MessageEntity.class).withId(messageId));
+
+		try (MockedStatic<CsvUtil> csvUtilMock = Mockito.mockStatic(CsvUtil.class)) {
+			csvUtilMock.when(() -> CsvUtil.validateSmsCsv(csvFile)).thenReturn(validationResult);
+
+			final var result = spy.processCsvSmsRequest(MUNICIPALITY_ID, smsCsvRequest, csvFile);
+
+			assertThat(result).isEqualTo(messageId);
+			csvUtilMock.verify(() -> CsvUtil.validateSmsCsv(csvFile));
+		}
+
+		verify(messagingSettingsIntegrationMock).getMessagingSettingsForUser(MUNICIPALITY_ID);
+		verify(userRepositoryMock).findByUsernameIgnoreCase(Identifier.get().getValue());
+		verify(departmentRepositoryMock).findByOrganizationId(SETTINGS_MAP.get(DEPARTMENT_ID));
+		verify(spy).processRecipients(messageEntityCaptor.capture());
+		verify(messageRepositoryMock).save(any());
+
+		final var capturedMessage = messageEntityCaptor.getValue();
+		assertThat(capturedMessage.getBody()).isEqualTo("This is a test message");
+		assertThat(capturedMessage.getMessageType()).isEqualTo(MessageType.SMS);
+		assertThat(capturedMessage.getRecipients()).hasSize(2);
+		assertThat(capturedMessage.getRecipients()).allSatisfy(recipient -> {
+			assertThat(recipient.getMessageType()).isEqualTo(MessageType.SMS);
+			assertThat(recipient.getStatus()).isEqualTo("PENDING");
+			assertThat(recipient.getPhoneNumber()).isIn("+46701740610", "+46701740620");
+		});
 	}
 
 	@Test

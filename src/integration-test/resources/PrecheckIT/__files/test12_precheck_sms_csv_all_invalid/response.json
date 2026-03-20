@@ -1,0 +1,9 @@
+{
+	"duplicateEntries": {},
+	"rejectedEntries": [
+		"InvalidHeader",
+		"notanumber",
+		"abc123",
+		"12345"
+	]
+}

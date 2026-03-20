@@ -29,12 +29,14 @@ import se.sundsvall.postportalservice.api.model.DigitalRegisteredLetterRequest;
 import se.sundsvall.postportalservice.api.model.LetterRequest;
 import se.sundsvall.postportalservice.api.model.Recipient;
 import se.sundsvall.postportalservice.api.model.Recipient.DeliveryMethod;
+import se.sundsvall.postportalservice.api.model.SmsCsvRequest;
 import se.sundsvall.postportalservice.api.model.SmsRecipient;
 import se.sundsvall.postportalservice.api.model.SmsRequest;
 import se.sundsvall.postportalservice.service.MessageService;
 
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -45,11 +47,13 @@ import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.http.MediaType.APPLICATION_PDF;
 import static org.springframework.http.MediaType.APPLICATION_XML;
 import static org.springframework.http.MediaType.MULTIPART_FORM_DATA;
+import static org.springframework.http.MediaType.parseMediaType;
 import static org.springframework.web.reactive.function.BodyInserters.fromMultipartData;
 import static se.sundsvall.postportalservice.TestDataFactory.INVALID_MUNICIPALITY_ID;
 import static se.sundsvall.postportalservice.TestDataFactory.MUNICIPALITY_ID;
 import static se.sundsvall.postportalservice.TestDataFactory.createValidDigitalRegisteredLetterRequest;
 import static se.sundsvall.postportalservice.TestDataFactory.createValidLetterRequest;
+import static se.sundsvall.postportalservice.TestDataFactory.createValidSmsCsvRequest;
 import static se.sundsvall.postportalservice.TestDataFactory.createValidSmsRequest;
 
 @SpringBootTest(classes = Application.class, webEnvironment = RANDOM_PORT)
@@ -78,9 +82,6 @@ class MessageResourceTest {
 		verifyNoMoreInteractions(messageServiceMock);
 	}
 
-	// ==================================================
-	// Letter
-	// ==================================================
 	@Test
 	void sendLetter_Created() {
 		final var letterRequest = createValidLetterRequest();
@@ -289,9 +290,6 @@ class MessageResourceTest {
 		});
 	}
 
-	// ==================================================
-	// Digital registered letter
-	// ==================================================
 	@Test
 	void sendDigitalRegisteredLetter_Created() {
 		final var digitalRegisteredLetterRequest = createValidDigitalRegisteredLetterRequest();
@@ -479,9 +477,6 @@ class MessageResourceTest {
 		});
 	}
 
-	// ==================================================
-	// Sms
-	// ==================================================
 	@Test
 	void sendSms_Created() {
 		final var request = createValidSmsRequest();
@@ -581,6 +576,96 @@ class MessageResourceTest {
 						.withPhoneNumber("invalid"))),
 				List.of(
 					new Violation("recipients[0].phoneNumber", "must be a valid MSISDN (example: +46701740605). Regular expression: ^\\+[1-9][\\d]{3,14}$"))));
+	}
+
+	@Test
+	void sendSmsCsv_Created() {
+		final var request = createValidSmsCsvRequest();
+		final var multipartBodyBuilder = new MultipartBodyBuilder();
+		multipartBodyBuilder.part("request", request);
+		multipartBodyBuilder.part("csv-file", "Phonenumber\n+46701740605\n").filename("phones.csv").contentType(parseMediaType("text/csv"));
+
+		when(messageServiceMock.processCsvSmsRequest(eq(MUNICIPALITY_ID), any(SmsCsvRequest.class), any(MultipartFile.class))).thenReturn("messageId");
+
+		webTestClient.post()
+			.uri(uriBuilder -> uriBuilder.replacePath("/{municipalityId}/messages/sms/csv").build(MUNICIPALITY_ID))
+			.header("X-Sent-By", "type=adAccount; joe01doe")
+			.contentType(MULTIPART_FORM_DATA)
+			.body(fromMultipartData(multipartBodyBuilder.build()))
+			.exchange()
+			.expectStatus().isCreated()
+			.expectHeader().contentType(ALL_VALUE)
+			.expectHeader().location("/2281/history/users/joe01doe/messages/messageId");
+
+		verify(messageServiceMock).processCsvSmsRequest(eq(MUNICIPALITY_ID), any(SmsCsvRequest.class), any(MultipartFile.class));
+	}
+
+	@Test
+	void sendSmsCsv_BadHeaderContent() {
+		final var multipartBodyBuilder = new MultipartBodyBuilder();
+		multipartBodyBuilder.part("request", createValidSmsCsvRequest());
+		multipartBodyBuilder.part("csv-file", "Phonenumber\n+46701740605\n").filename("phones.csv").contentType(parseMediaType("text/csv"));
+
+		final var response = webTestClient.post()
+			.uri(uriBuilder -> uriBuilder.replacePath("/{municipalityId}/messages/sms/csv").build(MUNICIPALITY_ID))
+			.contentType(MULTIPART_FORM_DATA)
+			.body(fromMultipartData(multipartBodyBuilder.build()))
+			.exchange()
+			.expectStatus().isBadRequest()
+			.expectBody(Problem.class)
+			.returnResult()
+			.getResponseBody();
+
+		assertThat(response.getTitle()).isEqualTo("Bad Request");
+		assertThat(response.getDetail()).isEqualTo("Required header 'X-Sent-By' is not present.");
+	}
+
+	@Test
+	void sendSmsCsv_BadPathContent() {
+		final var multipartBodyBuilder = new MultipartBodyBuilder();
+		multipartBodyBuilder.part("request", createValidSmsCsvRequest());
+		multipartBodyBuilder.part("csv-file", "Phonenumber\n+46701740605\n").filename("phones.csv").contentType(parseMediaType("text/csv"));
+
+		final var response = webTestClient.post()
+			.uri(uriBuilder -> uriBuilder.replacePath("/{municipalityId}/messages/sms/csv").build(INVALID_MUNICIPALITY_ID))
+			.header("X-Sent-By", "type=adAccount; joe01doe")
+			.contentType(MULTIPART_FORM_DATA)
+			.body(fromMultipartData(multipartBodyBuilder.build()))
+			.exchange()
+			.expectStatus().isBadRequest()
+			.expectBody(ConstraintViolationProblem.class)
+			.returnResult()
+			.getResponseBody();
+
+		assertThat(response.getTitle()).isEqualTo("Constraint Violation");
+		assertThat(response.getViolations()).hasSize(1).satisfiesExactly(violation -> {
+			assertThat(violation.field()).isEqualTo("sendSmsCsv.municipalityId");
+			assertThat(violation.message()).isEqualTo("not a valid municipality ID");
+		});
+	}
+
+	@Test
+	void sendSmsCsv_BadBodyContent() {
+		final var multipartBodyBuilder = new MultipartBodyBuilder();
+		multipartBodyBuilder.part("request", SmsCsvRequest.create());
+		multipartBodyBuilder.part("csv-file", "Phonenumber\n+46701740605\n").filename("phones.csv").contentType(parseMediaType("text/csv"));
+
+		final var response = webTestClient.post()
+			.uri(uriBuilder -> uriBuilder.replacePath("/{municipalityId}/messages/sms/csv").build(MUNICIPALITY_ID))
+			.header("X-Sent-By", "type=adAccount; joe01doe")
+			.contentType(MULTIPART_FORM_DATA)
+			.body(fromMultipartData(multipartBodyBuilder.build()))
+			.exchange()
+			.expectStatus().isBadRequest()
+			.expectBody(ConstraintViolationProblem.class)
+			.returnResult()
+			.getResponseBody();
+
+		assertThat(response.getTitle()).isEqualTo("Constraint Violation");
+		assertThat(response.getViolations()).hasSize(1).satisfiesExactly(violation -> {
+			assertThat(violation.field()).isEqualTo("message");
+			assertThat(violation.message()).isEqualTo("must not be blank");
+		});
 	}
 
 }

@@ -82,8 +82,18 @@ class PrecheckResource {
 		@ApiResponse(responseCode = "200", description = "Successful operation", useReturnTypeSchema = true)
 	})
 	@PostMapping(value = "/csv", consumes = MULTIPART_FORM_DATA_VALUE, produces = APPLICATION_JSON_VALUE)
-	ResponseEntity<PrecheckCsvResponse> validateCsv(@ValidMunicipalityId @PathVariable final String municipalityId,
+	ResponseEntity<PrecheckCsvResponse> precheckLetterCsv(@ValidMunicipalityId @PathVariable final String municipalityId,
 		@RequestPart(name = "csv-file") @ValidCsv final MultipartFile csvFile) {
-		return ok(precheckService.precheckCSV(municipalityId, csvFile));
+		return ok(precheckService.precheckLetterCsv(municipalityId, csvFile));
 	}
+
+	@Operation(summary = "Check if a given csv is properly formatted for SMS. Also returns information about any duplicate entries", responses = {
+		@ApiResponse(responseCode = "200", description = "Successful operation", useReturnTypeSchema = true)
+	})
+	@PostMapping(value = "/csv/sms", consumes = MULTIPART_FORM_DATA_VALUE, produces = APPLICATION_JSON_VALUE)
+	ResponseEntity<PrecheckCsvResponse> precheckSmsCsv(@ValidMunicipalityId @PathVariable final String municipalityId,
+		@RequestPart(name = "csv-file") @ValidCsv final MultipartFile csvFile) {
+		return ok(precheckService.precheckSmsCsv(csvFile));
+	}
+
 }

@@ -5,10 +5,12 @@ import static org.awaitility.Awaitility.await;
 import static org.springframework.http.HttpHeaders.LOCATION;
 import static org.springframework.http.HttpMethod.POST;
 import static org.springframework.http.HttpStatus.CREATED;
+import static org.springframework.http.MediaType.MULTIPART_FORM_DATA;
 import static se.sundsvall.postportalservice.Constants.FAILED;
 import static se.sundsvall.postportalservice.Constants.SENT;
 import static se.sundsvall.postportalservice.integration.db.converter.MessageType.SMS;
 
+import java.io.FileNotFoundException;
 import java.time.Duration;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -180,6 +182,39 @@ class MessageSmsIT extends AbstractAppTest {
 				assertThat(messageEntity.getRecipients())
 					.filteredOn(recipient -> recipient.getStatus().equals(FAILED))
 					.hasSize(2);
+			});
+		appTest.verifyAllStubs();
+	}
+
+	@Test
+	void test06_successfully_sendSmsCsv() throws FileNotFoundException {
+		final var appTest = setupCall();
+		final var location = appTest
+			.withServicePath("/%s/messages/sms/csv".formatted(MUNICIPALITY_ID))
+			.withHttpMethod(POST)
+			.withHeader(Identifier.HEADER_NAME, IDENTIFIER)
+			.withContentType(MULTIPART_FORM_DATA)
+			.withRequestFile("request", REQUEST_FILE)
+			.withRequestFile("csv-file", "phones.csv")
+			.withExpectedResponseStatus(CREATED)
+			.withExpectedResponseHeader(LOCATION, List.of("/%s/history/users/joe01doe/messages/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}".formatted(MUNICIPALITY_ID)))
+			.withExpectedResponseBodyIsNull()
+			.sendRequest()
+			.getResponseHeaders()
+			.getFirst(LOCATION);
+
+		final var messageId = location.substring(location.lastIndexOf("/") + 1);
+
+		// There are asynchronous processes involved in updating the recipient status, hence we need to wait until the expected state is reached
+		await().atMost(Duration.ofSeconds(3))
+			.pollInterval(Duration.ofMillis(100))
+			.untilAsserted(() -> {
+				final var messageEntity = messageRepository.findById(messageId).orElseThrow();
+				assertThat(messageEntity.getRecipients()).hasSize(3);
+				assertThat(messageEntity.getRecipients()).allSatisfy(recipient -> {
+					assertThat(recipient.getStatus()).isEqualTo(SENT);
+					assertThat(recipient.getMessageType()).isEqualTo(SMS);
+				});
 			});
 		appTest.verifyAllStubs();
 	}

@@ -100,7 +100,7 @@ class PrecheckResourceTest {
 		final var multipartBodyBuilder = new MultipartBodyBuilder();
 		multipartBodyBuilder.part("csv-file", "mockfile1").filename("legalIds.csv").contentType(MediaType.valueOf("text/csv"));
 
-		when(precheckServiceMock.precheckCSV(eq(MUNICIPALITY_ID), any(MultipartFile.class))).thenReturn(new PrecheckCsvResponse(Map.of("201901012391", 2, "201901022382", 3), Set.of()));
+		when(precheckServiceMock.precheckLetterCsv(eq(MUNICIPALITY_ID), any(MultipartFile.class))).thenReturn(new PrecheckCsvResponse(Map.of("201901012391", 2, "201901022382", 3), Set.of()));
 
 		final var response = webTestClient.post()
 			.uri("/{municipalityId}/precheck/csv", MUNICIPALITY_ID)
@@ -115,7 +115,7 @@ class PrecheckResourceTest {
 
 		assertThat(response).isNotNull();
 		assertThat(response.duplicateEntries()).containsExactlyInAnyOrderEntriesOf(Map.of("201901012391", 2, "201901022382", 3));
-		verify(precheckServiceMock).precheckCSV(eq(MUNICIPALITY_ID), any(MultipartFile.class));
+		verify(precheckServiceMock).precheckLetterCsv(eq(MUNICIPALITY_ID), any(MultipartFile.class));
 	}
 
 	@Test

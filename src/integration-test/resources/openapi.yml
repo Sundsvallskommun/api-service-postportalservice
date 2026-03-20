@@ -5,9 +5,9 @@ info:
   license:
     name: MIT License
     url: https://opensource.org/licenses/MIT
-  version: "1.5"
+  version: "1.6"
 servers:
-  - url: http://localhost:61272
+  - url: http://localhost:57036
     description: Generated server url
 paths:
   /{municipalityId}/precheck:
@@ -122,7 +122,58 @@ paths:
         - Precheck Resources
       summary: Check if a given csv is properly formatted. Also returns information
         about any duplicate entries
-      operationId: validateCsv
+      operationId: precheckLetterCsv
+      parameters:
+        - name: municipalityId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                csv-file:
+                  type: string
+                  format: binary
+              required:
+                - csv-file
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PrecheckCsvResponse"
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/Problem"
+                  - $ref: "#/components/schemas/ConstraintViolationProblem"
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "502":
+          description: Bad Gateway
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+  /{municipalityId}/precheck/csv/sms:
+    post:
+      tags:
+        - Precheck Resources
+      summary: Check if a given csv is properly formatted for SMS. Also returns information
+        about any duplicate entries
+      operationId: precheckSmsCsv
       parameters:
         - name: municipalityId
           in: path
@@ -192,6 +243,62 @@ paths:
             schema:
               $ref: "#/components/schemas/SmsRequest"
         required: true
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/Problem"
+                  - $ref: "#/components/schemas/ConstraintViolationProblem"
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "502":
+          description: Bad Gateway
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+  /{municipalityId}/messages/sms/csv:
+    post:
+      tags:
+        - Message Resources
+      summary: Send SMS to recipients from a CSV file
+      operationId: sendSmsCsv
+      parameters:
+        - name: X-Sent-By
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: municipalityId
+          in: path
+          description: Municipality ID
+          required: true
+          schema:
+            type: string
+          example: 2281
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                request:
+                  $ref: "#/components/schemas/SmsCsvRequest"
+                csv-file:
+                  type: string
+                  format: binary
+              required:
+                - csv-file
+                - request
       responses:
         "200":
           description: OK
@@ -774,16 +881,16 @@ components:
     Problem:
       type: object
       properties:
-        title:
-          type: string
-        detail:
-          type: string
         instance:
           type: string
           format: uri
         type:
           type: string
           format: uri
+        title:
+          type: string
+        detail:
+          type: string
         status:
           type: integer
           format: int32
@@ -1004,6 +1111,18 @@ components:
       required:
         - message
         - recipients
+    SmsCsvRequest:
+      type: object
+      description: SMS CSV request model
+      properties:
+        message:
+          type: string
+          description: The message to be sent
+          examples:
+            - This is the message to be sent
+          minLength: 1
+      required:
+        - message
     DigitalRegisteredLetterRequest:
       type: object
       description: Digital registered letter request model

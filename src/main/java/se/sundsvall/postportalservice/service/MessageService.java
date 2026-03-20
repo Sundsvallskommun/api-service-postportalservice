@@ -21,6 +21,7 @@ import se.sundsvall.dept44.support.Identifier;
 import se.sundsvall.postportalservice.api.model.DigitalRegisteredLetterRequest;
 import se.sundsvall.postportalservice.api.model.LetterCsvRequest;
 import se.sundsvall.postportalservice.api.model.LetterRequest;
+import se.sundsvall.postportalservice.api.model.SmsCsvRequest;
 import se.sundsvall.postportalservice.api.model.SmsRequest;
 import se.sundsvall.postportalservice.integration.citizen.CitizenIntegration;
 import se.sundsvall.postportalservice.integration.db.DepartmentEntity;
@@ -57,6 +58,7 @@ import static se.sundsvall.postportalservice.integration.messagingsettings.Messa
 import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.SMS_SENDER;
 import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.SUPPORT_TEXT;
 import static se.sundsvall.postportalservice.service.util.CsvUtil.parseCsvToLegalIds;
+import static se.sundsvall.postportalservice.service.util.CsvUtil.validateSmsCsv;
 import static se.sundsvall.postportalservice.service.util.SemaphoreUtil.withPermit;
 
 @Service
@@ -143,6 +145,26 @@ public class MessageService {
 		message.setRecipients(recipientEntities);
 		final var attachmentEntities = attachmentMapper.toAttachmentEntities(attachments);
 		message.setAttachments(attachmentEntities);
+
+		messageRepository.save(message);
+
+		processRecipients(message);
+		return message.getId();
+	}
+
+	public String processCsvSmsRequest(final String municipalityId, final SmsCsvRequest request, final MultipartFile csvFile) {
+		final var validationResult = validateSmsCsv(csvFile);
+		final var message = createMessageEntity(municipalityId);
+		message.setBody(request.getMessage());
+		message.setMessageType(SMS);
+
+		final var recipientEntities = validationResult.validEntries().keySet().stream()
+			.map(phoneNumber -> RecipientEntity.create()
+				.withPhoneNumber(phoneNumber)
+				.withMessageType(SMS)
+				.withStatus(PENDING))
+			.toList();
+		message.setRecipients(recipientEntities);
 
 		messageRepository.save(message);
 

@@ -9,6 +9,7 @@ import se.sundsvall.postportalservice.api.model.DigitalRegisteredLetterRequest;
 import se.sundsvall.postportalservice.api.model.LetterCsvRequest;
 import se.sundsvall.postportalservice.api.model.LetterRequest;
 import se.sundsvall.postportalservice.api.model.Recipient;
+import se.sundsvall.postportalservice.api.model.SmsCsvRequest;
 import se.sundsvall.postportalservice.api.model.SmsRecipient;
 import se.sundsvall.postportalservice.api.model.SmsRequest;
 
@@ -69,6 +70,11 @@ public final class TestDataFactory {
 			.withRecipients(List.of(createValidRecipient()))
 			.withContentType("text/plain")
 			.withAddresses(List.of(createValidAddress()));
+	}
+
+	public static SmsCsvRequest createValidSmsCsvRequest() {
+		return SmsCsvRequest.create()
+			.withMessage("This is a test message");
 	}
 
 	public static LetterCsvRequest createValidLetterCsvRequest() {

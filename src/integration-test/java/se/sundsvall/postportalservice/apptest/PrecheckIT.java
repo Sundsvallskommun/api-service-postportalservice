@@ -117,4 +117,52 @@ class PrecheckIT extends AbstractAppTest {
 			.withExpectedResponse(RESPONSE_FILE)
 			.sendRequestAndVerifyResponse();
 	}
+
+	@Test
+	void test09_precheck_sms_csv_valid_formats() throws FileNotFoundException {
+		setupCall()
+			.withServicePath("/2281/precheck/csv/sms")
+			.withHttpMethod(POST)
+			.withContentType(MULTIPART_FORM_DATA)
+			.withRequestFile("csv-file", "phoneNumbers.csv")
+			.withExpectedResponseStatus(OK)
+			.withExpectedResponse(RESPONSE_FILE)
+			.sendRequestAndVerifyResponse();
+	}
+
+	@Test
+	void test10_precheck_sms_csv_duplicates() throws FileNotFoundException {
+		setupCall()
+			.withServicePath("/2281/precheck/csv/sms")
+			.withHttpMethod(POST)
+			.withContentType(MULTIPART_FORM_DATA)
+			.withRequestFile("csv-file", "phoneNumbers.csv")
+			.withExpectedResponseStatus(OK)
+			.withExpectedResponse(RESPONSE_FILE)
+			.sendRequestAndVerifyResponse();
+	}
+
+	@Test
+	void test11_precheck_sms_csv_mixed() throws FileNotFoundException {
+		setupCall()
+			.withServicePath("/2281/precheck/csv/sms")
+			.withHttpMethod(POST)
+			.withContentType(MULTIPART_FORM_DATA)
+			.withRequestFile("csv-file", "phoneNumbers.csv")
+			.withExpectedResponseStatus(OK)
+			.withExpectedResponse(RESPONSE_FILE)
+			.sendRequestAndVerifyResponse();
+	}
+
+	@Test
+	void test12_precheck_sms_csv_all_invalid() throws FileNotFoundException {
+		setupCall()
+			.withServicePath("/2281/precheck/csv/sms")
+			.withHttpMethod(POST)
+			.withContentType(MULTIPART_FORM_DATA)
+			.withRequestFile("csv-file", "phoneNumbers.csv")
+			.withExpectedResponseStatus(OK)
+			.withExpectedResponse(RESPONSE_FILE)
+			.sendRequestAndVerifyResponse();
+	}
 }
