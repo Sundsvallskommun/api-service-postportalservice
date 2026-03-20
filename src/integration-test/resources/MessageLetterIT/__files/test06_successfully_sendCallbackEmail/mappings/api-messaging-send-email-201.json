@@ -1,0 +1,51 @@
+{
+	"request": {
+		"method": "POST",
+		"urlPath": "/api-messaging/2281/email",
+		"queryParameters": {
+			"async": {
+				"equalTo": "false"
+			}
+		},
+		"bodyPatterns": [
+			{
+				"equalToJson": {
+					"party": {
+						"partyId": "7a1234bc-56de-7890-1234-56789abcdef0"
+					},
+					"emailAddress": "callback@test.sundsvall.se",
+					"subject": "Callback email subject",
+					"attachments": [
+						{
+							"name": "test.pdf",
+							"contentType": "application/pdf",
+							"content": "VGVzdGluZyEgOik="
+						}
+					]
+				},
+				"ignoreExtraElements": true
+			}
+		],
+		"headers": {
+			"Authorization": {
+				"equalTo": "Bearer 0000000000000000AAAAAAAAAAAAAAAA"
+			},
+			"x-origin": {
+				"equalTo": "PostPortalService"
+			},
+			"X-Sent-By": {
+				"equalTo": "joe01doe; type=adAccount"
+			},
+			"Content-Type": {
+				"equalTo": "application/json"
+			}
+		}
+	},
+	"response": {
+		"status": 201,
+		"headers": {
+			"Content-Type": "application/json"
+		},
+		"bodyFileName": "test06_successfully_sendCallbackEmail/responses/messaging-send-email.json"
+	}
+}

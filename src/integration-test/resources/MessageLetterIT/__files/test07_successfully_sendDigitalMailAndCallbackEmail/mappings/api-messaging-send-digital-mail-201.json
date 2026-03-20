@@ -1,0 +1,27 @@
+{
+	"request": {
+		"url": "/api-messaging/2281/1234567890/digital-mail",
+		"method": "POST",
+		"headers": {
+			"Authorization": {
+				"equalTo": "Bearer 0000000000000000AAAAAAAAAAAAAAAA"
+			},
+			"x-origin": {
+				"equalTo": "PostPortalService"
+			},
+			"X-Sent-By": {
+				"equalTo": "joe01doe; type=adAccount"
+			},
+			"Content-Type": {
+				"equalTo": "application/json"
+			}
+		}
+	},
+	"response": {
+		"status": 201,
+		"headers": {
+			"Content-Type": "application/json"
+		},
+		"bodyFileName": "test07_successfully_sendDigitalMailAndCallbackEmail/responses/messaging-send-digital-mail.json"
+	}
+}

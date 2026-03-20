@@ -19,15 +19,15 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.http.HttpStatus.BAD_GATEWAY;
-import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.CONTACT_INFORMATION_EMAIL;
-import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.CONTACT_INFORMATION_PHONE_NUMBER;
-import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.CONTACT_INFORMATION_URL;
-import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.DEPARTMENT_ID;
-import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.DEPARTMENT_NAME;
-import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.FOLDER_NAME;
-import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.ORGANIZATION_NUMBER;
-import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.SMS_SENDER;
-import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.SUPPORT_TEXT;
+import static se.sundsvall.postportalservice.service.util.MessagingSettingsUtil.CONTACT_INFORMATION_EMAIL;
+import static se.sundsvall.postportalservice.service.util.MessagingSettingsUtil.CONTACT_INFORMATION_PHONE_NUMBER;
+import static se.sundsvall.postportalservice.service.util.MessagingSettingsUtil.CONTACT_INFORMATION_URL;
+import static se.sundsvall.postportalservice.service.util.MessagingSettingsUtil.DEPARTMENT_ID;
+import static se.sundsvall.postportalservice.service.util.MessagingSettingsUtil.DEPARTMENT_NAME;
+import static se.sundsvall.postportalservice.service.util.MessagingSettingsUtil.FOLDER_NAME;
+import static se.sundsvall.postportalservice.service.util.MessagingSettingsUtil.ORGANIZATION_NUMBER;
+import static se.sundsvall.postportalservice.service.util.MessagingSettingsUtil.SMS_SENDER;
+import static se.sundsvall.postportalservice.service.util.MessagingSettingsUtil.SUPPORT_TEXT;
 
 @ExtendWith(MockitoExtension.class)
 class MessagingSettingsIntegrationTest {
@@ -157,6 +157,32 @@ class MessagingSettingsIntegrationTest {
 			.hasFieldOrPropertyWithValue("status", BAD_GATEWAY)
 			.hasMessage("Bad Gateway: Invalid format for messaging setting attribute '%s' for user '%s' in municipalityId '%s'"
 				.formatted(ORGANIZATION_NUMBER, USERNAME, MUNICIPALITY_ID));
+
+		verify(messagingSettingsClient).getMessagingSettingsForUser(HEADER_VALUE, MUNICIPALITY_ID);
+	}
+
+	@Test
+	void getMessagingSettingsForUser_nullValueIsFilteredOut() {
+		final var messagingSettings = new MessagingSettings().values(List.of(
+			new MessagingSettingValue().key(ORGANIZATION_NUMBER).value("123456789"),
+			new MessagingSettingValue().key(FOLDER_NAME).value("TestFolder"),
+			new MessagingSettingValue().key(SMS_SENDER).value("Sundsvall"),
+			new MessagingSettingValue().key(SUPPORT_TEXT).value("Support text"),
+			new MessagingSettingValue().key(CONTACT_INFORMATION_URL).value("https://example.com"),
+			new MessagingSettingValue().key(CONTACT_INFORMATION_PHONE_NUMBER).value("0123456789"),
+			new MessagingSettingValue().key(CONTACT_INFORMATION_EMAIL).value("test@example.com"),
+			new MessagingSettingValue().key(DEPARTMENT_NAME).value("Department 44"),
+			new MessagingSettingValue().key(DEPARTMENT_ID).value("dept44"),
+			new MessagingSettingValue().key("some_optional_key").value(null)));
+
+		when(messagingSettingsClient.getMessagingSettingsForUser(HEADER_VALUE, MUNICIPALITY_ID))
+			.thenReturn(List.of(messagingSettings));
+
+		final var result = messagingSettingsIntegration.getMessagingSettingsForUser(MUNICIPALITY_ID);
+
+		assertThat(result)
+			.hasSize(9)
+			.doesNotContainKey("some_optional_key");
 
 		verify(messagingSettingsClient).getMessagingSettingsForUser(HEADER_VALUE, MUNICIPALITY_ID);
 	}

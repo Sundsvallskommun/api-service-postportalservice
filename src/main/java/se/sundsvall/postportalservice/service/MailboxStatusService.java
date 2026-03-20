@@ -6,7 +6,7 @@ import se.sundsvall.postportalservice.integration.messaging.MessagingIntegration
 import se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration;
 import se.sundsvall.postportalservice.service.util.PrecheckUtil;
 
-import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.ORGANIZATION_NUMBER;
+import static se.sundsvall.postportalservice.service.util.MessagingSettingsUtil.ORGANIZATION_NUMBER;
 
 /**
  * Service for checking digital mailbox status.

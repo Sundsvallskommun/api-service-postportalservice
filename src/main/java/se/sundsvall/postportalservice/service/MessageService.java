@@ -48,17 +48,19 @@ import static se.sundsvall.postportalservice.integration.db.converter.MessageTyp
 import static se.sundsvall.postportalservice.integration.db.converter.MessageType.LETTER;
 import static se.sundsvall.postportalservice.integration.db.converter.MessageType.SMS;
 import static se.sundsvall.postportalservice.integration.db.converter.MessageType.SNAIL_MAIL;
-import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.CONTACT_INFORMATION_EMAIL;
-import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.CONTACT_INFORMATION_PHONE_NUMBER;
-import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.CONTACT_INFORMATION_URL;
-import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.DEPARTMENT_ID;
-import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.DEPARTMENT_NAME;
-import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.FOLDER_NAME;
-import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.ORGANIZATION_NUMBER;
-import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.SMS_SENDER;
-import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.SUPPORT_TEXT;
 import static se.sundsvall.postportalservice.service.util.CsvUtil.parseCsvToLegalIds;
 import static se.sundsvall.postportalservice.service.util.CsvUtil.validateSmsCsv;
+import static se.sundsvall.postportalservice.service.util.MessagingSettingsUtil.CONTACT_INFORMATION_EMAIL;
+import static se.sundsvall.postportalservice.service.util.MessagingSettingsUtil.CONTACT_INFORMATION_PHONE_NUMBER;
+import static se.sundsvall.postportalservice.service.util.MessagingSettingsUtil.CONTACT_INFORMATION_URL;
+import static se.sundsvall.postportalservice.service.util.MessagingSettingsUtil.DEPARTMENT_ID;
+import static se.sundsvall.postportalservice.service.util.MessagingSettingsUtil.DEPARTMENT_NAME;
+import static se.sundsvall.postportalservice.service.util.MessagingSettingsUtil.FOLDER_NAME;
+import static se.sundsvall.postportalservice.service.util.MessagingSettingsUtil.ORGANIZATION_NUMBER;
+import static se.sundsvall.postportalservice.service.util.MessagingSettingsUtil.SMS_SENDER;
+import static se.sundsvall.postportalservice.service.util.MessagingSettingsUtil.SNAILMAIL_METHOD;
+import static se.sundsvall.postportalservice.service.util.MessagingSettingsUtil.SNAILMAIL_METHOD_VALUE;
+import static se.sundsvall.postportalservice.service.util.MessagingSettingsUtil.SUPPORT_TEXT;
 import static se.sundsvall.postportalservice.service.util.SemaphoreUtil.withPermit;
 
 @Service
@@ -108,7 +110,8 @@ public class MessageService {
 	}
 
 	public String processDigitalRegisteredLetterRequest(final String municipalityId, final DigitalRegisteredLetterRequest request, final List<MultipartFile> attachments) {
-		final var message = createMessageEntity(municipalityId);
+		final var settingsMap = messagingSettingsIntegration.getMessagingSettingsForUser(municipalityId);
+		final var message = createMessageEntity(municipalityId, settingsMap);
 		message.setBody(request.getBody());
 		message.setContentType(request.getContentType());
 		message.setSubject(request.getSubject());
@@ -135,7 +138,8 @@ public class MessageService {
 
 	public String processCsvLetterRequest(final String municipalityId, final LetterCsvRequest request, final MultipartFile csvFile, final List<MultipartFile> attachments) {
 		final var legalIds = parseCsvToLegalIds(csvFile);
-		final var message = createMessageEntity(municipalityId);
+		final var settingsMap = messagingSettingsIntegration.getMessagingSettingsForUser(municipalityId);
+		final var message = createMessageEntity(municipalityId, settingsMap);
 		message.setSubject(request.getSubject());
 		message.setContentType(request.getContentType());
 		message.setBody(request.getBody());
@@ -148,13 +152,14 @@ public class MessageService {
 
 		messageRepository.save(message);
 
-		processRecipients(message);
+		processRecipients(message, settingsMap);
 		return message.getId();
 	}
 
 	public String processCsvSmsRequest(final String municipalityId, final SmsCsvRequest request, final MultipartFile csvFile) {
 		final var validationResult = validateSmsCsv(csvFile);
-		final var message = createMessageEntity(municipalityId);
+		final var settingsMap = messagingSettingsIntegration.getMessagingSettingsForUser(municipalityId);
+		final var message = createMessageEntity(municipalityId, settingsMap);
 		message.setBody(request.getMessage());
 		message.setMessageType(SMS);
 
@@ -168,12 +173,13 @@ public class MessageService {
 
 		messageRepository.save(message);
 
-		processRecipients(message);
+		processRecipients(message, settingsMap);
 		return message.getId();
 	}
 
 	public String processLetterRequest(final String municipalityId, final LetterRequest letterRequest, final List<MultipartFile> attachments) {
-		final var message = createMessageEntity(municipalityId);
+		final var settingsMap = messagingSettingsIntegration.getMessagingSettingsForUser(municipalityId);
+		final var message = createMessageEntity(municipalityId, settingsMap);
 		message.setBody(letterRequest.getBody());
 		message.setContentType(letterRequest.getContentType());
 		message.setSubject(letterRequest.getSubject());
@@ -195,7 +201,7 @@ public class MessageService {
 
 		messageRepository.save(message);
 
-		processRecipients(message);
+		processRecipients(message, settingsMap);
 		return message.getId();
 	}
 
@@ -205,7 +211,8 @@ public class MessageService {
 	 * message.
 	 */
 	public String processSmsRequest(final String municipalityId, final SmsRequest smsRequest) {
-		final var message = createMessageEntity(municipalityId);
+		final var settingsMap = messagingSettingsIntegration.getMessagingSettingsForUser(municipalityId);
+		final var message = createMessageEntity(municipalityId, settingsMap);
 		message.setBody(smsRequest.getMessage());
 		message.setMessageType(SMS);
 
@@ -217,15 +224,15 @@ public class MessageService {
 
 		messageRepository.save(message);
 
-		processRecipients(message);
+		processRecipients(message, settingsMap);
 		return message.getId();
 	}
 
-	CompletableFuture<Void> processRecipients(final MessageEntity messageEntity) {
+	CompletableFuture<Void> processRecipients(final MessageEntity messageEntity, final Map<String, String> settingsMap) {
 		LOG.info("Starting to process recipients for message with id {}", messageEntity.getId());
 		final var futures = ofNullable(messageEntity.getRecipients()).orElse(emptyList()).stream()
 			.filter(recipientEntity -> !"UNDELIVERABLE".equalsIgnoreCase(recipientEntity.getStatus()))
-			.map(recipientEntity -> withPermit(() -> sendMessageToRecipient(messageEntity, recipientEntity), permits, executor))
+			.map(recipientEntity -> withPermit(() -> sendMessageToRecipient(messageEntity, recipientEntity, settingsMap), permits, executor))
 			.toArray(CompletableFuture[]::new);
 
 		return CompletableFuture.allOf(futures)
@@ -244,11 +251,11 @@ public class MessageService {
 			});
 	}
 
-	CompletableFuture<Void> sendMessageToRecipient(final MessageEntity messageEntity, final RecipientEntity recipientEntity) {
+	CompletableFuture<Void> sendMessageToRecipient(final MessageEntity messageEntity, final RecipientEntity recipientEntity, final Map<String, String> settingsMap) {
 		return switch (recipientEntity.getMessageType()) {
 			case SMS -> sendSmsToRecipient(messageEntity, recipientEntity);
 			case DIGITAL_MAIL -> sendDigitalMailToRecipient(messageEntity, recipientEntity);
-			case SNAIL_MAIL -> sendSnailMailToRecipient(messageEntity, recipientEntity);
+			case SNAIL_MAIL -> sendSnailMailToRecipient(messageEntity, recipientEntity, settingsMap);
 			default -> {
 				LOG.error("Unsupported message type: {}, for recipient with id: {}", recipientEntity.getMessageType(), recipientEntity.getId());
 				recipientEntity.setStatus(FAILED);
@@ -305,12 +312,24 @@ public class MessageService {
 			});
 	}
 
-	CompletableFuture<Void> sendSnailMailToRecipient(final MessageEntity messageEntity, final RecipientEntity recipientEntity) {
+	CompletableFuture<Void> sendSnailMailToRecipient(final MessageEntity messageEntity, final RecipientEntity recipientEntity, final Map<String, String> settingsMap) {
 		LOG.info("Sending snail mail to recipient with id {}", recipientEntity.getId());
 		final var contextMap = MDC.getCopyOfContextMap();
+
 		return supplyAsync(() -> {
 			MDC.setContextMap(contextMap);
+
+			// Check if we've configured something else than snail_mail
+			final var snailmailMethod = settingsMap.get(SNAILMAIL_METHOD);
+
+			// If callback email is configured, send as email instead.
+			if (SNAILMAIL_METHOD_VALUE.equals(snailmailMethod)) {
+				LOG.info("Snail mail method is set to {}, sending callback email instead.", SNAILMAIL_METHOD_VALUE);
+				return messagingIntegration.sendCallbackEmail(messageEntity, recipientEntity, settingsMap);
+			}
+
 			return messagingIntegration.sendSnailMail(messageEntity, recipientEntity);
+
 		})
 			.thenAccept(messageResult -> {
 				MDC.setContextMap(contextMap);
@@ -360,9 +379,7 @@ public class MessageService {
 				.withName(settingsMap.get(DEPARTMENT_NAME)));
 	}
 
-	private MessageEntity createMessageEntity(final String municipalityId) {
-		final var settingsMap = messagingSettingsIntegration.getMessagingSettingsForUser(municipalityId);
-
+	private MessageEntity createMessageEntity(final String municipalityId, final Map<String, String> settingsMap) {
 		final var user = getOrCreateUser(Identifier.get().getValue());
 		final var department = getOrCreateDepartment(settingsMap)
 			.withFolderName(settingsMap.get(FOLDER_NAME))

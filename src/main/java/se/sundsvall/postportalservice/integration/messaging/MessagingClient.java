@@ -1,6 +1,7 @@
 package se.sundsvall.postportalservice.integration.messaging;
 
 import generated.se.sundsvall.messaging.DigitalMailRequest;
+import generated.se.sundsvall.messaging.EmailRequest;
 import generated.se.sundsvall.messaging.Mailbox;
 import generated.se.sundsvall.messaging.MessageBatchResult;
 import generated.se.sundsvall.messaging.MessageResult;
@@ -70,4 +71,11 @@ public interface MessagingClient {
 		@PathVariable final String organizationNumber,
 		@RequestBody final List<String> partyIds);
 
+	@PostMapping(path = "/{municipalityId}/email", consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
+	MessageResult sendEmail(
+		@RequestHeader(Identifier.HEADER_NAME) final String identifier,
+		@RequestHeader("x-origin") final String origin,
+		@PathVariable final String municipalityId,
+		@RequestBody final EmailRequest request,
+		@RequestParam final boolean async);
 }
