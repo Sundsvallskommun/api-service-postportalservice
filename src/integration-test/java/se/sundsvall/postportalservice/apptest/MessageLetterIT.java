@@ -204,4 +204,72 @@ class MessageLetterIT extends AbstractAppTest {
 		appTest.verifyAllStubs();
 	}
 
+	@Test
+	void test06_successfully_sendCallbackEmail() throws FileNotFoundException {
+		final var appTest = setupCall();
+		final var location = appTest
+			.withServicePath("/%s/messages/letter".formatted(MUNICIPALITY_ID))
+			.withHttpMethod(POST)
+			.withHeader(Identifier.HEADER_NAME, IDENTIFIER)
+			.withContentType(MULTIPART_FORM_DATA)
+			.withRequestFile("request", REQUEST_FILE)
+			.withRequestFile("attachments", "test.pdf")
+			.withExpectedResponseStatus(CREATED)
+			.withExpectedResponseHeader(LOCATION, List.of("/%s/history/users/joe01doe/messages/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}".formatted(MUNICIPALITY_ID)))
+			.withExpectedResponseBodyIsNull()
+			.sendRequest()
+			.getResponseHeaders()
+			.getFirst(LOCATION);
+
+		final var messageId = location.substring(location.lastIndexOf("/") + 1);
+
+		// There are asynchronous processes involved in updating the recipient status, hence we need to wait until the expected state is reached
+		await().atMost(Duration.ofSeconds(3))
+			.pollInterval(Duration.ofMillis(100))
+			.untilAsserted(() -> {
+				var message = messageRepository.findById(messageId).orElseThrow();
+				assertThat(message.getRecipients()).hasSize(1);
+				assertThat(message.getRecipients())
+					.allSatisfy(recipientEntity -> {
+						assertThat(recipientEntity.getStatus()).isEqualTo(SENT);
+						assertThat(recipientEntity.getMessageType()).isEqualTo(SNAIL_MAIL);
+					});
+			});
+		appTest.verifyAllStubs();
+	}
+
+	@Test
+	void test07_successfully_sendDigitalMailAndCallbackEmail() throws FileNotFoundException {
+		final var appTest = setupCall();
+		final var location = appTest
+			.withServicePath("/%s/messages/letter".formatted(MUNICIPALITY_ID))
+			.withHttpMethod(POST)
+			.withHeader(Identifier.HEADER_NAME, IDENTIFIER)
+			.withContentType(MULTIPART_FORM_DATA)
+			.withRequestFile("request", REQUEST_FILE)
+			.withRequestFile("attachments", "test.pdf")
+			.withExpectedResponseStatus(CREATED)
+			.withExpectedResponseHeader(LOCATION, List.of("/%s/history/users/joe01doe/messages/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}".formatted(MUNICIPALITY_ID)))
+			.withExpectedResponseBodyIsNull()
+			.sendRequest()
+			.getResponseHeaders()
+			.getFirst(LOCATION);
+
+		final var messageId = location.substring(location.lastIndexOf("/") + 1);
+
+		// There are asynchronous processes involved in updating the recipient status, hence we need to wait until the expected state is reached
+		await().atMost(Duration.ofSeconds(3))
+			.pollInterval(Duration.ofMillis(100))
+			.untilAsserted(() -> {
+				var message = messageRepository.findById(messageId).orElseThrow();
+				assertThat(message.getRecipients()).hasSize(2);
+				assertThat(message.getRecipients())
+					.hasSize(2)
+					.extracting(RecipientEntity::getMessageType)
+					.containsExactlyInAnyOrder(SNAIL_MAIL, DIGITAL_MAIL);
+				assertThat(message.getRecipients())
+					.allSatisfy(recipientEntity -> assertThat(recipientEntity.getStatus()).isEqualTo(SENT));
+			});
+		appTest.verifyAllStubs();
+	}
 }
