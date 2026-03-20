@@ -65,15 +65,15 @@ import static org.springframework.http.HttpStatus.BAD_GATEWAY;
 import static se.sundsvall.postportalservice.Constants.FAILED;
 import static se.sundsvall.postportalservice.Constants.SENT;
 import static se.sundsvall.postportalservice.TestDataFactory.MUNICIPALITY_ID;
-import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.CONTACT_INFORMATION_EMAIL;
-import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.CONTACT_INFORMATION_PHONE_NUMBER;
-import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.CONTACT_INFORMATION_URL;
-import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.DEPARTMENT_ID;
-import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.DEPARTMENT_NAME;
-import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.FOLDER_NAME;
-import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.ORGANIZATION_NUMBER;
-import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.SMS_SENDER;
-import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.SUPPORT_TEXT;
+import static se.sundsvall.postportalservice.service.util.MessagingSettingsUtil.CONTACT_INFORMATION_EMAIL;
+import static se.sundsvall.postportalservice.service.util.MessagingSettingsUtil.CONTACT_INFORMATION_PHONE_NUMBER;
+import static se.sundsvall.postportalservice.service.util.MessagingSettingsUtil.CONTACT_INFORMATION_URL;
+import static se.sundsvall.postportalservice.service.util.MessagingSettingsUtil.DEPARTMENT_ID;
+import static se.sundsvall.postportalservice.service.util.MessagingSettingsUtil.DEPARTMENT_NAME;
+import static se.sundsvall.postportalservice.service.util.MessagingSettingsUtil.FOLDER_NAME;
+import static se.sundsvall.postportalservice.service.util.MessagingSettingsUtil.ORGANIZATION_NUMBER;
+import static se.sundsvall.postportalservice.service.util.MessagingSettingsUtil.SMS_SENDER;
+import static se.sundsvall.postportalservice.service.util.MessagingSettingsUtil.SUPPORT_TEXT;
 
 @ExtendWith(MockitoExtension.class)
 class MessageServiceTest {
@@ -665,8 +665,7 @@ class MessageServiceTest {
 		final var callbackSettingsMap = Map.of(
 			"snailmail_method", "Callback_Email",
 			"callback_email", "test@example.com",
-			"callback_email_subject", "Subject",
-			"callback_email_body_base64", "PHA+Qm9keTwvcD4=");
+			"callback_email_subject", "Subject");
 
 		when(messagingIntegrationMock.sendCallbackEmail(messageEntity, recipient1, callbackSettingsMap)).thenReturn(messageResult);
 		doCallRealMethod().when(spy).updateRecipient(messageResult, recipient1);
@@ -688,8 +687,7 @@ class MessageServiceTest {
 		final var callbackSettingsMap = Map.of(
 			"snailmail_method", "Callback_Email",
 			"callback_email", "test@example.com",
-			"callback_email_subject", "Subject",
-			"callback_email_body_base64", "PHA+Qm9keTwvcD4=");
+			"callback_email_subject", "Subject");
 
 		when(messagingIntegrationMock.sendCallbackEmail(messageEntity, recipient1, callbackSettingsMap)).thenThrow(new RuntimeException("Simulated exception"));
 
