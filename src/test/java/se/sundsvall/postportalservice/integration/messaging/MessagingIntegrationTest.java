@@ -3,17 +3,25 @@ package se.sundsvall.postportalservice.integration.messaging;
 import generated.se.sundsvall.messaging.DeliveryResult;
 import generated.se.sundsvall.messaging.DigitalMailAttachment;
 import generated.se.sundsvall.messaging.DigitalMailRequest;
+import generated.se.sundsvall.messaging.EmailRequest;
 import generated.se.sundsvall.messaging.MessageBatchResult;
 import generated.se.sundsvall.messaging.MessageResult;
 import generated.se.sundsvall.messaging.MessageStatus;
 import generated.se.sundsvall.messaging.SmsRequest;
 import generated.se.sundsvall.messaging.SnailmailRequest;
 import java.sql.Blob;
+import java.sql.SQLException;
+import java.util.Base64;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.InjectMocks;
@@ -28,6 +36,7 @@ import se.sundsvall.postportalservice.integration.db.UserEntity;
 import se.sundsvall.postportalservice.integration.db.converter.MessageType;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -53,6 +62,9 @@ class MessagingIntegrationTest {
 
 	@Captor
 	private ArgumentCaptor<SnailmailRequest> snailmailRequestCaptor;
+
+	@Captor
+	private ArgumentCaptor<EmailRequest> emailRequestCaptor;
 
 	@InjectMocks
 	private MessagingIntegration messagingIntegration;
@@ -176,6 +188,114 @@ class MessagingIntegrationTest {
 		});
 
 		verify(messagingClientMock).sendSnailMail(HEADER_VALUE, ORIGIN, MUNICIPALITY_ID, request, batchId);
+	}
+
+	@Test
+	void sendCallbackEmail() throws SQLException {
+		final var partyId = "00000000-0000-0000-0000-000000000001";
+		final var recipientId = "recipient-id-1";
+		final var blob = Mockito.mock(Blob.class);
+		when(blob.length()).thenReturn(5L);
+		when(blob.getBytes(1, 5)).thenReturn("hello".getBytes());
+
+		final var attachmentEntity = AttachmentEntity.create()
+			.withContent(blob)
+			.withFileName("file.pdf")
+			.withContentType("application/pdf");
+		final var messageEntity = MessageEntity.create()
+			.withMunicipalityId(MUNICIPALITY_ID)
+			.withDepartment(DepartmentEntity.create().withName("Dept").withOrganizationId("123"))
+			.withUser(UserEntity.create().withUsername("John Wick"))
+			.withAttachments(List.of(attachmentEntity));
+		final var recipientEntity = RecipientEntity.create()
+			.withId(recipientId)
+			.withPartyId(partyId)
+			.withMessageType(MessageType.SNAIL_MAIL);
+
+		final var settingsMap = Map.of(
+			"callback_email", "callback@example.com",
+			"callback_email_subject", "Subject",
+			"callback_email_body_base64", "PHA+Qm9keTwvcD4=");
+
+		final var messageResult = new MessageResult().messageId(UUID.randomUUID())
+			.deliveries(List.of(new DeliveryResult().status(MessageStatus.SENT)));
+
+		when(messagingClientMock.sendEmail(eq(HEADER_VALUE), eq(ORIGIN), eq(MUNICIPALITY_ID), emailRequestCaptor.capture(), eq(true)))
+			.thenReturn(messageResult);
+
+		final var result = messagingIntegration.sendCallbackEmail(messageEntity, recipientEntity, settingsMap);
+
+		assertThat(result).isEqualTo(messageResult);
+
+		final var emailRequest = emailRequestCaptor.getValue();
+		assertThat(emailRequest.getEmailAddress()).isEqualTo("callback@example.com");
+		assertThat(emailRequest.getSubject()).isEqualTo("Subject");
+		assertThat(emailRequest.getHtmlMessage()).isEqualTo("PHA+Qm9keTwvcD4=");
+		assertThat(emailRequest.getParty().getPartyId()).isEqualTo(UUID.fromString(partyId));
+		assertThat(emailRequest.getAttachments()).hasSize(1).allSatisfy(attachment -> {
+			assertThat(attachment.getName()).isEqualTo("file.pdf");
+			assertThat(attachment.getContentType()).isEqualTo("application/pdf");
+			assertThat(attachment.getContent()).isEqualTo(Base64.getEncoder().encodeToString("hello".getBytes()));
+		});
+
+		verify(messagingClientMock).sendEmail(HEADER_VALUE, ORIGIN, MUNICIPALITY_ID, emailRequest, true);
+	}
+
+	@ParameterizedTest
+	@MethodSource("missingParameterArguments")
+	void sendCallbackEmail_missingRequiredParameters(final Map<String, String> settingsMap) {
+		final var messageEntity = MessageEntity.create()
+			.withMunicipalityId(MUNICIPALITY_ID)
+			.withDepartment(DepartmentEntity.create().withName("Dept").withOrganizationId("123"))
+			.withUser(UserEntity.create().withUsername("John Wick"));
+		final var recipientEntity = RecipientEntity.create()
+			.withId("recipient-id-1")
+			.withPartyId("00000000-0000-0000-0000-000000000001")
+			.withMessageType(MessageType.SNAIL_MAIL);
+
+		assertThatThrownBy(() -> messagingIntegration.sendCallbackEmail(messageEntity, recipientEntity, settingsMap))
+			.isInstanceOf(se.sundsvall.dept44.problem.Problem.class)
+			.hasMessageContaining("Missing required parameter for callback email");
+	}
+
+	private static Stream<Arguments> missingParameterArguments() {
+		return Stream.of(
+			Arguments.of(Map.of()),
+			Arguments.of(Map.of("callback_email_subject", "Subject", "callback_email_body_base64", "body")),
+			Arguments.of(Map.of("callback_email", "a@b.com", "callback_email_body_base64", "body")),
+			Arguments.of(Map.of("callback_email", "a@b.com", "callback_email_subject", "Subject")),
+			Arguments.of(Map.of("callback_email", "  ", "callback_email_subject", "Subject", "callback_email_body_base64", "body")));
+	}
+
+	@Test
+	void sendCallbackEmail_blobToBase64Fails() throws SQLException {
+		final var partyId = "00000000-0000-0000-0000-000000000001";
+		final var blob = Mockito.mock(Blob.class);
+		when(blob.length()).thenReturn(5L);
+		when(blob.getBytes(1, 5)).thenThrow(new SQLException("DB error"));
+
+		final var attachmentEntity = AttachmentEntity.create()
+			.withContent(blob)
+			.withFileName("file.pdf")
+			.withContentType("application/pdf");
+		final var messageEntity = MessageEntity.create()
+			.withMunicipalityId(MUNICIPALITY_ID)
+			.withDepartment(DepartmentEntity.create().withName("Dept").withOrganizationId("123"))
+			.withUser(UserEntity.create().withUsername("John Wick"))
+			.withAttachments(List.of(attachmentEntity));
+		final var recipientEntity = RecipientEntity.create()
+			.withId("recipient-id-1")
+			.withPartyId(partyId)
+			.withMessageType(MessageType.SNAIL_MAIL);
+
+		final var settingsMap = Map.of(
+			"callback_email", "callback@example.com",
+			"callback_email_subject", "Subject",
+			"callback_email_body_base64", "PHA+Qm9keTwvcD4=");
+
+		assertThatThrownBy(() -> messagingIntegration.sendCallbackEmail(messageEntity, recipientEntity, settingsMap))
+			.isInstanceOf(se.sundsvall.dept44.problem.Problem.class)
+			.hasMessageContaining("Couldn't read blob from entity");
 	}
 
 }
