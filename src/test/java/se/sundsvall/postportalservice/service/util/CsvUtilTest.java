@@ -148,6 +148,29 @@ class CsvUtilTest {
 	}
 
 	@Test
+	void validateSmsCsvRejectsInternationalNumbers(@Load(value = "/testfile/phoneNumbers-international-rejected.csv") final String csv) throws IOException {
+		var multipartFileMock = Mockito.mock(MultipartFile.class);
+		when(multipartFileMock.getInputStream()).thenReturn(new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8)));
+
+		var result = CsvUtil.validateSmsCsv(multipartFileMock);
+
+		assertThat(result.validEntries()).isEmpty();
+		assertThat(result.invalidEntries()).containsExactlyInAnyOrder("+4712345678", "+12025551234", "+47701740610");
+	}
+
+	@Test
+	void validateSmsCsvSwedishBoundaryLengths(@Load(value = "/testfile/phoneNumbers-swedish-boundary.csv") final String csv) throws IOException {
+		var multipartFileMock = Mockito.mock(MultipartFile.class);
+		when(multipartFileMock.getInputStream()).thenReturn(new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8)));
+
+		var result = CsvUtil.validateSmsCsv(multipartFileMock);
+
+		assertThat(result.validEntries()).containsExactlyInAnyOrderEntriesOf(Map.of(
+			"+46701740650", 1));
+		assertThat(result.invalidEntries()).containsExactlyInAnyOrder("+4670174061", "+467017406100", "0046701740610");
+	}
+
+	@Test
 	void validateSmsCsvIOException() throws IOException {
 		var multipartFileMock = Mockito.mock(MultipartFile.class);
 
