@@ -20,7 +20,7 @@ public final class CsvUtil {
 
 	private static final String COULD_NOT_READ_CSV_FILE = "Could not read CSV file: %s";
 	private static final Set<String> VALID_HEADERS = Set.of("Phonenumber", "Telefonnummer", "Mobilnummer");
-	private static final String VALID_PHONE_NUMBER_REGEX = "^\\+[1-9][\\d]{3,14}$";
+	private static final String VALID_PHONE_NUMBER_REGEX = "^\\+46\\d{9}$";
 	private static final String DEFAULT_COUNTRY_CODE = "+46";
 	private static final String VALID_LEGAL_ID_REGEX = "^\\d{8}-?\\d{4}$";
 

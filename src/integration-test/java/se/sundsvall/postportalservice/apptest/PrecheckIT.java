@@ -165,4 +165,28 @@ class PrecheckIT extends AbstractAppTest {
 			.withExpectedResponse(RESPONSE_FILE)
 			.sendRequestAndVerifyResponse();
 	}
+
+	@Test
+	void test13_precheck_sms_csv_international_rejected() throws FileNotFoundException {
+		setupCall()
+			.withServicePath("/2281/precheck/csv/sms")
+			.withHttpMethod(POST)
+			.withContentType(MULTIPART_FORM_DATA)
+			.withRequestFile("csv-file", "phoneNumbers.csv")
+			.withExpectedResponseStatus(OK)
+			.withExpectedResponse(RESPONSE_FILE)
+			.sendRequestAndVerifyResponse();
+	}
+
+	@Test
+	void test14_precheck_sms_csv_swedish_boundary() throws FileNotFoundException {
+		setupCall()
+			.withServicePath("/2281/precheck/csv/sms")
+			.withHttpMethod(POST)
+			.withContentType(MULTIPART_FORM_DATA)
+			.withRequestFile("csv-file", "phoneNumbers.csv")
+			.withExpectedResponseStatus(OK)
+			.withExpectedResponse(RESPONSE_FILE)
+			.sendRequestAndVerifyResponse();
+	}
 }
