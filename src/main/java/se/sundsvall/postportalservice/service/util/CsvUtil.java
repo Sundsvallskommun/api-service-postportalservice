@@ -39,14 +39,13 @@ public final class CsvUtil {
 			while ((line = reader.readLine()) != null) {
 				var trimmed = line.trim();
 
+				var isHeader = false;
 				if (!headerRead) {
 					headerRead = true;
-					if (VALID_HEADERS.contains(trimmed)) {
-						continue;
-					}
+					isHeader = VALID_HEADERS.contains(trimmed);
 				}
 
-				if (trimmed.isEmpty()) {
+				if (isHeader || trimmed.isEmpty()) {
 					continue;
 				}
 
@@ -92,15 +91,13 @@ public final class CsvUtil {
 			while ((line = reader.readLine()) != null) {
 				var trimmed = line.trim();
 
+				var isHeader = false;
 				if (!headerRead) {
 					headerRead = true;
-					if ("Personnummer".equals(trimmed)) {
-						// If the header was "Personnummer", we skip it and process the next line.
-						continue;
-					}
+					isHeader = "Personnummer".equals(trimmed);
 				}
-				if (trimmed.isEmpty()) {
-					// If the line is empty, skip and process the next line.
+
+				if (isHeader || trimmed.isEmpty()) {
 					continue;
 				}
 

@@ -92,22 +92,12 @@ class CsvUtilTest {
 			.hasMessageContaining("Internal Server Error: Could not read CSV file: %s".formatted(customExceptionMessage));
 	}
 
-	@Test
-	void validateSmsCsvWithHeader(@Load(value = "/testfile/phoneNumbers.csv") final String csv) throws IOException {
-		var multipartFileMock = Mockito.mock(MultipartFile.class);
-		when(multipartFileMock.getInputStream()).thenReturn(new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8)));
-
-		var result = CsvUtil.validateSmsCsv(multipartFileMock);
-
-		assertThat(result.validEntries()).containsExactlyInAnyOrderEntriesOf(Map.of(
-			"+46701740610", 1,
-			"+46701740620", 1,
-			"+46701740630", 1));
-		assertThat(result.invalidEntries()).isEmpty();
-	}
-
-	@Test
-	void validateSmsCsvWithoutHeader(@Load(value = "/testfile/phoneNumbers-without-header.csv") final String csv) throws IOException {
+	@ParameterizedTest
+	@ValueSource(strings = {
+		"/testfile/phoneNumbers.csv", "/testfile/phoneNumbers-without-header.csv"
+	})
+	void validateSmsCsv(final String resourcePath) throws IOException {
+		var csv = new String(getClass().getResourceAsStream(resourcePath).readAllBytes(), StandardCharsets.UTF_8);
 		var multipartFileMock = Mockito.mock(MultipartFile.class);
 		when(multipartFileMock.getInputStream()).thenReturn(new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8)));
 
