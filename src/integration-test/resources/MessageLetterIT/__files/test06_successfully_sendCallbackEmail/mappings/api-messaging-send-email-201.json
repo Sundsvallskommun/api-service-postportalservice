@@ -4,7 +4,7 @@
 		"urlPath": "/api-messaging/2281/email",
 		"queryParameters": {
 			"async": {
-				"equalTo": "true"
+				"equalTo": "false"
 			}
 		},
 		"bodyPatterns": [
@@ -15,7 +15,6 @@
 					},
 					"emailAddress": "callback@test.sundsvall.se",
 					"subject": "Callback email subject",
-					"htmlMessage": "PGh0bWw+PGJvZHk+PHA+Q2FsbGJhY2sgZW1haWwgYm9keTwvcD48L2JvZHk+PC9odG1sPg==",
 					"attachments": [
 						{
 							"name": "test.pdf",

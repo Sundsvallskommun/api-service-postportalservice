@@ -15,13 +15,9 @@ import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.stream.Stream;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.InjectMocks;
@@ -210,17 +206,22 @@ class MessagingIntegrationTest {
 		final var recipientEntity = RecipientEntity.create()
 			.withId(recipientId)
 			.withPartyId(partyId)
+			.withFirstName("Jane")
+			.withLastName("Doe")
+			.withStreetAddress("Storgatan 1")
+			.withCareOf("c/o Someone")
+			.withZipCode("12345")
+			.withCity("Sundsvall")
 			.withMessageType(MessageType.SNAIL_MAIL);
 
 		final var settingsMap = Map.of(
 			"callback_email", "callback@example.com",
-			"callback_email_subject", "Subject",
-			"callback_email_body_base64", "PHA+Qm9keTwvcD4=");
+			"callback_email_subject", "Subject");
 
 		final var messageResult = new MessageResult().messageId(UUID.randomUUID())
 			.deliveries(List.of(new DeliveryResult().status(MessageStatus.SENT)));
 
-		when(messagingClientMock.sendEmail(eq(HEADER_VALUE), eq(ORIGIN), eq(MUNICIPALITY_ID), emailRequestCaptor.capture(), eq(true)))
+		when(messagingClientMock.sendEmail(eq(HEADER_VALUE), eq(ORIGIN), eq(MUNICIPALITY_ID), emailRequestCaptor.capture(), eq(false)))
 			.thenReturn(messageResult);
 
 		final var result = messagingIntegration.sendCallbackEmail(messageEntity, recipientEntity, settingsMap);
@@ -230,7 +231,9 @@ class MessagingIntegrationTest {
 		final var emailRequest = emailRequestCaptor.getValue();
 		assertThat(emailRequest.getEmailAddress()).isEqualTo("callback@example.com");
 		assertThat(emailRequest.getSubject()).isEqualTo("Subject");
-		assertThat(emailRequest.getHtmlMessage()).isEqualTo("PHA+Qm9keTwvcD4=");
+		assertThat(emailRequest.getMessage()).contains("Jane", "Doe", "Storgatan 1", "12345", "Sundsvall");
+		assertThat(emailRequest.getSender().getName()).isEqualTo("Postportalen");
+		assertThat(emailRequest.getSender().getAddress()).isEqualTo("noreply@postportal.se");
 		assertThat(emailRequest.getParty().getPartyId()).isEqualTo(UUID.fromString(partyId));
 		assertThat(emailRequest.getAttachments()).hasSize(1).allSatisfy(attachment -> {
 			assertThat(attachment.getName()).isEqualTo("file.pdf");
@@ -238,33 +241,7 @@ class MessagingIntegrationTest {
 			assertThat(attachment.getContent()).isEqualTo(Base64.getEncoder().encodeToString("hello".getBytes()));
 		});
 
-		verify(messagingClientMock).sendEmail(HEADER_VALUE, ORIGIN, MUNICIPALITY_ID, emailRequest, true);
-	}
-
-	@ParameterizedTest
-	@MethodSource("missingParameterArguments")
-	void sendCallbackEmail_missingRequiredParameters(final Map<String, String> settingsMap) {
-		final var messageEntity = MessageEntity.create()
-			.withMunicipalityId(MUNICIPALITY_ID)
-			.withDepartment(DepartmentEntity.create().withName("Dept").withOrganizationId("123"))
-			.withUser(UserEntity.create().withUsername("John Wick"));
-		final var recipientEntity = RecipientEntity.create()
-			.withId("recipient-id-1")
-			.withPartyId("00000000-0000-0000-0000-000000000001")
-			.withMessageType(MessageType.SNAIL_MAIL);
-
-		assertThatThrownBy(() -> messagingIntegration.sendCallbackEmail(messageEntity, recipientEntity, settingsMap))
-			.isInstanceOf(se.sundsvall.dept44.problem.Problem.class)
-			.hasMessageContaining("Missing required parameter for callback email");
-	}
-
-	private static Stream<Arguments> missingParameterArguments() {
-		return Stream.of(
-			Arguments.of(Map.of()),
-			Arguments.of(Map.of("callback_email_subject", "Subject", "callback_email_body_base64", "body")),
-			Arguments.of(Map.of("callback_email", "a@b.com", "callback_email_body_base64", "body")),
-			Arguments.of(Map.of("callback_email", "a@b.com", "callback_email_subject", "Subject")),
-			Arguments.of(Map.of("callback_email", "  ", "callback_email_subject", "Subject", "callback_email_body_base64", "body")));
+		verify(messagingClientMock).sendEmail(HEADER_VALUE, ORIGIN, MUNICIPALITY_ID, emailRequest, false);
 	}
 
 	@Test
@@ -290,8 +267,7 @@ class MessagingIntegrationTest {
 
 		final var settingsMap = Map.of(
 			"callback_email", "callback@example.com",
-			"callback_email_subject", "Subject",
-			"callback_email_body_base64", "PHA+Qm9keTwvcD4=");
+			"callback_email_subject", "Subject");
 
 		assertThatThrownBy(() -> messagingIntegration.sendCallbackEmail(messageEntity, recipientEntity, settingsMap))
 			.isInstanceOf(se.sundsvall.dept44.problem.Problem.class)

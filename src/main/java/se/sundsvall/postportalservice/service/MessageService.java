@@ -48,19 +48,19 @@ import static se.sundsvall.postportalservice.integration.db.converter.MessageTyp
 import static se.sundsvall.postportalservice.integration.db.converter.MessageType.LETTER;
 import static se.sundsvall.postportalservice.integration.db.converter.MessageType.SMS;
 import static se.sundsvall.postportalservice.integration.db.converter.MessageType.SNAIL_MAIL;
-import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.CONTACT_INFORMATION_EMAIL;
-import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.CONTACT_INFORMATION_PHONE_NUMBER;
-import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.CONTACT_INFORMATION_URL;
-import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.DEPARTMENT_ID;
-import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.DEPARTMENT_NAME;
-import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.FOLDER_NAME;
-import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.ORGANIZATION_NUMBER;
-import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.SMS_SENDER;
-import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.SUPPORT_TEXT;
-import static se.sundsvall.postportalservice.service.util.CallbackEmailUtil.SNAILMAIL_METHOD_KEY;
-import static se.sundsvall.postportalservice.service.util.CallbackEmailUtil.SNAILMAIL_METHOD_VALUE;
 import static se.sundsvall.postportalservice.service.util.CsvUtil.parseCsvToLegalIds;
 import static se.sundsvall.postportalservice.service.util.CsvUtil.validateSmsCsv;
+import static se.sundsvall.postportalservice.service.util.MessagingSettingsUtil.CONTACT_INFORMATION_EMAIL;
+import static se.sundsvall.postportalservice.service.util.MessagingSettingsUtil.CONTACT_INFORMATION_PHONE_NUMBER;
+import static se.sundsvall.postportalservice.service.util.MessagingSettingsUtil.CONTACT_INFORMATION_URL;
+import static se.sundsvall.postportalservice.service.util.MessagingSettingsUtil.DEPARTMENT_ID;
+import static se.sundsvall.postportalservice.service.util.MessagingSettingsUtil.DEPARTMENT_NAME;
+import static se.sundsvall.postportalservice.service.util.MessagingSettingsUtil.FOLDER_NAME;
+import static se.sundsvall.postportalservice.service.util.MessagingSettingsUtil.ORGANIZATION_NUMBER;
+import static se.sundsvall.postportalservice.service.util.MessagingSettingsUtil.SMS_SENDER;
+import static se.sundsvall.postportalservice.service.util.MessagingSettingsUtil.SNAILMAIL_METHOD;
+import static se.sundsvall.postportalservice.service.util.MessagingSettingsUtil.SNAILMAIL_METHOD_VALUE;
+import static se.sundsvall.postportalservice.service.util.MessagingSettingsUtil.SUPPORT_TEXT;
 import static se.sundsvall.postportalservice.service.util.SemaphoreUtil.withPermit;
 
 @Service
@@ -320,15 +320,16 @@ public class MessageService {
 			MDC.setContextMap(contextMap);
 
 			// Check if we've configured something else than snail_mail
-			final var snailmailMethod = settingsMap.get(SNAILMAIL_METHOD_KEY);
+			final var snailmailMethod = settingsMap.get(SNAILMAIL_METHOD);
 
 			// If callback email is configured, send as email instead.
 			if (SNAILMAIL_METHOD_VALUE.equals(snailmailMethod)) {
 				LOG.info("Snail mail method is set to {}, sending callback email instead.", SNAILMAIL_METHOD_VALUE);
 				return messagingIntegration.sendCallbackEmail(messageEntity, recipientEntity, settingsMap);
-			} else {
-				return messagingIntegration.sendSnailMail(messageEntity, recipientEntity);
 			}
+
+			return messagingIntegration.sendSnailMail(messageEntity, recipientEntity);
+
 		})
 			.thenAccept(messageResult -> {
 				MDC.setContextMap(contextMap);

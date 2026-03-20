@@ -64,11 +64,6 @@
 				"key": "callback_email_subject",
 				"value": "Callback email subject",
 				"type": "STRING"
-			},
-			{
-				"key": "callback_email_body_base64",
-				"value": "PGh0bWw+PGJvZHk+PHA+Q2FsbGJhY2sgZW1haWwgYm9keTwvcD48L2JvZHk+PC9odG1sPg==",
-				"type": "STRING"
 			}
 		]
 	}
