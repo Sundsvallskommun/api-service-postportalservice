@@ -60,7 +60,7 @@ public class DigitalRegisteredLetterMapper {
 	public Organization toOrganization(final DepartmentEntity nullableDepartmentEntity) {
 		return ofNullable(nullableDepartmentEntity)
 			.map(departmentEntity -> new Organization()
-				.number(Integer.valueOf(departmentEntity.getOrganizationNumber()))
+				.number(Long.valueOf(departmentEntity.getOrganizationNumber()))
 				.name(departmentEntity.getName()))
 			.orElse(null);
 	}

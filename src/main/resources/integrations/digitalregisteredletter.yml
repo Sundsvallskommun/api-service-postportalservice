@@ -5,9 +5,9 @@ info:
   license:
     name: MIT License
     url: https://opensource.org/licenses/MIT
-  version: "3.0"
+  version: "3.1"
 servers:
-  - url: http://localhost:63475
+  - url: http://localhost:59007
     description: Generated server url
 tags:
   - name: Scheduler Resource
@@ -259,7 +259,7 @@ paths:
         "200":
           description: Successful operation
           content:
-            '*/*':
+            application/json:
               schema:
                 type: array
                 items:
@@ -477,7 +477,7 @@ paths:
           required: false
           schema:
             type: integer
-            format: int32
+            format: int64
             description: Optional filter for matching organization id
             examples:
               - "44"
@@ -759,27 +759,17 @@ components:
     Problem:
       type: object
       properties:
-        title:
-          type: string
-        detail:
-          type: string
-        status:
-          $ref: "#/components/schemas/StatusType"
         instance:
           type: string
           format: uri
         type:
           type: string
           format: uri
-        parameters:
-          type: object
-          additionalProperties: { }
-    StatusType:
-      type: object
-      properties:
-        reasonPhrase:
+        title:
           type: string
-        statusCode:
+        detail:
+          type: string
+        status:
           type: integer
           format: int32
     Tenant:
@@ -811,160 +801,42 @@ components:
     ConstraintViolationProblem:
       type: object
       properties:
-        cause:
-          $ref: "#/components/schemas/ThrowableProblem"
-        stackTrace:
-          type: array
-          items:
-            type: object
-            properties:
-              classLoaderName:
-                type: string
-              moduleName:
-                type: string
-              moduleVersion:
-                type: string
-              methodName:
-                type: string
-              fileName:
-                type: string
-              lineNumber:
-                type: integer
-                format: int32
-              className:
-                type: string
-              nativeMethod:
-                type: boolean
         type:
           type: string
           format: uri
         status:
-          $ref: "#/components/schemas/StatusType"
+          type: integer
+          format: int32
         violations:
           type: array
           items:
             $ref: "#/components/schemas/Violation"
         title:
           type: string
-        message:
-          type: string
-        detail:
-          type: string
         instance:
           type: string
           format: uri
-        parameters:
-          type: object
-          additionalProperties: { }
-        suppressed:
-          type: array
-          items:
-            type: object
-            properties:
-              stackTrace:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    classLoaderName:
-                      type: string
-                    moduleName:
-                      type: string
-                    moduleVersion:
-                      type: string
-                    methodName:
-                      type: string
-                    fileName:
-                      type: string
-                    lineNumber:
-                      type: integer
-                      format: int32
-                    className:
-                      type: string
-                    nativeMethod:
-                      type: boolean
-              message:
-                type: string
-              localizedMessage:
-                type: string
-        localizedMessage:
+        detail:
           type: string
+        causeAsProblem:
+          $ref: "#/components/schemas/ThrowableProblem"
     ThrowableProblem:
       type: object
       properties:
-        cause: { }
-        stackTrace:
-          type: array
-          items:
-            type: object
-            properties:
-              classLoaderName:
-                type: string
-              moduleName:
-                type: string
-              moduleVersion:
-                type: string
-              methodName:
-                type: string
-              fileName:
-                type: string
-              lineNumber:
-                type: integer
-                format: int32
-              className:
-                type: string
-              nativeMethod:
-                type: boolean
-        message:
-          type: string
-        title:
-          type: string
-        detail:
-          type: string
-        status:
-          $ref: "#/components/schemas/StatusType"
-        instance:
-          type: string
-          format: uri
         type:
           type: string
           format: uri
-        parameters:
-          type: object
-          additionalProperties: { }
-        suppressed:
-          type: array
-          items:
-            type: object
-            properties:
-              stackTrace:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    classLoaderName:
-                      type: string
-                    moduleName:
-                      type: string
-                    moduleVersion:
-                      type: string
-                    methodName:
-                      type: string
-                    fileName:
-                      type: string
-                    lineNumber:
-                      type: integer
-                      format: int32
-                    className:
-                      type: string
-                    nativeMethod:
-                      type: boolean
-              message:
-                type: string
-              localizedMessage:
-                type: string
-        localizedMessage:
+        title:
           type: string
+        status:
+          type: integer
+          format: int32
+        detail:
+          type: string
+        instance:
+          type: string
+          format: uri
+        causeAsProblem: { }
     Violation:
       type: object
       properties:
@@ -1016,7 +888,7 @@ components:
       properties:
         number:
           type: integer
-          format: int32
+          format: int64
           description: Unique id for the organization
           examples:
             - "44"
@@ -1199,7 +1071,6 @@ components:
           items:
             $ref: "#/components/schemas/Letter"
             readOnly: true
-          readOnly: true
     PagingAndSortingMetaData:
       type: object
       description: PagingAndSortingMetaData model
@@ -1208,44 +1079,50 @@ components:
           type: integer
           format: int32
           description: Current page
-          example: 5
+          examples:
+            - "5"
           readOnly: true
         limit:
           type: integer
           format: int32
           description: Displayed objects per page
-          example: 20
+          examples:
+            - "20"
           readOnly: true
         count:
           type: integer
           format: int32
           description: Displayed objects on current page
-          example: 13
+          examples:
+            - "13"
           readOnly: true
         totalRecords:
           type: integer
           format: int64
           description: Total amount of hits based on provided search parameters
-          example: 98
+          examples:
+            - "98"
           readOnly: true
         totalPages:
           type: integer
           format: int32
           description: Total amount of pages based on provided search parameters
-          example: 23
+          examples:
+            - "23"
           readOnly: true
         sortBy:
           type: array
           items:
             type: string
             description: The properties to sort by
-            example: property
+            examples:
+              - property
             readOnly: true
-          readOnly: true
         sortDirection:
           $ref: "#/components/schemas/Direction"
           description: The sort order direction
-          example: ASC
+          examples:
+            - ASC
     Device:
       type: object
       properties:

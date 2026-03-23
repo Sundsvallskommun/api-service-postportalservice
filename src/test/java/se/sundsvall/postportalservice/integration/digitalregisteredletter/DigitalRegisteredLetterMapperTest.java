@@ -80,7 +80,7 @@ class DigitalRegisteredLetterMapperTest {
 			});
 			assertThat(letterRequest.getOrganization()).satisfies(organization -> {
 				assertThat(organization.getName()).isEqualTo(department.getName());
-				assertThat(organization.getNumber()).isEqualTo(Integer.valueOf(department.getOrganizationNumber()));
+				assertThat(organization.getNumber()).isEqualTo(Long.valueOf(department.getOrganizationNumber()));
 			});
 		});
 	}
@@ -123,7 +123,7 @@ class DigitalRegisteredLetterMapperTest {
 
 		assertThat(result).isNotNull().satisfies(organization -> {
 			assertThat(organization.getName()).isEqualTo(department.getName());
-			assertThat(organization.getNumber()).isEqualTo(Integer.valueOf(department.getOrganizationNumber()));
+			assertThat(organization.getNumber()).isEqualTo(Long.valueOf(department.getOrganizationNumber()));
 		});
 	}
 
