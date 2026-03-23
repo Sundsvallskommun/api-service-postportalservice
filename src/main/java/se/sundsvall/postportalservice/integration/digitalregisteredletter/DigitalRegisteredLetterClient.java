@@ -29,7 +29,8 @@ import static se.sundsvall.postportalservice.integration.digitalregisteredletter
 @FeignClient(
 	name = CLIENT_ID,
 	url = "${integration.digitalregisteredletter.url}",
-	configuration = DigitalRegisteredLetterConfiguration.class)
+	configuration = DigitalRegisteredLetterConfiguration.class,
+	dismiss404 = true)
 @CircuitBreaker(name = CLIENT_ID)
 public interface DigitalRegisteredLetterClient {
 
