@@ -84,14 +84,11 @@ public class MessagingSettingsUtil {
 	 * @throws ThrowableProblem if any expected value is missing
 	 */
 	private static void assertRequiredValuesForEmailCallback(final Map<String, String> settingsMap, final String user, final String municipalityId) {
-		// Check if there's a snailmail_method configured
-		if (settingsMap.containsKey(SNAILMAIL_METHOD)) {
-			// If it is, check that the snailmail_method == Callback_EMail
-			if (SNAILMAIL_METHOD_VALUE.equalsIgnoreCase(settingsMap.get(SNAILMAIL_METHOD))) {
-				// Verify required fields are present
-				if (isBlank(settingsMap.get(SNAILMAIL_CALLBACK_EMAIL)) || isBlank(settingsMap.get(SNAILMAIL_CALLBACK_SUBJECT))) {
-					throw Problem.valueOf(BAD_GATEWAY, "Missing required parameter(s) for callback email for user '%s' in municipalityId '%s'.".formatted(user, municipalityId));
-				}
+		// Check if there's a snailmail_method configured and that the snailmail_method == Callback_EMail
+		if (settingsMap.containsKey(SNAILMAIL_METHOD) && SNAILMAIL_METHOD_VALUE.equalsIgnoreCase(settingsMap.get(SNAILMAIL_METHOD))) {
+			// Verify required fields are present
+			if (isBlank(settingsMap.get(SNAILMAIL_CALLBACK_EMAIL)) || isBlank(settingsMap.get(SNAILMAIL_CALLBACK_SUBJECT))) {
+				throw Problem.valueOf(BAD_GATEWAY, "Missing required parameter(s) for callback email for user '%s' in municipalityId '%s'.".formatted(user, municipalityId));
 			}
 		}
 	}
