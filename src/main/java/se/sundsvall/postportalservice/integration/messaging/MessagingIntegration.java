@@ -4,6 +4,7 @@ import generated.se.sundsvall.messaging.Mailbox;
 import generated.se.sundsvall.messaging.MessageBatchResult;
 import generated.se.sundsvall.messaging.MessageResult;
 import java.util.List;
+import java.util.Map;
 import org.springframework.stereotype.Component;
 import se.sundsvall.postportalservice.integration.db.MessageEntity;
 import se.sundsvall.postportalservice.integration.db.RecipientEntity;
@@ -11,6 +12,8 @@ import se.sundsvall.postportalservice.service.util.RecipientId;
 
 import static se.sundsvall.postportalservice.Constants.ORIGIN;
 import static se.sundsvall.postportalservice.integration.messaging.MessagingMapper.toDigitalMailRequest;
+import static se.sundsvall.postportalservice.integration.messaging.MessagingMapper.toEmailAttachments;
+import static se.sundsvall.postportalservice.integration.messaging.MessagingMapper.toEmailRequest;
 import static se.sundsvall.postportalservice.integration.messaging.MessagingMapper.toSmsRequest;
 import static se.sundsvall.postportalservice.integration.messaging.MessagingMapper.toSnailmailRequest;
 import static se.sundsvall.postportalservice.service.util.IdentifierUtil.getIdentifierHeaderValue;
@@ -64,4 +67,17 @@ public class MessagingIntegration {
 		return client.precheckMailboxes(municipalityId, organizationNumber, partyIds);
 	}
 
+	public MessageResult sendCallbackEmail(final MessageEntity messageEntity, final RecipientEntity recipientEntity, final Map<String, String> settingsMap) {
+		RecipientId.init(recipientEntity.getId());
+		final var emailRequest = toEmailRequest(recipientEntity, settingsMap);
+		final var emailAttachments = toEmailAttachments(messageEntity);
+		emailRequest.setAttachments(emailAttachments);
+
+		return client.sendEmail(
+			getIdentifierHeaderValue(messageEntity.getUser().getUsername()),
+			ORIGIN,
+			messageEntity.getMunicipalityId(),
+			emailRequest,
+			false);
+	}
 }

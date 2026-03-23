@@ -52,6 +52,7 @@ import se.sundsvall.postportalservice.service.util.CsvUtil;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.doReturn;
@@ -64,15 +65,15 @@ import static org.springframework.http.HttpStatus.BAD_GATEWAY;
 import static se.sundsvall.postportalservice.Constants.FAILED;
 import static se.sundsvall.postportalservice.Constants.SENT;
 import static se.sundsvall.postportalservice.TestDataFactory.MUNICIPALITY_ID;
-import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.CONTACT_INFORMATION_EMAIL;
-import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.CONTACT_INFORMATION_PHONE_NUMBER;
-import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.CONTACT_INFORMATION_URL;
-import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.DEPARTMENT_ID;
-import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.DEPARTMENT_NAME;
-import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.FOLDER_NAME;
-import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.ORGANIZATION_NUMBER;
-import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.SMS_SENDER;
-import static se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration.SUPPORT_TEXT;
+import static se.sundsvall.postportalservice.service.util.MessagingSettingsUtil.CONTACT_INFORMATION_EMAIL;
+import static se.sundsvall.postportalservice.service.util.MessagingSettingsUtil.CONTACT_INFORMATION_PHONE_NUMBER;
+import static se.sundsvall.postportalservice.service.util.MessagingSettingsUtil.CONTACT_INFORMATION_URL;
+import static se.sundsvall.postportalservice.service.util.MessagingSettingsUtil.DEPARTMENT_ID;
+import static se.sundsvall.postportalservice.service.util.MessagingSettingsUtil.DEPARTMENT_NAME;
+import static se.sundsvall.postportalservice.service.util.MessagingSettingsUtil.FOLDER_NAME;
+import static se.sundsvall.postportalservice.service.util.MessagingSettingsUtil.ORGANIZATION_NUMBER;
+import static se.sundsvall.postportalservice.service.util.MessagingSettingsUtil.SMS_SENDER;
+import static se.sundsvall.postportalservice.service.util.MessagingSettingsUtil.SUPPORT_TEXT;
 
 @ExtendWith(MockitoExtension.class)
 class MessageServiceTest {
@@ -138,7 +139,7 @@ class MessageServiceTest {
 	void tearDown() {
 		Identifier.remove();
 		verifyNoMoreInteractions(attachmentMapperMock, entityMapperMock,
-			messagingIntegrationMock,
+			messagingIntegrationMock, messagingSettingsIntegrationMock,
 			departmentRepositoryMock, userRepositoryMock,
 			messageRepositoryMock, recipientRepositoryMock, digitalRegisteredLetterIntegrationMock,
 			citizenIntegrationMock);
@@ -316,7 +317,7 @@ class MessageServiceTest {
 		when(userRepositoryMock.findByUsernameIgnoreCase(Identifier.get().getValue())).thenReturn(Optional.of(userEntity));
 		when(departmentRepositoryMock.findByOrganizationId(SETTINGS_MAP.get(DEPARTMENT_ID))).thenReturn(Optional.of(departmentEntity));
 
-		doReturn(new CompletableFuture<>()).when(spy).processRecipients(any());
+		doReturn(new CompletableFuture<>()).when(spy).processRecipients(any(), any());
 		when(messageRepositoryMock.save(any())).thenAnswer(invocation -> invocation.getArgument(0, MessageEntity.class).withId(messageId));
 
 		final var result = spy.processLetterRequest(MUNICIPALITY_ID, letterRequest, multipartFileList);
@@ -328,7 +329,7 @@ class MessageServiceTest {
 		verify(departmentRepositoryMock).findByOrganizationId(SETTINGS_MAP.get(DEPARTMENT_ID));
 		verify(entityMapperMock).toRecipientEntity(any(Address.class));
 		verify(entityMapperMock).toRecipientEntity(any(Recipient.class));
-		verify(spy).processRecipients(any());
+		verify(spy).processRecipients(any(), any());
 		verify(messageRepositoryMock).save(any());
 	}
 
@@ -343,7 +344,7 @@ class MessageServiceTest {
 		when(messagingSettingsIntegrationMock.getMessagingSettingsForUser(MUNICIPALITY_ID)).thenReturn(SETTINGS_MAP);
 		when(userRepositoryMock.findByUsernameIgnoreCase(Identifier.get().getValue())).thenReturn(Optional.of(userEntity));
 		when(departmentRepositoryMock.findByOrganizationId(SETTINGS_MAP.get(DEPARTMENT_ID))).thenReturn(Optional.of(departmentEntity));
-		doReturn(new CompletableFuture<>()).when(spy).processRecipients(any());
+		doReturn(new CompletableFuture<>()).when(spy).processRecipients(any(), any());
 		when(messageRepositoryMock.save(any())).thenAnswer(invocation -> invocation.getArgument(0, MessageEntity.class).withId(messageId));
 
 		final var result = spy.processSmsRequest(MUNICIPALITY_ID, smsRequest);
@@ -353,7 +354,7 @@ class MessageServiceTest {
 		verify(userRepositoryMock).findByUsernameIgnoreCase(Identifier.get().getValue());
 		verify(departmentRepositoryMock).findByOrganizationId(SETTINGS_MAP.get(DEPARTMENT_ID));
 		verify(entityMapperMock).toRecipientEntity(any(SmsRecipient.class));
-		verify(spy).processRecipients(any());
+		verify(spy).processRecipients(any(), any());
 		verify(messageRepositoryMock).save(any());
 	}
 
@@ -374,7 +375,7 @@ class MessageServiceTest {
 		when(messagingSettingsIntegrationMock.getMessagingSettingsForUser(MUNICIPALITY_ID)).thenReturn(SETTINGS_MAP);
 		when(userRepositoryMock.findByUsernameIgnoreCase(Identifier.get().getValue())).thenReturn(Optional.of(userEntity));
 		when(departmentRepositoryMock.findByOrganizationId(SETTINGS_MAP.get(DEPARTMENT_ID))).thenReturn(Optional.of(departmentEntity));
-		doReturn(new CompletableFuture<>()).when(spy).processRecipients(any());
+		doReturn(new CompletableFuture<>()).when(spy).processRecipients(any(), eq(SETTINGS_MAP));
 		when(messageRepositoryMock.save(any())).thenAnswer(invocation -> invocation.getArgument(0, MessageEntity.class).withId(messageId));
 
 		try (MockedStatic<CsvUtil> csvUtilMock = Mockito.mockStatic(CsvUtil.class)) {
@@ -389,7 +390,7 @@ class MessageServiceTest {
 		verify(messagingSettingsIntegrationMock).getMessagingSettingsForUser(MUNICIPALITY_ID);
 		verify(userRepositoryMock).findByUsernameIgnoreCase(Identifier.get().getValue());
 		verify(departmentRepositoryMock).findByOrganizationId(SETTINGS_MAP.get(DEPARTMENT_ID));
-		verify(spy).processRecipients(messageEntityCaptor.capture());
+		verify(spy).processRecipients(messageEntityCaptor.capture(), eq(SETTINGS_MAP));
 		verify(messageRepositoryMock).save(any());
 
 		final var capturedMessage = messageEntityCaptor.getValue();
@@ -414,16 +415,16 @@ class MessageServiceTest {
 
 		final var future1 = new CompletableFuture<Void>();
 		final var future2 = new CompletableFuture<Void>();
-		doReturn(future1).when(spy).sendMessageToRecipient(messageEntity, recipient1);
-		doReturn(future2).when(spy).sendMessageToRecipient(messageEntity, recipient2);
+		doReturn(future1).when(spy).sendMessageToRecipient(messageEntity, recipient1, SETTINGS_MAP);
+		doReturn(future2).when(spy).sendMessageToRecipient(messageEntity, recipient2, SETTINGS_MAP);
 
-		final var completableFuture = spy.processRecipients(messageEntity);
+		final var completableFuture = spy.processRecipients(messageEntity, SETTINGS_MAP);
 		future1.complete(null);
 		future2.complete(null);
 		completableFuture.join();
 
-		verify(spy).sendMessageToRecipient(messageEntity, recipient1);
-		verify(spy).sendMessageToRecipient(messageEntity, recipient2);
+		verify(spy).sendMessageToRecipient(messageEntity, recipient1, SETTINGS_MAP);
+		verify(spy).sendMessageToRecipient(messageEntity, recipient2, SETTINGS_MAP);
 		verify(messageRepositoryMock).save(messageEntity);
 	}
 
@@ -438,17 +439,17 @@ class MessageServiceTest {
 
 		final var future1 = new CompletableFuture<Void>();
 		final var future2 = new CompletableFuture<Void>();
-		doReturn(future1).when(spy).sendMessageToRecipient(messageEntity, recipient1);
-		doReturn(future2).when(spy).sendMessageToRecipient(messageEntity, recipient2);
+		doReturn(future1).when(spy).sendMessageToRecipient(messageEntity, recipient1, SETTINGS_MAP);
+		doReturn(future2).when(spy).sendMessageToRecipient(messageEntity, recipient2, SETTINGS_MAP);
 
-		final var completableFuture = spy.processRecipients(messageEntity);
+		final var completableFuture = spy.processRecipients(messageEntity, SETTINGS_MAP);
 
 		future1.completeExceptionally(new RuntimeException("Simulated exception"));
 		future2.complete(null);
 
 		completableFuture.join();
 
-		verify(spy, times(2)).sendMessageToRecipient(any(), any());
+		verify(spy, times(2)).sendMessageToRecipient(any(), any(), any());
 		verify(messageRepositoryMock).save(messageEntity);
 	}
 
@@ -461,10 +462,10 @@ class MessageServiceTest {
 
 		final var future1 = new CompletableFuture<Void>();
 		final var future2 = new CompletableFuture<Void>();
-		doReturn(future1).when(spy).sendMessageToRecipient(messageEntity, recipient1);
-		doReturn(future2).when(spy).sendMessageToRecipient(messageEntity, recipient2);
+		doReturn(future1).when(spy).sendMessageToRecipient(messageEntity, recipient1, SETTINGS_MAP);
+		doReturn(future2).when(spy).sendMessageToRecipient(messageEntity, recipient2, SETTINGS_MAP);
 
-		final var completableFuture = spy.processRecipients(messageEntity);
+		final var completableFuture = spy.processRecipients(messageEntity, SETTINGS_MAP);
 
 		future1.complete(null);
 
@@ -487,7 +488,7 @@ class MessageServiceTest {
 		final var messageEntity = MessageEntity.create().withRecipients(List.of(recipient1));
 		doReturn(new CompletableFuture<>()).when(spy).sendSmsToRecipient(messageEntity, recipient1);
 
-		spy.sendMessageToRecipient(messageEntity, recipient1);
+		spy.sendMessageToRecipient(messageEntity, recipient1, SETTINGS_MAP);
 
 		verify(spy).sendSmsToRecipient(messageEntity, recipient1);
 	}
@@ -500,7 +501,7 @@ class MessageServiceTest {
 		final var messageEntity = MessageEntity.create().withRecipients(List.of(recipient1));
 		doReturn(new CompletableFuture<>()).when(spy).sendDigitalMailToRecipient(messageEntity, recipient1);
 
-		spy.sendMessageToRecipient(messageEntity, recipient1);
+		spy.sendMessageToRecipient(messageEntity, recipient1, SETTINGS_MAP);
 
 		verify(spy).sendDigitalMailToRecipient(messageEntity, recipient1);
 	}
@@ -511,11 +512,11 @@ class MessageServiceTest {
 
 		final var recipient1 = new RecipientEntity().withFirstName("john").withMessageType(MessageType.SNAIL_MAIL);
 		final var messageEntity = MessageEntity.create().withRecipients(List.of(recipient1));
-		doReturn(new CompletableFuture<>()).when(spy).sendSnailMailToRecipient(messageEntity, recipient1);
+		doReturn(new CompletableFuture<>()).when(spy).sendSnailMailToRecipient(messageEntity, recipient1, SETTINGS_MAP);
 
-		spy.sendMessageToRecipient(messageEntity, recipient1);
+		spy.sendMessageToRecipient(messageEntity, recipient1, SETTINGS_MAP);
 
-		verify(spy).sendSnailMailToRecipient(messageEntity, recipient1);
+		verify(spy).sendSnailMailToRecipient(messageEntity, recipient1, SETTINGS_MAP);
 	}
 
 	@Test
@@ -523,7 +524,7 @@ class MessageServiceTest {
 		final var recipient1 = new RecipientEntity().withFirstName("john").withMessageType(MessageType.LETTER);
 		final var messageEntity = MessageEntity.create().withRecipients(List.of(recipient1));
 
-		messageService.sendMessageToRecipient(messageEntity, recipient1);
+		messageService.sendMessageToRecipient(messageEntity, recipient1, SETTINGS_MAP);
 
 		assertThat(recipient1.getStatus()).isEqualTo(FAILED);
 		assertThat(recipient1.getStatusDetail()).isEqualTo("Unsupported message type: LETTER");
@@ -625,7 +626,7 @@ class MessageServiceTest {
 		when(messagingIntegrationMock.sendSnailMail(messageEntity, recipient1)).thenReturn(messageResult);
 		doCallRealMethod().when(spy).updateRecipient(messageResult, recipient1);
 
-		final var completableFuture = spy.sendSnailMailToRecipient(messageEntity, recipient1);
+		final var completableFuture = spy.sendSnailMailToRecipient(messageEntity, recipient1, SETTINGS_MAP);
 
 		completableFuture.join();
 		assertThat(recipient1.getStatus()).isEqualTo(MessageStatus.SENT.toString());
@@ -642,12 +643,60 @@ class MessageServiceTest {
 
 		when(messagingIntegrationMock.sendSnailMail(messageEntity, recipient1)).thenThrow(new RuntimeException("Simulated exception"));
 
-		final var completableFuture = spy.sendSnailMailToRecipient(messageEntity, recipient1);
+		final var completableFuture = spy.sendSnailMailToRecipient(messageEntity, recipient1, SETTINGS_MAP);
 
 		completableFuture.join();
 		assertThat(recipient1.getStatus()).isEqualTo(MessageStatus.FAILED.toString());
 		assertThat(recipient1.getStatusDetail()).isEqualTo("java.lang.RuntimeException: Simulated exception");
 		verify(messagingIntegrationMock).sendSnailMail(messageEntity, recipient1);
+		verify(recipientRepositoryMock).save(recipient1);
+	}
+
+	@Test
+	void sendSnailMailToRecipient_callbackEmail_success() {
+		final var spy = Mockito.spy(messageService);
+		final var recipient1 = new RecipientEntity().withFirstName("john");
+		final var messageEntity = MessageEntity.create().withRecipients(List.of(recipient1));
+		final var uuid = UUID.randomUUID();
+		final var messageResult = new MessageResult()
+			.messageId(uuid)
+			.deliveries(List.of(new DeliveryResult()
+				.status(MessageStatus.SENT)));
+		final var callbackSettingsMap = Map.of(
+			"snailmail_method", "Callback_Email",
+			"callback_email", "test@example.com",
+			"callback_email_subject", "Subject");
+
+		when(messagingIntegrationMock.sendCallbackEmail(messageEntity, recipient1, callbackSettingsMap)).thenReturn(messageResult);
+		doCallRealMethod().when(spy).updateRecipient(messageResult, recipient1);
+
+		final var completableFuture = spy.sendSnailMailToRecipient(messageEntity, recipient1, callbackSettingsMap);
+
+		completableFuture.join();
+		assertThat(recipient1.getStatus()).isEqualTo(MessageStatus.SENT.toString());
+		assertThat(recipient1.getExternalId()).isEqualTo(uuid.toString());
+		verify(messagingIntegrationMock).sendCallbackEmail(messageEntity, recipient1, callbackSettingsMap);
+		verify(recipientRepositoryMock).save(recipient1);
+	}
+
+	@Test
+	void sendSnailMailToRecipient_callbackEmail_exception() {
+		final var spy = Mockito.spy(messageService);
+		final var recipient1 = new RecipientEntity().withFirstName("john");
+		final var messageEntity = MessageEntity.create().withRecipients(List.of(recipient1));
+		final var callbackSettingsMap = Map.of(
+			"snailmail_method", "Callback_Email",
+			"callback_email", "test@example.com",
+			"callback_email_subject", "Subject");
+
+		when(messagingIntegrationMock.sendCallbackEmail(messageEntity, recipient1, callbackSettingsMap)).thenThrow(new RuntimeException("Simulated exception"));
+
+		final var completableFuture = spy.sendSnailMailToRecipient(messageEntity, recipient1, callbackSettingsMap);
+
+		completableFuture.join();
+		assertThat(recipient1.getStatus()).isEqualTo(MessageStatus.FAILED.toString());
+		assertThat(recipient1.getStatusDetail()).isEqualTo("java.lang.RuntimeException: Simulated exception");
+		verify(messagingIntegrationMock).sendCallbackEmail(messageEntity, recipient1, callbackSettingsMap);
 		verify(recipientRepositoryMock).save(recipient1);
 	}
 
