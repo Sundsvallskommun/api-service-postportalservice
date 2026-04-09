@@ -5,8 +5,7 @@ import static org.springframework.http.HttpHeaders.LOCATION;
 import static org.springframework.http.HttpMethod.POST;
 import static org.springframework.http.HttpStatus.CREATED;
 import static org.springframework.http.MediaType.MULTIPART_FORM_DATA;
-import static se.sundsvall.postportalservice.Constants.FAILED;
-import static se.sundsvall.postportalservice.Constants.SENT;
+import static se.sundsvall.postportalservice.Constants.PENDING;
 import static se.sundsvall.postportalservice.integration.db.converter.MessageType.DIGITAL_REGISTERED_LETTER;
 
 import java.io.FileNotFoundException;
@@ -52,38 +51,8 @@ class MessageDigitalRegisteredLetterIT extends AbstractAppTest {
 		assertThat(message.getRecipients()).hasSize(1);
 		assertThat(message.getRecipients())
 			.allSatisfy(recipientEntity -> {
-				assertThat(recipientEntity.getStatus()).isEqualTo(SENT);
-				assertThat(recipientEntity.getExternalId()).isEqualTo("drl-external-id-123");
-				assertThat(recipientEntity.getMessageType()).isEqualTo(DIGITAL_REGISTERED_LETTER);
-			});
-		appTest.verifyAllStubs();
-	}
-
-	@Test
-	void test02_unsuccessfully_sendDigitalRegisteredLetter() throws FileNotFoundException {
-		final var appTest = setupCall();
-		final var location = appTest
-			.withServicePath("/%s/messages/registered-letter".formatted(MUNICIPALITY_ID))
-			.withHttpMethod(POST)
-			.withHeader(Identifier.HEADER_NAME, IDENTIFIER)
-			.withContentType(MULTIPART_FORM_DATA)
-			.withRequestFile("request", REQUEST_FILE)
-			.withRequestFile("attachments", "test.pdf")
-			.withExpectedResponseStatus(CREATED)
-			.withExpectedResponseHeader(LOCATION, List.of("/%s/history/users/joe01doe/messages/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}".formatted(MUNICIPALITY_ID)))
-			.withExpectedResponseBodyIsNull()
-			.sendRequest()
-			.getResponseHeaders()
-			.getFirst(LOCATION);
-
-		final var messageId = location.substring(location.lastIndexOf("/") + 1);
-
-		final var message = messageRepository.findById(messageId).orElseThrow();
-		assertThat(message.getRecipients()).hasSize(1);
-		assertThat(message.getRecipients())
-			.allSatisfy(recipientEntity -> {
-				assertThat(recipientEntity.getStatus()).isEqualTo(FAILED);
-				assertThat(recipientEntity.getExternalId()).isEqualTo("drl-external-id-123");
+				assertThat(recipientEntity.getStatus()).isEqualTo(PENDING);
+				assertThat(recipientEntity.getExternalId()).isNull();
 				assertThat(recipientEntity.getMessageType()).isEqualTo(DIGITAL_REGISTERED_LETTER);
 			});
 		appTest.verifyAllStubs();

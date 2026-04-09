@@ -20,24 +20,27 @@ public class MessagingSettingsIntegration {
 	}
 
 	public Map<String, String> getMessagingSettingsForUser(final String municipalityId) {
-		var settings = messagingSettingsClient.getMessagingSettingsForUser(Identifier.get().toHeaderValue(), municipalityId);
-		var user = Identifier.get().getValue();
+		return getMessagingSettingsForUser(municipalityId, Identifier.get().toHeaderValue());
+	}
+
+	public Map<String, String> getMessagingSettingsForUser(final String municipalityId, final String identifier) {
+		var settings = messagingSettingsClient.getMessagingSettingsForUser(identifier, municipalityId);
 
 		// Basic sanity checks
 		if (settings.isEmpty()) {
-			throw Problem.valueOf(BAD_GATEWAY, "No messaging settings found for user '%s' in municipalityId '%s'".formatted(user, municipalityId));
+			throw Problem.valueOf(BAD_GATEWAY, "No messaging settings found for user '%s' in municipalityId '%s'".formatted(identifier, municipalityId));
 		}
 
 		if (settings.size() > 1) {
 			throw Problem.valueOf(BAD_GATEWAY, "Found multiple messaging settings for user '%s' in municipalityId '%s', can't determine which one to use"
-				.formatted(Identifier.get().getValue(), municipalityId));
+				.formatted(identifier, municipalityId));
 		}
 
 		var settingsMap = settings.getFirst().getValues().stream()
 			.filter(setting -> setting.getValue() != null)
 			.collect(Collectors.toMap(MessagingSettingValue::getKey, MessagingSettingValue::getValue));
 
-		validateMessagingSettings(settingsMap, user, municipalityId);
+		validateMessagingSettings(settingsMap, identifier, municipalityId);
 
 		return settingsMap;
 	}

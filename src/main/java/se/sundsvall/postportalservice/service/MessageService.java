@@ -32,9 +32,10 @@ import se.sundsvall.postportalservice.integration.db.dao.DepartmentRepository;
 import se.sundsvall.postportalservice.integration.db.dao.MessageRepository;
 import se.sundsvall.postportalservice.integration.db.dao.RecipientRepository;
 import se.sundsvall.postportalservice.integration.db.dao.UserRepository;
-import se.sundsvall.postportalservice.integration.digitalregisteredletter.DigitalRegisteredLetterIntegration;
 import se.sundsvall.postportalservice.integration.messaging.MessagingIntegration;
 import se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration;
+import se.sundsvall.postportalservice.integration.rabbitmq.Publisher;
+import se.sundsvall.postportalservice.integration.rabbitmq.model.SendRegisteredLetterEvent;
 import se.sundsvall.postportalservice.service.mapper.AttachmentMapper;
 import se.sundsvall.postportalservice.service.mapper.EntityMapper;
 import se.sundsvall.postportalservice.service.util.RecipientId;
@@ -48,6 +49,7 @@ import static se.sundsvall.postportalservice.integration.db.converter.MessageTyp
 import static se.sundsvall.postportalservice.integration.db.converter.MessageType.LETTER;
 import static se.sundsvall.postportalservice.integration.db.converter.MessageType.SMS;
 import static se.sundsvall.postportalservice.integration.db.converter.MessageType.SNAIL_MAIL;
+import static se.sundsvall.postportalservice.integration.rabbitmq.Queue.SEND_REGISTERED_LETTER;
 import static se.sundsvall.postportalservice.service.util.CsvUtil.parseCsvToLegalIds;
 import static se.sundsvall.postportalservice.service.util.CsvUtil.validateSmsCsv;
 import static se.sundsvall.postportalservice.service.util.MessagingSettingsUtil.CONTACT_INFORMATION_EMAIL;
@@ -71,7 +73,6 @@ public class MessageService {
 	private final ExecutorService executor = Executors.newFixedThreadPool(64);
 	private final Semaphore permits = new Semaphore(32);
 
-	private final DigitalRegisteredLetterIntegration digitalRegisteredLetterIntegration;
 	private final MessagingIntegration messagingIntegration;
 	private final MessagingSettingsIntegration messagingSettingsIntegration;
 	private final PrecheckService precheckService;
@@ -84,9 +85,9 @@ public class MessageService {
 	private final MessageRepository messageRepository;
 	private final RecipientRepository recipientRepository;
 	private final CitizenIntegration citizenIntegration;
+	private final Publisher publisher;
 
 	public MessageService(
-		final DigitalRegisteredLetterIntegration digitalRegisteredLetterIntegration,
 		final MessagingIntegration messagingIntegration,
 		final MessagingSettingsIntegration messagingSettingsIntegration,
 		final PrecheckService precheckService,
@@ -95,8 +96,9 @@ public class MessageService {
 		final DepartmentRepository departmentRepository,
 		final UserRepository userRepository,
 		final MessageRepository messageRepository,
-		final RecipientRepository recipientRepository, final CitizenIntegration citizenIntegration) {
-		this.digitalRegisteredLetterIntegration = digitalRegisteredLetterIntegration;
+		final RecipientRepository recipientRepository,
+		final CitizenIntegration citizenIntegration,
+		final Publisher publisher) {
 		this.messagingIntegration = messagingIntegration;
 		this.messagingSettingsIntegration = messagingSettingsIntegration;
 		this.precheckService = precheckService;
@@ -107,6 +109,7 @@ public class MessageService {
 		this.messageRepository = messageRepository;
 		this.recipientRepository = recipientRepository;
 		this.citizenIntegration = citizenIntegration;
+		this.publisher = publisher;
 	}
 
 	public String processDigitalRegisteredLetterRequest(final String municipalityId, final DigitalRegisteredLetterRequest request, final List<MultipartFile> attachments) {
@@ -130,9 +133,10 @@ public class MessageService {
 		final var attachmentEntities = attachmentMapper.toAttachmentEntities(attachments);
 		message.setAttachments(attachmentEntities);
 
-		digitalRegisteredLetterIntegration.sendLetter(message, recipient);
-
 		messageRepository.save(message);
+
+		publisher.publishEvent(SEND_REGISTERED_LETTER, new SendRegisteredLetterEvent(municipalityId, recipient.getId()));
+
 		return message.getId();
 	}
 

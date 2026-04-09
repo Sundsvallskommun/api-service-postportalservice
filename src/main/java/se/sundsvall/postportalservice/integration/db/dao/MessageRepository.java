@@ -15,4 +15,8 @@ public interface MessageRepository extends JpaRepository<MessageEntity, String> 
 	Optional<MessageEntity> findByMunicipalityIdAndIdAndUserUsernameIgnoreCase(final String municipalityId, final String messageId, final String username);
 
 	Optional<MessageEntity> findByIdAndMessageType(final String messageId, final MessageType messageType);
+
+	Optional<MessageEntity> findByRecipients_Id(final String recipientId);
+
+	Optional<MessageEntity> findByMunicipalityIdAndRecipients_Id(final String municipalityId, final String recipientId);
 }

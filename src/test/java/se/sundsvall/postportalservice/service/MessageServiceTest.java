@@ -45,6 +45,9 @@ import se.sundsvall.postportalservice.integration.db.dao.UserRepository;
 import se.sundsvall.postportalservice.integration.digitalregisteredletter.DigitalRegisteredLetterIntegration;
 import se.sundsvall.postportalservice.integration.messaging.MessagingIntegration;
 import se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration;
+import se.sundsvall.postportalservice.integration.rabbitmq.Publisher;
+import se.sundsvall.postportalservice.integration.rabbitmq.Queue;
+import se.sundsvall.postportalservice.integration.rabbitmq.model.SendRegisteredLetterEvent;
 import se.sundsvall.postportalservice.service.mapper.AttachmentMapper;
 import se.sundsvall.postportalservice.service.mapper.EntityMapper;
 import se.sundsvall.postportalservice.service.util.CsvUtil;
@@ -53,7 +56,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
@@ -120,6 +122,9 @@ class MessageServiceTest {
 	@Mock
 	private CitizenIntegration citizenIntegrationMock;
 
+	@Mock
+	private Publisher publisherMock;
+
 	@Captor
 	private ArgumentCaptor<MessageEntity> messageEntityCaptor;
 
@@ -168,13 +173,11 @@ class MessageServiceTest {
 	}
 
 	/**
-	 * If the DigitalRegisteredLetter integration throws an exception. We expect the exception to be swallowed and the
-	 * recipient to be marked as FAILED with the exception message as status detail. The process should continue and the
-	 * message entity should
-	 * be saved with the recipient marked as FAILED.
+	 * Verify that the message is saved and an event is published to RabbitMQ.
+	 * The recipient should remain in PENDING status since processing is now async.
 	 */
 	@Test
-	void processDigitalRegisteredLetterRequest_digitalRegisteredLetterThrows() {
+	void processDigitalRegisteredLetterRequest_savesAndPublishesEvent() {
 		final var request = TestDataFactory.createValidDigitalRegisteredLetterRequest();
 		final var multipartFile = Mockito.mock(MultipartFile.class);
 		final var multipartFiles = List.of(multipartFile);
@@ -185,12 +188,6 @@ class MessageServiceTest {
 		when(messagingSettingsIntegrationMock.getMessagingSettingsForUser(MUNICIPALITY_ID)).thenReturn(SETTINGS_MAP);
 		when(citizenIntegrationMock.getCitizens(MUNICIPALITY_ID, List.of(request.getPartyId()))).thenReturn(List.of(citizen));
 		when(messageRepositoryMock.save(any())).thenAnswer(invocation -> invocation.getArgument(0, MessageEntity.class).withId("messageId"));
-		doAnswer(inv -> {
-			final var recipientEntity = inv.getArgument(1, RecipientEntity.class);
-			recipientEntity.setStatus(FAILED);
-			recipientEntity.setStatusDetail("Something when wrong");
-			return null;
-		}).when(digitalRegisteredLetterIntegrationMock).sendLetter(any(MessageEntity.class), any(RecipientEntity.class));
 		when(userRepositoryMock.findByUsernameIgnoreCase(USERNAME)).thenReturn(Optional.empty());
 		when(departmentRepositoryMock.findByOrganizationId("departmentId")).thenReturn(Optional.empty());
 		when(attachmentMapperMock.toAttachmentEntities(multipartFiles)).thenReturn(attachmentEntities);
@@ -202,8 +199,8 @@ class MessageServiceTest {
 		verify(citizenIntegrationMock).getCitizens(MUNICIPALITY_ID, List.of(request.getPartyId()));
 		verify(userRepositoryMock).findByUsernameIgnoreCase(USERNAME);
 		verify(departmentRepositoryMock).findByOrganizationId("departmentId");
-		verify(digitalRegisteredLetterIntegrationMock).sendLetter(any(), any());
 		verify(messageRepositoryMock).save(messageEntityCaptor.capture());
+		verify(publisherMock).publishEvent(eq(Queue.SEND_REGISTERED_LETTER), any(SendRegisteredLetterEvent.class));
 		final var messageEntity = messageEntityCaptor.getValue();
 		assertThat(messageEntity).isNotNull();
 		assertThat(messageEntity.getId()).isEqualTo("messageId");
@@ -224,16 +221,15 @@ class MessageServiceTest {
 			assertThat(recipientEntity.getFirstName()).isEqualTo("John");
 			assertThat(recipientEntity.getLastName()).isEqualTo("Doe");
 			assertThat(recipientEntity.getMessageType()).isEqualTo(MessageType.DIGITAL_REGISTERED_LETTER);
-			assertThat(recipientEntity.getStatus()).isEqualTo(FAILED);
-			assertThat(recipientEntity.getStatusDetail()).isEqualTo("Something when wrong");
+			assertThat(recipientEntity.getStatus()).isEqualTo("PENDING");
 			assertThat(recipientEntity.getExternalId()).isNull();
 		});
 
-		verifyNoInteractions(messagingIntegrationMock);
+		verifyNoInteractions(messagingIntegrationMock, digitalRegisteredLetterIntegrationMock);
 	}
 
 	/**
-	 * Happy case where everything works as expected.
+	 * Happy case where everything works as expected. Message is saved and event is published.
 	 */
 	@Test
 	void processDigitalRegisteredLetterRequest_happyCase() {
@@ -248,12 +244,6 @@ class MessageServiceTest {
 		when(messagingSettingsIntegrationMock.getMessagingSettingsForUser(MUNICIPALITY_ID)).thenReturn(SETTINGS_MAP);
 		when(citizenIntegrationMock.getCitizens(MUNICIPALITY_ID, List.of(request.getPartyId()))).thenReturn(List.of(citizen));
 		when(messageRepositoryMock.save(any())).thenAnswer(invocation -> invocation.getArgument(0, MessageEntity.class).withId("messageId"));
-		doAnswer(inv -> {
-			final var recipientEntity = inv.getArgument(1, RecipientEntity.class);
-			recipientEntity.setStatus(SENT);
-			recipientEntity.setExternalId("229a3e3e-17ae-423a-9a14-671b5b1bbd17");
-			return null;
-		}).when(digitalRegisteredLetterIntegrationMock).sendLetter(any(MessageEntity.class), any(RecipientEntity.class));
 		when(userRepositoryMock.findByUsernameIgnoreCase(USERNAME)).thenReturn(Optional.of(userEntity));
 		when(departmentRepositoryMock.findByOrganizationId("departmentId")).thenReturn(Optional.of(departmentEntity));
 		when(attachmentMapperMock.toAttachmentEntities(multipartFileList)).thenReturn(attachmentEntities);
@@ -265,20 +255,18 @@ class MessageServiceTest {
 		verify(citizenIntegrationMock).getCitizens(MUNICIPALITY_ID, List.of(request.getPartyId()));
 		verify(userRepositoryMock).findByUsernameIgnoreCase(USERNAME);
 		verify(departmentRepositoryMock).findByOrganizationId("departmentId");
-		verify(digitalRegisteredLetterIntegrationMock).sendLetter(any(), any());
 		verify(messageRepositoryMock).save(messageEntityCaptor.capture());
+		verify(publisherMock).publishEvent(eq(Queue.SEND_REGISTERED_LETTER), any(SendRegisteredLetterEvent.class));
 		final var messageEntity = messageEntityCaptor.getValue();
 		assertThat(messageEntity).isNotNull();
 		assertThat(messageEntity.getId()).isEqualTo("messageId");
 		assertThat(messageEntity.getAttachments()).isEqualTo(attachmentEntities);
 		assertThat(messageEntity.getDepartment()).isNotNull().isInstanceOf(DepartmentEntity.class).satisfies(entity -> {
-			// Asserts that a new department was created with the correct values since none existed previously
 			assertThat(departmentEntity.getId()).isEqualTo("departmentId");
 			assertThat(departmentEntity.getName()).isEqualTo("departmentName");
 			assertThat(departmentEntity.getOrganizationId()).isEqualTo("departmentId");
 		});
 		assertThat(messageEntity.getUser()).isNotNull().isInstanceOf(UserEntity.class).satisfies(entity -> {
-			// Asserts that a new user was created with the correct values since none existed previously
 			assertThat(userEntity.getId()).isEqualTo("userId");
 			assertThat(userEntity.getUsername()).isEqualTo(USERNAME);
 		});
@@ -287,12 +275,11 @@ class MessageServiceTest {
 			assertThat(recipientEntity.getFirstName()).isEqualTo("Jane");
 			assertThat(recipientEntity.getLastName()).isEqualTo("Smith");
 			assertThat(recipientEntity.getMessageType()).isEqualTo(MessageType.DIGITAL_REGISTERED_LETTER);
-			assertThat(recipientEntity.getStatus()).isEqualTo(SENT);
-			assertThat(recipientEntity.getExternalId()).isEqualTo("229a3e3e-17ae-423a-9a14-671b5b1bbd17");
-			assertThat(recipientEntity.getStatusDetail()).isNull();
+			assertThat(recipientEntity.getStatus()).isEqualTo("PENDING");
+			assertThat(recipientEntity.getExternalId()).isNull();
 		});
 
-		verifyNoInteractions(messagingIntegrationMock);
+		verifyNoInteractions(messagingIntegrationMock, digitalRegisteredLetterIntegrationMock);
 	}
 
 	@Test

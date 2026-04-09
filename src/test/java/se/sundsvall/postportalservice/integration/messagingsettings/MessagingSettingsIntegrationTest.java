@@ -88,7 +88,7 @@ class MessagingSettingsIntegrationTest {
 			.isInstanceOf(Problem.class)
 			.hasFieldOrPropertyWithValue("status", BAD_GATEWAY)
 			.hasMessage("Bad Gateway: No messaging settings found for user '%s' in municipalityId '%s'"
-				.formatted(USERNAME, MUNICIPALITY_ID));
+				.formatted(HEADER_VALUE, MUNICIPALITY_ID));
 
 		verify(messagingSettingsClient).getMessagingSettingsForUser(HEADER_VALUE, MUNICIPALITY_ID);
 	}
@@ -104,7 +104,7 @@ class MessagingSettingsIntegrationTest {
 			.isInstanceOf(Problem.class)
 			.hasFieldOrPropertyWithValue("status", BAD_GATEWAY)
 			.hasMessage("Bad Gateway: Found multiple messaging settings for user '%s' in municipalityId '%s', can't determine which one to use"
-				.formatted(USERNAME, MUNICIPALITY_ID));
+				.formatted(HEADER_VALUE, MUNICIPALITY_ID));
 
 		verify(messagingSettingsClient).getMessagingSettingsForUser(HEADER_VALUE, MUNICIPALITY_ID);
 	}
@@ -130,7 +130,7 @@ class MessagingSettingsIntegrationTest {
 			.isInstanceOf(Problem.class)
 			.hasFieldOrPropertyWithValue("status", BAD_GATEWAY)
 			.hasMessage("Bad Gateway: Required messaging setting attribute '%s' is missing for user '%s' in municipalityId '%s'"
-				.formatted(DEPARTMENT_NAME, USERNAME, MUNICIPALITY_ID));
+				.formatted(DEPARTMENT_NAME, HEADER_VALUE, MUNICIPALITY_ID));
 
 		verify(messagingSettingsClient).getMessagingSettingsForUser(HEADER_VALUE, MUNICIPALITY_ID);
 	}
@@ -156,7 +156,7 @@ class MessagingSettingsIntegrationTest {
 			.isInstanceOf(Problem.class)
 			.hasFieldOrPropertyWithValue("status", BAD_GATEWAY)
 			.hasMessage("Bad Gateway: Invalid format for messaging setting attribute '%s' for user '%s' in municipalityId '%s'"
-				.formatted(ORGANIZATION_NUMBER, USERNAME, MUNICIPALITY_ID));
+				.formatted(ORGANIZATION_NUMBER, HEADER_VALUE, MUNICIPALITY_ID));
 
 		verify(messagingSettingsClient).getMessagingSettingsForUser(HEADER_VALUE, MUNICIPALITY_ID);
 	}

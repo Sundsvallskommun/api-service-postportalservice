@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  mariadb:
+    image: mariadb:11
+    container_name: mariadb-local
+    restart: always
+    environment:
+      MARIADB_DATABASE: pps
+      MARIADB_ROOT_PASSWORD: rootpassword
+    ports:
+      - "3306:3306"
+    volumes:
+      - mariadb_data:/var/lib/mysql
+  rabbitmq:
+    image: rabbitmq:4-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"    # AMQP
+      - "15672:15672"  # Management UI
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: admin
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    restart: unless-stopped
+
+volumes:
+  mariadb_data:
+  rabbitmq_data:
