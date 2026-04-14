@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import se.sundsvall.dept44.requestid.RequestId;
 import se.sundsvall.dept44.support.Identifier;
 import se.sundsvall.postportalservice.api.model.DigitalRegisteredLetterRequest;
 import se.sundsvall.postportalservice.api.model.LetterCsvRequest;
@@ -24,6 +25,7 @@ import se.sundsvall.postportalservice.api.model.LetterRequest;
 import se.sundsvall.postportalservice.api.model.SmsCsvRequest;
 import se.sundsvall.postportalservice.api.model.SmsRequest;
 import se.sundsvall.postportalservice.integration.citizen.CitizenIntegration;
+import se.sundsvall.postportalservice.integration.db.AttachmentEntity;
 import se.sundsvall.postportalservice.integration.db.DepartmentEntity;
 import se.sundsvall.postportalservice.integration.db.MessageEntity;
 import se.sundsvall.postportalservice.integration.db.RecipientEntity;
@@ -49,7 +51,7 @@ import static se.sundsvall.postportalservice.integration.db.converter.MessageTyp
 import static se.sundsvall.postportalservice.integration.db.converter.MessageType.LETTER;
 import static se.sundsvall.postportalservice.integration.db.converter.MessageType.SMS;
 import static se.sundsvall.postportalservice.integration.db.converter.MessageType.SNAIL_MAIL;
-import static se.sundsvall.postportalservice.integration.rabbitmq.Queue.SEND_REGISTERED_LETTER;
+import static se.sundsvall.postportalservice.integration.rabbitmq.model.Queue.SEND_REGISTERED_LETTER;
 import static se.sundsvall.postportalservice.service.util.CsvUtil.parseCsvToLegalIds;
 import static se.sundsvall.postportalservice.service.util.CsvUtil.validateSmsCsv;
 import static se.sundsvall.postportalservice.service.util.MessagingSettingsUtil.CONTACT_INFORMATION_EMAIL;
@@ -135,9 +137,34 @@ public class MessageService {
 
 		messageRepository.save(message);
 
-		publisher.publishEvent(SEND_REGISTERED_LETTER, new SendRegisteredLetterEvent(municipalityId, recipient.getId()));
+		publisher.publishEvent(SEND_REGISTERED_LETTER, createSendRegisteredLetterEvent(municipalityId, request, message, settingsMap));
 
 		return message.getId();
+	}
+
+	private SendRegisteredLetterEvent createSendRegisteredLetterEvent(final String municipalityId, final DigitalRegisteredLetterRequest request, final MessageEntity message, final Map<String, String> settingsMap) {
+
+		final var sender = new SendRegisteredLetterEvent.Sender(
+			message.getUser().getUsername(),
+			settingsMap.get(ORGANIZATION_NUMBER),
+			message.getDepartment().getName(),
+			settingsMap.get(SUPPORT_TEXT),
+			settingsMap.get(CONTACT_INFORMATION_URL),
+			settingsMap.get(CONTACT_INFORMATION_EMAIL),
+			settingsMap.get(CONTACT_INFORMATION_PHONE_NUMBER));
+
+		final var recipient = new SendRegisteredLetterEvent.Recipient(
+			request.getPartyId());
+
+		final var eventMessage = new SendRegisteredLetterEvent.Message(
+			request.getSubject(),
+			request.getBody(),
+			request.getContentType(),
+			message.getAttachments().stream()
+				.map(AttachmentEntity::getId)
+				.toList());
+
+		return new SendRegisteredLetterEvent(municipalityId, RequestId.get(), message.getRecipients().getFirst().getId(), sender, recipient, eventMessage);
 	}
 
 	public String processCsvLetterRequest(final String municipalityId, final LetterCsvRequest request, final MultipartFile csvFile, final List<MultipartFile> attachments) {

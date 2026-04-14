@@ -9,6 +9,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Index;
 import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import java.time.OffsetDateTime;
 import java.util.Objects;
@@ -80,9 +81,18 @@ public class RecipientEntity {
 	@TimeZoneStorage(NORMALIZE)
 	private OffsetDateTime created;
 
+	@Column(name = "updated", columnDefinition = "DATETIME")
+	@TimeZoneStorage(NORMALIZE)
+	private OffsetDateTime updated;
+
 	@PrePersist
 	void prePersist() {
 		created = OffsetDateTime.now();
+	}
+
+	@PreUpdate
+	void preUpdate() {
+		updated = OffsetDateTime.now();
 	}
 
 	public static RecipientEntity create() {
@@ -310,6 +320,19 @@ public class RecipientEntity {
 		return this;
 	}
 
+	public OffsetDateTime getUpdated() {
+		return updated;
+	}
+
+	public void setUpdated(OffsetDateTime updated) {
+		this.updated = updated;
+	}
+
+	public RecipientEntity withUpdated(OffsetDateTime updated) {
+		this.updated = updated;
+		return this;
+	}
+
 	@Override
 	public String toString() {
 		return "RecipientEntity{" +
@@ -330,6 +353,7 @@ public class RecipientEntity {
 			", statusDetail='" + statusDetail + '\'' +
 			", externalId='" + externalId + '\'' +
 			", created=" + created +
+			", updated=" + updated +
 			'}';
 	}
 
@@ -341,11 +365,11 @@ public class RecipientEntity {
 		return Objects.equals(id, that.id) && Objects.equals(partyId, that.partyId) && Objects.equals(email, that.email) && Objects.equals(phoneNumber, that.phoneNumber) && Objects.equals(firstName,
 			that.firstName) && Objects.equals(lastName, that.lastName) && Objects.equals(streetAddress, that.streetAddress) && Objects.equals(apartmentNumber, that.apartmentNumber) && Objects.equals(careOf, that.careOf)
 			&& Objects.equals(zipCode, that.zipCode) && Objects.equals(city, that.city) && Objects.equals(country, that.country) && Objects.equals(status, that.status) && messageType == that.messageType
-			&& Objects.equals(statusDetail, that.statusDetail) && Objects.equals(externalId, that.externalId) && Objects.equals(created, that.created);
+			&& Objects.equals(statusDetail, that.statusDetail) && Objects.equals(externalId, that.externalId) && Objects.equals(created, that.created) && Objects.equals(updated, that.updated);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(id, partyId, email, phoneNumber, firstName, lastName, streetAddress, apartmentNumber, careOf, zipCode, city, country, status, messageType, statusDetail, externalId, created);
+		return Objects.hash(id, partyId, email, phoneNumber, firstName, lastName, streetAddress, apartmentNumber, careOf, zipCode, city, country, status, messageType, statusDetail, externalId, created, updated);
 	}
 }

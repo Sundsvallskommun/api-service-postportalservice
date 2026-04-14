@@ -17,15 +17,18 @@ import java.time.Duration;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.ContextConfiguration;
 import se.sundsvall.dept44.support.Identifier;
 import se.sundsvall.dept44.test.AbstractAppTest;
 import se.sundsvall.dept44.test.annotation.wiremock.WireMockAppTestSuite;
 import se.sundsvall.postportalservice.Application;
+import se.sundsvall.postportalservice.apptest.rabbitmq.RabbitMQContainerInitializer;
 import se.sundsvall.postportalservice.integration.db.RecipientEntity;
 import se.sundsvall.postportalservice.integration.db.converter.MessageType;
 import se.sundsvall.postportalservice.integration.db.dao.MessageRepository;
 
 @WireMockAppTestSuite(files = "classpath:/MessageLetterIT/", classes = Application.class)
+@ContextConfiguration(initializers = RabbitMQContainerInitializer.class)
 class MessageLetterIT extends AbstractAppTest {
 
 	private static final String REQUEST_FILE = "request.json";
@@ -65,8 +68,8 @@ class MessageLetterIT extends AbstractAppTest {
 						assertThat(recipientEntity.getStatus()).isEqualTo(SENT);
 						assertThat(recipientEntity.getMessageType()).isEqualTo(DIGITAL_MAIL);
 					});
+				appTest.verifyAllStubs();
 			});
-		appTest.verifyAllStubs();
 	}
 
 	@Test
@@ -99,8 +102,8 @@ class MessageLetterIT extends AbstractAppTest {
 						assertThat(recipientEntity.getStatus()).isEqualTo(SENT);
 						assertThat(recipientEntity.getMessageType()).isEqualTo(SNAIL_MAIL);
 					});
+				appTest.verifyAllStubs();
 			});
-		appTest.verifyAllStubs();
 	}
 
 	@Test
@@ -134,8 +137,8 @@ class MessageLetterIT extends AbstractAppTest {
 					.containsExactlyInAnyOrder(MessageType.SNAIL_MAIL, DIGITAL_MAIL);
 				assertThat(message.getRecipients())
 					.allSatisfy(recipientEntity -> assertThat(recipientEntity.getStatus()).isEqualTo(SENT));
+				appTest.verifyAllStubs();
 			});
-		appTest.verifyAllStubs();
 	}
 
 	@Test
@@ -165,8 +168,8 @@ class MessageLetterIT extends AbstractAppTest {
 				assertThat(message.getRecipients()).hasSize(1);
 				assertThat(message.getRecipients())
 					.allSatisfy(recipientEntity -> assertThat(recipientEntity.getStatus()).isEqualTo(SENT));
+				appTest.verifyAllStubs();
 			});
-		appTest.verifyAllStubs();
 	}
 
 	@Test
@@ -200,8 +203,8 @@ class MessageLetterIT extends AbstractAppTest {
 						tuple("11111111-1111-1111-1111-111111111111", DIGITAL_MAIL, "SENT"),
 						tuple("22222222-2222-2222-2222-222222222222", SNAIL_MAIL, "SENT"),
 						tuple("33333333-3333-3333-3333-333333333333", LETTER, "UNDELIVERABLE"));
+				appTest.verifyAllStubs();
 			});
-		appTest.verifyAllStubs();
 	}
 
 	@Test
@@ -234,8 +237,8 @@ class MessageLetterIT extends AbstractAppTest {
 						assertThat(recipientEntity.getStatus()).isEqualTo(SENT);
 						assertThat(recipientEntity.getMessageType()).isEqualTo(SNAIL_MAIL);
 					});
+				appTest.verifyAllStubs();
 			});
-		appTest.verifyAllStubs();
 	}
 
 	@Test
@@ -269,7 +272,7 @@ class MessageLetterIT extends AbstractAppTest {
 					.containsExactlyInAnyOrder(SNAIL_MAIL, DIGITAL_MAIL);
 				assertThat(message.getRecipients())
 					.allSatisfy(recipientEntity -> assertThat(recipientEntity.getStatus()).isEqualTo(SENT));
+				appTest.verifyAllStubs();
 			});
-		appTest.verifyAllStubs();
 	}
 }

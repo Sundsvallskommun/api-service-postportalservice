@@ -2,6 +2,7 @@ package se.sundsvall.postportalservice.integration.rabbitmq;
 
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Component;
+import se.sundsvall.postportalservice.integration.rabbitmq.model.Queue;
 
 @Component
 public class Publisher {

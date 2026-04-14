@@ -33,6 +33,7 @@ create table message (
 
 create table recipient (
                            created DATETIME,
+                           updated DATETIME,
                            address VARCHAR(255),
                            apartment_number VARCHAR(20),
                            care_of VARCHAR(100),

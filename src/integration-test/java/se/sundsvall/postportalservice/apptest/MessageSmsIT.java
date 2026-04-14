@@ -15,13 +15,16 @@ import java.time.Duration;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.ContextConfiguration;
 import se.sundsvall.dept44.support.Identifier;
 import se.sundsvall.dept44.test.AbstractAppTest;
 import se.sundsvall.dept44.test.annotation.wiremock.WireMockAppTestSuite;
 import se.sundsvall.postportalservice.Application;
+import se.sundsvall.postportalservice.apptest.rabbitmq.RabbitMQContainerInitializer;
 import se.sundsvall.postportalservice.integration.db.dao.MessageRepository;
 
 @WireMockAppTestSuite(files = "classpath:/MessageSmsIT/", classes = Application.class)
+@ContextConfiguration(initializers = RabbitMQContainerInitializer.class)
 class MessageSmsIT extends AbstractAppTest {
 
 	private static final String REQUEST_FILE = "request.json";

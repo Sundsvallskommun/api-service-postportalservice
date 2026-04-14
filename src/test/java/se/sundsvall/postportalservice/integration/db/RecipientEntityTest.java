@@ -36,6 +36,7 @@ class RecipientEntityTest {
 	private static final String MESSAGE_STATUS = "SENT";
 	private static final MessageType MESSAGE_TYPE = MessageType.SNAIL_MAIL;
 	private static final OffsetDateTime CREATED = now();
+	private static final OffsetDateTime UPDATED = now();
 
 	@BeforeAll
 	static void setup() {
@@ -68,6 +69,7 @@ class RecipientEntityTest {
 			.withCity(CITY)
 			.withCountry(COUNTRY)
 			.withCreated(CREATED)
+			.withUpdated(UPDATED)
 			.withStatusDetail(STATUS_DETAIL)
 			.withMessageType(MESSAGE_TYPE)
 			.withStatus(MESSAGE_STATUS)
@@ -86,6 +88,7 @@ class RecipientEntityTest {
 		assertThat(recipientEntity.getCity()).isEqualTo(CITY);
 		assertThat(recipientEntity.getCountry()).isEqualTo(COUNTRY);
 		assertThat(recipientEntity.getCreated()).isEqualTo(CREATED);
+		assertThat(recipientEntity.getUpdated()).isEqualTo(UPDATED);
 		assertThat(recipientEntity.getStatusDetail()).isEqualTo(STATUS_DETAIL);
 		assertThat(recipientEntity.getMessageType()).isEqualTo(MESSAGE_TYPE);
 		assertThat(recipientEntity.getStatus()).isEqualTo(MESSAGE_STATUS);
@@ -110,6 +113,7 @@ class RecipientEntityTest {
 		recipientEntity.setCity(CITY);
 		recipientEntity.setCountry(COUNTRY);
 		recipientEntity.setCreated(CREATED);
+		recipientEntity.setUpdated(UPDATED);
 		recipientEntity.setStatusDetail(STATUS_DETAIL);
 		recipientEntity.setMessageType(MESSAGE_TYPE);
 		recipientEntity.setStatus(MESSAGE_STATUS);
@@ -128,6 +132,7 @@ class RecipientEntityTest {
 		assertThat(recipientEntity.getCity()).isEqualTo(CITY);
 		assertThat(recipientEntity.getCountry()).isEqualTo(COUNTRY);
 		assertThat(recipientEntity.getCreated()).isEqualTo(CREATED);
+		assertThat(recipientEntity.getUpdated()).isEqualTo(UPDATED);
 		assertThat(recipientEntity.getStatusDetail()).isEqualTo(STATUS_DETAIL);
 		assertThat(recipientEntity.getMessageType()).isEqualTo(MESSAGE_TYPE);
 		assertThat(recipientEntity.getStatus()).isEqualTo(MESSAGE_STATUS);

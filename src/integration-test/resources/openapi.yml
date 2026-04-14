@@ -561,62 +561,6 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/Problem"
-  /{municipalityId}/recipients/{recipientId}:
-    get:
-      tags:
-        - Recipient Resources
-      summary: Get recipient data for a digital registered letter
-      description: Returns all metadata needed to send a digital registered letter
-        for the given recipient
-      operationId: getRecipientById
-      parameters:
-        - name: municipalityId
-          in: path
-          description: Municipality ID
-          required: true
-          schema:
-            type: string
-          example: 2281
-        - name: recipientId
-          in: path
-          description: Recipient ID
-          required: true
-          schema:
-            type: string
-          example: da03b33e-9de2-45ac-8291-31a88de59410
-      responses:
-        "400":
-          description: Bad Request
-          content:
-            application/problem+json:
-              schema:
-                oneOf:
-                  - $ref: "#/components/schemas/Problem"
-                  - $ref: "#/components/schemas/ConstraintViolationProblem"
-        "404":
-          description: Not Found
-          content:
-            application/problem+json:
-              schema:
-                $ref: "#/components/schemas/Problem"
-        "500":
-          description: Internal Server Error
-          content:
-            application/problem+json:
-              schema:
-                $ref: "#/components/schemas/Problem"
-        "502":
-          description: Bad Gateway
-          content:
-            application/problem+json:
-              schema:
-                $ref: "#/components/schemas/Problem"
-        "200":
-          description: Successful operation
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/RecipientResponse"
   /{municipalityId}/history/users/{userId}/messages:
     get:
       tags:
@@ -1385,61 +1329,6 @@ components:
           description: Number of registered letters sent
           examples:
             - "5"
-    AttachmentMetadata:
-      type: object
-      description: Metadata for an attachment
-      properties:
-        id:
-          type: string
-          description: Attachment ID
-        fileName:
-          type: string
-          description: File name
-        contentType:
-          type: string
-          description: Content type
-    RecipientResponse:
-      type: object
-      description: Recipient data needed for sending a digital registered letter
-      properties:
-        partyId:
-          type: string
-          description: Party ID of the recipient
-        subject:
-          type: string
-          description: Subject of the letter
-        body:
-          type: string
-          description: Body of the letter
-        contentType:
-          type: string
-          description: "Content type of the body, e.g. text/plain or text/html"
-        organizationNumber:
-          type: string
-          description: Organization number
-        organizationName:
-          type: string
-          description: Organization name
-        supportText:
-          type: string
-          description: Support text
-        contactInformationUrl:
-          type: string
-          description: Contact information URL
-        contactInformationEmail:
-          type: string
-          description: Contact information email
-        contactInformationPhoneNumber:
-          type: string
-          description: Contact information phone number
-        identifier:
-          type: string
-          description: Identifier for the x-sent-by header
-        attachments:
-          type: array
-          description: Attachment metadata
-          items:
-            $ref: "#/components/schemas/AttachmentMetadata"
     Pageable:
       type: object
       properties:

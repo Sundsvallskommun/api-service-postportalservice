@@ -26,6 +26,7 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.multipart.MultipartFile;
 import se.sundsvall.dept44.problem.Problem;
+import se.sundsvall.dept44.requestid.RequestId;
 import se.sundsvall.dept44.support.Identifier;
 import se.sundsvall.postportalservice.TestDataFactory;
 import se.sundsvall.postportalservice.api.model.Address;
@@ -46,7 +47,7 @@ import se.sundsvall.postportalservice.integration.digitalregisteredletter.Digita
 import se.sundsvall.postportalservice.integration.messaging.MessagingIntegration;
 import se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration;
 import se.sundsvall.postportalservice.integration.rabbitmq.Publisher;
-import se.sundsvall.postportalservice.integration.rabbitmq.Queue;
+import se.sundsvall.postportalservice.integration.rabbitmq.model.Queue;
 import se.sundsvall.postportalservice.integration.rabbitmq.model.SendRegisteredLetterEvent;
 import se.sundsvall.postportalservice.service.mapper.AttachmentMapper;
 import se.sundsvall.postportalservice.service.mapper.EntityMapper;
@@ -65,7 +66,6 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.http.HttpStatus.BAD_GATEWAY;
 import static se.sundsvall.postportalservice.Constants.FAILED;
-import static se.sundsvall.postportalservice.Constants.SENT;
 import static se.sundsvall.postportalservice.TestDataFactory.MUNICIPALITY_ID;
 import static se.sundsvall.postportalservice.service.util.MessagingSettingsUtil.CONTACT_INFORMATION_EMAIL;
 import static se.sundsvall.postportalservice.service.util.MessagingSettingsUtil.CONTACT_INFORMATION_PHONE_NUMBER;
@@ -81,6 +81,7 @@ import static se.sundsvall.postportalservice.service.util.MessagingSettingsUtil.
 class MessageServiceTest {
 
 	private static final String USERNAME = "username";
+	private static final String REQUEST_ID = "test-request-id";
 	private static final Map<String, String> SETTINGS_MAP = Map.of(
 		DEPARTMENT_ID, "departmentId",
 		DEPARTMENT_NAME, "departmentName",
@@ -128,6 +129,9 @@ class MessageServiceTest {
 	@Captor
 	private ArgumentCaptor<MessageEntity> messageEntityCaptor;
 
+	@Captor
+	private ArgumentCaptor<SendRegisteredLetterEvent> eventCaptor;
+
 	@InjectMocks
 	private MessageService messageService;
 
@@ -138,16 +142,18 @@ class MessageServiceTest {
 			.withValue(USERNAME)
 			.withTypeString("AD_ACCOUNT");
 		Identifier.set(identifier);
+		RequestId.init(REQUEST_ID);
 	}
 
 	@AfterEach
 	void tearDown() {
 		Identifier.remove();
+		RequestId.reset();
 		verifyNoMoreInteractions(attachmentMapperMock, entityMapperMock,
 			messagingIntegrationMock, messagingSettingsIntegrationMock,
 			departmentRepositoryMock, userRepositoryMock,
 			messageRepositoryMock, recipientRepositoryMock, digitalRegisteredLetterIntegrationMock,
-			citizenIntegrationMock);
+			citizenIntegrationMock, publisherMock);
 	}
 
 	/**
@@ -173,8 +179,8 @@ class MessageServiceTest {
 	}
 
 	/**
-	 * Verify that the message is saved and an event is published to RabbitMQ.
-	 * The recipient should remain in PENDING status since processing is now async.
+	 * Verify that the message is saved and an event is published to RabbitMQ. The recipient should remain in PENDING status
+	 * since processing is now async.
 	 */
 	@Test
 	void processDigitalRegisteredLetterRequest_savesAndPublishesEvent() {
@@ -182,12 +188,18 @@ class MessageServiceTest {
 		final var multipartFile = Mockito.mock(MultipartFile.class);
 		final var multipartFiles = List.of(multipartFile);
 
-		final var attachmentEntities = List.of(new AttachmentEntity(), new AttachmentEntity());
+		final var attachmentEntities = List.of(
+			new AttachmentEntity().withId("attachment-id-1"),
+			new AttachmentEntity().withId("attachment-id-2"));
 		final var citizen = new CitizenExtended().givenname("John").lastname("Doe");
 
 		when(messagingSettingsIntegrationMock.getMessagingSettingsForUser(MUNICIPALITY_ID)).thenReturn(SETTINGS_MAP);
 		when(citizenIntegrationMock.getCitizens(MUNICIPALITY_ID, List.of(request.getPartyId()))).thenReturn(List.of(citizen));
-		when(messageRepositoryMock.save(any())).thenAnswer(invocation -> invocation.getArgument(0, MessageEntity.class).withId("messageId"));
+		when(messageRepositoryMock.save(any())).thenAnswer(invocation -> {
+			final var msg = invocation.getArgument(0, MessageEntity.class).withId("messageId");
+			msg.getRecipients().getFirst().setId("recipientId");
+			return msg;
+		});
 		when(userRepositoryMock.findByUsernameIgnoreCase(USERNAME)).thenReturn(Optional.empty());
 		when(departmentRepositoryMock.findByOrganizationId("departmentId")).thenReturn(Optional.empty());
 		when(attachmentMapperMock.toAttachmentEntities(multipartFiles)).thenReturn(attachmentEntities);
@@ -200,7 +212,23 @@ class MessageServiceTest {
 		verify(userRepositoryMock).findByUsernameIgnoreCase(USERNAME);
 		verify(departmentRepositoryMock).findByOrganizationId("departmentId");
 		verify(messageRepositoryMock).save(messageEntityCaptor.capture());
-		verify(publisherMock).publishEvent(eq(Queue.SEND_REGISTERED_LETTER), any(SendRegisteredLetterEvent.class));
+		verify(publisherMock).publishEvent(eq(Queue.SEND_REGISTERED_LETTER), eventCaptor.capture());
+		final var event = eventCaptor.getValue();
+		assertThat(event.municipalityId()).isEqualTo(MUNICIPALITY_ID);
+		assertThat(event.requestId()).isEqualTo(REQUEST_ID);
+		assertThat(event.recipientId()).isEqualTo("recipientId");
+		assertThat(event.sender().identifier()).isEqualTo(USERNAME);
+		assertThat(event.sender().organizationNumber()).isEqualTo(SETTINGS_MAP.get(ORGANIZATION_NUMBER));
+		assertThat(event.sender().organizationName()).isEqualTo("departmentName");
+		assertThat(event.sender().supportText()).isEqualTo(SETTINGS_MAP.get(SUPPORT_TEXT));
+		assertThat(event.sender().contactInformationUrl()).isEqualTo(SETTINGS_MAP.get(CONTACT_INFORMATION_URL));
+		assertThat(event.sender().contactInformationEmail()).isEqualTo(SETTINGS_MAP.get(CONTACT_INFORMATION_EMAIL));
+		assertThat(event.sender().contactInformationPhoneNumber()).isEqualTo(SETTINGS_MAP.get(CONTACT_INFORMATION_PHONE_NUMBER));
+		assertThat(event.recipient().partyId()).isEqualTo(request.getPartyId());
+		assertThat(event.message().subject()).isEqualTo(request.getSubject());
+		assertThat(event.message().body()).isEqualTo(request.getBody());
+		assertThat(event.message().contentType()).isEqualTo(request.getContentType());
+		assertThat(event.message().attachmentIds()).containsExactly("attachment-id-1", "attachment-id-2");
 		final var messageEntity = messageEntityCaptor.getValue();
 		assertThat(messageEntity).isNotNull();
 		assertThat(messageEntity.getId()).isEqualTo("messageId");
@@ -236,14 +264,20 @@ class MessageServiceTest {
 		final var request = TestDataFactory.createValidDigitalRegisteredLetterRequest();
 		final var multipartFile = Mockito.mock(MultipartFile.class);
 		final var multipartFileList = List.of(multipartFile);
-		final var attachmentEntities = List.of(new AttachmentEntity(), new AttachmentEntity());
+		final var attachmentEntities = List.of(
+			new AttachmentEntity().withId("attachment-id-1"),
+			new AttachmentEntity().withId("attachment-id-2"));
 		final var userEntity = new UserEntity().withUsername(USERNAME).withId("userId");
 		final var departmentEntity = new DepartmentEntity().withName("departmentName").withOrganizationId("departmentId").withId("departmentId");
 		final var citizen = new CitizenExtended().givenname("Jane").lastname("Smith");
 
 		when(messagingSettingsIntegrationMock.getMessagingSettingsForUser(MUNICIPALITY_ID)).thenReturn(SETTINGS_MAP);
 		when(citizenIntegrationMock.getCitizens(MUNICIPALITY_ID, List.of(request.getPartyId()))).thenReturn(List.of(citizen));
-		when(messageRepositoryMock.save(any())).thenAnswer(invocation -> invocation.getArgument(0, MessageEntity.class).withId("messageId"));
+		when(messageRepositoryMock.save(any())).thenAnswer(invocation -> {
+			final var msg = invocation.getArgument(0, MessageEntity.class).withId("messageId");
+			msg.getRecipients().getFirst().setId("recipientId");
+			return msg;
+		});
 		when(userRepositoryMock.findByUsernameIgnoreCase(USERNAME)).thenReturn(Optional.of(userEntity));
 		when(departmentRepositoryMock.findByOrganizationId("departmentId")).thenReturn(Optional.of(departmentEntity));
 		when(attachmentMapperMock.toAttachmentEntities(multipartFileList)).thenReturn(attachmentEntities);
@@ -256,7 +290,23 @@ class MessageServiceTest {
 		verify(userRepositoryMock).findByUsernameIgnoreCase(USERNAME);
 		verify(departmentRepositoryMock).findByOrganizationId("departmentId");
 		verify(messageRepositoryMock).save(messageEntityCaptor.capture());
-		verify(publisherMock).publishEvent(eq(Queue.SEND_REGISTERED_LETTER), any(SendRegisteredLetterEvent.class));
+		verify(publisherMock).publishEvent(eq(Queue.SEND_REGISTERED_LETTER), eventCaptor.capture());
+		final var event = eventCaptor.getValue();
+		assertThat(event.municipalityId()).isEqualTo(MUNICIPALITY_ID);
+		assertThat(event.requestId()).isEqualTo(REQUEST_ID);
+		assertThat(event.recipientId()).isEqualTo("recipientId");
+		assertThat(event.sender().identifier()).isEqualTo(USERNAME);
+		assertThat(event.sender().organizationNumber()).isEqualTo(SETTINGS_MAP.get(ORGANIZATION_NUMBER));
+		assertThat(event.sender().organizationName()).isEqualTo("departmentName");
+		assertThat(event.sender().supportText()).isEqualTo(SETTINGS_MAP.get(SUPPORT_TEXT));
+		assertThat(event.sender().contactInformationUrl()).isEqualTo(SETTINGS_MAP.get(CONTACT_INFORMATION_URL));
+		assertThat(event.sender().contactInformationEmail()).isEqualTo(SETTINGS_MAP.get(CONTACT_INFORMATION_EMAIL));
+		assertThat(event.sender().contactInformationPhoneNumber()).isEqualTo(SETTINGS_MAP.get(CONTACT_INFORMATION_PHONE_NUMBER));
+		assertThat(event.recipient().partyId()).isEqualTo(request.getPartyId());
+		assertThat(event.message().subject()).isEqualTo(request.getSubject());
+		assertThat(event.message().body()).isEqualTo(request.getBody());
+		assertThat(event.message().contentType()).isEqualTo(request.getContentType());
+		assertThat(event.message().attachmentIds()).containsExactly("attachment-id-1", "attachment-id-2");
 		final var messageEntity = messageEntityCaptor.getValue();
 		assertThat(messageEntity).isNotNull();
 		assertThat(messageEntity.getId()).isEqualTo("messageId");

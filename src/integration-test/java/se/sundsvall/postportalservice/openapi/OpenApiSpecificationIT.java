@@ -14,12 +14,14 @@ import java.nio.file.Path;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.resttestclient.TestRestTemplate;
 import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureTestRestTemplate;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.resttestclient.TestRestTemplate;
 import org.springframework.core.io.Resource;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.ContextConfiguration;
 import se.sundsvall.postportalservice.Application;
+import se.sundsvall.postportalservice.apptest.rabbitmq.RabbitMQContainerInitializer;
 
 @SpringBootTest(webEnvironment = RANDOM_PORT, classes = {
 	Application.class
@@ -29,6 +31,7 @@ import se.sundsvall.postportalservice.Application;
 })
 @ActiveProfiles("it")
 @AutoConfigureTestRestTemplate
+@ContextConfiguration(initializers = RabbitMQContainerInitializer.class)
 class OpenApiSpecificationIT {
 
 	private static final YAMLMapper YAML_MAPPER = new YAMLMapper();

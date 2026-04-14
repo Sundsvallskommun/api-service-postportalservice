@@ -8,12 +8,15 @@ import static org.springframework.http.MediaType.MULTIPART_FORM_DATA;
 
 import java.io.FileNotFoundException;
 import org.junit.jupiter.api.Test;
+import org.springframework.test.context.ContextConfiguration;
 import se.sundsvall.dept44.support.Identifier;
 import se.sundsvall.dept44.test.AbstractAppTest;
 import se.sundsvall.dept44.test.annotation.wiremock.WireMockAppTestSuite;
 import se.sundsvall.postportalservice.Application;
+import se.sundsvall.postportalservice.apptest.rabbitmq.RabbitMQContainerInitializer;
 
 @WireMockAppTestSuite(files = "classpath:/PrecheckIT/", classes = Application.class)
+@ContextConfiguration(initializers = RabbitMQContainerInitializer.class)
 class PrecheckIT extends AbstractAppTest {
 
 	private static final String REQUEST_FILE = "request.json";
