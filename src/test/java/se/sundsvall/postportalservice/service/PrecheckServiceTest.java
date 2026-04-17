@@ -444,14 +444,13 @@ class PrecheckServiceTest {
 	}
 
 	@Test
-	void precheckSmsCsv_withInvalidNumbers(@Load(value = "/testfile/phoneNumbers-all-invalid.csv") final String csv) throws IOException {
+	void precheckSmsCsv_noValidEntries_throwsProblem(@Load(value = "/testfile/phoneNumbers-all-invalid.csv") final String csv) throws IOException {
 		final var multipartFileMock = Mockito.mock(MultipartFile.class);
 		when(multipartFileMock.getInputStream()).thenReturn(new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8)));
 
-		final var result = precheckService.precheckSmsCsv(multipartFileMock);
-
-		assertThat(result.duplicateEntries()).isEmpty();
-		assertThat(result.rejectedEntries()).containsExactlyInAnyOrder("notanumber", "abc123", "12345");
+		assertThatThrownBy(() -> precheckService.precheckSmsCsv(multipartFileMock))
+			.isInstanceOf(Problem.class)
+			.hasMessageContaining("No valid phone numbers found in the provided CSV file");
 	}
 
 	@Test

@@ -66,6 +66,10 @@ public class PrecheckService {
 	public PrecheckCsvResponse precheckSmsCsv(final MultipartFile csvFile) {
 		final var result = CsvUtil.validateSmsCsv(csvFile);
 
+		if (result.validEntries().isEmpty()) {
+			throw Problem.valueOf(BAD_REQUEST, "No valid phone numbers found in the provided CSV file");
+		}
+
 		final var duplicateEntriesMap = result.validEntries().entrySet().stream()
 			.filter(entry -> entry.getValue() > 1)
 			.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
