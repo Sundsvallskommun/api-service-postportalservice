@@ -1,9 +1,5 @@
 {
-	"duplicateEntries": {},
-	"rejectedEntries": [
-		"InvalidHeader",
-		"notanumber",
-		"abc123",
-		"12345"
-	]
+	"status": 400,
+	"title": "Bad Request",
+	"detail": "No valid phone numbers found in the provided CSV file"
 }
