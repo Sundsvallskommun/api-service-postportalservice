@@ -161,7 +161,7 @@ class PrecheckIT extends AbstractAppTest {
 			.withHttpMethod(POST)
 			.withContentType(MULTIPART_FORM_DATA)
 			.withRequestFile("csv-file", "phoneNumbers.csv")
-			.withExpectedResponseStatus(OK)
+			.withExpectedResponseStatus(BAD_REQUEST)
 			.withExpectedResponse(RESPONSE_FILE)
 			.sendRequestAndVerifyResponse();
 	}
@@ -173,7 +173,7 @@ class PrecheckIT extends AbstractAppTest {
 			.withHttpMethod(POST)
 			.withContentType(MULTIPART_FORM_DATA)
 			.withRequestFile("csv-file", "phoneNumbers.csv")
-			.withExpectedResponseStatus(OK)
+			.withExpectedResponseStatus(BAD_REQUEST)
 			.withExpectedResponse(RESPONSE_FILE)
 			.sendRequestAndVerifyResponse();
 	}

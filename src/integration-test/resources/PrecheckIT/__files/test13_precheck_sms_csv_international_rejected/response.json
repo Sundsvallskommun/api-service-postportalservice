@@ -1,8 +1,5 @@
 {
-	"duplicateEntries": {},
-	"rejectedEntries": [
-		"+4712345678",
-		"+12025551234",
-		"+47701740610"
-	]
+	"status": 400,
+	"title": "Bad Request",
+	"detail": "No valid phone numbers found in the provided CSV file"
 }
