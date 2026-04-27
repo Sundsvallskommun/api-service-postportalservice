@@ -7,6 +7,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -17,6 +18,7 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import se.sundsvall.dept44.problem.Problem;
 import se.sundsvall.dept44.support.Identifier;
 import se.sundsvall.postportalservice.api.model.DigitalRegisteredLetterRequest;
 import se.sundsvall.postportalservice.api.model.LetterCsvRequest;
@@ -28,6 +30,7 @@ import se.sundsvall.postportalservice.integration.db.DepartmentEntity;
 import se.sundsvall.postportalservice.integration.db.MessageEntity;
 import se.sundsvall.postportalservice.integration.db.RecipientEntity;
 import se.sundsvall.postportalservice.integration.db.UserEntity;
+import se.sundsvall.postportalservice.integration.db.converter.PartyType;
 import se.sundsvall.postportalservice.integration.db.dao.DepartmentRepository;
 import se.sundsvall.postportalservice.integration.db.dao.MessageRepository;
 import se.sundsvall.postportalservice.integration.db.dao.RecipientRepository;
@@ -42,13 +45,14 @@ import se.sundsvall.postportalservice.service.util.RecipientId;
 import static java.util.Collections.emptyList;
 import static java.util.Optional.ofNullable;
 import static java.util.concurrent.CompletableFuture.supplyAsync;
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static se.sundsvall.postportalservice.Constants.FAILED;
 import static se.sundsvall.postportalservice.Constants.PENDING;
 import static se.sundsvall.postportalservice.integration.db.converter.MessageType.DIGITAL_REGISTERED_LETTER;
 import static se.sundsvall.postportalservice.integration.db.converter.MessageType.LETTER;
 import static se.sundsvall.postportalservice.integration.db.converter.MessageType.SMS;
 import static se.sundsvall.postportalservice.integration.db.converter.MessageType.SNAIL_MAIL;
-import static se.sundsvall.postportalservice.service.util.CsvUtil.parseCsvToLegalIds;
+import static se.sundsvall.postportalservice.service.util.CsvUtil.parseLetterCsv;
 import static se.sundsvall.postportalservice.service.util.CsvUtil.validateSmsCsv;
 import static se.sundsvall.postportalservice.service.util.MessagingSettingsUtil.CONTACT_INFORMATION_EMAIL;
 import static se.sundsvall.postportalservice.service.util.MessagingSettingsUtil.CONTACT_INFORMATION_PHONE_NUMBER;
@@ -137,7 +141,20 @@ public class MessageService {
 	}
 
 	public String processCsvLetterRequest(final String municipalityId, final LetterCsvRequest request, final MultipartFile csvFile, final List<MultipartFile> attachments) {
-		final var legalIds = parseCsvToLegalIds(csvFile);
+		final var parsed = parseLetterCsv(csvFile);
+		final var requestedType = Optional.ofNullable(request.getRecipientType())
+			.map(PartyType::valueOf)
+			.orElse(null);
+
+		if (requestedType == PartyType.PRIVATE && !parsed.orgnummer().isEmpty()) {
+			throw Problem.valueOf(BAD_REQUEST,
+				"recipientType=PRIVATE is set, but the CSV contains organisationsnummer rows: " + parsed.orgnummer().keySet());
+		}
+		if (requestedType == PartyType.ENTERPRISE && !parsed.personnummer().isEmpty()) {
+			throw Problem.valueOf(BAD_REQUEST,
+				"recipientType=ENTERPRISE is set, but the CSV contains personnummer rows: " + parsed.personnummer().keySet());
+		}
+
 		final var settingsMap = messagingSettingsIntegration.getMessagingSettingsForUser(municipalityId);
 		final var message = createMessageEntity(municipalityId, settingsMap);
 		message.setSubject(request.getSubject());
@@ -145,7 +162,9 @@ public class MessageService {
 		message.setBody(request.getBody());
 		message.setMessageType(LETTER);
 
-		final var recipientEntities = precheckService.precheckLegalIds(municipalityId, new ArrayList<>(legalIds));
+		final var personnummer = new ArrayList<>(parsed.personnummer().keySet());
+		final var orgnummer = new ArrayList<>(parsed.orgnummer().keySet());
+		final var recipientEntities = precheckService.precheckLegalIds(municipalityId, personnummer, orgnummer);
 		message.setRecipients(recipientEntities);
 		final var attachmentEntities = attachmentMapper.toAttachmentEntities(attachments);
 		message.setAttachments(attachmentEntities);
@@ -185,8 +204,12 @@ public class MessageService {
 		message.setSubject(letterRequest.getSubject());
 		message.setMessageType(LETTER);
 
+		final var partyType = Optional.ofNullable(letterRequest.getRecipientType())
+			.map(PartyType::valueOf)
+			.orElse(PartyType.PRIVATE);
+
 		final var recipientEntities = ofNullable(letterRequest.getRecipients()).orElse(emptyList()).stream()
-			.map(entityMapper::toRecipientEntity)
+			.map(recipient -> entityMapper.toRecipientEntity(recipient, partyType))
 			.filter(Objects::nonNull);
 
 		final var addressRecipients = ofNullable(letterRequest.getAddresses()).orElse(emptyList()).stream()

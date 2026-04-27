@@ -5,6 +5,7 @@ import java.util.Random;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import se.sundsvall.postportalservice.integration.db.converter.MessageType;
+import se.sundsvall.postportalservice.integration.db.converter.PartyType;
 
 import static com.google.code.beanmatchers.BeanMatchers.hasValidBeanConstructor;
 import static com.google.code.beanmatchers.BeanMatchers.hasValidBeanEquals;
@@ -35,6 +36,7 @@ class RecipientEntityTest {
 	private static final String STATUS_DETAIL = "statusDetail";
 	private static final String MESSAGE_STATUS = "SENT";
 	private static final MessageType MESSAGE_TYPE = MessageType.SNAIL_MAIL;
+	private static final PartyType PARTY_TYPE = PartyType.PRIVATE;
 	private static final OffsetDateTime CREATED = now();
 
 	@BeforeAll
@@ -57,6 +59,7 @@ class RecipientEntityTest {
 		var recipientEntity = RecipientEntity.create()
 			.withId(ID)
 			.withPartyId(PARTY_ID)
+			.withPartyType(PARTY_TYPE)
 			.withEmail(EMAIL)
 			.withPhoneNumber(PHONE_NUMBER)
 			.withFirstName(FIRST_NAME)
@@ -75,6 +78,7 @@ class RecipientEntityTest {
 
 		assertThat(recipientEntity.getId()).isEqualTo(ID);
 		assertThat(recipientEntity.getPartyId()).isEqualTo(PARTY_ID);
+		assertThat(recipientEntity.getPartyType()).isEqualTo(PARTY_TYPE);
 		assertThat(recipientEntity.getEmail()).isEqualTo(EMAIL);
 		assertThat(recipientEntity.getPhoneNumber()).isEqualTo(PHONE_NUMBER);
 		assertThat(recipientEntity.getFirstName()).isEqualTo(FIRST_NAME);
@@ -99,6 +103,7 @@ class RecipientEntityTest {
 
 		recipientEntity.setId(ID);
 		recipientEntity.setPartyId(PARTY_ID);
+		recipientEntity.setPartyType(PARTY_TYPE);
 		recipientEntity.setEmail(EMAIL);
 		recipientEntity.setPhoneNumber(PHONE_NUMBER);
 		recipientEntity.setFirstName(FIRST_NAME);
@@ -117,6 +122,7 @@ class RecipientEntityTest {
 
 		assertThat(recipientEntity.getId()).isEqualTo(ID);
 		assertThat(recipientEntity.getPartyId()).isEqualTo(PARTY_ID);
+		assertThat(recipientEntity.getPartyType()).isEqualTo(PARTY_TYPE);
 		assertThat(recipientEntity.getEmail()).isEqualTo(EMAIL);
 		assertThat(recipientEntity.getPhoneNumber()).isEqualTo(PHONE_NUMBER);
 		assertThat(recipientEntity.getFirstName()).isEqualTo(FIRST_NAME);

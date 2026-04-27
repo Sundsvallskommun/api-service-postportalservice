@@ -169,6 +169,18 @@
 							</configOptions>
 						</configuration>
 					</execution>
+					<execution>
+						<id>legalentity-api</id>
+						<goals>
+							<goal>generate</goal>
+						</goals>
+						<configuration>
+							<inputSpec>${project.basedir}/src/main/resources/integrations/legalentity.yml</inputSpec>
+							<configOptions>
+								<modelPackage>generated.se.sundsvall.legalentity</modelPackage>
+							</configOptions>
+						</configuration>
+					</execution>
 				</executions>
 			</plugin>
 			<plugin>

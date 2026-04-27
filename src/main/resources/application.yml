@@ -39,6 +39,9 @@ spring:
           party:
             authorization-grant-type: client_credentials
             provider: party
+          legalentity:
+            authorization-grant-type: client_credentials
+            provider: legalentity
 openapi:
   title: Postportalservice
   name: postportalservice
@@ -53,4 +56,6 @@ resilience4j:
       employee:
         ignoreExceptions: se.sundsvall.dept44.exception.ClientProblem
       messaging:
+        ignoreExceptions: se.sundsvall.dept44.exception.ClientProblem
+      legalentity:
         ignoreExceptions: se.sundsvall.dept44.exception.ClientProblem

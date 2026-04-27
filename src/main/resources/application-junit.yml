@@ -39,6 +39,8 @@ spring:
             token-uri: http://token.url
           party:
             token-uri: http://token.url
+          legalentity:
+            token-uri: http://token.url
         registration:
           citizen:
             client-id: the-client-id
@@ -56,6 +58,9 @@ spring:
             client-id: the-client-id
             client-secret: the-client-secret
           party:
+            client-id: the-client-id
+            client-secret: the-client-secret
+          legalentity:
             client-id: the-client-id
             client-secret: the-client-secret
 integration:
@@ -85,3 +90,7 @@ integration:
     read-timeout: 20
     max-legal-ids-per-call: 20
     max-party-ids-per-call: 30
+  legalentity:
+    url: http://legalentity.local
+    connect-timeout: 10
+    read-timeout: 20

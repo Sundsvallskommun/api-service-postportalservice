@@ -4,12 +4,14 @@ import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import java.util.List;
 import java.util.Map;
 import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import se.sundsvall.postportalservice.integration.party.configuration.PartyConfiguration;
 
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
+import static org.springframework.http.MediaType.TEXT_PLAIN_VALUE;
 import static se.sundsvall.postportalservice.integration.party.configuration.PartyConfiguration.CLIENT_ID;
 
 @FeignClient(
@@ -28,4 +30,14 @@ public interface PartyClient {
 	Map<String, String> getPersonNumbers(
 		@PathVariable final String municipalityId,
 		@RequestBody final List<String> partyIds);
+
+	@GetMapping(path = "/{municipalityId}/ENTERPRISE/{legalId}/partyId", produces = TEXT_PLAIN_VALUE)
+	String getEnterprisePartyIdByLegalId(
+		@PathVariable final String municipalityId,
+		@PathVariable final String legalId);
+
+	@GetMapping(path = "/{municipalityId}/ENTERPRISE/{partyId}/legalId", produces = TEXT_PLAIN_VALUE)
+	String getEnterpriseLegalIdByPartyId(
+		@PathVariable final String municipalityId,
+		@PathVariable final String partyId);
 }

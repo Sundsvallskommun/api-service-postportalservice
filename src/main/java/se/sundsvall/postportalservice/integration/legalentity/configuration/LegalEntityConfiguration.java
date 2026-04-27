@@ -1,6 +1,7 @@
-package se.sundsvall.postportalservice.integration.party.configuration;
+package se.sundsvall.postportalservice.integration.legalentity.configuration;
 
 import java.util.List;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.openfeign.FeignBuilderCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
@@ -11,13 +12,14 @@ import se.sundsvall.dept44.configuration.feign.decoder.ProblemErrorDecoder;
 
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 
+@EnableConfigurationProperties(LegalEntityProperties.class)
 @Import(FeignConfiguration.class)
-public class PartyConfiguration {
+public class LegalEntityConfiguration {
 
-	public static final String CLIENT_ID = "party";
+	public static final String CLIENT_ID = "legalentity";
 
 	@Bean
-	FeignBuilderCustomizer feignBuilderCustomizer(final PartyProperties properties, final ClientRegistrationRepository clientRegistrationRepository) {
+	FeignBuilderCustomizer feignBuilderCustomizer(final LegalEntityProperties properties, final ClientRegistrationRepository clientRegistrationRepository) {
 		return FeignMultiCustomizer.create()
 			.withErrorDecoder(new ProblemErrorDecoder(CLIENT_ID, List.of(NOT_FOUND.value())))
 			.withRequestTimeoutsInSeconds(properties.connectTimeout(), properties.readTimeout())

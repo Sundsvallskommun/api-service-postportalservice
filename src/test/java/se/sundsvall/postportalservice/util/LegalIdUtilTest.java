@@ -17,6 +17,63 @@ class LegalIdUtilTest {
 		assertThat(LegalIdUtil.isAnAdult(personId)).isEqualTo(expectedResult);
 	}
 
+	@ParameterizedTest(name = "{0}")
+	@MethodSource("orgNumberProvider")
+	void testIsOrgNumber(String testName, String legalId, boolean expectedResult) {
+		assertThat(LegalIdUtil.isOrgNumber(legalId)).isEqualTo(expectedResult);
+	}
+
+	@ParameterizedTest(name = "{0}")
+	@MethodSource("privateLegalIdProvider")
+	void testIsPrivateLegalId(String testName, String legalId, boolean expectedResult) {
+		assertThat(LegalIdUtil.isPrivateLegalId(legalId)).isEqualTo(expectedResult);
+	}
+
+	public static Stream<Arguments> orgNumberProvider() {
+		return Stream.of(
+			// Valid org numbers (3rd digit >= 2)
+			Arguments.of("10-digit org number, 3rd digit 2", "5523456789", true),
+			Arguments.of("10-digit org number, 3rd digit 9", "5593456789", true),
+			Arguments.of("12-digit '16'-prefixed org number", "165523456789", true),
+
+			// Sole proprietors (enskilda firmor) - 3rd digit < 2 means NOT classified as org number
+			Arguments.of("10-digit enskild firma, 3rd digit 0", "5503456789", false),
+			Arguments.of("10-digit enskild firma, 3rd digit 1", "5513456789", false),
+
+			// Personal numbers (3rd digit < 2 because it's the first month digit)
+			Arguments.of("12-digit personnummer (month 01)", "198601010000", false),
+			Arguments.of("12-digit personnummer (month 12)", "199212310000", false),
+
+			// Edge cases
+			Arguments.of("Null", null, false),
+			Arguments.of("Empty", "", false),
+			Arguments.of("Too short (5)", "12345", false),
+			Arguments.of("Too long (13)", "1234567890123", false),
+			Arguments.of("Wrong length (11)", "12345678901", false),
+			Arguments.of("Non-numeric 3rd char", "12A2345678", false));
+	}
+
+	public static Stream<Arguments> privateLegalIdProvider() {
+		return Stream.of(
+			// Valid personnummer
+			Arguments.of("12-digit personnummer (month 01)", "198601010000", true),
+			Arguments.of("12-digit personnummer (month 12)", "199212310000", true),
+
+			// Org numbers should NOT be private
+			Arguments.of("10-digit org number", "5523456789", false),
+			Arguments.of("12-digit '16'-prefixed org number", "165523456789", false),
+
+			// 12-digit '16'-prefixed value where stripped has 3rd digit < 2 — neither org nor really private; classify as private
+			// (has 12 digits)
+			Arguments.of("12-digit '16'-prefixed but stripped 3rd digit 1", "165512345678", true),
+
+			// Edge cases
+			Arguments.of("Null", null, false),
+			Arguments.of("Empty", "", false),
+			Arguments.of("10-digit (not 12)", "1986010100", false),
+			Arguments.of("Too short", "19860101", false));
+	}
+
 	public static Stream<Arguments> legalIdProvider() {
 		final var today = LocalDate.now();
 		final var formatter = DateTimeFormatter.ofPattern("uuuuMMdd");  // Using strict mode in the actual implementation

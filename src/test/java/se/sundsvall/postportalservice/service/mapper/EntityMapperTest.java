@@ -2,6 +2,9 @@ package se.sundsvall.postportalservice.service.mapper;
 
 import generated.se.sundsvall.citizen.CitizenAddress;
 import generated.se.sundsvall.citizen.CitizenExtended;
+import generated.se.sundsvall.legalentity.LEAddress;
+import generated.se.sundsvall.legalentity.LEPostAddress;
+import generated.se.sundsvall.legalentity.LegalEntity2;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -12,6 +15,7 @@ import se.sundsvall.postportalservice.api.model.Address;
 import se.sundsvall.postportalservice.api.model.Recipient;
 import se.sundsvall.postportalservice.api.model.SmsRecipient;
 import se.sundsvall.postportalservice.integration.db.converter.MessageType;
+import se.sundsvall.postportalservice.integration.db.converter.PartyType;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static se.sundsvall.postportalservice.Constants.PENDING;
@@ -223,5 +227,151 @@ class EntityMapperTest {
 		assertThat(result.getPartyId()).isEqualTo(partyId.toString());
 		assertThat(result.getMessageType()).isEqualTo(LETTER);
 		assertThat(result.getStatus()).isEqualTo(UNDELIVERABLE);
+	}
+
+	@Test
+	void toRecipientEntity_recipient_withPartyType_enterprise() {
+		final var recipient = new Recipient()
+			.withPartyId(UUID.randomUUID().toString())
+			.withDeliveryMethod(Recipient.DeliveryMethod.DIGITAL_MAIL);
+
+		final var result = entityMapper.toRecipientEntity(recipient, PartyType.ENTERPRISE);
+
+		assertThat(result).isNotNull();
+		assertThat(result.getPartyType()).isEqualTo(PartyType.ENTERPRISE);
+		assertThat(result.getMessageType()).isEqualTo(MessageType.DIGITAL_MAIL);
+	}
+
+	@Test
+	void toRecipientEntity_recipient_nullReturnsNull() {
+		assertThat(entityMapper.toRecipientEntity((Recipient) null, PartyType.ENTERPRISE)).isNull();
+	}
+
+	@Test
+	void toEnterpriseDigitalMailRecipientEntity() {
+		final var partyId = UUID.randomUUID().toString();
+
+		final var result = entityMapper.toEnterpriseDigitalMailRecipientEntity(partyId);
+
+		assertThat(result).isNotNull();
+		assertThat(result.getPartyId()).isEqualTo(partyId);
+		assertThat(result.getPartyType()).isEqualTo(PartyType.ENTERPRISE);
+		assertThat(result.getMessageType()).isEqualTo(MessageType.DIGITAL_MAIL);
+		assertThat(result.getStatus()).isEqualTo(PENDING);
+	}
+
+	@Test
+	void toEnterpriseDigitalMailRecipientEntity_nullPartyId() {
+		assertThat(entityMapper.toEnterpriseDigitalMailRecipientEntity(null)).isNull();
+	}
+
+	@Test
+	void toEnterpriseUndeliverableRecipientEntity() {
+		final var partyId = UUID.randomUUID().toString();
+
+		final var result = entityMapper.toEnterpriseUndeliverableRecipientEntity(partyId, "No mailbox");
+
+		assertThat(result).isNotNull();
+		assertThat(result.getPartyId()).isEqualTo(partyId);
+		assertThat(result.getPartyType()).isEqualTo(PartyType.ENTERPRISE);
+		assertThat(result.getMessageType()).isEqualTo(LETTER);
+		assertThat(result.getStatus()).isEqualTo(UNDELIVERABLE);
+		assertThat(result.getStatusDetail()).isEqualTo("No mailbox");
+	}
+
+	@Test
+	void toEnterpriseUndeliverableRecipientEntity_nullPartyId() {
+		assertThat(entityMapper.toEnterpriseUndeliverableRecipientEntity(null, "reason")).isNull();
+	}
+
+	@Test
+	void toEnterpriseSnailMailRecipientEntity_happyPath() {
+		final var partyId = UUID.randomUUID().toString();
+		final var legalEntity = new LegalEntity2()
+			.name("Acme AB")
+			.address(new LEAddress()
+				.addressArea("Storgatan")
+				.adressNumber("12B")
+				.postalCode("85222")
+				.city("Sundsvall"))
+			.postAddress(new LEPostAddress()
+				.coAdress("c/o CEO")
+				.country("Sweden"));
+
+		final var result = entityMapper.toEnterpriseSnailMailRecipientEntity(partyId, legalEntity);
+
+		assertThat(result).isNotNull();
+		assertThat(result.getPartyId()).isEqualTo(partyId);
+		assertThat(result.getPartyType()).isEqualTo(PartyType.ENTERPRISE);
+		assertThat(result.getMessageType()).isEqualTo(MessageType.SNAIL_MAIL);
+		assertThat(result.getFirstName()).isEqualTo("Acme AB");
+		assertThat(result.getLastName()).isNull();
+		assertThat(result.getStreetAddress()).isEqualTo("Storgatan 12B");
+		assertThat(result.getCareOf()).isEqualTo("c/o CEO");
+		assertThat(result.getZipCode()).isEqualTo("85222");
+		assertThat(result.getCity()).isEqualTo("Sundsvall");
+		assertThat(result.getCountry()).isEqualTo("Sweden");
+		assertThat(result.getStatus()).isEqualTo(PENDING);
+	}
+
+	@Test
+	void toEnterpriseSnailMailRecipientEntity_nullPartyId() {
+		assertThat(entityMapper.toEnterpriseSnailMailRecipientEntity(null, new LegalEntity2())).isNull();
+	}
+
+	@Test
+	void toEnterpriseSnailMailRecipientEntity_nullLegalEntity() {
+		assertThat(entityMapper.toEnterpriseSnailMailRecipientEntity("partyId", null)).isNull();
+	}
+
+	@Test
+	void toEnterpriseSnailMailRecipientEntity_missingAddressAndZip_returnsNull() {
+		final var partyId = UUID.randomUUID().toString();
+		final var legalEntity = new LegalEntity2().name("Acme");
+
+		final var result = entityMapper.toEnterpriseSnailMailRecipientEntity(partyId, legalEntity);
+
+		assertThat(result).isNull();
+	}
+
+	@Test
+	void toEnterpriseSnailMailRecipientEntity_onlyZipCode_keeps() {
+		final var partyId = UUID.randomUUID().toString();
+		final var legalEntity = new LegalEntity2()
+			.name("Acme")
+			.address(new LEAddress().postalCode("85222"));
+
+		final var result = entityMapper.toEnterpriseSnailMailRecipientEntity(partyId, legalEntity);
+
+		assertThat(result).isNotNull();
+		assertThat(result.getZipCode()).isEqualTo("85222");
+		assertThat(result.getStreetAddress()).isNull();
+	}
+
+	@Test
+	void toEnterpriseSnailMailRecipientEntity_onlyAddressArea_keeps() {
+		final var partyId = UUID.randomUUID().toString();
+		final var legalEntity = new LegalEntity2()
+			.name("Acme")
+			.address(new LEAddress().addressArea("Only Street"));
+
+		final var result = entityMapper.toEnterpriseSnailMailRecipientEntity(partyId, legalEntity);
+
+		assertThat(result).isNotNull();
+		assertThat(result.getStreetAddress()).isEqualTo("Only Street");
+		assertThat(result.getZipCode()).isNull();
+	}
+
+	@Test
+	void toEnterpriseSnailMailRecipientEntity_onlyAddressNumber_keeps() {
+		final var partyId = UUID.randomUUID().toString();
+		final var legalEntity = new LegalEntity2()
+			.name("Acme")
+			.address(new LEAddress().adressNumber("42"));
+
+		final var result = entityMapper.toEnterpriseSnailMailRecipientEntity(partyId, legalEntity);
+
+		assertThat(result).isNotNull();
+		assertThat(result.getStreetAddress()).isEqualTo("42");
 	}
 }

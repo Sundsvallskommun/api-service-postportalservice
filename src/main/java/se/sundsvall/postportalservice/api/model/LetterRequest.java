@@ -6,6 +6,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import java.util.List;
 import java.util.Objects;
+import se.sundsvall.dept44.common.validators.annotation.OneOf;
 
 import static io.swagger.v3.oas.annotations.media.Schema.RequiredMode.NOT_REQUIRED;
 import static io.swagger.v3.oas.annotations.media.Schema.RequiredMode.REQUIRED;
@@ -22,6 +23,14 @@ public class LetterRequest {
 
 	@Schema(description = "The content type of the body", examples = "text/plain", requiredMode = NOT_REQUIRED)
 	private String contentType;
+
+	@Schema(description = "Recipient type for all recipients in this request. Defaults to PRIVATE when omitted.", examples = "PRIVATE", allowableValues = {
+		"PRIVATE", "ENTERPRISE"
+	}, requiredMode = NOT_REQUIRED)
+	@OneOf(value = {
+		"PRIVATE", "ENTERPRISE"
+	}, nullable = true)
+	private String recipientType;
 
 	@ArraySchema(schema = @Schema(description = "List of recipients", implementation = Recipient.class))
 	private List<@Valid Recipient> recipients;
@@ -72,6 +81,19 @@ public class LetterRequest {
 		return this;
 	}
 
+	public String getRecipientType() {
+		return recipientType;
+	}
+
+	public void setRecipientType(String recipientType) {
+		this.recipientType = recipientType;
+	}
+
+	public LetterRequest withRecipientType(String recipientType) {
+		this.recipientType = recipientType;
+		return this;
+	}
+
 	public List<Recipient> getRecipients() {
 		return recipients;
 	}
@@ -104,6 +126,7 @@ public class LetterRequest {
 			"subject='" + subject + '\'' +
 			", body='" + body + '\'' +
 			", contentType='" + contentType + '\'' +
+			", recipientType='" + recipientType + '\'' +
 			", recipients=" + recipients +
 			", addresses=" + addresses +
 			'}';
@@ -114,12 +137,12 @@ public class LetterRequest {
 		if (o == null || getClass() != o.getClass())
 			return false;
 		LetterRequest that = (LetterRequest) o;
-		return Objects.equals(subject, that.subject) && Objects.equals(body, that.body) && Objects.equals(contentType, that.contentType) && Objects.equals(recipients, that.recipients) && Objects.equals(
+		return Objects.equals(subject, that.subject) && Objects.equals(body, that.body) && Objects.equals(contentType, that.contentType) && Objects.equals(recipientType, that.recipientType) && Objects.equals(recipients, that.recipients) && Objects.equals(
 			addresses, that.addresses);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(subject, body, contentType, recipients, addresses);
+		return Objects.hash(subject, body, contentType, recipientType, recipients, addresses);
 	}
 }

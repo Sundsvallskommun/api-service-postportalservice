@@ -40,7 +40,7 @@ class CsvUtilTest {
 	@ValueSource(strings = {
 		"/testfile/legalIds-without-header.csv", "/testfile/legalIds.csv"
 	})
-	void validateLetterCsvToLegalIds(final String resourcePath) throws IOException {
+	void parseLetterCsvToPersonnummer(final String resourcePath) throws IOException {
 		var csv = new String(getClass().getResourceAsStream(resourcePath).readAllBytes(), StandardCharsets.UTF_8);
 		var multipartFileMock = Mockito.mock(MultipartFile.class);
 
@@ -48,9 +48,10 @@ class CsvUtilTest {
 		when(multipartFileMock.getContentType()).thenReturn("text/csv");
 		when(multipartFileMock.getOriginalFilename()).thenReturn("legalIds.csv");
 
-		var result = CsvUtil.validateLetterCsv(multipartFileMock);
+		var result = CsvUtil.parseLetterCsv(multipartFileMock);
 
-		assertCsvContent(result);
+		assertCsvContent(result.personnummer());
+		assertThat(result.orgnummer()).isEmpty();
 	}
 
 	private void assertCsvContent(final Map<String, Integer> values) {
@@ -65,19 +66,78 @@ class CsvUtilTest {
 	}
 
 	@Test
-	void validateLetterCsvToLegalIdsWithDuplicates(@Load(value = "/testfile/legalIds-duplicates.csv") final String csv) throws IOException {
+	void parseLetterCsvWithDuplicates(@Load(value = "/testfile/legalIds-duplicates.csv") final String csv) throws IOException {
 		var multipartFileMock = Mockito.mock(MultipartFile.class);
 
 		when(multipartFileMock.getInputStream()).thenReturn(new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8)));
 		when(multipartFileMock.getContentType()).thenReturn("text/csv");
 		when(multipartFileMock.getOriginalFilename()).thenReturn("legalIds.csv");
 
-		var result = CsvUtil.validateLetterCsv(multipartFileMock);
+		var result = CsvUtil.parseLetterCsv(multipartFileMock);
 
-		assertThat(result).containsExactlyInAnyOrderEntriesOf(
+		assertThat(result.personnummer()).containsExactlyInAnyOrderEntriesOf(
 			java.util.Map.of(
 				"201901012391", 2,
 				"201901012392", 2));
+		assertThat(result.orgnummer()).isEmpty();
+	}
+
+	@Test
+	void parseLetterCsvWithMixedTypes() throws IOException {
+		final var csv = "Identitetsnummer\n201901012391\n5523456789\n";
+		var multipartFileMock = Mockito.mock(MultipartFile.class);
+		when(multipartFileMock.getInputStream()).thenReturn(new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8)));
+
+		var result = CsvUtil.parseLetterCsv(multipartFileMock);
+
+		assertThat(result.personnummer()).containsExactlyInAnyOrderEntriesOf(java.util.Map.of("201901012391", 1));
+		assertThat(result.orgnummer()).containsExactlyInAnyOrderEntriesOf(java.util.Map.of("5523456789", 1));
+	}
+
+	@Test
+	void parseLetterCsvAcceptsLegacyPersonnummerHeader() throws IOException {
+		final var csv = "Personnummer\n201901012391\n";
+		var multipartFileMock = Mockito.mock(MultipartFile.class);
+		when(multipartFileMock.getInputStream()).thenReturn(new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8)));
+
+		var result = CsvUtil.parseLetterCsv(multipartFileMock);
+
+		assertThat(result.personnummer()).containsKey("201901012391");
+	}
+
+	@Test
+	void parseLetterCsvRejectsTenDigitEnskildFirma() throws IOException {
+		final var csv = "Identitetsnummer\n5513456789\n";
+		var multipartFileMock = Mockito.mock(MultipartFile.class);
+		when(multipartFileMock.getInputStream()).thenReturn(new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8)));
+
+		assertThatThrownBy(() -> CsvUtil.parseLetterCsv(multipartFileMock))
+			.isInstanceOf(Problem.class)
+			.hasMessageContaining("sole proprietors")
+			.hasMessageContaining("12-digit personnummer");
+	}
+
+	@Test
+	void parseLetterCsvRejectsMalformedRow() throws IOException {
+		final var csv = "Identitetsnummer\nABC\n";
+		var multipartFileMock = Mockito.mock(MultipartFile.class);
+		when(multipartFileMock.getInputStream()).thenReturn(new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8)));
+
+		assertThatThrownBy(() -> CsvUtil.parseLetterCsv(multipartFileMock))
+			.isInstanceOf(Problem.class)
+			.hasMessageContaining("Invalid CSV format");
+	}
+
+	@Test
+	void parseLetterCsvAcceptsHyphenatedNumbers() throws IOException {
+		final var csv = "Identitetsnummer\n20190101-2391\n552345-6789\n";
+		var multipartFileMock = Mockito.mock(MultipartFile.class);
+		when(multipartFileMock.getInputStream()).thenReturn(new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8)));
+
+		var result = CsvUtil.parseLetterCsv(multipartFileMock);
+
+		assertThat(result.personnummer()).containsKey("201901012391");
+		assertThat(result.orgnummer()).containsKey("5523456789");
 	}
 
 	@Test
