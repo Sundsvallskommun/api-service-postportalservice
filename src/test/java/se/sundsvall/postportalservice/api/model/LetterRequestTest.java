@@ -22,6 +22,7 @@ class LetterRequestTest {
 	private final String subject = "This is the subject of the letter";
 	private final String body = "This is the body of the letter";
 	private final String contentType = "text/plain";
+	private final String recipientType = "ENTERPRISE";
 	private final List<Recipient> recipients = List.of(createValidRecipient());
 	private final List<Address> addresses = List.of(createValidAddress());
 
@@ -43,12 +44,14 @@ class LetterRequestTest {
 			.withSubject(subject)
 			.withBody(body)
 			.withContentType(contentType)
+			.withRecipientType(recipientType)
 			.withRecipients(recipients)
 			.withAddresses(addresses);
 
 		assertThat(letterRequest.getSubject()).isEqualTo(subject);
 		assertThat(letterRequest.getBody()).isEqualTo(body);
 		assertThat(letterRequest.getContentType()).isEqualTo(contentType);
+		assertThat(letterRequest.getRecipientType()).isEqualTo(recipientType);
 		assertThat(letterRequest.getRecipients()).isEqualTo(recipients);
 		assertThat(letterRequest.getAddresses()).isEqualTo(addresses);
 		assertThat(letterRequest).hasNoNullFieldsOrProperties();
@@ -60,12 +63,14 @@ class LetterRequestTest {
 		letterRequest.setSubject(subject);
 		letterRequest.setBody(body);
 		letterRequest.setContentType(contentType);
+		letterRequest.setRecipientType(recipientType);
 		letterRequest.setRecipients(recipients);
 		letterRequest.setAddresses(addresses);
 
 		assertThat(letterRequest.getSubject()).isEqualTo(subject);
 		assertThat(letterRequest.getBody()).isEqualTo(body);
 		assertThat(letterRequest.getContentType()).isEqualTo(contentType);
+		assertThat(letterRequest.getRecipientType()).isEqualTo(recipientType);
 		assertThat(letterRequest.getRecipients()).isEqualTo(recipients);
 		assertThat(letterRequest.getAddresses()).isEqualTo(addresses);
 		assertThat(letterRequest).hasNoNullFieldsOrProperties();
@@ -90,6 +95,7 @@ class LetterRequestTest {
 			.withSubject(subject)
 			.withBody(body)
 			.withContentType(contentType)
+			.withRecipientType(recipientType)
 			.withRecipients(recipients)
 			.withAddresses(addresses);
 
@@ -97,6 +103,31 @@ class LetterRequestTest {
 
 		assertThat(violations).isEmpty();
 		assertThat(letterRequest).hasNoNullFieldsOrProperties();
+	}
+
+	@Test
+	void invalidRecipientTypeIsRejected() {
+		final var letterRequest = LetterRequest.create()
+			.withSubject(subject)
+			.withRecipientType("INVALID");
+
+		final var violations = validator.validate(letterRequest);
+
+		assertThat(violations).isNotEmpty()
+			.extracting(violation -> violation.getPropertyPath().toString())
+			.contains("recipientType");
+	}
+
+	@Test
+	void nullRecipientTypeIsAccepted() {
+		final var letterRequest = LetterRequest.create()
+			.withSubject(subject)
+			.withRecipientType(null);
+
+		final var violations = validator.validate(letterRequest);
+
+		assertThat(violations.stream().map(violation -> violation.getPropertyPath().toString()))
+			.doesNotContain("recipientType");
 	}
 
 	@Test

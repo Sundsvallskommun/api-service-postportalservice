@@ -162,4 +162,68 @@ class PartyIntegrationTest {
 		verify(partyClientMock, times(3)).getPartyIds(anyString(), anyList());
 		verify(partyPropertiesMock, times(6)).maxLegalIdsPerCall();
 	}
+
+	@Test
+	void getEnterprisePartyIds_happyPath() {
+		final var legalIds = List.of("5523456789", "5593456789");
+		when(partyClientMock.getEnterprisePartyIdByLegalId(MUNICIPALITY_ID, "5523456789")).thenReturn("28fba79e-73aa-4ecb-939f-301f326d2d4c");
+		when(partyClientMock.getEnterprisePartyIdByLegalId(MUNICIPALITY_ID, "5593456789")).thenReturn("f560865a-51f0-4e96-bca1-55d57a0d3f68");
+
+		final var result = partyIntegration.getEnterprisePartyIds(MUNICIPALITY_ID, legalIds);
+
+		assertThat(result).containsEntry("5523456789", "28fba79e-73aa-4ecb-939f-301f326d2d4c")
+			.containsEntry("5593456789", "f560865a-51f0-4e96-bca1-55d57a0d3f68")
+			.hasSize(2);
+		verify(partyClientMock).getEnterprisePartyIdByLegalId(MUNICIPALITY_ID, "5523456789");
+		verify(partyClientMock).getEnterprisePartyIdByLegalId(MUNICIPALITY_ID, "5593456789");
+	}
+
+	@Test
+	void getEnterprisePartyIds_partialFailure() {
+		final var legalIds = List.of("5523456789", "5593456789");
+		when(partyClientMock.getEnterprisePartyIdByLegalId(MUNICIPALITY_ID, "5523456789")).thenReturn("28fba79e-73aa-4ecb-939f-301f326d2d4c");
+		when(partyClientMock.getEnterprisePartyIdByLegalId(MUNICIPALITY_ID, "5593456789")).thenThrow(Problem.valueOf(BAD_GATEWAY, "Not found"));
+
+		final var result = partyIntegration.getEnterprisePartyIds(MUNICIPALITY_ID, legalIds);
+
+		assertThat(result).containsEntry("5523456789", "28fba79e-73aa-4ecb-939f-301f326d2d4c")
+			.hasSize(1)
+			.doesNotContainKey("5593456789");
+		verify(partyClientMock).getEnterprisePartyIdByLegalId(MUNICIPALITY_ID, "5523456789");
+		verify(partyClientMock).getEnterprisePartyIdByLegalId(MUNICIPALITY_ID, "5593456789");
+	}
+
+	@Test
+	void getEnterprisePartyIds_empty() {
+		assertThat(partyIntegration.getEnterprisePartyIds(MUNICIPALITY_ID, List.of())).isEmpty();
+	}
+
+	@Test
+	void getEnterprisePartyIds_null() {
+		assertThat(partyIntegration.getEnterprisePartyIds(MUNICIPALITY_ID, null)).isEmpty();
+	}
+
+	@Test
+	void getEnterpriseLegalIds_happyPath() {
+		when(partyClientMock.getEnterpriseLegalIdByPartyId(MUNICIPALITY_ID, PARTY_IDS.get(0))).thenReturn("5523456789");
+		when(partyClientMock.getEnterpriseLegalIdByPartyId(MUNICIPALITY_ID, PARTY_IDS.get(1))).thenReturn("5593456789");
+
+		final var result = partyIntegration.getEnterpriseLegalIds(MUNICIPALITY_ID, PARTY_IDS);
+
+		assertThat(result).containsEntry(PARTY_IDS.get(0), "5523456789")
+			.containsEntry(PARTY_IDS.get(1), "5593456789")
+			.hasSize(2);
+		verify(partyClientMock).getEnterpriseLegalIdByPartyId(MUNICIPALITY_ID, PARTY_IDS.get(0));
+		verify(partyClientMock).getEnterpriseLegalIdByPartyId(MUNICIPALITY_ID, PARTY_IDS.get(1));
+	}
+
+	@Test
+	void getEnterpriseLegalIds_empty() {
+		assertThat(partyIntegration.getEnterpriseLegalIds(MUNICIPALITY_ID, List.of())).isEmpty();
+	}
+
+	@Test
+	void getEnterpriseLegalIds_null() {
+		assertThat(partyIntegration.getEnterpriseLegalIds(MUNICIPALITY_ID, null)).isEmpty();
+	}
 }

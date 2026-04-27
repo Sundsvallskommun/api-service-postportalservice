@@ -328,7 +328,7 @@ class MessageServiceTest {
 		verify(userRepositoryMock).findByUsernameIgnoreCase(Identifier.get().getValue());
 		verify(departmentRepositoryMock).findByOrganizationId(SETTINGS_MAP.get(DEPARTMENT_ID));
 		verify(entityMapperMock).toRecipientEntity(any(Address.class));
-		verify(entityMapperMock).toRecipientEntity(any(Recipient.class));
+		verify(entityMapperMock).toRecipientEntity(any(Recipient.class), eq(se.sundsvall.postportalservice.integration.db.converter.PartyType.PRIVATE));
 		verify(spy).processRecipients(any(), any());
 		verify(messageRepositoryMock).save(any());
 	}

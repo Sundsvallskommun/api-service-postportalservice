@@ -14,7 +14,8 @@
 					"198001062382",
 					"198001072399"
 				],
-				"ignoreExtraElements": true
+				"ignoreExtraElements": true,
+				"ignoreArrayOrder": true
 			}
 		]
 	},

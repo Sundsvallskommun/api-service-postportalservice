@@ -1,6 +1,7 @@
 package se.sundsvall.postportalservice.service;
 
 import generated.se.sundsvall.citizen.CitizenExtended;
+import generated.se.sundsvall.legalentity.LegalEntity2;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -20,7 +21,9 @@ import se.sundsvall.postportalservice.api.model.PrecheckResponse.DeliveryMethod;
 import se.sundsvall.postportalservice.api.model.PrecheckResponse.PrecheckRecipient;
 import se.sundsvall.postportalservice.integration.citizen.CitizenIntegration;
 import se.sundsvall.postportalservice.integration.db.RecipientEntity;
+import se.sundsvall.postportalservice.integration.db.converter.PartyType;
 import se.sundsvall.postportalservice.integration.digitalregisteredletter.DigitalRegisteredLetterIntegration;
+import se.sundsvall.postportalservice.integration.legalentity.LegalEntityIntegration;
 import se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration;
 import se.sundsvall.postportalservice.integration.party.PartyIntegration;
 import se.sundsvall.postportalservice.service.mapper.EntityMapper;
@@ -47,6 +50,7 @@ public class PrecheckService {
 	private final EntityMapper entityMapper;
 	private final PartyIntegration partyIntegration;
 	private final MessagingSettingsIntegration messagingSettingsIntegration;
+	private final LegalEntityIntegration legalEntityIntegration;
 
 	public PrecheckService(
 		final DigitalRegisteredLetterIntegration digitalRegisteredLetterIntegration,
@@ -54,13 +58,15 @@ public class PrecheckService {
 		final MailboxStatusService mailboxStatusService,
 		final EntityMapper entityMapper,
 		final PartyIntegration partyIntegration,
-		final MessagingSettingsIntegration messagingSettingsIntegration) {
+		final MessagingSettingsIntegration messagingSettingsIntegration,
+		final LegalEntityIntegration legalEntityIntegration) {
 		this.digitalRegisteredLetterIntegration = digitalRegisteredLetterIntegration;
 		this.citizenIntegration = citizenIntegration;
 		this.mailboxStatusService = mailboxStatusService;
 		this.entityMapper = entityMapper;
 		this.partyIntegration = partyIntegration;
 		this.messagingSettingsIntegration = messagingSettingsIntegration;
+		this.legalEntityIntegration = legalEntityIntegration;
 	}
 
 	public PrecheckCsvResponse precheckSmsCsv(final MultipartFile csvFile) {
@@ -78,33 +84,50 @@ public class PrecheckService {
 	}
 
 	public PrecheckCsvResponse precheckLetterCsv(final String municipalityId, final MultipartFile csvFile) {
+		final var parsed = CsvUtil.parseLetterCsv(csvFile);
 
-		// Returns a map with personal identity numbers as keys and their occurrence counts as values
-		final var occurrenceMap = CsvUtil.validateLetterCsv(csvFile);
-		final var legalIds = occurrenceMap.keySet();
+		final var allOccurrences = new java.util.LinkedHashMap<String, Integer>();
+		allOccurrences.putAll(parsed.personnummer());
+		allOccurrences.putAll(parsed.orgnummer());
+
+		final var legalIds = allOccurrences.keySet();
 
 		// Filter the map to include only entries with more than one occurrence
-		final var duplicateEntriesMap = occurrenceMap.entrySet().stream()
+		final var duplicateEntriesMap = allOccurrences.entrySet().stream()
 			.filter(entry -> entry.getValue() > 1)
 			.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
-		// Get partyIds for all legalIds
-		final var legalIdToPartyIdMap = partyIntegration.getPartyIds(municipalityId, new ArrayList<>(legalIds));
+		// Look up partyIds via the appropriate Party endpoint per type. Skip empty buckets entirely.
+		final var privateMap = parsed.personnummer().isEmpty()
+			? Map.<String, String>of()
+			: partyIntegration.getPartyIds(municipalityId, new ArrayList<>(parsed.personnummer().keySet()));
+		final var enterpriseMap = parsed.orgnummer().isEmpty()
+			? Map.<String, String>of()
+			: partyIntegration.getEnterprisePartyIds(municipalityId, new ArrayList<>(parsed.orgnummer().keySet()));
 
-		if (legalIdToPartyIdMap.isEmpty()) {
+		if (privateMap.isEmpty() && enterpriseMap.isEmpty()) {
 			throw Problem.valueOf(BAD_REQUEST, "No valid partyIds found for the provided legal IDs");
 		}
 
 		final var legalIdsWithoutPartyId = legalIds.stream()
-			.filter(legalId -> Optional.ofNullable(legalIdToPartyIdMap.get(legalId)).isEmpty())
+			.filter(legalId -> Optional.ofNullable(privateMap.get(legalId)).isEmpty()
+				&& Optional.ofNullable(enterpriseMap.get(legalId)).isEmpty())
 			.collect(Collectors.toSet());
 
 		return new PrecheckCsvResponse(duplicateEntriesMap, legalIdsWithoutPartyId);
 	}
 
 	public PrecheckResponse precheckPartyIds(final String municipalityId, final List<String> partyIds) {
+		return precheckPartyIds(municipalityId, partyIds, PartyType.PRIVATE);
+	}
+
+	public PrecheckResponse precheckPartyIds(final String municipalityId, final List<String> partyIds, final PartyType partyType) {
 		// Check if we can send using digital mail
 		final var mailboxStatus = mailboxStatusService.checkMailboxStatus(municipalityId, partyIds);
+
+		if (partyType == PartyType.ENTERPRISE) {
+			return createEnterprisePrecheckResponse(municipalityId, mailboxStatus);
+		}
 
 		// Get citizen details for those without digital mailboxes
 		final var citizens = citizenIntegration.getCitizens(municipalityId, mailboxStatus.unreachable());
@@ -121,6 +144,29 @@ public class PrecheckService {
 		return createPrecheckResponse(mailboxStatus, categorizedCitizens);
 	}
 
+	private PrecheckResponse createEnterprisePrecheckResponse(final String municipalityId, final MailboxStatusService.MailboxStatus mailboxStatus) {
+		final var legalEntities = legalEntityIntegration.getLegalEntities(municipalityId, mailboxStatus.unreachable());
+
+		final var reasonByPartyId = new LinkedHashMap<String, String>();
+		mailboxStatus.unreachableWithReason().forEach(unreachable -> reasonByPartyId.put(unreachable.partyId(), unreachable.reason()));
+
+		final var digital = mailboxStatus.reachable().stream()
+			.map(partyId -> new PrecheckRecipient(null, partyId, DeliveryMethod.DIGITAL_MAIL, null));
+
+		final var fallback = mailboxStatus.unreachable().stream()
+			.map(partyId -> {
+				final var hasAddress = Optional.ofNullable(legalEntities.get(partyId))
+					.map(LegalEntity2::getAddress)
+					.isPresent();
+				if (hasAddress) {
+					return new PrecheckRecipient(null, partyId, DeliveryMethod.SNAIL_MAIL, null);
+				}
+				return new PrecheckRecipient(null, partyId, DeliveryMethod.DELIVERY_NOT_POSSIBLE, reasonByPartyId.get(partyId));
+			});
+
+		return PrecheckResponse.of(Stream.concat(digital, fallback).toList());
+	}
+
 	private PartyIdMapping getPartyIdMapping(final String municipalityId, final List<String> partyIds) {
 		// Get legalIds for partyIds and create mapping that we can use for age verification later on
 		final var partyIdMapping = new PartyIdMapping();
@@ -135,7 +181,13 @@ public class PrecheckService {
 		return partyIdMapping;
 	}
 
-	public List<RecipientEntity> precheckLegalIds(final String municipalityId, final List<String> legalIds) {
+	public List<RecipientEntity> precheckLegalIds(final String municipalityId, final List<String> personnummer, final List<String> orgnummer) {
+		final var privateRecipients = precheckPrivateLegalIds(municipalityId, personnummer);
+		final var enterpriseRecipients = precheckEnterpriseLegalIds(municipalityId, orgnummer);
+		return Stream.concat(privateRecipients.stream(), enterpriseRecipients.stream()).toList();
+	}
+
+	private List<RecipientEntity> precheckPrivateLegalIds(final String municipalityId, final List<String> legalIds) {
 		if (legalIds == null || legalIds.isEmpty()) {
 			return emptyList();
 		}
@@ -160,6 +212,42 @@ public class PrecheckService {
 
 		// Convert categorized citizens to recipient entities
 		return createRecipientEntities(mailboxStatus.reachable(), categorized, citizens);
+	}
+
+	private List<RecipientEntity> precheckEnterpriseLegalIds(final String municipalityId, final List<String> legalIds) {
+		if (legalIds == null || legalIds.isEmpty()) {
+			return emptyList();
+		}
+
+		final var legalIdToPartyIdMap = partyIntegration.getEnterprisePartyIds(municipalityId, legalIds);
+		final var partyIds = new ArrayList<>(legalIdToPartyIdMap.values());
+
+		if (partyIds.isEmpty()) {
+			return emptyList();
+		}
+
+		final var mailboxStatus = mailboxStatusService.checkMailboxStatus(municipalityId, partyIds);
+		final var legalEntities = legalEntityIntegration.getLegalEntities(municipalityId, mailboxStatus.unreachable());
+
+		final var reasonByPartyId = new LinkedHashMap<String, String>();
+		mailboxStatus.unreachableWithReason().forEach(unreachable -> reasonByPartyId.put(unreachable.partyId(), unreachable.reason()));
+
+		final var digital = mailboxStatus.reachable().stream()
+			.map(entityMapper::toEnterpriseDigitalMailRecipientEntity)
+			.filter(Objects::nonNull);
+
+		final var fallback = mailboxStatus.unreachable().stream()
+			.map(partyId -> {
+				final var legalEntity = legalEntities.get(partyId);
+				final var snail = entityMapper.toEnterpriseSnailMailRecipientEntity(partyId, legalEntity);
+				if (snail != null) {
+					return snail;
+				}
+				return entityMapper.toEnterpriseUndeliverableRecipientEntity(partyId, reasonByPartyId.get(partyId));
+			})
+			.filter(Objects::nonNull);
+
+		return Stream.concat(digital, fallback).toList();
 	}
 
 	public List<String> precheckKivra(final String municipalityId, final KivraEligibilityRequest request) {
