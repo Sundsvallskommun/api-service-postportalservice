@@ -118,7 +118,7 @@ public class PrecheckService {
 			.filter(partyId -> partyTypes.get(partyId) == PartyType.ENTERPRISE)
 			.toList();
 		final var privatePartyIds = partyIds.stream()
-			.filter(partyId -> !enterprisePartyIds.contains(partyId))
+			.filter(partyId -> partyTypes.get(partyId) != PartyType.ENTERPRISE)
 			.toList();
 
 		final var enterpriseRecipients = enterprisePartyIds.isEmpty()

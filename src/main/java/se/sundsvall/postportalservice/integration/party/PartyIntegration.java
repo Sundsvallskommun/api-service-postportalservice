@@ -1,5 +1,6 @@
 package se.sundsvall.postportalservice.integration.party;
 
+import jakarta.annotation.PreDestroy;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,6 +30,11 @@ public class PartyIntegration {
 	public PartyIntegration(final PartyClient partyClient, final PartyProperties partyProperties) {
 		this.partyClient = partyClient;
 		this.partyProperties = partyProperties;
+	}
+
+	@PreDestroy
+	void shutdown() {
+		enterpriseLookupExecutor.shutdown();
 	}
 
 	/**

@@ -3,6 +3,7 @@ package se.sundsvall.postportalservice.service;
 import generated.se.sundsvall.messaging.DeliveryResult;
 import generated.se.sundsvall.messaging.MessageResult;
 import generated.se.sundsvall.messaging.MessageStatus;
+import jakarta.annotation.PreDestroy;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -115,6 +116,11 @@ public class MessageService {
 		this.recipientRepository = recipientRepository;
 		this.citizenIntegration = citizenIntegration;
 		this.partyIntegration = partyIntegration;
+	}
+
+	@PreDestroy
+	void shutdown() {
+		executor.shutdown();
 	}
 
 	public String processDigitalRegisteredLetterRequest(final String municipalityId, final DigitalRegisteredLetterRequest request, final List<MultipartFile> attachments) {

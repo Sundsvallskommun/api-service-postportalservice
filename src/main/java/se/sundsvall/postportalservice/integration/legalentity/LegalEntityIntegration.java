@@ -1,6 +1,7 @@
 package se.sundsvall.postportalservice.integration.legalentity;
 
 import generated.se.sundsvall.legalentity.LegalEntity2;
+import jakarta.annotation.PreDestroy;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -24,6 +25,11 @@ public class LegalEntityIntegration {
 
 	public LegalEntityIntegration(final LegalEntityClient client) {
 		this.client = client;
+	}
+
+	@PreDestroy
+	void shutdown() {
+		lookupExecutor.shutdown();
 	}
 
 	/**
@@ -53,7 +59,7 @@ public class LegalEntityIntegration {
 		try {
 			return client.getLegalEntity(municipalityId, partyId);
 		} catch (final Exception e) {
-			LOG.debug("LegalEntity lookup failed for partyId {}: {}", partyId, e.getMessage());
+			LOG.warn("LegalEntity lookup failed for partyId {}: {}", partyId, e.getMessage());
 			return null;
 		}
 	}
