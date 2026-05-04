@@ -3,7 +3,6 @@ package se.sundsvall.postportalservice.integration.legalentity;
 import generated.se.sundsvall.legalentity.LegalEntity2;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -25,18 +24,6 @@ public class LegalEntityIntegration {
 
 	public LegalEntityIntegration(final LegalEntityClient client) {
 		this.client = client;
-	}
-
-	/**
-	 * Get a single legal entity by partyId. Soft-fails on errors / 404 (returns empty Optional).
-	 */
-	public Optional<LegalEntity2> getLegalEntity(final String municipalityId, final String partyId) {
-		try {
-			return ofNullable(client.getLegalEntity(municipalityId, partyId));
-		} catch (final Exception e) {
-			LOG.debug("LegalEntity lookup failed for partyId {}: {}", partyId, e.getMessage());
-			return Optional.empty();
-		}
 	}
 
 	/**

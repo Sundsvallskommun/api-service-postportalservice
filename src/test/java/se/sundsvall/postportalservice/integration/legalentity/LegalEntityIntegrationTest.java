@@ -33,40 +33,6 @@ class LegalEntityIntegrationTest {
 	}
 
 	@Test
-	void fetchLegalEntity_happyPath() {
-		final var partyId = "3fa85f64-5717-4562-b3fc-2c963f66afa6";
-		final var legalEntity = new LegalEntity2();
-		when(clientMock.getLegalEntity(MUNICIPALITY_ID, partyId)).thenReturn(legalEntity);
-
-		final var result = integration.getLegalEntity(MUNICIPALITY_ID, partyId);
-
-		assertThat(result).contains(legalEntity);
-		verify(clientMock).getLegalEntity(MUNICIPALITY_ID, partyId);
-	}
-
-	@Test
-	void fetchLegalEntity_returnsEmptyOn404() {
-		final var partyId = "3fa85f64-5717-4562-b3fc-2c963f66afa6";
-		when(clientMock.getLegalEntity(MUNICIPALITY_ID, partyId)).thenReturn(null);
-
-		final var result = integration.getLegalEntity(MUNICIPALITY_ID, partyId);
-
-		assertThat(result).isEmpty();
-		verify(clientMock).getLegalEntity(MUNICIPALITY_ID, partyId);
-	}
-
-	@Test
-	void fetchLegalEntity_returnsEmptyOnException() {
-		final var partyId = "3fa85f64-5717-4562-b3fc-2c963f66afa6";
-		when(clientMock.getLegalEntity(MUNICIPALITY_ID, partyId)).thenThrow(Problem.valueOf(BAD_GATEWAY, "kaboom"));
-
-		final var result = integration.getLegalEntity(MUNICIPALITY_ID, partyId);
-
-		assertThat(result).isEmpty();
-		verify(clientMock).getLegalEntity(MUNICIPALITY_ID, partyId);
-	}
-
-	@Test
 	void fetchLegalEntities_empty() {
 		assertThat(integration.getLegalEntities(MUNICIPALITY_ID, List.of())).isEmpty();
 	}
