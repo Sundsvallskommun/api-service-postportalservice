@@ -43,14 +43,23 @@ public class LegalEntityIntegration {
 
 		final var result = new ConcurrentHashMap<String, LegalEntity2>();
 
-		final var futures = partyIds.stream()
-			.map(partyId -> CompletableFuture
-				.supplyAsync(() -> safeLookup(municipalityId, partyId), lookupExecutor)
-				.thenAccept(legalEntity -> ofNullable(legalEntity)
-					.ifPresent(entity -> result.put(partyId, entity))))
-			.toArray(CompletableFuture[]::new);
+		// Spring Cloud OpenFeign's SpringDecoder lazily initializes its HttpMessageConverters list on first use;
+		// concurrent first calls race, and the losers see an empty list ('messageConverters must not be empty').
+		// Make the first call synchronously so the converter list is populated before fanning out the rest.
+		final var firstPartyId = partyIds.getFirst();
+		ofNullable(safeLookup(municipalityId, firstPartyId))
+			.ifPresent(entity -> result.put(firstPartyId, entity));
 
-		CompletableFuture.allOf(futures).join();
+		final var remaining = partyIds.subList(1, partyIds.size());
+		if (!remaining.isEmpty()) {
+			final var futures = remaining.stream()
+				.map(partyId -> CompletableFuture
+					.supplyAsync(() -> safeLookup(municipalityId, partyId), lookupExecutor)
+					.thenAccept(legalEntity -> ofNullable(legalEntity)
+						.ifPresent(entity -> result.put(partyId, entity))))
+				.toArray(CompletableFuture[]::new);
+			CompletableFuture.allOf(futures).join();
+		}
 
 		return result;
 	}
