@@ -2,6 +2,8 @@ package se.sundsvall.postportalservice.service;
 
 import generated.se.sundsvall.citizen.CitizenAddress;
 import generated.se.sundsvall.citizen.CitizenExtended;
+import generated.se.sundsvall.legalentity.LEAddress;
+import generated.se.sundsvall.legalentity.LegalEntity2;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -46,6 +48,7 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.http.HttpStatus.BAD_GATEWAY;
 import static se.sundsvall.postportalservice.TestDataFactory.generateLegalId;
+import static se.sundsvall.postportalservice.integration.db.converter.PartyType.ENTERPRISE;
 
 @ExtendWith({
 	MockitoExtension.class, ResourceLoaderExtension.class
@@ -173,7 +176,7 @@ class PrecheckServiceTest {
 		final var mailboxStatus = new MailboxStatus(List.of(partyId), List.of());
 		when(mailboxStatusServiceMock.checkMailboxStatus(MUNICIPALITY_ID, partyIds)).thenReturn(mailboxStatus);
 
-		final var result = precheckService.precheckLegalIds(MUNICIPALITY_ID, legalIds, java.util.List.of());
+		final var result = precheckService.precheckLegalIds(MUNICIPALITY_ID, legalIds, List.of());
 
 		assertThat(result).hasSize(1)
 			.extracting(RecipientEntity::getPartyId, RecipientEntity::getMessageType, RecipientEntity::getStatus, RecipientEntity::getFirstName, RecipientEntity::getLastName)
@@ -210,7 +213,7 @@ class PrecheckServiceTest {
 
 		when(citizenIntegrationMock.getCitizens(MUNICIPALITY_ID, partyIds)).thenReturn(List.of(citizenExtended));
 
-		final var result = precheckService.precheckLegalIds(MUNICIPALITY_ID, legalIds, java.util.List.of());
+		final var result = precheckService.precheckLegalIds(MUNICIPALITY_ID, legalIds, List.of());
 
 		assertThat(result).hasSize(1)
 			.extracting(RecipientEntity::getPartyId, RecipientEntity::getMessageType, RecipientEntity::getStatus)
@@ -248,7 +251,7 @@ class PrecheckServiceTest {
 			.thenReturn(List.of(citizenExtended));
 
 		// Execute
-		final var result = precheckService.precheckLegalIds(MUNICIPALITY_ID, legalIds, java.util.List.of());
+		final var result = precheckService.precheckLegalIds(MUNICIPALITY_ID, legalIds, List.of());
 
 		// Assert
 		assertThat(result).hasSize(1)
@@ -290,7 +293,7 @@ class PrecheckServiceTest {
 			.thenReturn(List.of(citizenExtended));
 
 		// Execute
-		final var result = precheckService.precheckLegalIds(MUNICIPALITY_ID, legalIds, java.util.List.of());
+		final var result = precheckService.precheckLegalIds(MUNICIPALITY_ID, legalIds, List.of());
 
 		// Assert
 		assertThat(result).hasSize(1)
@@ -309,7 +312,7 @@ class PrecheckServiceTest {
 		final var legalIds = List.of("201801022383", "201801032390", "201801042381");
 		when(partyIntegrationMock.getPartyIds(MUNICIPALITY_ID, legalIds)).thenThrow(Problem.valueOf(BAD_GATEWAY, "Failed to retrieve party data"));
 
-		assertThatThrownBy(() -> precheckService.precheckLegalIds(MUNICIPALITY_ID, legalIds, java.util.List.of()))
+		assertThatThrownBy(() -> precheckService.precheckLegalIds(MUNICIPALITY_ID, legalIds, List.of()))
 			.isInstanceOf(Problem.class)
 			.hasMessageContaining("Bad Gateway: Failed to retrieve party data");
 
@@ -327,7 +330,7 @@ class PrecheckServiceTest {
 		when(mailboxStatusServiceMock.checkMailboxStatus(anyString(), anyList()))
 			.thenThrow(Problem.valueOf(BAD_GATEWAY, "Failed to check mailbox status"));
 
-		assertThatThrownBy(() -> precheckService.precheckLegalIds(MUNICIPALITY_ID, legalIds, java.util.List.of()))
+		assertThatThrownBy(() -> precheckService.precheckLegalIds(MUNICIPALITY_ID, legalIds, List.of()))
 			.isInstanceOf(Problem.class)
 			.hasMessageContaining("Bad Gateway: Failed to check mailbox status");
 
@@ -480,7 +483,7 @@ class PrecheckServiceTest {
 		final var partyIds = List.of(partyId);
 		final var mailboxStatus = new MailboxStatus(List.of(partyId), List.of());
 		when(partyIntegrationMock.getPartyTypes(MUNICIPALITY_ID, partyIds))
-			.thenReturn(Map.of(partyId, se.sundsvall.postportalservice.integration.db.converter.PartyType.ENTERPRISE));
+			.thenReturn(Map.of(partyId, ENTERPRISE));
 		when(mailboxStatusServiceMock.checkMailboxStatus(MUNICIPALITY_ID, partyIds)).thenReturn(mailboxStatus);
 
 		final var result = precheckService.precheckPartyIds(MUNICIPALITY_ID, partyIds);
@@ -499,11 +502,11 @@ class PrecheckServiceTest {
 		final var partyIds = List.of(partyId);
 		final var mailboxStatus = new MailboxStatus(List.of(), List.of(new PrecheckUtil.UnreachableMailbox(partyId, "no mailbox")));
 		when(partyIntegrationMock.getPartyTypes(MUNICIPALITY_ID, partyIds))
-			.thenReturn(Map.of(partyId, se.sundsvall.postportalservice.integration.db.converter.PartyType.ENTERPRISE));
+			.thenReturn(Map.of(partyId, ENTERPRISE));
 		when(mailboxStatusServiceMock.checkMailboxStatus(MUNICIPALITY_ID, partyIds)).thenReturn(mailboxStatus);
 
-		final var legalEntity = new generated.se.sundsvall.legalentity.LegalEntity2()
-			.address(new generated.se.sundsvall.legalentity.LEAddress().postalCode("85222"));
+		final var legalEntity = new LegalEntity2()
+			.address(new LEAddress().postalCode("85222"));
 		when(legalEntityIntegrationMock.getLegalEntities(MUNICIPALITY_ID, List.of(partyId)))
 			.thenReturn(Map.of(partyId, legalEntity));
 
@@ -523,7 +526,7 @@ class PrecheckServiceTest {
 		final var partyIds = List.of(partyId);
 		final var mailboxStatus = new MailboxStatus(List.of(), List.of(new PrecheckUtil.UnreachableMailbox(partyId, "no mailbox")));
 		when(partyIntegrationMock.getPartyTypes(MUNICIPALITY_ID, partyIds))
-			.thenReturn(Map.of(partyId, se.sundsvall.postportalservice.integration.db.converter.PartyType.ENTERPRISE));
+			.thenReturn(Map.of(partyId, ENTERPRISE));
 		when(mailboxStatusServiceMock.checkMailboxStatus(MUNICIPALITY_ID, partyIds)).thenReturn(mailboxStatus);
 		when(legalEntityIntegrationMock.getLegalEntities(MUNICIPALITY_ID, List.of(partyId))).thenReturn(Map.of());
 
@@ -550,7 +553,7 @@ class PrecheckServiceTest {
 
 		assertThat(result).hasSize(1);
 		assertThat(result.getFirst().getPartyId()).isEqualTo(partyId);
-		assertThat(result.getFirst().getPartyType()).isEqualTo(se.sundsvall.postportalservice.integration.db.converter.PartyType.ENTERPRISE);
+		assertThat(result.getFirst().getPartyType()).isEqualTo(ENTERPRISE);
 		assertThat(result.getFirst().getMessageType()).isEqualTo(MessageType.DIGITAL_MAIL);
 
 		verify(partyIntegrationMock).getEnterprisePartyIds(MUNICIPALITY_ID, List.of(legalId));
@@ -567,16 +570,16 @@ class PrecheckServiceTest {
 		when(partyIntegrationMock.getEnterprisePartyIds(MUNICIPALITY_ID, List.of(legalId))).thenReturn(Map.of(legalId, partyId));
 		when(mailboxStatusServiceMock.checkMailboxStatus(MUNICIPALITY_ID, List.of(partyId)))
 			.thenReturn(new MailboxStatus(List.of(), List.of(new PrecheckUtil.UnreachableMailbox(partyId, "no mailbox"))));
-		final var legalEntity = new generated.se.sundsvall.legalentity.LegalEntity2()
+		final var legalEntity = new LegalEntity2()
 			.name("Acme AB")
-			.address(new generated.se.sundsvall.legalentity.LEAddress().postalCode("85222"));
+			.address(new LEAddress().postalCode("85222"));
 		when(legalEntityIntegrationMock.getLegalEntities(MUNICIPALITY_ID, List.of(partyId))).thenReturn(Map.of(partyId, legalEntity));
 
 		final var result = precheckService.precheckLegalIds(MUNICIPALITY_ID, List.of(), List.of(legalId));
 
 		assertThat(result).hasSize(1);
 		assertThat(result.getFirst().getMessageType()).isEqualTo(MessageType.SNAIL_MAIL);
-		assertThat(result.getFirst().getPartyType()).isEqualTo(se.sundsvall.postportalservice.integration.db.converter.PartyType.ENTERPRISE);
+		assertThat(result.getFirst().getPartyType()).isEqualTo(ENTERPRISE);
 
 		verify(partyIntegrationMock).getEnterprisePartyIds(MUNICIPALITY_ID, List.of(legalId));
 		verify(mailboxStatusServiceMock).checkMailboxStatus(MUNICIPALITY_ID, List.of(partyId));

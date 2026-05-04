@@ -106,7 +106,8 @@ public class PartyIntegration {
 	/**
 	 * Resolve a {@link PartyType} for each provided partyId. Combines the PRIVATE batch lookup with an ENTERPRISE per-id
 	 * fan-out for partyIds the PRIVATE batch did not resolve. PartyIds that match neither are absent from the result map;
-	 * callers decide how to treat unknowns.
+	 * callers decide how
+	 * to treat unknowns.
 	 *
 	 * @param  municipalityId the municipality id
 	 * @param  partyIds       the partyIds to classify
@@ -132,16 +133,29 @@ public class PartyIntegration {
 
 	private Map<String, String> fanOutLookup(final List<String> keys, final UnaryOperator<String> lookup) {
 		final var result = new ConcurrentHashMap<String, String>();
+		if (keys.isEmpty()) {
+			return result;
+		}
 
-		final var futures = keys.stream()
-			.map(key -> CompletableFuture
-				.supplyAsync(() -> safeLookup(key, lookup), enterpriseLookupExecutor)
-				.thenAccept(value -> ofNullable(value)
-					.filter(v -> !v.isEmpty())
-					.ifPresent(v -> result.put(key, v))))
-			.toArray(CompletableFuture[]::new);
+		// Spring Cloud OpenFeign's SpringDecoder lazily initializes its HttpMessageConverters list on first use;
+		// concurrent first calls race, and the losers see an empty list ('messageConverters must not be empty').
+		// Make the first call synchronously so the converter list is populated before fanning out the rest.
+		final var firstKey = keys.getFirst();
+		ofNullable(safeLookup(firstKey, lookup))
+			.filter(v -> !v.isEmpty())
+			.ifPresent(v -> result.put(firstKey, v));
 
-		CompletableFuture.allOf(futures).join();
+		final var remaining = keys.subList(1, keys.size());
+		if (!remaining.isEmpty()) {
+			final var futures = remaining.stream()
+				.map(key -> CompletableFuture
+					.supplyAsync(() -> safeLookup(key, lookup), enterpriseLookupExecutor)
+					.thenAccept(value -> ofNullable(value)
+						.filter(v -> !v.isEmpty())
+						.ifPresent(v -> result.put(key, v))))
+				.toArray(CompletableFuture[]::new);
+			CompletableFuture.allOf(futures).join();
+		}
 
 		return result;
 	}

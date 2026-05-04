@@ -123,8 +123,7 @@ public class PrecheckService {
 
 		final var enterpriseRecipients = enterprisePartyIds.isEmpty()
 			? Stream.<PrecheckRecipient>empty()
-			: createEnterprisePrecheckResponse(municipalityId, mailboxStatusService.checkMailboxStatus(municipalityId, enterprisePartyIds))
-				.precheckRecipients().stream();
+			: createEnterprisePrecheckResponse(municipalityId, enterprisePartyIds).precheckRecipients().stream();
 
 		final var privateRecipients = privatePartyIds.isEmpty()
 			? Stream.<PrecheckRecipient>empty()
@@ -152,7 +151,8 @@ public class PrecheckService {
 		return createPrecheckResponse(mailboxStatus, categorizedCitizens);
 	}
 
-	private PrecheckResponse createEnterprisePrecheckResponse(final String municipalityId, final MailboxStatusService.MailboxStatus mailboxStatus) {
+	private PrecheckResponse createEnterprisePrecheckResponse(final String municipalityId, final List<String> partyIds) {
+		final var mailboxStatus = mailboxStatusService.checkMailboxStatus(municipalityId, partyIds);
 		final var legalEntities = legalEntityIntegration.getLegalEntities(municipalityId, mailboxStatus.unreachable());
 
 		final var reasonByPartyId = new LinkedHashMap<String, String>();

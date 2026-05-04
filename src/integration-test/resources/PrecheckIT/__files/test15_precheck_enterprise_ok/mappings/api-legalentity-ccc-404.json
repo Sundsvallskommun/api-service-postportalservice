@@ -1,0 +1,12 @@
+{
+	"request": {
+		"method": "GET",
+		"url": "/api-legalentity/2281/cccccccc-cccc-cccc-cccc-cccccccccccc"
+	},
+	"response": {
+		"status": 404,
+		"headers": {
+			"Content-Type": "application/json"
+		}
+	}
+}

@@ -1,0 +1,21 @@
+{
+	"request": {
+		"method": "GET",
+		"url": "/api-legalentity/2281/bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"
+	},
+	"response": {
+		"status": 200,
+		"headers": {
+			"Content-Type": "application/json"
+		},
+		"jsonBody": {
+			"name": "Acme AB",
+			"address": {
+				"addressArea": "Acme Street",
+				"adressNumber": "1",
+				"postalCode": "85222",
+				"city": "Sundsvall"
+			}
+		}
+	}
+}

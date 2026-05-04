@@ -38,6 +38,7 @@ import se.sundsvall.postportalservice.integration.db.MessageEntity;
 import se.sundsvall.postportalservice.integration.db.RecipientEntity;
 import se.sundsvall.postportalservice.integration.db.UserEntity;
 import se.sundsvall.postportalservice.integration.db.converter.MessageType;
+import se.sundsvall.postportalservice.integration.db.converter.PartyType;
 import se.sundsvall.postportalservice.integration.db.dao.DepartmentRepository;
 import se.sundsvall.postportalservice.integration.db.dao.MessageRepository;
 import se.sundsvall.postportalservice.integration.db.dao.RecipientRepository;
@@ -323,7 +324,7 @@ class MessageServiceTest {
 		when(userRepositoryMock.findByUsernameIgnoreCase(Identifier.get().getValue())).thenReturn(Optional.of(userEntity));
 		when(departmentRepositoryMock.findByOrganizationId(SETTINGS_MAP.get(DEPARTMENT_ID))).thenReturn(Optional.of(departmentEntity));
 		when(partyIntegrationMock.getPartyTypes(MUNICIPALITY_ID, List.of(partyId)))
-			.thenReturn(Map.of(partyId, se.sundsvall.postportalservice.integration.db.converter.PartyType.PRIVATE));
+			.thenReturn(Map.of(partyId, PartyType.PRIVATE));
 
 		doReturn(new CompletableFuture<>()).when(spy).processRecipients(any(), any());
 		when(messageRepositoryMock.save(any())).thenAnswer(invocation -> invocation.getArgument(0, MessageEntity.class).withId(messageId));
@@ -337,7 +338,7 @@ class MessageServiceTest {
 		verify(departmentRepositoryMock).findByOrganizationId(SETTINGS_MAP.get(DEPARTMENT_ID));
 		verify(partyIntegrationMock).getPartyTypes(MUNICIPALITY_ID, List.of(partyId));
 		verify(entityMapperMock).toRecipientEntity(any(Address.class));
-		verify(entityMapperMock).toRecipientEntity(any(Recipient.class), eq(se.sundsvall.postportalservice.integration.db.converter.PartyType.PRIVATE));
+		verify(entityMapperMock).toRecipientEntity(any(Recipient.class), eq(PartyType.PRIVATE));
 		verify(spy).processRecipients(any(), any());
 		verify(messageRepositoryMock).save(any());
 	}

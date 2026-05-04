@@ -2,6 +2,7 @@ package se.sundsvall.postportalservice.service;
 
 import generated.se.sundsvall.messaging.DeliveryResult;
 import generated.se.sundsvall.messaging.MessageResult;
+import generated.se.sundsvall.messaging.MessageStatus;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -375,7 +376,7 @@ public class MessageService {
 			.orElse(null);
 		final var status = ofNullable(deliveryResult)
 			.map(DeliveryResult::getStatus)
-			.orElse(generated.se.sundsvall.messaging.MessageStatus.FAILED);
+			.orElse(MessageStatus.FAILED);
 
 		LOG.info("Updating recipient with id {}, Status: {}, ExternalId: {}", recipientEntity.getId(), status, messageId);
 		recipientEntity.setStatus(status.toString());
