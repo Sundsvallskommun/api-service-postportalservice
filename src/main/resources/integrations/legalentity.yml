@@ -1,0 +1,96 @@
+openapi: 3.0.1
+info:
+  title: Legal Entity API
+  version: v2
+paths:
+  '/{municipalityId}/{legalEntityId}':
+    get:
+      tags:
+        - LegalEntity
+      parameters:
+        - name: legalEntityId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: municipalityId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LegalEntity2'
+        '404':
+          description: Not Found
+        '500':
+          description: Server Error
+components:
+  schemas:
+    LEAddress:
+      type: object
+      properties:
+        addressArea:
+          type: string
+          nullable: true
+        adressNumber:
+          type: string
+          nullable: true
+        city:
+          type: string
+          nullable: true
+        postalCode:
+          type: string
+          nullable: true
+        municipality:
+          type: string
+          nullable: true
+        county:
+          type: string
+          nullable: true
+      additionalProperties: false
+    LEPostAddress:
+      type: object
+      properties:
+        coAdress:
+          type: string
+          nullable: true
+        country:
+          type: string
+          nullable: true
+        postalCode:
+          type: string
+          nullable: true
+        city:
+          type: string
+          nullable: true
+        address1:
+          type: string
+          nullable: true
+        address2:
+          type: string
+          nullable: true
+      additionalProperties: false
+    LegalEntity2:
+      type: object
+      properties:
+        legalEntityId:
+          type: string
+          format: uuid
+          nullable: true
+        organizationNumber:
+          type: string
+          nullable: true
+        name:
+          type: string
+          nullable: true
+        postAddress:
+          $ref: '#/components/schemas/LEPostAddress'
+        address:
+          $ref: '#/components/schemas/LEAddress'
+      additionalProperties: false

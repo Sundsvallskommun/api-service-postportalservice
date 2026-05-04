@@ -10,34 +10,33 @@ import java.util.Map;
 import java.util.Set;
 import org.springframework.web.multipart.MultipartFile;
 import se.sundsvall.dept44.problem.Problem;
+import se.sundsvall.postportalservice.util.LegalIdUtil;
 
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
 
 public final class CsvUtil {
 
-	private CsvUtil() {}
-
 	private static final String COULD_NOT_READ_CSV_FILE = "Could not read CSV file: %s";
 	private static final Set<String> VALID_HEADERS = Set.of("Phonenumber", "Telefonnummer", "Mobilnummer");
+	private static final Set<String> VALID_LETTER_HEADERS = Set.of("Personnummer", "Identitetsnummer");
 	private static final String VALID_PHONE_NUMBER_REGEX = "^\\+46\\d{9}$";
 	private static final String DEFAULT_COUNTRY_CODE = "+46";
-	private static final String VALID_LEGAL_ID_REGEX = "^\\d{8}-?\\d{4}$";
+	// Accepts either 12-digit personal identity number (with optional hyphen between digits 8 and 9) or 10-digit
+	// organization number (with optional hyphen between digits 6 and 7)
+	private static final String VALID_LETTER_ID_REGEX = "^(\\d{8}-?\\d{4}|\\d{6}-?\\d{4})$";
 
-	public record SmsCsvValidationResult(
-		Map<String, Integer> validEntries,
-		Set<String> invalidEntries) {
-	}
+	private CsvUtil() {}
 
 	public static SmsCsvValidationResult validateSmsCsv(final MultipartFile csvFile) {
-		Map<String, Integer> validEntries = new LinkedHashMap<>();
-		Set<String> invalidEntries = new HashSet<>();
+		final Map<String, Integer> validEntries = new LinkedHashMap<>();
+		final Set<String> invalidEntries = new HashSet<>();
 		boolean headerRead = false;
 
-		try (var reader = new BufferedReader(new InputStreamReader(csvFile.getInputStream(), StandardCharsets.UTF_8))) {
+		try (final var reader = new BufferedReader(new InputStreamReader(csvFile.getInputStream(), StandardCharsets.UTF_8))) {
 			String line;
 			while ((line = reader.readLine()) != null) {
-				var trimmed = line.trim();
+				final var trimmed = line.trim();
 
 				var isHeader = false;
 				if (!headerRead) {
@@ -49,7 +48,7 @@ public final class CsvUtil {
 					continue;
 				}
 
-				var normalized = normalizeToMsisdn(trimmed);
+				final var normalized = normalizeToMsisdn(trimmed);
 				if (!normalized.matches(VALID_PHONE_NUMBER_REGEX)) {
 					invalidEntries.add(trimmed);
 				} else {
@@ -58,12 +57,12 @@ public final class CsvUtil {
 			}
 			return new SmsCsvValidationResult(validEntries, invalidEntries);
 
-		} catch (IOException e) {
+		} catch (final IOException e) {
 			throw Problem.valueOf(INTERNAL_SERVER_ERROR, COULD_NOT_READ_CSV_FILE.formatted(e.getMessage()));
 		}
 	}
 
-	private static String normalizeToMsisdn(String input) {
+	private static String normalizeToMsisdn(final String input) {
 		// Strip all whitespace and hyphens
 		var stripped = input.replaceAll("[\\s-]", "");
 
@@ -76,74 +75,67 @@ public final class CsvUtil {
 	}
 
 	/**
-	 * Validates that a given CSV file has a header line with "Personnummer" and that each data row contains exactly 12
-	 * digits. Returns a map with the counts of each unique personal identity number found in the CSV.
+	 * Validates a letter CSV file and classifies each row as a 12-digit personal identity number or a 10-digit organization
+	 * number (the 3rd digit >= 2). The header line ("Personnummer" or "Identitetsnummer") is optional. Hyphens in numbers
+	 * are accepted
+	 * and stripped. Sole proprietors (10-digit IDs with the 3rd digit < 2) are rejected with a clear message asking the
+	 * sender to submit them as a 12-digit personal identity number.
 	 *
 	 * @param  csvFile the CSV file to validate
-	 * @return         a map with personal identity numbers as keys and their counts as values
+	 * @return         a {@link LetterCsvParseResult} with counts of each unique number, bucketed by type
 	 */
-	public static Map<String, Integer> validateLetterCsv(final MultipartFile csvFile) {
-		Map<String, Integer> counts = new LinkedHashMap<>();
+	public static LetterCsvParseResult parseLetterCsv(final MultipartFile csvFile) {
+		final Map<String, Integer> privateIds = new LinkedHashMap<>();
+		final Map<String, Integer> enterpriseIds = new LinkedHashMap<>();
 		boolean headerRead = false;
 
-		try (var reader = new BufferedReader(new InputStreamReader(csvFile.getInputStream(), StandardCharsets.UTF_8))) {
+		try (final var reader = new BufferedReader(new InputStreamReader(csvFile.getInputStream(), StandardCharsets.UTF_8))) {
 			String line;
 			while ((line = reader.readLine()) != null) {
-				var trimmed = line.trim();
+				final var trimmed = line.trim();
 
 				var isHeader = false;
 				if (!headerRead) {
 					headerRead = true;
-					isHeader = "Personnummer".equals(trimmed);
+					isHeader = VALID_LETTER_HEADERS.contains(trimmed);
 				}
 
 				if (isHeader || trimmed.isEmpty()) {
 					continue;
 				}
 
-				// Validate that the line contains exactly 12 digits, with an optional hyphen between digit 8 and 9
-				if (!trimmed.matches(VALID_LEGAL_ID_REGEX)) {
-					throw Problem.valueOf(BAD_REQUEST, "Invalid CSV format. CSV may contain an optional 'Personnummer' header. Each data row must contain 12 digits, an optional hyphen between digit 8 and 9 are acceptable. Invalid entry: " + trimmed);
+				if (!trimmed.matches(VALID_LETTER_ID_REGEX)) {
+					throw Problem.valueOf(BAD_REQUEST,
+						"Invalid CSV format. CSV may contain an optional 'Personnummer' or 'Identitetsnummer' header. Each data row must contain either a 12-digit personal identity number (optional hyphen between digit 8 and 9) or a 10-digit organisation number (optional hyphen between digit 6 and 7). Invalid entry: "
+							+ trimmed);
 				}
 
-				counts.merge(trimmed.replace("-", ""), 1, Integer::sum);
-
+				final var normalized = trimmed.replace("-", "");
+				if (LegalIdUtil.isPrivateLegalId(normalized)) {
+					privateIds.merge(normalized, 1, Integer::sum);
+				} else if (LegalIdUtil.isOrgNumber(normalized)) {
+					enterpriseIds.merge(normalized, 1, Integer::sum);
+				} else {
+					// 10-digit IDs with the 3rd digit < 2 are sole proprietors using a personal identity number as their
+					// organization number. The Party PRIVATE batch endpoint expects a 12-digit personal identity number,
+					// so we reject these at the boundary.
+					throw Problem.valueOf(BAD_REQUEST, "Invalid CSV row '" + trimmed + "': sole proprietors must be submitted as a 12-digit personal identity number.");
+				}
 			}
-			return counts;
+			return new LetterCsvParseResult(privateIds, enterpriseIds);
 
-		} catch (IOException e) {
+		} catch (final IOException e) {
 			throw Problem.valueOf(INTERNAL_SERVER_ERROR, COULD_NOT_READ_CSV_FILE.formatted(e.getMessage()));
 		}
 	}
 
-	/**
-	 * Parses a CSV file containing legal IDs and returns a set of unique legal IDs.
-	 *
-	 * @param  csvFile the CSV file to parse
-	 * @return         a set of unique legal IDs
-	 */
-	public static Set<String> parseCsvToLegalIds(final MultipartFile csvFile) {
-		Set<String> legalIds = new HashSet<>();
+	public record SmsCsvValidationResult(
+		Map<String, Integer> validEntries,
+		Set<String> invalidEntries) {
+	}
 
-		try (var reader = new BufferedReader(new InputStreamReader(csvFile.getInputStream(), StandardCharsets.UTF_8))) {
-			String line;
-			while ((line = reader.readLine()) != null) {
-
-				if (line.trim().isEmpty() || line.trim().startsWith("Personnummer")) {
-					continue;
-				}
-
-				var columns = line.split(";");
-				var legalId = columns[0].trim().replace("-", "");
-
-				if (!legalId.isEmpty()) {
-					legalIds.add(legalId);
-				}
-			}
-		} catch (IOException e) {
-			throw Problem.valueOf(INTERNAL_SERVER_ERROR, COULD_NOT_READ_CSV_FILE.formatted(e.getMessage()));
-		}
-
-		return legalIds;
+	public record LetterCsvParseResult(
+		Map<String, Integer> privateIds,
+		Map<String, Integer> enterpriseIds) {
 	}
 }

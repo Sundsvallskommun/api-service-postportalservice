@@ -11,6 +11,7 @@ import static se.sundsvall.postportalservice.Constants.SENT;
 import static se.sundsvall.postportalservice.integration.db.converter.MessageType.DIGITAL_MAIL;
 import static se.sundsvall.postportalservice.integration.db.converter.MessageType.LETTER;
 import static se.sundsvall.postportalservice.integration.db.converter.MessageType.SNAIL_MAIL;
+import static se.sundsvall.postportalservice.integration.db.converter.PartyType.ENTERPRISE;
 
 import java.io.FileNotFoundException;
 import java.time.Duration;
@@ -269,6 +270,75 @@ class MessageLetterIT extends AbstractAppTest {
 					.containsExactlyInAnyOrder(SNAIL_MAIL, DIGITAL_MAIL);
 				assertThat(message.getRecipients())
 					.allSatisfy(recipientEntity -> assertThat(recipientEntity.getStatus()).isEqualTo(SENT));
+			});
+		appTest.verifyAllStubs();
+	}
+
+	@Test
+	void test08_successfully_sendDigitalMailToEnterprise() throws FileNotFoundException {
+		final var appTest = setupCall();
+		final var location = appTest
+			.withServicePath("/%s/messages/letter".formatted(MUNICIPALITY_ID))
+			.withHttpMethod(POST)
+			.withHeader(Identifier.HEADER_NAME, IDENTIFIER)
+			.withContentType(MULTIPART_FORM_DATA)
+			.withRequestFile("request", REQUEST_FILE)
+			.withRequestFile("attachments", "test.pdf")
+			.withExpectedResponseStatus(CREATED)
+			.withExpectedResponseHeader(LOCATION, List.of("/%s/history/users/joe01doe/messages/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}".formatted(MUNICIPALITY_ID)))
+			.withExpectedResponseBodyIsNull()
+			.sendRequest()
+			.getResponseHeaders()
+			.getFirst(LOCATION);
+
+		final var messageId = location.substring(location.lastIndexOf("/") + 1);
+
+		await().atMost(Duration.ofSeconds(3))
+			.pollInterval(Duration.ofMillis(100))
+			.untilAsserted(() -> {
+				var message = messageRepository.findById(messageId).orElseThrow();
+				assertThat(message.getRecipients()).hasSize(1);
+				assertThat(message.getRecipients())
+					.allSatisfy(recipientEntity -> {
+						assertThat(recipientEntity.getStatus()).isEqualTo(SENT);
+						assertThat(recipientEntity.getMessageType()).isEqualTo(DIGITAL_MAIL);
+						assertThat(recipientEntity.getPartyType()).isEqualTo(ENTERPRISE);
+					});
+			});
+		appTest.verifyAllStubs();
+	}
+
+	@Test
+	void test09_successfully_sendCsvToEnterprises() throws FileNotFoundException {
+		final var appTest = setupCall();
+		final var location = appTest
+			.withServicePath("/%s/messages/letter/csv".formatted(MUNICIPALITY_ID))
+			.withHttpMethod(POST)
+			.withHeader(Identifier.HEADER_NAME, IDENTIFIER)
+			.withContentType(MULTIPART_FORM_DATA)
+			.withRequestFile("request", REQUEST_FILE)
+			.withRequestFile("csv-file", "legalIds.csv")
+			.withRequestFile("attachments", "test.pdf")
+			.withExpectedResponseStatus(CREATED)
+			.withExpectedResponseHeader(LOCATION, List.of("/%s/history/users/joe01doe/messages/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}".formatted(MUNICIPALITY_ID)))
+			.withExpectedResponseBodyIsNull()
+			.sendRequest()
+			.getResponseHeaders()
+			.getFirst(LOCATION);
+
+		final var messageId = location.substring(location.lastIndexOf("/") + 1);
+
+		await().atMost(Duration.ofSeconds(3))
+			.pollInterval(Duration.ofMillis(100))
+			.untilAsserted(() -> {
+				var message = messageRepository.findById(messageId).orElseThrow();
+				assertThat(message.getRecipients()).hasSize(3);
+				assertThat(message.getRecipients())
+					.extracting(RecipientEntity::getPartyId, RecipientEntity::getMessageType, RecipientEntity::getStatus, RecipientEntity::getPartyType)
+					.containsExactlyInAnyOrder(
+						tuple("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa", DIGITAL_MAIL, "SENT", ENTERPRISE),
+						tuple("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb", SNAIL_MAIL, "SENT", ENTERPRISE),
+						tuple("cccccccc-cccc-cccc-cccc-cccccccccccc", LETTER, "UNDELIVERABLE", ENTERPRISE));
 			});
 		appTest.verifyAllStubs();
 	}

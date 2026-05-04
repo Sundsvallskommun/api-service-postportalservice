@@ -1,0 +1,16 @@
+[
+	{
+		"partyId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+		"reachable": true
+	},
+	{
+		"partyId": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
+		"reason": "Sender not accepted by recipient",
+		"reachable": false
+	},
+	{
+		"partyId": "cccccccc-cccc-cccc-cccc-cccccccccccc",
+		"reason": "Sender not accepted by recipient",
+		"reachable": false
+	}
+]

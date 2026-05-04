@@ -14,6 +14,7 @@ import java.time.OffsetDateTime;
 import java.util.Objects;
 import org.hibernate.annotations.TimeZoneStorage;
 import se.sundsvall.postportalservice.integration.db.converter.MessageType;
+import se.sundsvall.postportalservice.integration.db.converter.PartyType;
 
 import static org.hibernate.annotations.TimeZoneStorageType.NORMALIZE;
 
@@ -31,6 +32,10 @@ public class RecipientEntity {
 
 	@Column(name = "party_id", columnDefinition = "VARCHAR(36)")
 	private String partyId;
+
+	@Column(name = "party_type", columnDefinition = "VARCHAR(20)")
+	@Enumerated(EnumType.STRING)
+	private PartyType partyType;
 
 	@Column(name = "email", columnDefinition = "VARCHAR(150)")
 	private String email;
@@ -164,6 +169,19 @@ public class RecipientEntity {
 
 	public RecipientEntity withPartyId(String partyId) {
 		this.partyId = partyId;
+		return this;
+	}
+
+	public PartyType getPartyType() {
+		return partyType;
+	}
+
+	public void setPartyType(PartyType partyType) {
+		this.partyType = partyType;
+	}
+
+	public RecipientEntity withPartyType(PartyType partyType) {
+		this.partyType = partyType;
 		return this;
 	}
 
@@ -315,6 +333,7 @@ public class RecipientEntity {
 		return "RecipientEntity{" +
 			"id='" + id + '\'' +
 			", partyId='" + partyId + '\'' +
+			", partyType=" + partyType +
 			", email='" + email + '\'' +
 			", phoneNumber='" + phoneNumber + '\'' +
 			", firstName='" + firstName + '\'' +
@@ -338,7 +357,7 @@ public class RecipientEntity {
 		if (o == null || getClass() != o.getClass())
 			return false;
 		RecipientEntity that = (RecipientEntity) o;
-		return Objects.equals(id, that.id) && Objects.equals(partyId, that.partyId) && Objects.equals(email, that.email) && Objects.equals(phoneNumber, that.phoneNumber) && Objects.equals(firstName,
+		return Objects.equals(id, that.id) && Objects.equals(partyId, that.partyId) && partyType == that.partyType && Objects.equals(email, that.email) && Objects.equals(phoneNumber, that.phoneNumber) && Objects.equals(firstName,
 			that.firstName) && Objects.equals(lastName, that.lastName) && Objects.equals(streetAddress, that.streetAddress) && Objects.equals(apartmentNumber, that.apartmentNumber) && Objects.equals(careOf, that.careOf)
 			&& Objects.equals(zipCode, that.zipCode) && Objects.equals(city, that.city) && Objects.equals(country, that.country) && Objects.equals(status, that.status) && messageType == that.messageType
 			&& Objects.equals(statusDetail, that.statusDetail) && Objects.equals(externalId, that.externalId) && Objects.equals(created, that.created);
@@ -346,6 +365,6 @@ public class RecipientEntity {
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(id, partyId, email, phoneNumber, firstName, lastName, streetAddress, apartmentNumber, careOf, zipCode, city, country, status, messageType, statusDetail, externalId, created);
+		return Objects.hash(id, partyId, partyType, email, phoneNumber, firstName, lastName, streetAddress, apartmentNumber, careOf, zipCode, city, country, status, messageType, statusDetail, externalId, created);
 	}
 }

@@ -1,0 +1,13 @@
+{
+	"request": {
+		"method": "GET",
+		"url": "/api-party/2281/ENTERPRISE/bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb/legalId"
+	},
+	"response": {
+		"status": 200,
+		"headers": {
+			"Content-Type": "text/plain"
+		},
+		"body": "5566778800"
+	}
+}

@@ -1,14 +1,19 @@
 package se.sundsvall.postportalservice.service.mapper;
 
 import generated.se.sundsvall.citizen.CitizenExtended;
+import generated.se.sundsvall.legalentity.LEAddress;
+import generated.se.sundsvall.legalentity.LEPostAddress;
+import generated.se.sundsvall.legalentity.LegalEntity2;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Stream;
 import org.springframework.stereotype.Component;
 import se.sundsvall.postportalservice.api.model.Address;
 import se.sundsvall.postportalservice.api.model.Recipient;
 import se.sundsvall.postportalservice.api.model.SmsRecipient;
 import se.sundsvall.postportalservice.integration.db.RecipientEntity;
 import se.sundsvall.postportalservice.integration.db.converter.MessageType;
+import se.sundsvall.postportalservice.integration.db.converter.PartyType;
 
 import static java.util.Collections.emptyList;
 import static se.sundsvall.postportalservice.Constants.INELIGIBLE_MINOR;
@@ -17,6 +22,13 @@ import static se.sundsvall.postportalservice.Constants.UNDELIVERABLE;
 
 @Component
 public class EntityMapper {
+
+	private static String joinNonBlank(final String left, final String right) {
+		return Stream.of(left, right)
+			.filter(string -> string != null && !string.isBlank())
+			.reduce((a, b) -> a + " " + b)
+			.orElse(null);
+	}
 
 	public RecipientEntity toRecipientEntity(final SmsRecipient smsRecipient) {
 		return Optional.ofNullable(smsRecipient).map(recipient -> RecipientEntity.create()
@@ -27,7 +39,7 @@ public class EntityMapper {
 			.orElse(null);
 	}
 
-	public RecipientEntity toRecipientEntity(final Recipient recipient) {
+	public RecipientEntity toRecipientEntity(final Recipient recipient, final PartyType partyType) {
 		if (recipient == null) {
 			return null;
 		}
@@ -55,7 +67,8 @@ public class EntityMapper {
 			.withLastName(Optional.ofNullable(address).map(Address::getLastName).orElse(null))
 			.withMessageType(messageType)
 			.withStatus(PENDING)
-			.withPartyId(recipient.getPartyId());
+			.withPartyId(recipient.getPartyId())
+			.withPartyType(partyType);
 	}
 
 	public RecipientEntity toRecipientEntity(final Address address) {
@@ -79,9 +92,60 @@ public class EntityMapper {
 			.withFirstName(Optional.ofNullable(citizenExtended).map(CitizenExtended::getGivenname).orElse(null))
 			.withLastName(Optional.ofNullable(citizenExtended).map(CitizenExtended::getLastname).orElse(null))
 			.withPartyId(id)
+			.withPartyType(PartyType.PRIVATE)
 			.withMessageType(MessageType.DIGITAL_MAIL)
 			.withStatus(PENDING))
 			.orElse(null);
+	}
+
+	public RecipientEntity toEnterpriseDigitalMailRecipientEntity(final String partyId) {
+		return Optional.ofNullable(partyId).map(id -> RecipientEntity.create()
+			.withPartyId(id)
+			.withPartyType(PartyType.ENTERPRISE)
+			.withMessageType(MessageType.DIGITAL_MAIL)
+			.withStatus(PENDING))
+			.orElse(null);
+	}
+
+	public RecipientEntity toEnterpriseUndeliverableRecipientEntity(final String partyId, final String reason) {
+		return Optional.ofNullable(partyId).map(id -> RecipientEntity.create()
+			.withPartyId(id)
+			.withPartyType(PartyType.ENTERPRISE)
+			.withMessageType(MessageType.LETTER)
+			.withStatus(UNDELIVERABLE)
+			.withStatusDetail(reason))
+			.orElse(null);
+	}
+
+	public RecipientEntity toEnterpriseSnailMailRecipientEntity(final String partyId, final LegalEntity2 legalEntity) {
+		if (partyId == null || legalEntity == null) {
+			return null;
+		}
+
+		final var address = legalEntity.getAddress();
+		final var postAddress = legalEntity.getPostAddress();
+
+		final var streetAddress = Optional.ofNullable(address)
+			.map(addr -> joinNonBlank(addr.getAddressArea(), addr.getAdressNumber()))
+			.orElse(null);
+		final var zipCode = Optional.ofNullable(address).map(LEAddress::getPostalCode).orElse(null);
+		final var city = Optional.ofNullable(address).map(LEAddress::getCity).orElse(null);
+
+		if ((streetAddress == null || streetAddress.isBlank()) && (zipCode == null || zipCode.isBlank())) {
+			return null;
+		}
+
+		return RecipientEntity.create()
+			.withPartyId(partyId)
+			.withPartyType(PartyType.ENTERPRISE)
+			.withFirstName(legalEntity.getName())
+			.withMessageType(MessageType.SNAIL_MAIL)
+			.withStreetAddress(streetAddress)
+			.withCareOf(Optional.ofNullable(postAddress).map(LEPostAddress::getCoAdress).orElse(null))
+			.withZipCode(zipCode)
+			.withCity(city)
+			.withCountry(Optional.ofNullable(postAddress).map(LEPostAddress::getCountry).orElse(null))
+			.withStatus(PENDING);
 	}
 
 	public RecipientEntity toSnailMailRecipientEntity(final CitizenExtended citizenExtended) {
@@ -101,6 +165,7 @@ public class EntityMapper {
 
 		return RecipientEntity.create()
 			.withPartyId(Optional.ofNullable(citizenExtended.getPersonId()).map(UUID::toString).orElse(null))
+			.withPartyType(PartyType.PRIVATE)
 			.withFirstName(citizenExtended.getGivenname())
 			.withLastName(citizenExtended.getLastname())
 			.withMessageType(MessageType.SNAIL_MAIL)
@@ -124,6 +189,7 @@ public class EntityMapper {
 	private RecipientEntity createBaseRecipientEntity(final CitizenExtended citizenExtended, final String status) {
 		return Optional.ofNullable(citizenExtended).map(citizen -> RecipientEntity.create()
 			.withPartyId(Optional.ofNullable(citizen.getPersonId()).map(UUID::toString).orElse(null))
+			.withPartyType(PartyType.PRIVATE)
 			.withMessageType(MessageType.LETTER)
 			.withStatus(status))
 			.orElse(null);

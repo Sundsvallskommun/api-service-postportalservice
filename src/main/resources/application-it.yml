@@ -25,6 +25,8 @@ spring:
             token-uri: http://localhost:${wiremock.server.port:}/api-gateway/token
           party:
             token-uri: http://localhost:${wiremock.server.port:}/api-gateway/token
+          legalentity:
+            token-uri: http://localhost:${wiremock.server.port:}/api-gateway/token
         registration:
           citizen:
             client-id: the-client-id
@@ -44,6 +46,9 @@ spring:
           party:
             client-id: the-client-id
             client-secret: the-client-secret
+          legalentity:
+            client-id: the-client-id
+            client-secret: the-client-secret
 integration:
   citizen:
     url: http://localhost:${wiremock.server.port:}/api-citizen
@@ -57,3 +62,5 @@ integration:
     url: http://localhost:${wiremock.server.port:}/api-employee
   party:
     url: http://localhost:${wiremock.server.port:}/api-party
+  legalentity:
+    url: http://localhost:${wiremock.server.port:}/api-legalentity

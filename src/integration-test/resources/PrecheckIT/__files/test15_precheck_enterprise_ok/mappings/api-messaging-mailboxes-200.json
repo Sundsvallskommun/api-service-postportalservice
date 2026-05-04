@@ -1,0 +1,29 @@
+{
+	"request": {
+		"method": "POST",
+		"url": "/api-messaging/2281/1234567890/mailboxes",
+		"headers": {
+			"Authorization": {
+				"equalTo": "Bearer 0000000000000000AAAAAAAAAAAAAAAA"
+			}
+		},
+		"bodyPatterns": [
+			{
+				"contains": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+			},
+			{
+				"contains": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"
+			},
+			{
+				"contains": "cccccccc-cccc-cccc-cccc-cccccccccccc"
+			}
+		]
+	},
+	"response": {
+		"status": 200,
+		"headers": {
+			"Content-Type": "application/json"
+		},
+		"bodyFileName": "test15_precheck_enterprise_ok/responses/api-messaging-mailboxes.json"
+	}
+}

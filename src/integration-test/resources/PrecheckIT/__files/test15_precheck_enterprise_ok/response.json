@@ -1,0 +1,17 @@
+{
+	"recipients": [
+		{
+			"partyId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+			"deliveryMethod": "DIGITAL_MAIL"
+		},
+		{
+			"partyId": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
+			"deliveryMethod": "SNAIL_MAIL"
+		},
+		{
+			"partyId": "cccccccc-cccc-cccc-cccc-cccccccccccc",
+			"deliveryMethod": "DELIVERY_NOT_POSSIBLE",
+			"reason": "Sender not accepted by recipient"
+		}
+	]
+}

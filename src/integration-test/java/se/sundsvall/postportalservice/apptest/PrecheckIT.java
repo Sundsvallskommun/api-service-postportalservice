@@ -189,4 +189,29 @@ class PrecheckIT extends AbstractAppTest {
 			.withExpectedResponse(RESPONSE_FILE)
 			.sendRequestAndVerifyResponse();
 	}
+
+	@Test
+	void test15_precheck_enterprise_ok() {
+		setupCall()
+			.withHttpMethod(POST)
+			.withServicePath("/2281/precheck")
+			.withHeader(Identifier.HEADER_NAME, "type=adAccount; joe01doe")
+			.withContentType(APPLICATION_JSON)
+			.withRequest(REQUEST_FILE)
+			.withExpectedResponseStatus(OK)
+			.withExpectedResponse(RESPONSE_FILE)
+			.sendRequestAndVerifyResponse();
+	}
+
+	@Test
+	void test16_precheck_csv_enterprise() throws FileNotFoundException {
+		setupCall()
+			.withServicePath("/2281/precheck/csv")
+			.withHttpMethod(POST)
+			.withContentType(MULTIPART_FORM_DATA)
+			.withRequestFile("csv-file", "legalIds.csv")
+			.withExpectedResponseStatus(OK)
+			.withExpectedResponse(RESPONSE_FILE)
+			.sendRequestAndVerifyResponse();
+	}
 }

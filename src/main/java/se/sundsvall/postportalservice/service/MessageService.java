@@ -2,6 +2,8 @@ package se.sundsvall.postportalservice.service;
 
 import generated.se.sundsvall.messaging.DeliveryResult;
 import generated.se.sundsvall.messaging.MessageResult;
+import generated.se.sundsvall.messaging.MessageStatus;
+import jakarta.annotation.PreDestroy;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -21,6 +23,7 @@ import se.sundsvall.dept44.support.Identifier;
 import se.sundsvall.postportalservice.api.model.DigitalRegisteredLetterRequest;
 import se.sundsvall.postportalservice.api.model.LetterCsvRequest;
 import se.sundsvall.postportalservice.api.model.LetterRequest;
+import se.sundsvall.postportalservice.api.model.Recipient;
 import se.sundsvall.postportalservice.api.model.SmsCsvRequest;
 import se.sundsvall.postportalservice.api.model.SmsRequest;
 import se.sundsvall.postportalservice.integration.citizen.CitizenIntegration;
@@ -28,6 +31,7 @@ import se.sundsvall.postportalservice.integration.db.DepartmentEntity;
 import se.sundsvall.postportalservice.integration.db.MessageEntity;
 import se.sundsvall.postportalservice.integration.db.RecipientEntity;
 import se.sundsvall.postportalservice.integration.db.UserEntity;
+import se.sundsvall.postportalservice.integration.db.converter.PartyType;
 import se.sundsvall.postportalservice.integration.db.dao.DepartmentRepository;
 import se.sundsvall.postportalservice.integration.db.dao.MessageRepository;
 import se.sundsvall.postportalservice.integration.db.dao.RecipientRepository;
@@ -35,6 +39,7 @@ import se.sundsvall.postportalservice.integration.db.dao.UserRepository;
 import se.sundsvall.postportalservice.integration.digitalregisteredletter.DigitalRegisteredLetterIntegration;
 import se.sundsvall.postportalservice.integration.messaging.MessagingIntegration;
 import se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration;
+import se.sundsvall.postportalservice.integration.party.PartyIntegration;
 import se.sundsvall.postportalservice.service.mapper.AttachmentMapper;
 import se.sundsvall.postportalservice.service.mapper.EntityMapper;
 import se.sundsvall.postportalservice.service.util.RecipientId;
@@ -48,7 +53,7 @@ import static se.sundsvall.postportalservice.integration.db.converter.MessageTyp
 import static se.sundsvall.postportalservice.integration.db.converter.MessageType.LETTER;
 import static se.sundsvall.postportalservice.integration.db.converter.MessageType.SMS;
 import static se.sundsvall.postportalservice.integration.db.converter.MessageType.SNAIL_MAIL;
-import static se.sundsvall.postportalservice.service.util.CsvUtil.parseCsvToLegalIds;
+import static se.sundsvall.postportalservice.service.util.CsvUtil.parseLetterCsv;
 import static se.sundsvall.postportalservice.service.util.CsvUtil.validateSmsCsv;
 import static se.sundsvall.postportalservice.service.util.MessagingSettingsUtil.CONTACT_INFORMATION_EMAIL;
 import static se.sundsvall.postportalservice.service.util.MessagingSettingsUtil.CONTACT_INFORMATION_PHONE_NUMBER;
@@ -84,6 +89,7 @@ public class MessageService {
 	private final MessageRepository messageRepository;
 	private final RecipientRepository recipientRepository;
 	private final CitizenIntegration citizenIntegration;
+	private final PartyIntegration partyIntegration;
 
 	public MessageService(
 		final DigitalRegisteredLetterIntegration digitalRegisteredLetterIntegration,
@@ -95,7 +101,9 @@ public class MessageService {
 		final DepartmentRepository departmentRepository,
 		final UserRepository userRepository,
 		final MessageRepository messageRepository,
-		final RecipientRepository recipientRepository, final CitizenIntegration citizenIntegration) {
+		final RecipientRepository recipientRepository,
+		final CitizenIntegration citizenIntegration,
+		final PartyIntegration partyIntegration) {
 		this.digitalRegisteredLetterIntegration = digitalRegisteredLetterIntegration;
 		this.messagingIntegration = messagingIntegration;
 		this.messagingSettingsIntegration = messagingSettingsIntegration;
@@ -107,6 +115,12 @@ public class MessageService {
 		this.messageRepository = messageRepository;
 		this.recipientRepository = recipientRepository;
 		this.citizenIntegration = citizenIntegration;
+		this.partyIntegration = partyIntegration;
+	}
+
+	@PreDestroy
+	void shutdown() {
+		executor.shutdown();
 	}
 
 	public String processDigitalRegisteredLetterRequest(final String municipalityId, final DigitalRegisteredLetterRequest request, final List<MultipartFile> attachments) {
@@ -137,7 +151,8 @@ public class MessageService {
 	}
 
 	public String processCsvLetterRequest(final String municipalityId, final LetterCsvRequest request, final MultipartFile csvFile, final List<MultipartFile> attachments) {
-		final var legalIds = parseCsvToLegalIds(csvFile);
+		final var parsed = parseLetterCsv(csvFile);
+
 		final var settingsMap = messagingSettingsIntegration.getMessagingSettingsForUser(municipalityId);
 		final var message = createMessageEntity(municipalityId, settingsMap);
 		message.setSubject(request.getSubject());
@@ -145,7 +160,9 @@ public class MessageService {
 		message.setBody(request.getBody());
 		message.setMessageType(LETTER);
 
-		final var recipientEntities = precheckService.precheckLegalIds(municipalityId, new ArrayList<>(legalIds));
+		final var privateIds = new ArrayList<>(parsed.privateIds().keySet());
+		final var enterpriseIds = new ArrayList<>(parsed.enterpriseIds().keySet());
+		final var recipientEntities = precheckService.precheckLegalIds(municipalityId, privateIds, enterpriseIds);
 		message.setRecipients(recipientEntities);
 		final var attachmentEntities = attachmentMapper.toAttachmentEntities(attachments);
 		message.setAttachments(attachmentEntities);
@@ -185,8 +202,15 @@ public class MessageService {
 		message.setSubject(letterRequest.getSubject());
 		message.setMessageType(LETTER);
 
-		final var recipientEntities = ofNullable(letterRequest.getRecipients()).orElse(emptyList()).stream()
-			.map(entityMapper::toRecipientEntity)
+		final var letterRecipients = ofNullable(letterRequest.getRecipients()).orElse(emptyList());
+		final var partyIds = letterRecipients.stream()
+			.map(Recipient::getPartyId)
+			.filter(Objects::nonNull)
+			.toList();
+		final var partyTypes = partyIntegration.getPartyTypes(municipalityId, partyIds);
+
+		final var recipientEntities = letterRecipients.stream()
+			.map(recipient -> entityMapper.toRecipientEntity(recipient, partyTypes.getOrDefault(recipient.getPartyId(), PartyType.PRIVATE)))
 			.filter(Objects::nonNull);
 
 		final var addressRecipients = ofNullable(letterRequest.getAddresses()).orElse(emptyList()).stream()
@@ -358,7 +382,7 @@ public class MessageService {
 			.orElse(null);
 		final var status = ofNullable(deliveryResult)
 			.map(DeliveryResult::getStatus)
-			.orElse(generated.se.sundsvall.messaging.MessageStatus.FAILED);
+			.orElse(MessageStatus.FAILED);
 
 		LOG.info("Updating recipient with id {}, Status: {}, ExternalId: {}", recipientEntity.getId(), status, messageId);
 		recipientEntity.setStatus(status.toString());

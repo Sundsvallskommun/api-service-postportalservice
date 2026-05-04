@@ -38,6 +38,7 @@ import se.sundsvall.postportalservice.integration.db.MessageEntity;
 import se.sundsvall.postportalservice.integration.db.RecipientEntity;
 import se.sundsvall.postportalservice.integration.db.UserEntity;
 import se.sundsvall.postportalservice.integration.db.converter.MessageType;
+import se.sundsvall.postportalservice.integration.db.converter.PartyType;
 import se.sundsvall.postportalservice.integration.db.dao.DepartmentRepository;
 import se.sundsvall.postportalservice.integration.db.dao.MessageRepository;
 import se.sundsvall.postportalservice.integration.db.dao.RecipientRepository;
@@ -45,6 +46,7 @@ import se.sundsvall.postportalservice.integration.db.dao.UserRepository;
 import se.sundsvall.postportalservice.integration.digitalregisteredletter.DigitalRegisteredLetterIntegration;
 import se.sundsvall.postportalservice.integration.messaging.MessagingIntegration;
 import se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration;
+import se.sundsvall.postportalservice.integration.party.PartyIntegration;
 import se.sundsvall.postportalservice.service.mapper.AttachmentMapper;
 import se.sundsvall.postportalservice.service.mapper.EntityMapper;
 import se.sundsvall.postportalservice.service.util.CsvUtil;
@@ -120,6 +122,9 @@ class MessageServiceTest {
 	@Mock
 	private CitizenIntegration citizenIntegrationMock;
 
+	@Mock
+	private PartyIntegration partyIntegrationMock;
+
 	@Captor
 	private ArgumentCaptor<MessageEntity> messageEntityCaptor;
 
@@ -142,7 +147,7 @@ class MessageServiceTest {
 			messagingIntegrationMock, messagingSettingsIntegrationMock,
 			departmentRepositoryMock, userRepositoryMock,
 			messageRepositoryMock, recipientRepositoryMock, digitalRegisteredLetterIntegrationMock,
-			citizenIntegrationMock);
+			citizenIntegrationMock, partyIntegrationMock);
 	}
 
 	/**
@@ -312,10 +317,14 @@ class MessageServiceTest {
 			.withTypeString("AD_ACCOUNT");
 		Identifier.set(identifier);
 
+		final var partyId = letterRequest.getRecipients().getFirst().getPartyId();
+
 		when(messagingSettingsIntegrationMock.getMessagingSettingsForUser(MUNICIPALITY_ID)).thenReturn(SETTINGS_MAP);
 		when(attachmentMapperMock.toAttachmentEntities(multipartFileList)).thenReturn(List.of(attachmentEntity));
 		when(userRepositoryMock.findByUsernameIgnoreCase(Identifier.get().getValue())).thenReturn(Optional.of(userEntity));
 		when(departmentRepositoryMock.findByOrganizationId(SETTINGS_MAP.get(DEPARTMENT_ID))).thenReturn(Optional.of(departmentEntity));
+		when(partyIntegrationMock.getPartyTypes(MUNICIPALITY_ID, List.of(partyId)))
+			.thenReturn(Map.of(partyId, PartyType.PRIVATE));
 
 		doReturn(new CompletableFuture<>()).when(spy).processRecipients(any(), any());
 		when(messageRepositoryMock.save(any())).thenAnswer(invocation -> invocation.getArgument(0, MessageEntity.class).withId(messageId));
@@ -327,8 +336,9 @@ class MessageServiceTest {
 		verify(messagingSettingsIntegrationMock).getMessagingSettingsForUser(MUNICIPALITY_ID);
 		verify(userRepositoryMock).findByUsernameIgnoreCase(Identifier.get().getValue());
 		verify(departmentRepositoryMock).findByOrganizationId(SETTINGS_MAP.get(DEPARTMENT_ID));
+		verify(partyIntegrationMock).getPartyTypes(MUNICIPALITY_ID, List.of(partyId));
 		verify(entityMapperMock).toRecipientEntity(any(Address.class));
-		verify(entityMapperMock).toRecipientEntity(any(Recipient.class));
+		verify(entityMapperMock).toRecipientEntity(any(Recipient.class), eq(PartyType.PRIVATE));
 		verify(spy).processRecipients(any(), any());
 		verify(messageRepositoryMock).save(any());
 	}
