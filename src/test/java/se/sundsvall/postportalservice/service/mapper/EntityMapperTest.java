@@ -50,7 +50,7 @@ class EntityMapperTest {
 			.withPartyId(UUID.randomUUID().toString())
 			.withDeliveryMethod(Recipient.DeliveryMethod.DIGITAL_MAIL);
 
-		final var result = entityMapper.toRecipientEntity(recipient);
+		final var result = entityMapper.toRecipientEntity(recipient, PartyType.PRIVATE);
 
 		assertThat(result).isNotNull();
 		assertThat(result.getPartyId()).isEqualTo(recipient.getPartyId());
@@ -82,7 +82,7 @@ class EntityMapperTest {
 			.withAddress(address)
 			.withDeliveryMethod(Recipient.DeliveryMethod.SNAIL_MAIL);
 
-		final var result = entityMapper.toRecipientEntity(recipient);
+		final var result = entityMapper.toRecipientEntity(recipient, PartyType.PRIVATE);
 
 		assertThat(result).isNotNull();
 		assertThat(result.getPartyId()).isEqualTo(recipient.getPartyId());
@@ -244,7 +244,7 @@ class EntityMapperTest {
 
 	@Test
 	void toRecipientEntity_recipient_nullReturnsNull() {
-		assertThat(entityMapper.toRecipientEntity((Recipient) null, PartyType.ENTERPRISE)).isNull();
+		assertThat(entityMapper.toRecipientEntity(null, PartyType.ENTERPRISE)).isNull();
 	}
 
 	@Test

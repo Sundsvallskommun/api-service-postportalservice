@@ -3,9 +3,6 @@ package se.sundsvall.postportalservice.api.model;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import java.util.Objects;
-import se.sundsvall.dept44.common.validators.annotation.OneOf;
-
-import static io.swagger.v3.oas.annotations.media.Schema.RequiredMode.NOT_REQUIRED;
 
 @Schema(description = "Letter CSV request model")
 public class LetterCsvRequest {
@@ -21,14 +18,6 @@ public class LetterCsvRequest {
 	@Schema(description = "The content type of the body", examples = "text/plain")
 	@NotBlank
 	private String contentType;
-
-	@Schema(description = "Recipient type for all rows in the CSV. When omitted, each row is auto-detected by number format.", examples = "PRIVATE", allowableValues = {
-		"PRIVATE", "ENTERPRISE"
-	}, requiredMode = NOT_REQUIRED)
-	@OneOf(value = {
-		"PRIVATE", "ENTERPRISE"
-	}, nullable = true)
-	private String recipientType;
 
 	public static LetterCsvRequest create() {
 		return new LetterCsvRequest();
@@ -73,26 +62,12 @@ public class LetterCsvRequest {
 		this.contentType = contentType;
 	}
 
-	public String getRecipientType() {
-		return recipientType;
-	}
-
-	public LetterCsvRequest withRecipientType(String recipientType) {
-		this.recipientType = recipientType;
-		return this;
-	}
-
-	public void setRecipientType(String recipientType) {
-		this.recipientType = recipientType;
-	}
-
 	@Override
 	public String toString() {
 		return "LetterCsvRequest{" +
 			"subject='" + subject + '\'' +
 			", body='" + body + '\'' +
 			", contentType='" + contentType + '\'' +
-			", recipientType='" + recipientType + '\'' +
 			'}';
 	}
 
@@ -101,11 +76,11 @@ public class LetterCsvRequest {
 		if (o == null || getClass() != o.getClass())
 			return false;
 		LetterCsvRequest that = (LetterCsvRequest) o;
-		return Objects.equals(subject, that.subject) && Objects.equals(body, that.body) && Objects.equals(contentType, that.contentType) && Objects.equals(recipientType, that.recipientType);
+		return Objects.equals(subject, that.subject) && Objects.equals(body, that.body) && Objects.equals(contentType, that.contentType);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(subject, body, contentType, recipientType);
+		return Objects.hash(subject, body, contentType);
 	}
 }

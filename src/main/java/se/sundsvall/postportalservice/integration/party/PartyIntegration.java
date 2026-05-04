@@ -4,15 +4,18 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.UnaryOperator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+import se.sundsvall.postportalservice.integration.db.converter.PartyType;
 import se.sundsvall.postportalservice.integration.party.configuration.PartyProperties;
 
 import static java.util.Collections.emptyMap;
+import static java.util.Optional.ofNullable;
 
 @Component
 public class PartyIntegration {
@@ -100,20 +103,46 @@ public class PartyIntegration {
 		return fanOutLookup(partyIds, partyId -> partyClient.getEnterpriseLegalIdByPartyId(municipalityId, partyId));
 	}
 
+	/**
+	 * Resolve a {@link PartyType} for each provided partyId. Combines the PRIVATE batch lookup with an ENTERPRISE per-id
+	 * fan-out for partyIds the PRIVATE batch did not resolve. PartyIds that match neither are absent from the result map;
+	 * callers decide how to treat unknowns.
+	 *
+	 * @param  municipalityId the municipality id
+	 * @param  partyIds       the partyIds to classify
+	 * @return                a map of partyId to {@link PartyType}; unresolved partyIds are absent
+	 */
+	public Map<String, PartyType> getPartyTypes(final String municipalityId, final List<String> partyIds) {
+		if (partyIds == null || partyIds.isEmpty()) {
+			return emptyMap();
+		}
+
+		final var result = new HashMap<String, PartyType>();
+		getLegalIds(municipalityId, partyIds).keySet()
+			.forEach(partyId -> result.put(partyId, PartyType.PRIVATE));
+
+		final var unresolved = partyIds.stream()
+			.filter(partyId -> !result.containsKey(partyId))
+			.toList();
+		getEnterpriseLegalIds(municipalityId, unresolved).keySet()
+			.forEach(partyId -> result.put(partyId, PartyType.ENTERPRISE));
+
+		return result;
+	}
+
 	private Map<String, String> fanOutLookup(final List<String> keys, final UnaryOperator<String> lookup) {
+		final var result = new ConcurrentHashMap<String, String>();
+
 		final var futures = keys.stream()
 			.map(key -> CompletableFuture
 				.supplyAsync(() -> safeLookup(key, lookup), enterpriseLookupExecutor)
-				.thenApply(value -> Map.entry(key, value == null ? "" : value)))
-			.toList();
+				.thenAccept(value -> ofNullable(value)
+					.filter(v -> !v.isEmpty())
+					.ifPresent(v -> result.put(key, v))))
+			.toArray(CompletableFuture[]::new);
 
-		final var result = new HashMap<String, String>();
-		futures.forEach(future -> {
-			final var entry = future.join();
-			if (!entry.getValue().isEmpty()) {
-				result.put(entry.getKey(), entry.getValue());
-			}
-		});
+		CompletableFuture.allOf(futures).join();
+
 		return result;
 	}
 

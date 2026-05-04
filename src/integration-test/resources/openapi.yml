@@ -1229,15 +1229,6 @@ components:
           description: The content type of the body
           examples:
             - text/plain
-        recipientType:
-          type: string
-          description: Recipient type for all recipients in this request. Defaults
-            to PRIVATE when omitted.
-          enum:
-            - PRIVATE
-            - ENTERPRISE
-          examples:
-            - PRIVATE
         recipients:
           type: array
           items:
@@ -1296,15 +1287,6 @@ components:
           examples:
             - text/plain
           minLength: 1
-        recipientType:
-          type: string
-          description: Recipient type for all rows in the CSV. When omitted, each
-            row is auto-detected by number format.
-          enum:
-            - PRIVATE
-            - ENTERPRISE
-          examples:
-            - PRIVATE
       required:
         - body
         - contentType

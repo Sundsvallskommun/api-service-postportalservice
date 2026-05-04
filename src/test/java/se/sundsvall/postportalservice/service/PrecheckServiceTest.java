@@ -127,6 +127,7 @@ class PrecheckServiceTest {
 				tuple(snailMailUuid, DeliveryMethod.SNAIL_MAIL),
 				tuple(notEligibleUuid, DeliveryMethod.DELIVERY_NOT_POSSIBLE));
 
+		verify(partyIntegrationMock).getPartyTypes(MUNICIPALITY_ID, partyIds);
 		verify(mailboxStatusServiceMock).checkMailboxStatus(MUNICIPALITY_ID, partyIds);
 		verify(citizenIntegrationMock).getCitizens(MUNICIPALITY_ID, List.of(snailMailUuid, notEligibleUuid));
 		verify(partyIntegrationMock).getLegalIds(MUNICIPALITY_ID, partyIds);
@@ -143,6 +144,7 @@ class PrecheckServiceTest {
 			.isInstanceOf(Problem.class)
 			.hasMessageContaining("Bad Gateway: Failed to check mailbox status");
 
+		verify(partyIntegrationMock).getPartyTypes(MUNICIPALITY_ID, partyIds);
 		verify(mailboxStatusServiceMock).checkMailboxStatus(MUNICIPALITY_ID, partyIds);
 		verifyNoInteractions(citizenIntegrationMock);
 	}
@@ -356,6 +358,7 @@ class PrecheckServiceTest {
 		assertThat(result.rejectedEntries()).hasSize(1).contains("201901062388");
 
 		verify(partyIntegrationMock).getPartyIds(eq(MUNICIPALITY_ID), anyList());
+		verify(partyIntegrationMock).getEnterprisePartyIds(MUNICIPALITY_ID, List.of());
 	}
 
 	@Test
@@ -378,6 +381,7 @@ class PrecheckServiceTest {
 		assertThat(result.rejectedEntries()).isEmpty();
 
 		verify(partyIntegrationMock).getPartyIds(eq(MUNICIPALITY_ID), anyList());
+		verify(partyIntegrationMock).getEnterprisePartyIds(MUNICIPALITY_ID, List.of());
 	}
 
 	@Test
@@ -422,6 +426,7 @@ class PrecheckServiceTest {
 			.hasMessageContaining("No valid partyIds found");
 
 		verify(partyIntegrationMock).getPartyIds(eq(MUNICIPALITY_ID), anyList());
+		verify(partyIntegrationMock).getEnterprisePartyIds(MUNICIPALITY_ID, List.of());
 	}
 
 	@Test
@@ -474,13 +479,16 @@ class PrecheckServiceTest {
 		final var partyId = "5c1b2636-5ffc-467d-95be-156aeb73ec8e";
 		final var partyIds = List.of(partyId);
 		final var mailboxStatus = new MailboxStatus(List.of(partyId), List.of());
+		when(partyIntegrationMock.getPartyTypes(MUNICIPALITY_ID, partyIds))
+			.thenReturn(Map.of(partyId, se.sundsvall.postportalservice.integration.db.converter.PartyType.ENTERPRISE));
 		when(mailboxStatusServiceMock.checkMailboxStatus(MUNICIPALITY_ID, partyIds)).thenReturn(mailboxStatus);
 
-		final var result = precheckService.precheckPartyIds(MUNICIPALITY_ID, partyIds, se.sundsvall.postportalservice.integration.db.converter.PartyType.ENTERPRISE);
+		final var result = precheckService.precheckPartyIds(MUNICIPALITY_ID, partyIds);
 
 		assertThat(result.precheckRecipients()).hasSize(1)
 			.extracting(PrecheckRecipient::partyId, PrecheckRecipient::deliveryMethod)
 			.containsExactly(tuple(partyId, DeliveryMethod.DIGITAL_MAIL));
+		verify(partyIntegrationMock).getPartyTypes(MUNICIPALITY_ID, partyIds);
 		verify(mailboxStatusServiceMock).checkMailboxStatus(MUNICIPALITY_ID, partyIds);
 		verify(legalEntityIntegrationMock).getLegalEntities(MUNICIPALITY_ID, List.of());
 	}
@@ -490,6 +498,8 @@ class PrecheckServiceTest {
 		final var partyId = "5c1b2636-5ffc-467d-95be-156aeb73ec8e";
 		final var partyIds = List.of(partyId);
 		final var mailboxStatus = new MailboxStatus(List.of(), List.of(new PrecheckUtil.UnreachableMailbox(partyId, "no mailbox")));
+		when(partyIntegrationMock.getPartyTypes(MUNICIPALITY_ID, partyIds))
+			.thenReturn(Map.of(partyId, se.sundsvall.postportalservice.integration.db.converter.PartyType.ENTERPRISE));
 		when(mailboxStatusServiceMock.checkMailboxStatus(MUNICIPALITY_ID, partyIds)).thenReturn(mailboxStatus);
 
 		final var legalEntity = new generated.se.sundsvall.legalentity.LegalEntity2()
@@ -497,11 +507,12 @@ class PrecheckServiceTest {
 		when(legalEntityIntegrationMock.getLegalEntities(MUNICIPALITY_ID, List.of(partyId)))
 			.thenReturn(Map.of(partyId, legalEntity));
 
-		final var result = precheckService.precheckPartyIds(MUNICIPALITY_ID, partyIds, se.sundsvall.postportalservice.integration.db.converter.PartyType.ENTERPRISE);
+		final var result = precheckService.precheckPartyIds(MUNICIPALITY_ID, partyIds);
 
 		assertThat(result.precheckRecipients()).hasSize(1)
 			.extracting(PrecheckRecipient::partyId, PrecheckRecipient::deliveryMethod)
 			.containsExactly(tuple(partyId, DeliveryMethod.SNAIL_MAIL));
+		verify(partyIntegrationMock).getPartyTypes(MUNICIPALITY_ID, partyIds);
 		verify(mailboxStatusServiceMock).checkMailboxStatus(MUNICIPALITY_ID, partyIds);
 		verify(legalEntityIntegrationMock).getLegalEntities(MUNICIPALITY_ID, List.of(partyId));
 	}
@@ -511,14 +522,17 @@ class PrecheckServiceTest {
 		final var partyId = "5c1b2636-5ffc-467d-95be-156aeb73ec8e";
 		final var partyIds = List.of(partyId);
 		final var mailboxStatus = new MailboxStatus(List.of(), List.of(new PrecheckUtil.UnreachableMailbox(partyId, "no mailbox")));
+		when(partyIntegrationMock.getPartyTypes(MUNICIPALITY_ID, partyIds))
+			.thenReturn(Map.of(partyId, se.sundsvall.postportalservice.integration.db.converter.PartyType.ENTERPRISE));
 		when(mailboxStatusServiceMock.checkMailboxStatus(MUNICIPALITY_ID, partyIds)).thenReturn(mailboxStatus);
 		when(legalEntityIntegrationMock.getLegalEntities(MUNICIPALITY_ID, List.of(partyId))).thenReturn(Map.of());
 
-		final var result = precheckService.precheckPartyIds(MUNICIPALITY_ID, partyIds, se.sundsvall.postportalservice.integration.db.converter.PartyType.ENTERPRISE);
+		final var result = precheckService.precheckPartyIds(MUNICIPALITY_ID, partyIds);
 
 		assertThat(result.precheckRecipients()).hasSize(1)
 			.extracting(PrecheckRecipient::partyId, PrecheckRecipient::deliveryMethod)
 			.containsExactly(tuple(partyId, DeliveryMethod.DELIVERY_NOT_POSSIBLE));
+		verify(partyIntegrationMock).getPartyTypes(MUNICIPALITY_ID, partyIds);
 		verify(mailboxStatusServiceMock).checkMailboxStatus(MUNICIPALITY_ID, partyIds);
 		verify(legalEntityIntegrationMock).getLegalEntities(MUNICIPALITY_ID, List.of(partyId));
 	}

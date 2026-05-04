@@ -19,7 +19,6 @@ class LetterCsvRequestTest {
 	private final String subject = "This is the subject of the letter";
 	private final String body = "This is the body of the letter";
 	private final String contentType = "text/plain";
-	private final String recipientType = "ENTERPRISE";
 
 	private final Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
 
@@ -38,13 +37,11 @@ class LetterCsvRequestTest {
 		final var bean = LetterCsvRequest.create()
 			.withSubject(subject)
 			.withBody(body)
-			.withContentType(contentType)
-			.withRecipientType(recipientType);
+			.withContentType(contentType);
 
 		assertThat(bean.getSubject()).isEqualTo(subject);
 		assertThat(bean.getBody()).isEqualTo(body);
 		assertThat(bean.getContentType()).isEqualTo(contentType);
-		assertThat(bean.getRecipientType()).isEqualTo(recipientType);
 		assertThat(bean).hasNoNullFieldsOrProperties();
 	}
 
@@ -54,12 +51,10 @@ class LetterCsvRequestTest {
 		bean.setSubject(subject);
 		bean.setBody(body);
 		bean.setContentType(contentType);
-		bean.setRecipientType(recipientType);
 
 		assertThat(bean.getSubject()).isEqualTo(subject);
 		assertThat(bean.getBody()).isEqualTo(body);
 		assertThat(bean.getContentType()).isEqualTo(contentType);
-		assertThat(bean.getRecipientType()).isEqualTo(recipientType);
 		assertThat(bean).hasNoNullFieldsOrProperties();
 	}
 
@@ -83,42 +78,12 @@ class LetterCsvRequestTest {
 		final var bean = LetterCsvRequest.create()
 			.withSubject(subject)
 			.withBody(body)
-			.withContentType(contentType)
-			.withRecipientType(recipientType);
+			.withContentType(contentType);
 
 		final var violations = validator.validate(bean);
 
 		assertThat(violations).isEmpty();
 		assertThat(bean).hasNoNullFieldsOrProperties();
-	}
-
-	@Test
-	void invalidRecipientTypeIsRejected() {
-		final var bean = LetterCsvRequest.create()
-			.withSubject(subject)
-			.withBody(body)
-			.withContentType(contentType)
-			.withRecipientType("INVALID");
-
-		final var violations = validator.validate(bean);
-
-		assertThat(violations).isNotEmpty()
-			.extracting(violation -> violation.getPropertyPath().toString())
-			.contains("recipientType");
-	}
-
-	@Test
-	void nullRecipientTypeIsAccepted() {
-		final var bean = LetterCsvRequest.create()
-			.withSubject(subject)
-			.withBody(body)
-			.withContentType(contentType)
-			.withRecipientType(null);
-
-		final var violations = validator.validate(bean);
-
-		assertThat(violations.stream().map(violation -> violation.getPropertyPath().toString()))
-			.doesNotContain("recipientType");
 	}
 
 	@Test

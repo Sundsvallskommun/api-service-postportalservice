@@ -86,9 +86,9 @@ public class PrecheckService {
 	public PrecheckCsvResponse precheckLetterCsv(final String municipalityId, final MultipartFile csvFile) {
 		final var parsed = CsvUtil.parseLetterCsv(csvFile);
 
-		final var allOccurrences = new java.util.LinkedHashMap<String, Integer>();
-		allOccurrences.putAll(parsed.personnummer());
-		allOccurrences.putAll(parsed.orgnummer());
+		final var allOccurrences = new LinkedHashMap<String, Integer>();
+		allOccurrences.putAll(parsed.privateIds());
+		allOccurrences.putAll(parsed.enterpriseIds());
 
 		final var legalIds = allOccurrences.keySet();
 
@@ -97,37 +97,45 @@ public class PrecheckService {
 			.filter(entry -> entry.getValue() > 1)
 			.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
-		// Look up partyIds via the appropriate Party endpoint per type. Skip empty buckets entirely.
-		final var privateMap = parsed.personnummer().isEmpty()
-			? Map.<String, String>of()
-			: partyIntegration.getPartyIds(municipalityId, new ArrayList<>(parsed.personnummer().keySet()));
-		final var enterpriseMap = parsed.orgnummer().isEmpty()
-			? Map.<String, String>of()
-			: partyIntegration.getEnterprisePartyIds(municipalityId, new ArrayList<>(parsed.orgnummer().keySet()));
+		final var privateMap = partyIntegration.getPartyIds(municipalityId, new ArrayList<>(parsed.privateIds().keySet()));
+		final var enterpriseMap = partyIntegration.getEnterprisePartyIds(municipalityId, new ArrayList<>(parsed.enterpriseIds().keySet()));
 
 		if (privateMap.isEmpty() && enterpriseMap.isEmpty()) {
 			throw Problem.valueOf(BAD_REQUEST, "No valid partyIds found for the provided legal IDs");
 		}
 
 		final var legalIdsWithoutPartyId = legalIds.stream()
-			.filter(legalId -> Optional.ofNullable(privateMap.get(legalId)).isEmpty()
-				&& Optional.ofNullable(enterpriseMap.get(legalId)).isEmpty())
+			.filter(legalId -> privateMap.get(legalId) == null && enterpriseMap.get(legalId) == null)
 			.collect(Collectors.toSet());
 
 		return new PrecheckCsvResponse(duplicateEntriesMap, legalIdsWithoutPartyId);
 	}
 
 	public PrecheckResponse precheckPartyIds(final String municipalityId, final List<String> partyIds) {
-		return precheckPartyIds(municipalityId, partyIds, PartyType.PRIVATE);
+		// Resolve type per partyId; unresolved partyIds default to PRIVATE (preserves prior behavior).
+		final var partyTypes = partyIntegration.getPartyTypes(municipalityId, partyIds);
+		final var enterprisePartyIds = partyIds.stream()
+			.filter(partyId -> partyTypes.get(partyId) == PartyType.ENTERPRISE)
+			.toList();
+		final var privatePartyIds = partyIds.stream()
+			.filter(partyId -> !enterprisePartyIds.contains(partyId))
+			.toList();
+
+		final var enterpriseRecipients = enterprisePartyIds.isEmpty()
+			? Stream.<PrecheckRecipient>empty()
+			: createEnterprisePrecheckResponse(municipalityId, mailboxStatusService.checkMailboxStatus(municipalityId, enterprisePartyIds))
+				.precheckRecipients().stream();
+
+		final var privateRecipients = privatePartyIds.isEmpty()
+			? Stream.<PrecheckRecipient>empty()
+			: createPrivatePrecheckResponse(municipalityId, privatePartyIds).precheckRecipients().stream();
+
+		return PrecheckResponse.of(Stream.concat(privateRecipients, enterpriseRecipients).toList());
 	}
 
-	public PrecheckResponse precheckPartyIds(final String municipalityId, final List<String> partyIds, final PartyType partyType) {
+	private PrecheckResponse createPrivatePrecheckResponse(final String municipalityId, final List<String> partyIds) {
 		// Check if we can send using digital mail
 		final var mailboxStatus = mailboxStatusService.checkMailboxStatus(municipalityId, partyIds);
-
-		if (partyType == PartyType.ENTERPRISE) {
-			return createEnterprisePrecheckResponse(municipalityId, mailboxStatus);
-		}
 
 		// Get citizen details for those without digital mailboxes
 		final var citizens = citizenIntegration.getCitizens(municipalityId, mailboxStatus.unreachable());
@@ -181,9 +189,9 @@ public class PrecheckService {
 		return partyIdMapping;
 	}
 
-	public List<RecipientEntity> precheckLegalIds(final String municipalityId, final List<String> personnummer, final List<String> orgnummer) {
-		final var privateRecipients = precheckPrivateLegalIds(municipalityId, personnummer);
-		final var enterpriseRecipients = precheckEnterpriseLegalIds(municipalityId, orgnummer);
+	public List<RecipientEntity> precheckLegalIds(final String municipalityId, final List<String> privateIds, final List<String> enterpriseIds) {
+		final var privateRecipients = precheckPrivateLegalIds(municipalityId, privateIds);
+		final var enterpriseRecipients = precheckEnterpriseLegalIds(municipalityId, enterpriseIds);
 		return Stream.concat(privateRecipients.stream(), enterpriseRecipients.stream()).toList();
 	}
 

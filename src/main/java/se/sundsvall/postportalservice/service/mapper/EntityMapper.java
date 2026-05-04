@@ -6,6 +6,7 @@ import generated.se.sundsvall.legalentity.LEPostAddress;
 import generated.se.sundsvall.legalentity.LegalEntity2;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Stream;
 import org.springframework.stereotype.Component;
 import se.sundsvall.postportalservice.api.model.Address;
 import se.sundsvall.postportalservice.api.model.Recipient;
@@ -23,18 +24,10 @@ import static se.sundsvall.postportalservice.Constants.UNDELIVERABLE;
 public class EntityMapper {
 
 	private static String joinNonBlank(final String left, final String right) {
-		final var hasLeft = left != null && !left.isBlank();
-		final var hasRight = right != null && !right.isBlank();
-		if (hasLeft && hasRight) {
-			return left + " " + right;
-		}
-		if (hasLeft) {
-			return left;
-		}
-		if (hasRight) {
-			return right;
-		}
-		return null;
+		return Stream.of(left, right)
+			.filter(string -> string != null && !string.isBlank())
+			.reduce((a, b) -> a + " " + b)
+			.orElse(null);
 	}
 
 	public RecipientEntity toRecipientEntity(final SmsRecipient smsRecipient) {
@@ -44,10 +37,6 @@ public class EntityMapper {
 			.withPartyId(recipient.getPartyId())
 			.withPhoneNumber(recipient.getPhoneNumber()))
 			.orElse(null);
-	}
-
-	public RecipientEntity toRecipientEntity(final Recipient recipient) {
-		return toRecipientEntity(recipient, PartyType.PRIVATE);
 	}
 
 	public RecipientEntity toRecipientEntity(final Recipient recipient, final PartyType partyType) {

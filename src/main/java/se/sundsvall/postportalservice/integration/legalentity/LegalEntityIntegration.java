@@ -1,11 +1,11 @@
 package se.sundsvall.postportalservice.integration.legalentity;
 
 import generated.se.sundsvall.legalentity.LegalEntity2;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import org.slf4j.Logger;
@@ -48,17 +48,17 @@ public class LegalEntityIntegration {
 			return emptyMap();
 		}
 
+		final var result = new ConcurrentHashMap<String, LegalEntity2>();
+
 		final var futures = partyIds.stream()
 			.map(partyId -> CompletableFuture
 				.supplyAsync(() -> safeLookup(municipalityId, partyId), lookupExecutor)
-				.thenApply(legalEntity -> Map.entry(partyId, ofNullable(legalEntity))))
-			.toList();
+				.thenAccept(legalEntity -> ofNullable(legalEntity)
+					.ifPresent(entity -> result.put(partyId, entity))))
+			.toArray(CompletableFuture[]::new);
 
-		final var result = new HashMap<String, LegalEntity2>();
-		futures.forEach(future -> {
-			final var entry = future.join();
-			entry.getValue().ifPresent(legalEntity -> result.put(entry.getKey(), legalEntity));
-		});
+		CompletableFuture.allOf(futures).join();
+
 		return result;
 	}
 

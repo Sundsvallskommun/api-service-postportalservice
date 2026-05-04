@@ -7,7 +7,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -18,11 +17,11 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-import se.sundsvall.dept44.problem.Problem;
 import se.sundsvall.dept44.support.Identifier;
 import se.sundsvall.postportalservice.api.model.DigitalRegisteredLetterRequest;
 import se.sundsvall.postportalservice.api.model.LetterCsvRequest;
 import se.sundsvall.postportalservice.api.model.LetterRequest;
+import se.sundsvall.postportalservice.api.model.Recipient;
 import se.sundsvall.postportalservice.api.model.SmsCsvRequest;
 import se.sundsvall.postportalservice.api.model.SmsRequest;
 import se.sundsvall.postportalservice.integration.citizen.CitizenIntegration;
@@ -38,6 +37,7 @@ import se.sundsvall.postportalservice.integration.db.dao.UserRepository;
 import se.sundsvall.postportalservice.integration.digitalregisteredletter.DigitalRegisteredLetterIntegration;
 import se.sundsvall.postportalservice.integration.messaging.MessagingIntegration;
 import se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration;
+import se.sundsvall.postportalservice.integration.party.PartyIntegration;
 import se.sundsvall.postportalservice.service.mapper.AttachmentMapper;
 import se.sundsvall.postportalservice.service.mapper.EntityMapper;
 import se.sundsvall.postportalservice.service.util.RecipientId;
@@ -45,7 +45,6 @@ import se.sundsvall.postportalservice.service.util.RecipientId;
 import static java.util.Collections.emptyList;
 import static java.util.Optional.ofNullable;
 import static java.util.concurrent.CompletableFuture.supplyAsync;
-import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static se.sundsvall.postportalservice.Constants.FAILED;
 import static se.sundsvall.postportalservice.Constants.PENDING;
 import static se.sundsvall.postportalservice.integration.db.converter.MessageType.DIGITAL_REGISTERED_LETTER;
@@ -88,6 +87,7 @@ public class MessageService {
 	private final MessageRepository messageRepository;
 	private final RecipientRepository recipientRepository;
 	private final CitizenIntegration citizenIntegration;
+	private final PartyIntegration partyIntegration;
 
 	public MessageService(
 		final DigitalRegisteredLetterIntegration digitalRegisteredLetterIntegration,
@@ -99,7 +99,9 @@ public class MessageService {
 		final DepartmentRepository departmentRepository,
 		final UserRepository userRepository,
 		final MessageRepository messageRepository,
-		final RecipientRepository recipientRepository, final CitizenIntegration citizenIntegration) {
+		final RecipientRepository recipientRepository,
+		final CitizenIntegration citizenIntegration,
+		final PartyIntegration partyIntegration) {
 		this.digitalRegisteredLetterIntegration = digitalRegisteredLetterIntegration;
 		this.messagingIntegration = messagingIntegration;
 		this.messagingSettingsIntegration = messagingSettingsIntegration;
@@ -111,6 +113,7 @@ public class MessageService {
 		this.messageRepository = messageRepository;
 		this.recipientRepository = recipientRepository;
 		this.citizenIntegration = citizenIntegration;
+		this.partyIntegration = partyIntegration;
 	}
 
 	public String processDigitalRegisteredLetterRequest(final String municipalityId, final DigitalRegisteredLetterRequest request, final List<MultipartFile> attachments) {
@@ -142,18 +145,6 @@ public class MessageService {
 
 	public String processCsvLetterRequest(final String municipalityId, final LetterCsvRequest request, final MultipartFile csvFile, final List<MultipartFile> attachments) {
 		final var parsed = parseLetterCsv(csvFile);
-		final var requestedType = Optional.ofNullable(request.getRecipientType())
-			.map(PartyType::valueOf)
-			.orElse(null);
-
-		if (requestedType == PartyType.PRIVATE && !parsed.orgnummer().isEmpty()) {
-			throw Problem.valueOf(BAD_REQUEST,
-				"recipientType=PRIVATE is set, but the CSV contains organisationsnummer rows: " + parsed.orgnummer().keySet());
-		}
-		if (requestedType == PartyType.ENTERPRISE && !parsed.personnummer().isEmpty()) {
-			throw Problem.valueOf(BAD_REQUEST,
-				"recipientType=ENTERPRISE is set, but the CSV contains personnummer rows: " + parsed.personnummer().keySet());
-		}
 
 		final var settingsMap = messagingSettingsIntegration.getMessagingSettingsForUser(municipalityId);
 		final var message = createMessageEntity(municipalityId, settingsMap);
@@ -162,9 +153,9 @@ public class MessageService {
 		message.setBody(request.getBody());
 		message.setMessageType(LETTER);
 
-		final var personnummer = new ArrayList<>(parsed.personnummer().keySet());
-		final var orgnummer = new ArrayList<>(parsed.orgnummer().keySet());
-		final var recipientEntities = precheckService.precheckLegalIds(municipalityId, personnummer, orgnummer);
+		final var privateIds = new ArrayList<>(parsed.privateIds().keySet());
+		final var enterpriseIds = new ArrayList<>(parsed.enterpriseIds().keySet());
+		final var recipientEntities = precheckService.precheckLegalIds(municipalityId, privateIds, enterpriseIds);
 		message.setRecipients(recipientEntities);
 		final var attachmentEntities = attachmentMapper.toAttachmentEntities(attachments);
 		message.setAttachments(attachmentEntities);
@@ -204,12 +195,15 @@ public class MessageService {
 		message.setSubject(letterRequest.getSubject());
 		message.setMessageType(LETTER);
 
-		final var partyType = Optional.ofNullable(letterRequest.getRecipientType())
-			.map(PartyType::valueOf)
-			.orElse(PartyType.PRIVATE);
+		final var letterRecipients = ofNullable(letterRequest.getRecipients()).orElse(emptyList());
+		final var partyIds = letterRecipients.stream()
+			.map(Recipient::getPartyId)
+			.filter(Objects::nonNull)
+			.toList();
+		final var partyTypes = partyIntegration.getPartyTypes(municipalityId, partyIds);
 
-		final var recipientEntities = ofNullable(letterRequest.getRecipients()).orElse(emptyList()).stream()
-			.map(recipient -> entityMapper.toRecipientEntity(recipient, partyType))
+		final var recipientEntities = letterRecipients.stream()
+			.map(recipient -> entityMapper.toRecipientEntity(recipient, partyTypes.getOrDefault(recipient.getPartyId(), PartyType.PRIVATE)))
 			.filter(Objects::nonNull);
 
 		final var addressRecipients = ofNullable(letterRequest.getAddresses()).orElse(emptyList()).stream()

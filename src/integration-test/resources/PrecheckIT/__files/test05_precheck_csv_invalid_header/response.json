@@ -1,5 +1,5 @@
 {
 	"title": "Bad Request",
 	"status": 400,
-	"detail": "Invalid CSV format. CSV may contain an optional 'Personnummer' or 'Identitetsnummer' header. Each data row must contain either a 12-digit personnummer (optional hyphen between digit 8 and 9) or a 10-digit organisationsnummer (optional hyphen between digit 6 and 7). Invalid entry: invalid-header"
+	"detail": "Invalid CSV format. CSV may contain an optional 'Personnummer' or 'Identitetsnummer' header. Each data row must contain either a 12-digit personal identity number (optional hyphen between digit 8 and 9) or a 10-digit organisation number (optional hyphen between digit 6 and 7). Invalid entry: invalid-header"
 }

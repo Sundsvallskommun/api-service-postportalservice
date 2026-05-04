@@ -1,0 +1,12 @@
+{
+	"request": {
+		"method": "GET",
+		"url": "/api-party/2281/ENTERPRISE/33333333-3333-3333-3333-333333333333/legalId"
+	},
+	"response": {
+		"status": 404,
+		"headers": {
+			"Content-Type": "application/json"
+		}
+	}
+}
