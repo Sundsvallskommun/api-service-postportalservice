@@ -19,6 +19,7 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import se.sundsvall.dept44.problem.Problem;
 import se.sundsvall.dept44.support.Identifier;
 import se.sundsvall.postportalservice.api.model.DigitalRegisteredLetterRequest;
 import se.sundsvall.postportalservice.api.model.LetterCsvRequest;
@@ -47,6 +48,7 @@ import se.sundsvall.postportalservice.service.util.RecipientId;
 import static java.util.Collections.emptyList;
 import static java.util.Optional.ofNullable;
 import static java.util.concurrent.CompletableFuture.supplyAsync;
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static se.sundsvall.postportalservice.Constants.FAILED;
 import static se.sundsvall.postportalservice.Constants.PENDING;
 import static se.sundsvall.postportalservice.integration.db.converter.MessageType.DIGITAL_REGISTERED_LETTER;
@@ -124,6 +126,12 @@ public class MessageService {
 	}
 
 	public String processDigitalRegisteredLetterRequest(final String municipalityId, final DigitalRegisteredLetterRequest request, final List<MultipartFile> attachments) {
+		final var partyId = request.getPartyId();
+		final var partyType = partyIntegration.getPartyTypes(municipalityId, List.of(partyId)).get(partyId);
+		if (partyType == PartyType.ENTERPRISE) {
+			throw Problem.valueOf(BAD_REQUEST, "Digital registered letters are not supported for enterprise recipients");
+		}
+
 		final var settingsMap = messagingSettingsIntegration.getMessagingSettingsForUser(municipalityId);
 		final var message = createMessageEntity(municipalityId, settingsMap);
 		message.setBody(request.getBody());
@@ -131,12 +139,12 @@ public class MessageService {
 		message.setSubject(request.getSubject());
 		message.setMessageType(DIGITAL_REGISTERED_LETTER);
 
-		final var citizens = citizenIntegration.getCitizens(municipalityId, List.of(request.getPartyId())).getFirst();
+		final var citizens = citizenIntegration.getCitizens(municipalityId, List.of(partyId)).getFirst();
 
 		final var recipient = RecipientEntity.create()
 			.withFirstName(citizens.getGivenname())
 			.withLastName(citizens.getLastname())
-			.withPartyId(request.getPartyId())
+			.withPartyId(partyId)
 			.withStatus(PENDING)
 			.withMessageType(DIGITAL_REGISTERED_LETTER);
 		message.setRecipients(List.of(recipient));
