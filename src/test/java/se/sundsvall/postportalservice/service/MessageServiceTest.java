@@ -161,6 +161,8 @@ class MessageServiceTest {
 		final var multipartFiles = List.of(multipartFile);
 		Identifier.set(new Identifier().withValue("test01user"));
 
+		when(partyIntegrationMock.getPartyTypes(MUNICIPALITY_ID, List.of(request.getPartyId())))
+			.thenReturn(Map.of(request.getPartyId(), PartyType.PRIVATE));
 		when(messagingSettingsIntegrationMock.getMessagingSettingsForUser(MUNICIPALITY_ID))
 			.thenThrow(Problem.valueOf(BAD_GATEWAY, "No messaging settings found for user '%s' in municipalityId '%s'".formatted("test01user", MUNICIPALITY_ID)));
 
@@ -168,6 +170,7 @@ class MessageServiceTest {
 			.isInstanceOf(Problem.class)
 			.hasMessage("Bad Gateway: No messaging settings found for user '%s' in municipalityId '%s'".formatted("test01user", MUNICIPALITY_ID));
 
+		verify(partyIntegrationMock).getPartyTypes(MUNICIPALITY_ID, List.of(request.getPartyId()));
 		verify(messagingSettingsIntegrationMock).getMessagingSettingsForUser(MUNICIPALITY_ID);
 		verifyNoInteractions(messagingIntegrationMock, departmentRepositoryMock, userRepositoryMock, messageRepositoryMock, citizenIntegrationMock);
 	}
@@ -187,6 +190,8 @@ class MessageServiceTest {
 		final var attachmentEntities = List.of(new AttachmentEntity(), new AttachmentEntity());
 		final var citizen = new CitizenExtended().givenname("John").lastname("Doe");
 
+		when(partyIntegrationMock.getPartyTypes(MUNICIPALITY_ID, List.of(request.getPartyId())))
+			.thenReturn(Map.of(request.getPartyId(), PartyType.PRIVATE));
 		when(messagingSettingsIntegrationMock.getMessagingSettingsForUser(MUNICIPALITY_ID)).thenReturn(SETTINGS_MAP);
 		when(citizenIntegrationMock.getCitizens(MUNICIPALITY_ID, List.of(request.getPartyId()))).thenReturn(List.of(citizen));
 		when(messageRepositoryMock.save(any())).thenAnswer(invocation -> invocation.getArgument(0, MessageEntity.class).withId("messageId"));
@@ -204,6 +209,7 @@ class MessageServiceTest {
 
 		assertThat(result).isNotNull().isEqualTo("messageId");
 
+		verify(partyIntegrationMock).getPartyTypes(MUNICIPALITY_ID, List.of(request.getPartyId()));
 		verify(citizenIntegrationMock).getCitizens(MUNICIPALITY_ID, List.of(request.getPartyId()));
 		verify(userRepositoryMock).findByUsernameIgnoreCase(USERNAME);
 		verify(departmentRepositoryMock).findByOrganizationId("departmentId");
@@ -250,6 +256,8 @@ class MessageServiceTest {
 		final var departmentEntity = new DepartmentEntity().withName("departmentName").withOrganizationId("departmentId").withId("departmentId");
 		final var citizen = new CitizenExtended().givenname("Jane").lastname("Smith");
 
+		when(partyIntegrationMock.getPartyTypes(MUNICIPALITY_ID, List.of(request.getPartyId())))
+			.thenReturn(Map.of(request.getPartyId(), PartyType.PRIVATE));
 		when(messagingSettingsIntegrationMock.getMessagingSettingsForUser(MUNICIPALITY_ID)).thenReturn(SETTINGS_MAP);
 		when(citizenIntegrationMock.getCitizens(MUNICIPALITY_ID, List.of(request.getPartyId()))).thenReturn(List.of(citizen));
 		when(messageRepositoryMock.save(any())).thenAnswer(invocation -> invocation.getArgument(0, MessageEntity.class).withId("messageId"));
@@ -267,6 +275,7 @@ class MessageServiceTest {
 
 		assertThat(result).isNotNull().isEqualTo("messageId");
 
+		verify(partyIntegrationMock).getPartyTypes(MUNICIPALITY_ID, List.of(request.getPartyId()));
 		verify(citizenIntegrationMock).getCitizens(MUNICIPALITY_ID, List.of(request.getPartyId()));
 		verify(userRepositoryMock).findByUsernameIgnoreCase(USERNAME);
 		verify(departmentRepositoryMock).findByOrganizationId("departmentId");
@@ -298,6 +307,22 @@ class MessageServiceTest {
 		});
 
 		verifyNoInteractions(messagingIntegrationMock);
+	}
+
+	@Test
+	void processDigitalRegisteredLetterRequest_enterprisePartyId_returnsBadRequest() {
+		final var request = TestDataFactory.createValidDigitalRegisteredLetterRequest();
+		final var multipartFiles = List.of(Mockito.mock(MultipartFile.class));
+
+		when(partyIntegrationMock.getPartyTypes(MUNICIPALITY_ID, List.of(request.getPartyId())))
+			.thenReturn(Map.of(request.getPartyId(), PartyType.ENTERPRISE));
+
+		assertThatThrownBy(() -> messageService.processDigitalRegisteredLetterRequest(MUNICIPALITY_ID, request, multipartFiles))
+			.isInstanceOf(Problem.class)
+			.hasMessage("Bad Request: Digital registered letters are not supported for enterprise recipients");
+
+		verify(partyIntegrationMock).getPartyTypes(MUNICIPALITY_ID, List.of(request.getPartyId()));
+		verifyNoInteractions(messagingSettingsIntegrationMock, citizenIntegrationMock, digitalRegisteredLetterIntegrationMock, messageRepositoryMock);
 	}
 
 	@Test
