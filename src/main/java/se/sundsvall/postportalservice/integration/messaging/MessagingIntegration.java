@@ -49,10 +49,6 @@ public class MessagingIntegration {
 			messageEntity.getId());
 	}
 
-	public void triggerSnailMailBatchProcessing(final String municipalityId, final String batchId) {
-		client.triggerSnailMailBatchProcessing(municipalityId, batchId);
-	}
-
 	public MessageResult sendSms(final MessageEntity messageEntity, final RecipientEntity recipientEntity) {
 		RecipientId.init(recipientEntity.getId());
 		final var smsRequest = toSmsRequest(messageEntity, recipientEntity);

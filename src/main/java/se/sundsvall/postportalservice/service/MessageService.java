@@ -75,8 +75,8 @@ public class MessageService {
 
 	private static final Logger LOG = LoggerFactory.getLogger(MessageService.class);
 
-	private final ExecutorService executor = Executors.newFixedThreadPool(64);
-	private final Semaphore permits = new Semaphore(32);
+	private final ExecutorService executor = Executors.newFixedThreadPool(16);
+	private final Semaphore permits = new Semaphore(8);
 
 	private final DigitalRegisteredLetterIntegration digitalRegisteredLetterIntegration;
 	private final MessagingIntegration messagingIntegration;
@@ -260,27 +260,11 @@ public class MessageService {
 		return message.getId();
 	}
 
-	CompletableFuture<Void> processRecipients(final MessageEntity messageEntity, final Map<String, String> settingsMap) {
+	void processRecipients(final MessageEntity messageEntity, final Map<String, String> settingsMap) {
 		LOG.info("Starting to process recipients for message with id {}", messageEntity.getId());
-		final var futures = ofNullable(messageEntity.getRecipients()).orElse(emptyList()).stream()
+		ofNullable(messageEntity.getRecipients()).orElse(emptyList()).stream()
 			.filter(recipientEntity -> !"UNDELIVERABLE".equalsIgnoreCase(recipientEntity.getStatus()))
-			.map(recipientEntity -> withPermit(() -> sendMessageToRecipient(messageEntity, recipientEntity, settingsMap), permits, executor))
-			.toArray(CompletableFuture[]::new);
-
-		return CompletableFuture.allOf(futures)
-			.handle((_, throwable) -> {
-				final var triggerSnailmailBatch = messageEntity.getRecipients().stream()
-					.anyMatch(recipientEntity -> recipientEntity.getMessageType() == SNAIL_MAIL);
-				if (triggerSnailmailBatch) {
-					LOG.info("Triggering snail mail batch processing for message with id {}", messageEntity.getId());
-					messagingIntegration.triggerSnailMailBatchProcessing(messageEntity.getMunicipalityId(), messageEntity.getId());
-				}
-				messageRepository.save(messageEntity);
-				if (throwable != null) {
-					LOG.error(throwable.getMessage(), throwable);
-				}
-				return null;
-			});
+			.forEach(recipientEntity -> withPermit(() -> sendMessageToRecipient(messageEntity, recipientEntity, settingsMap), permits, executor));
 	}
 
 	CompletableFuture<Void> sendMessageToRecipient(final MessageEntity messageEntity, final RecipientEntity recipientEntity, final Map<String, String> settingsMap) {

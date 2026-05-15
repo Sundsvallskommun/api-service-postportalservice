@@ -19,7 +19,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import se.sundsvall.dept44.support.Identifier;
 import se.sundsvall.postportalservice.integration.messaging.configuration.MessagingConfiguration;
 
-import static org.springframework.http.MediaType.ALL_VALUE;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static se.sundsvall.postportalservice.integration.messaging.configuration.MessagingConfiguration.CLIENT_ID;
 
@@ -59,11 +58,6 @@ public interface MessagingClient {
 		@PathVariable final String municipalityId,
 		@RequestBody final SnailmailRequest request,
 		@RequestParam final String batchId);
-
-	@PostMapping(path = "/{municipalityId}/snail-mail/batch/{batchId}", consumes = ALL_VALUE)
-	void triggerSnailMailBatchProcessing(
-		@PathVariable final String municipalityId,
-		@PathVariable final String batchId);
 
 	@PostMapping(path = "/{municipalityId}/{organizationNumber}/mailboxes", consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
 	List<Mailbox> precheckMailboxes(

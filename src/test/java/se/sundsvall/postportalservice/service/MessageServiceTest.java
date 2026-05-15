@@ -57,8 +57,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doCallRealMethod;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -351,7 +351,7 @@ class MessageServiceTest {
 		when(partyIntegrationMock.getPartyTypes(MUNICIPALITY_ID, List.of(partyId)))
 			.thenReturn(Map.of(partyId, PartyType.PRIVATE));
 
-		doReturn(new CompletableFuture<>()).when(spy).processRecipients(any(), any());
+		doNothing().when(spy).processRecipients(any(), any());
 		when(messageRepositoryMock.save(any())).thenAnswer(invocation -> invocation.getArgument(0, MessageEntity.class).withId(messageId));
 
 		final var result = spy.processLetterRequest(MUNICIPALITY_ID, letterRequest, multipartFileList);
@@ -379,7 +379,7 @@ class MessageServiceTest {
 		when(messagingSettingsIntegrationMock.getMessagingSettingsForUser(MUNICIPALITY_ID)).thenReturn(SETTINGS_MAP);
 		when(userRepositoryMock.findByUsernameIgnoreCase(Identifier.get().getValue())).thenReturn(Optional.of(userEntity));
 		when(departmentRepositoryMock.findByOrganizationId(SETTINGS_MAP.get(DEPARTMENT_ID))).thenReturn(Optional.of(departmentEntity));
-		doReturn(new CompletableFuture<>()).when(spy).processRecipients(any(), any());
+		doNothing().when(spy).processRecipients(any(), any());
 		when(messageRepositoryMock.save(any())).thenAnswer(invocation -> invocation.getArgument(0, MessageEntity.class).withId(messageId));
 
 		final var result = spy.processSmsRequest(MUNICIPALITY_ID, smsRequest);
@@ -410,7 +410,7 @@ class MessageServiceTest {
 		when(messagingSettingsIntegrationMock.getMessagingSettingsForUser(MUNICIPALITY_ID)).thenReturn(SETTINGS_MAP);
 		when(userRepositoryMock.findByUsernameIgnoreCase(Identifier.get().getValue())).thenReturn(Optional.of(userEntity));
 		when(departmentRepositoryMock.findByOrganizationId(SETTINGS_MAP.get(DEPARTMENT_ID))).thenReturn(Optional.of(departmentEntity));
-		doReturn(new CompletableFuture<>()).when(spy).processRecipients(any(), eq(SETTINGS_MAP));
+		doNothing().when(spy).processRecipients(any(), eq(SETTINGS_MAP));
 		when(messageRepositoryMock.save(any())).thenAnswer(invocation -> invocation.getArgument(0, MessageEntity.class).withId(messageId));
 
 		try (MockedStatic<CsvUtil> csvUtilMock = Mockito.mockStatic(CsvUtil.class)) {
@@ -448,71 +448,30 @@ class MessageServiceTest {
 		final var messageEntity = MessageEntity.create()
 			.withRecipients(List.of(recipient1, recipient2));
 
-		final var future1 = new CompletableFuture<Void>();
-		final var future2 = new CompletableFuture<Void>();
-		doReturn(future1).when(spy).sendMessageToRecipient(messageEntity, recipient1, SETTINGS_MAP);
-		doReturn(future2).when(spy).sendMessageToRecipient(messageEntity, recipient2, SETTINGS_MAP);
+		doReturn(CompletableFuture.completedFuture(null)).when(spy).sendMessageToRecipient(messageEntity, recipient1, SETTINGS_MAP);
+		doReturn(CompletableFuture.completedFuture(null)).when(spy).sendMessageToRecipient(messageEntity, recipient2, SETTINGS_MAP);
 
-		final var completableFuture = spy.processRecipients(messageEntity, SETTINGS_MAP);
-		future1.complete(null);
-		future2.complete(null);
-		completableFuture.join();
+		spy.processRecipients(messageEntity, SETTINGS_MAP);
 
-		verify(spy).sendMessageToRecipient(messageEntity, recipient1, SETTINGS_MAP);
-		verify(spy).sendMessageToRecipient(messageEntity, recipient2, SETTINGS_MAP);
-		verify(messageRepositoryMock).save(messageEntity);
+		verify(spy, Mockito.timeout(2000)).sendMessageToRecipient(messageEntity, recipient1, SETTINGS_MAP);
+		verify(spy, Mockito.timeout(2000)).sendMessageToRecipient(messageEntity, recipient2, SETTINGS_MAP);
 	}
 
 	@Test
-	void processRecipients_future_completes_exceptionally() {
+	void processRecipients_skipsUndeliverable() {
 		final var spy = Mockito.spy(messageService);
-		final var recipient1 = new RecipientEntity().withFirstName("john");
-		final var recipient2 = new RecipientEntity().withFirstName("sarah");
+		final var deliverable = new RecipientEntity().withFirstName("john");
+		final var undeliverable = new RecipientEntity().withFirstName("sarah").withStatus("UNDELIVERABLE");
 
 		final var messageEntity = MessageEntity.create()
-			.withRecipients(List.of(recipient1, recipient2));
+			.withRecipients(List.of(deliverable, undeliverable));
 
-		final var future1 = new CompletableFuture<Void>();
-		final var future2 = new CompletableFuture<Void>();
-		doReturn(future1).when(spy).sendMessageToRecipient(messageEntity, recipient1, SETTINGS_MAP);
-		doReturn(future2).when(spy).sendMessageToRecipient(messageEntity, recipient2, SETTINGS_MAP);
+		doReturn(CompletableFuture.completedFuture(null)).when(spy).sendMessageToRecipient(messageEntity, deliverable, SETTINGS_MAP);
 
-		final var completableFuture = spy.processRecipients(messageEntity, SETTINGS_MAP);
+		spy.processRecipients(messageEntity, SETTINGS_MAP);
 
-		future1.completeExceptionally(new RuntimeException("Simulated exception"));
-		future2.complete(null);
-
-		completableFuture.join();
-
-		verify(spy, times(2)).sendMessageToRecipient(any(), any(), any());
-		verify(messageRepositoryMock).save(messageEntity);
-	}
-
-	@Test
-	void processRecipients_future_delayed() {
-		final var spy = Mockito.spy(messageService);
-		final var recipient1 = new RecipientEntity().withFirstName("john");
-		final var recipient2 = new RecipientEntity().withFirstName("sarah");
-		final var messageEntity = MessageEntity.create().withRecipients(List.of(recipient1, recipient2));
-
-		final var future1 = new CompletableFuture<Void>();
-		final var future2 = new CompletableFuture<Void>();
-		doReturn(future1).when(spy).sendMessageToRecipient(messageEntity, recipient1, SETTINGS_MAP);
-		doReturn(future2).when(spy).sendMessageToRecipient(messageEntity, recipient2, SETTINGS_MAP);
-
-		final var completableFuture = spy.processRecipients(messageEntity, SETTINGS_MAP);
-
-		future1.complete(null);
-
-		try {
-			Thread.sleep(3000);
-			future2.complete(null);
-		} catch (final InterruptedException e) {
-			Thread.currentThread().interrupt();
-		}
-		completableFuture.join();
-
-		verify(messageRepositoryMock, times(1)).save(messageEntity);
+		verify(spy, Mockito.timeout(2000)).sendMessageToRecipient(messageEntity, deliverable, SETTINGS_MAP);
+		verify(spy, Mockito.after(500).never()).sendMessageToRecipient(messageEntity, undeliverable, SETTINGS_MAP);
 	}
 
 	@Test
