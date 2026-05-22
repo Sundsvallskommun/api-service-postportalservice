@@ -44,6 +44,7 @@
         id VARCHAR(36) not null,
         last_name VARCHAR(100),
         message_id VARCHAR(36),
+        organization_name VARCHAR(255),
         party_id VARCHAR(36),
         phone_number VARCHAR(20),
         status VARCHAR(80),

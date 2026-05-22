@@ -49,6 +49,9 @@ public class RecipientEntity {
 	@Column(name = "last_name", columnDefinition = "VARCHAR(100)")
 	private String lastName;
 
+	@Column(name = "organization_name", columnDefinition = "VARCHAR(255)")
+	private String organizationName;
+
 	@Column(name = "address", columnDefinition = "VARCHAR(255)")
 	private String streetAddress;
 
@@ -237,6 +240,19 @@ public class RecipientEntity {
 		return this;
 	}
 
+	public String getOrganizationName() {
+		return organizationName;
+	}
+
+	public void setOrganizationName(String organizationName) {
+		this.organizationName = organizationName;
+	}
+
+	public RecipientEntity withOrganizationName(String organizationName) {
+		this.organizationName = organizationName;
+		return this;
+	}
+
 	public String getStreetAddress() {
 		return streetAddress;
 	}
@@ -338,6 +354,7 @@ public class RecipientEntity {
 			", phoneNumber='" + phoneNumber + '\'' +
 			", firstName='" + firstName + '\'' +
 			", lastName='" + lastName + '\'' +
+			", organizationName='" + organizationName + '\'' +
 			", streetAddress='" + streetAddress + '\'' +
 			", apartmentNumber='" + apartmentNumber + '\'' +
 			", careOf='" + careOf + '\'' +
@@ -358,13 +375,13 @@ public class RecipientEntity {
 			return false;
 		RecipientEntity that = (RecipientEntity) o;
 		return Objects.equals(id, that.id) && Objects.equals(partyId, that.partyId) && partyType == that.partyType && Objects.equals(email, that.email) && Objects.equals(phoneNumber, that.phoneNumber) && Objects.equals(firstName,
-			that.firstName) && Objects.equals(lastName, that.lastName) && Objects.equals(streetAddress, that.streetAddress) && Objects.equals(apartmentNumber, that.apartmentNumber) && Objects.equals(careOf, that.careOf)
-			&& Objects.equals(zipCode, that.zipCode) && Objects.equals(city, that.city) && Objects.equals(country, that.country) && Objects.equals(status, that.status) && messageType == that.messageType
+			that.firstName) && Objects.equals(lastName, that.lastName) && Objects.equals(organizationName, that.organizationName) && Objects.equals(streetAddress, that.streetAddress) && Objects.equals(apartmentNumber, that.apartmentNumber)
+			&& Objects.equals(careOf, that.careOf) && Objects.equals(zipCode, that.zipCode) && Objects.equals(city, that.city) && Objects.equals(country, that.country) && Objects.equals(status, that.status) && messageType == that.messageType
 			&& Objects.equals(statusDetail, that.statusDetail) && Objects.equals(externalId, that.externalId) && Objects.equals(created, that.created);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(id, partyId, partyType, email, phoneNumber, firstName, lastName, streetAddress, apartmentNumber, careOf, zipCode, city, country, status, messageType, statusDetail, externalId, created);
+		return Objects.hash(id, partyId, partyType, email, phoneNumber, firstName, lastName, organizationName, streetAddress, apartmentNumber, careOf, zipCode, city, country, status, messageType, statusDetail, externalId, created);
 	}
 }

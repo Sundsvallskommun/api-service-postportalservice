@@ -18,6 +18,7 @@ class AddressTest {
 
 	private final String firstName = "John";
 	private final String lastName = "Doe";
+	private final String organizationName = "Acme AB";
 	private final String street = "Main Street 1";
 	private final String apartmentNumber = "1101";
 	private final String careOf = "c/o Jane Doe";
@@ -42,6 +43,7 @@ class AddressTest {
 		final var address = Address.create()
 			.withFirstName(firstName)
 			.withLastName(lastName)
+			.withOrganizationName(organizationName)
 			.withStreet(street)
 			.withApartmentNumber(apartmentNumber)
 			.withCareOf(careOf)
@@ -51,6 +53,7 @@ class AddressTest {
 
 		assertThat(address.getFirstName()).isEqualTo(firstName);
 		assertThat(address.getLastName()).isEqualTo(lastName);
+		assertThat(address.getOrganizationName()).isEqualTo(organizationName);
 		assertThat(address.getStreet()).isEqualTo(street);
 		assertThat(address.getApartmentNumber()).isEqualTo(apartmentNumber);
 		assertThat(address.getCareOf()).isEqualTo(careOf);
@@ -65,6 +68,7 @@ class AddressTest {
 		final var address = new Address();
 		address.setFirstName(firstName);
 		address.setLastName(lastName);
+		address.setOrganizationName(organizationName);
 		address.setStreet(street);
 		address.setApartmentNumber(apartmentNumber);
 		address.setCareOf(careOf);
@@ -74,6 +78,7 @@ class AddressTest {
 
 		assertThat(address.getFirstName()).isEqualTo(firstName);
 		assertThat(address.getLastName()).isEqualTo(lastName);
+		assertThat(address.getOrganizationName()).isEqualTo(organizationName);
 		assertThat(address.getStreet()).isEqualTo(street);
 		assertThat(address.getApartmentNumber()).isEqualTo(apartmentNumber);
 		assertThat(address.getCareOf()).isEqualTo(careOf);
@@ -89,11 +94,10 @@ class AddressTest {
 
 		final var violations = validator.validate(address);
 
-		assertThat(violations).hasSize(6)
+		assertThat(violations).hasSize(5)
 			.extracting(violation -> violation.getPropertyPath().toString(), ConstraintViolation::getMessage)
 			.containsExactlyInAnyOrder(
-				tuple("firstName", "must not be blank"),
-				tuple("lastName", "must not be blank"),
+				tuple("", "either firstName and lastName, or organizationName must be provided"),
 				tuple("street", "must not be blank"),
 				tuple("zipCode", "must not be blank"),
 				tuple("city", "must not be blank"),
@@ -103,10 +107,42 @@ class AddressTest {
 	}
 
 	@Test
+	void validateAddressWithOnlyOrganizationNameIsValid() {
+		final var address = Address.create()
+			.withOrganizationName(organizationName)
+			.withStreet(street)
+			.withZipCode(zipCode)
+			.withCity(city)
+			.withCountry(country);
+
+		final var violations = validator.validate(address);
+
+		assertThat(violations).isEmpty();
+	}
+
+	@Test
+	void validateAddressWithOnlyFirstNameMissingOrganizationNameIsInvalid() {
+		final var address = Address.create()
+			.withFirstName(firstName)
+			.withStreet(street)
+			.withZipCode(zipCode)
+			.withCity(city)
+			.withCountry(country);
+
+		final var violations = validator.validate(address);
+
+		assertThat(violations).hasSize(1)
+			.extracting(violation -> violation.getPropertyPath().toString(), ConstraintViolation::getMessage)
+			.containsExactly(
+				tuple("", "either firstName and lastName, or organizationName must be provided"));
+	}
+
+	@Test
 	void validatePopulatedBean() {
 		final var address = Address.create()
 			.withFirstName(firstName)
 			.withLastName(lastName)
+			.withOrganizationName(organizationName)
 			.withStreet(street)
 			.withApartmentNumber(apartmentNumber)
 			.withCareOf(careOf)

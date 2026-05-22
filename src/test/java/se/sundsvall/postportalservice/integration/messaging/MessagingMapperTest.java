@@ -126,4 +126,41 @@ class MessagingMapperTest {
 		assertThat(result.getContentType()).isEqualTo(DigitalMailAttachment.ContentTypeEnum.APPLICATION_PDF);
 		assertThat(result.getContent()).isEqualTo("contentString");
 	}
+
+	@Test
+	void formatRecipientName_personOnly() {
+		final var recipient = RecipientEntity.create()
+			.withFirstName("John")
+			.withLastName("Doe");
+
+		assertThat(MessagingMapper.formatRecipientName(recipient)).isEqualTo("John Doe");
+	}
+
+	@Test
+	void formatRecipientName_organizationOnly() {
+		final var recipient = RecipientEntity.create()
+			.withOrganizationName("Acme AB");
+
+		assertThat(MessagingMapper.formatRecipientName(recipient)).isEqualTo("Acme AB");
+	}
+
+	@Test
+	void formatRecipientName_organizationAndPerson() {
+		final var recipient = RecipientEntity.create()
+			.withFirstName("John")
+			.withLastName("Doe")
+			.withOrganizationName("Acme AB");
+
+		assertThat(MessagingMapper.formatRecipientName(recipient)).isEqualTo("Acme AB (att: John Doe)");
+	}
+
+	@Test
+	void formatRecipientName_blankOrganizationFallsBackToPerson() {
+		final var recipient = RecipientEntity.create()
+			.withFirstName("John")
+			.withLastName("Doe")
+			.withOrganizationName("  ");
+
+		assertThat(MessagingMapper.formatRecipientName(recipient)).isEqualTo("John Doe");
+	}
 }

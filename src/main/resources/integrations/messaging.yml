@@ -5,7 +5,7 @@ info:
   license:
     name: MIT License
     url: https://opensource.org/licenses/MIT
-  version: "7.10"
+  version: "7.11"
 servers:
   - url: https://messaging-af-messaging.apps.ocp201.sundsvall.se
     description: Generated server url
@@ -2086,14 +2086,19 @@ components:
       properties:
         firstName:
           type: string
-          description: The first name of the recipient
+          description: The first name of the recipient. Required together with lastName if organizationName is not provided.
           examples:
             - John
         lastName:
           type: string
-          description: The last name of the recipient
+          description: The last name of the recipient. Required together with firstName if organizationName is not provided.
           examples:
             - Doe
+        organizationName:
+          type: string
+          description: The organization name of the recipient. Required if firstName and lastName are not provided.
+          examples:
+            - Acme AB
         address:
           type: string
           description: The address

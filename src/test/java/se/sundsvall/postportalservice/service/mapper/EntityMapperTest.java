@@ -304,8 +304,9 @@ class EntityMapperTest {
 		assertThat(result.getPartyId()).isEqualTo(partyId);
 		assertThat(result.getPartyType()).isEqualTo(PartyType.ENTERPRISE);
 		assertThat(result.getMessageType()).isEqualTo(MessageType.SNAIL_MAIL);
-		assertThat(result.getFirstName()).isEqualTo("Acme AB");
+		assertThat(result.getFirstName()).isNull();
 		assertThat(result.getLastName()).isNull();
+		assertThat(result.getOrganizationName()).isEqualTo("Acme AB");
 		assertThat(result.getStreetAddress()).isEqualTo("Storgatan 12B");
 		assertThat(result.getCareOf()).isEqualTo("c/o CEO");
 		assertThat(result.getZipCode()).isEqualTo("85222");
