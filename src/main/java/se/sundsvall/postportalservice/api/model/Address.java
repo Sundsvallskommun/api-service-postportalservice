@@ -3,17 +3,20 @@ package se.sundsvall.postportalservice.api.model;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import java.util.Objects;
+import se.sundsvall.postportalservice.api.validation.ValidAddress;
 
 @Schema(description = "Address model")
+@ValidAddress
 public class Address {
 
-	@Schema(description = "First name of the recipient", examples = "John")
-	@NotBlank
+	@Schema(description = "First name of the recipient. Required together with lastName if organizationName is not provided.", examples = "John")
 	private String firstName;
 
-	@Schema(description = "Last name of the recipient", examples = "Doe")
-	@NotBlank
+	@Schema(description = "Last name of the recipient. Required together with firstName if organizationName is not provided.", examples = "Doe")
 	private String lastName;
+
+	@Schema(description = "Organization name of the recipient. Required if firstName and lastName are not provided.", examples = "Acme AB")
+	private String organizationName;
 
 	@Schema(description = "Street address", examples = "Main Street 1")
 	@NotBlank
@@ -64,6 +67,19 @@ public class Address {
 
 	public Address withLastName(String lastName) {
 		this.lastName = lastName;
+		return this;
+	}
+
+	public String getOrganizationName() {
+		return organizationName;
+	}
+
+	public void setOrganizationName(String organizationName) {
+		this.organizationName = organizationName;
+	}
+
+	public Address withOrganizationName(String organizationName) {
+		this.organizationName = organizationName;
 		return this;
 	}
 
@@ -150,6 +166,7 @@ public class Address {
 		return "Address{" +
 			"firstName='" + firstName + '\'' +
 			", lastName='" + lastName + '\'' +
+			", organizationName='" + organizationName + '\'' +
 			", street='" + street + '\'' +
 			", apartmentNumber='" + apartmentNumber + '\'' +
 			", careOf='" + careOf + '\'' +
@@ -164,12 +181,12 @@ public class Address {
 		if (o == null || getClass() != o.getClass())
 			return false;
 		Address address = (Address) o;
-		return Objects.equals(firstName, address.firstName) && Objects.equals(lastName, address.lastName) && Objects.equals(street, address.street) && Objects.equals(apartmentNumber, address.apartmentNumber)
-			&& Objects.equals(careOf, address.careOf) && Objects.equals(zipCode, address.zipCode) && Objects.equals(city, address.city) && Objects.equals(country, address.country);
+		return Objects.equals(firstName, address.firstName) && Objects.equals(lastName, address.lastName) && Objects.equals(organizationName, address.organizationName) && Objects.equals(street, address.street)
+			&& Objects.equals(apartmentNumber, address.apartmentNumber) && Objects.equals(careOf, address.careOf) && Objects.equals(zipCode, address.zipCode) && Objects.equals(city, address.city) && Objects.equals(country, address.country);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(firstName, lastName, street, apartmentNumber, careOf, zipCode, city, country);
+		return Objects.hash(firstName, lastName, organizationName, street, apartmentNumber, careOf, zipCode, city, country);
 	}
 }

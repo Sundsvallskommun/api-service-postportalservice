@@ -192,8 +192,7 @@ class MessageResourceTest {
 				List.of(
 					new Violation("addresses[0].city", "must not be blank"),
 					new Violation("addresses[0].country", "must not be blank"),
-					new Violation("addresses[0].firstName", "must not be blank"),
-					new Violation("addresses[0].lastName", "must not be blank"),
+					new Violation("addresses[0]", "either firstName and lastName, or organizationName must be provided"),
 					new Violation("addresses[0].street", "must not be blank"),
 					new Violation("addresses[0].zipCode", "must not be blank"))),
 
@@ -232,8 +231,7 @@ class MessageResourceTest {
 				List.of(
 					new Violation("recipients[0].address.city", "must not be blank"),
 					new Violation("recipients[0].address.country", "must not be blank"),
-					new Violation("recipients[0].address.firstName", "must not be blank"),
-					new Violation("recipients[0].address.lastName", "must not be blank"),
+					new Violation("recipients[0].address", "either firstName and lastName, or organizationName must be provided"),
 					new Violation("recipients[0].address.street", "must not be blank"),
 					new Violation("recipients[0].address.zipCode", "must not be blank"))));
 	}

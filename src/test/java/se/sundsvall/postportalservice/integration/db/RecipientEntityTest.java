@@ -27,6 +27,7 @@ class RecipientEntityTest {
 	private static final String PHONE_NUMBER = "+46701740605";
 	private static final String FIRST_NAME = "firstName";
 	private static final String LAST_NAME = "lastName";
+	private static final String ORGANIZATION_NAME = "organizationName";
 	private static final String STREET_ADDRESS = "streetAddress";
 	private static final String APARTMENT_NUMBER = "apartmentNumber";
 	private static final String CARE_OF = "careOf";
@@ -64,6 +65,7 @@ class RecipientEntityTest {
 			.withPhoneNumber(PHONE_NUMBER)
 			.withFirstName(FIRST_NAME)
 			.withLastName(LAST_NAME)
+			.withOrganizationName(ORGANIZATION_NAME)
 			.withStreetAddress(STREET_ADDRESS)
 			.withApartmentNumber(APARTMENT_NUMBER)
 			.withCareOf(CARE_OF)
@@ -83,6 +85,7 @@ class RecipientEntityTest {
 		assertThat(recipientEntity.getPhoneNumber()).isEqualTo(PHONE_NUMBER);
 		assertThat(recipientEntity.getFirstName()).isEqualTo(FIRST_NAME);
 		assertThat(recipientEntity.getLastName()).isEqualTo(LAST_NAME);
+		assertThat(recipientEntity.getOrganizationName()).isEqualTo(ORGANIZATION_NAME);
 		assertThat(recipientEntity.getStreetAddress()).isEqualTo(STREET_ADDRESS);
 		assertThat(recipientEntity.getApartmentNumber()).isEqualTo(APARTMENT_NUMBER);
 		assertThat(recipientEntity.getCareOf()).isEqualTo(CARE_OF);
@@ -108,6 +111,7 @@ class RecipientEntityTest {
 		recipientEntity.setPhoneNumber(PHONE_NUMBER);
 		recipientEntity.setFirstName(FIRST_NAME);
 		recipientEntity.setLastName(LAST_NAME);
+		recipientEntity.setOrganizationName(ORGANIZATION_NAME);
 		recipientEntity.setStreetAddress(STREET_ADDRESS);
 		recipientEntity.setApartmentNumber(APARTMENT_NUMBER);
 		recipientEntity.setCareOf(CARE_OF);
@@ -127,6 +131,7 @@ class RecipientEntityTest {
 		assertThat(recipientEntity.getPhoneNumber()).isEqualTo(PHONE_NUMBER);
 		assertThat(recipientEntity.getFirstName()).isEqualTo(FIRST_NAME);
 		assertThat(recipientEntity.getLastName()).isEqualTo(LAST_NAME);
+		assertThat(recipientEntity.getOrganizationName()).isEqualTo(ORGANIZATION_NAME);
 		assertThat(recipientEntity.getStreetAddress()).isEqualTo(STREET_ADDRESS);
 		assertThat(recipientEntity.getApartmentNumber()).isEqualTo(APARTMENT_NUMBER);
 		assertThat(recipientEntity.getCareOf()).isEqualTo(CARE_OF);

@@ -41,12 +41,29 @@ public final class MessagingMapper {
 	// Extremely temporary, will use templating in the future
 	private static final String MAIL_CONTENT = """
 		Bifogat är ett brev som ej kunnat levereras som digital post och måste skickas som fysisk post av er, skicka till:
-		Namn: %s %s
+		Namn: %s
 		Adress: %s
 		c/o: %s
 		Postnummer: %s
 		Ort: %s
 		""";
+
+	static String formatRecipientName(final RecipientEntity recipientEntity) {
+		final var firstName = recipientEntity.getFirstName();
+		final var lastName = recipientEntity.getLastName();
+		final var organizationName = recipientEntity.getOrganizationName();
+		final var hasPersonName = firstName != null && !firstName.isBlank() && lastName != null && !lastName.isBlank();
+		final var hasOrganizationName = organizationName != null && !organizationName.isBlank();
+
+		if (hasOrganizationName && hasPersonName) {
+			return "%s (att: %s %s)".formatted(organizationName, firstName, lastName);
+		}
+		if (hasOrganizationName) {
+			return organizationName;
+		}
+		return "%s %s".formatted(firstName, lastName);
+	}
+
 	private static final String EMAIL_SENDER_NAME = "Postportalen";
 	private static final String EMAIL_SENDER_ADDRESS = "noreply@postportal.se";
 
@@ -133,6 +150,7 @@ public final class MessagingMapper {
 			.country(recipientEntity.getCountry())
 			.firstName(recipientEntity.getFirstName())
 			.lastName(recipientEntity.getLastName())
+			.organizationName(recipientEntity.getOrganizationName())
 			.zipCode(recipientEntity.getZipCode()))
 			.orElse(null);
 	}
@@ -158,7 +176,7 @@ public final class MessagingMapper {
 				.address(EMAIL_SENDER_ADDRESS)
 				.name(EMAIL_SENDER_NAME))
 			.message(MAIL_CONTENT.formatted(
-				recipientEntity.getFirstName(), recipientEntity.getLastName(),
+				formatRecipientName(recipientEntity),
 				recipientEntity.getStreetAddress(),
 				recipientEntity.getCareOf(),
 				recipientEntity.getZipCode(),
