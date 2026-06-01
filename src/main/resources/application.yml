@@ -1,8 +1,3 @@
-integration:
-  party:
-    chunk:
-      maxLegalIdsPerCall: 1000
-      maxPartyIdsPerCall: 1000
 spring:
   main:
     banner-mode: off
@@ -59,3 +54,14 @@ resilience4j:
         ignoreExceptions: se.sundsvall.dept44.exception.ClientProblem
       legalentity:
         ignoreExceptions: se.sundsvall.dept44.exception.ClientProblem
+delivery:
+  executor:
+    # Concurrency limit towards the messaging service (the blocking call runs on the pool thread).
+    # The work queue is intentionally unbounded - a recipient is never dropped; sustained overload may OOM.
+    pool-size: 8
+    await-termination-seconds: 30
+integration:
+  party:
+    chunk:
+      maxLegalIdsPerCall: 1000
+      maxPartyIdsPerCall: 1000

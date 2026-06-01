@@ -11,7 +11,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -24,6 +23,7 @@ import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.web.multipart.MultipartFile;
 import se.sundsvall.dept44.problem.Problem;
 import se.sundsvall.dept44.support.Identifier;
@@ -56,9 +56,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -124,6 +123,9 @@ class MessageServiceTest {
 
 	@Mock
 	private PartyIntegration partyIntegrationMock;
+
+	@Mock
+	private ThreadPoolTaskExecutor deliveryExecutorMock;
 
 	@Captor
 	private ArgumentCaptor<MessageEntity> messageEntityCaptor;
@@ -448,13 +450,13 @@ class MessageServiceTest {
 		final var messageEntity = MessageEntity.create()
 			.withRecipients(List.of(recipient1, recipient2));
 
-		doReturn(CompletableFuture.completedFuture(null)).when(spy).sendMessageToRecipient(messageEntity, recipient1, SETTINGS_MAP);
-		doReturn(CompletableFuture.completedFuture(null)).when(spy).sendMessageToRecipient(messageEntity, recipient2, SETTINGS_MAP);
+		runDeliveryExecutorInline();
+		doNothing().when(spy).deliver(any(), any(), any());
 
 		spy.processRecipients(messageEntity, SETTINGS_MAP);
 
-		verify(spy, Mockito.timeout(2000)).sendMessageToRecipient(messageEntity, recipient1, SETTINGS_MAP);
-		verify(spy, Mockito.timeout(2000)).sendMessageToRecipient(messageEntity, recipient2, SETTINGS_MAP);
+		verify(spy).deliver(messageEntity, recipient1, SETTINGS_MAP);
+		verify(spy).deliver(messageEntity, recipient2, SETTINGS_MAP);
 	}
 
 	@Test
@@ -466,109 +468,50 @@ class MessageServiceTest {
 		final var messageEntity = MessageEntity.create()
 			.withRecipients(List.of(deliverable, undeliverable));
 
-		doReturn(CompletableFuture.completedFuture(null)).when(spy).sendMessageToRecipient(messageEntity, deliverable, SETTINGS_MAP);
+		runDeliveryExecutorInline();
+		doNothing().when(spy).deliver(any(), any(), any());
 
 		spy.processRecipients(messageEntity, SETTINGS_MAP);
 
-		verify(spy, Mockito.timeout(2000)).sendMessageToRecipient(messageEntity, deliverable, SETTINGS_MAP);
-		verify(spy, Mockito.after(500).never()).sendMessageToRecipient(messageEntity, undeliverable, SETTINGS_MAP);
+		verify(spy).deliver(messageEntity, deliverable, SETTINGS_MAP);
+		verify(spy, never()).deliver(messageEntity, undeliverable, SETTINGS_MAP);
+	}
+
+	/**
+	 * Makes the mocked delivery executor run submitted tasks synchronously on the calling thread, so delivery behavior
+	 * is deterministic in unit tests.
+	 */
+	private void runDeliveryExecutorInline() {
+		doAnswer(invocation -> {
+			invocation.getArgument(0, Runnable.class).run();
+			return null;
+		}).when(deliveryExecutorMock).execute(any());
 	}
 
 	@Test
-	void sendMessageToRecipient_SMS() {
-		final var spy = Mockito.spy(messageService);
-
-		final var recipient1 = new RecipientEntity().withFirstName("john").withMessageType(MessageType.SMS);
-		final var messageEntity = MessageEntity.create().withRecipients(List.of(recipient1));
-		doReturn(new CompletableFuture<>()).when(spy).sendSmsToRecipient(messageEntity, recipient1);
-
-		spy.sendMessageToRecipient(messageEntity, recipient1, SETTINGS_MAP);
-
-		verify(spy).sendSmsToRecipient(messageEntity, recipient1);
-	}
-
-	@Test
-	void sendMessageToRecipient_digitalMail() {
-		final var spy = Mockito.spy(messageService);
-
-		final var recipient1 = new RecipientEntity().withFirstName("john").withMessageType(MessageType.DIGITAL_MAIL);
-		final var messageEntity = MessageEntity.create().withRecipients(List.of(recipient1));
-		doReturn(new CompletableFuture<>()).when(spy).sendDigitalMailToRecipient(messageEntity, recipient1);
-
-		spy.sendMessageToRecipient(messageEntity, recipient1, SETTINGS_MAP);
-
-		verify(spy).sendDigitalMailToRecipient(messageEntity, recipient1);
-	}
-
-	@Test
-	void sendMessageToRecipient_snailMail() {
-		final var spy = Mockito.spy(messageService);
-
-		final var recipient1 = new RecipientEntity().withFirstName("john").withMessageType(MessageType.SNAIL_MAIL);
-		final var messageEntity = MessageEntity.create().withRecipients(List.of(recipient1));
-		doReturn(new CompletableFuture<>()).when(spy).sendSnailMailToRecipient(messageEntity, recipient1, SETTINGS_MAP);
-
-		spy.sendMessageToRecipient(messageEntity, recipient1, SETTINGS_MAP);
-
-		verify(spy).sendSnailMailToRecipient(messageEntity, recipient1, SETTINGS_MAP);
-	}
-
-	@Test
-	void sendMessageToRecipient_unsupportedMessageType() {
-		final var recipient1 = new RecipientEntity().withFirstName("john").withMessageType(MessageType.LETTER);
-		final var messageEntity = MessageEntity.create().withRecipients(List.of(recipient1));
-
-		messageService.sendMessageToRecipient(messageEntity, recipient1, SETTINGS_MAP);
-
-		assertThat(recipient1.getStatus()).isEqualTo(FAILED);
-		assertThat(recipient1.getStatusDetail()).isEqualTo("Unsupported message type: LETTER");
-	}
-
-	@Test
-	void processSmsRequestToRecipient() {
-		final var spy = Mockito.spy(messageService);
-		final var recipient1 = new RecipientEntity().withFirstName("john");
-		final var messageEntity = MessageEntity.create().withRecipients(List.of(recipient1));
+	void deliver_sms() {
+		final var recipient = new RecipientEntity().withFirstName("john").withMessageType(MessageType.SMS);
+		final var messageEntity = MessageEntity.create().withRecipients(List.of(recipient));
 		final var uuid = UUID.randomUUID();
 		final var messageResult = new MessageResult()
 			.messageId(uuid)
 			.deliveries(List.of(new DeliveryResult()
 				.status(MessageStatus.SENT)));
 
-		when(messagingIntegrationMock.sendSms(messageEntity, recipient1)).thenReturn(messageResult);
-		doCallRealMethod().when(spy).updateRecipient(messageResult, recipient1);
+		when(messagingIntegrationMock.sendSms(messageEntity, recipient)).thenReturn(messageResult);
 
-		final var completableFuture = spy.sendSmsToRecipient(messageEntity, recipient1);
+		messageService.deliver(messageEntity, recipient, SETTINGS_MAP);
 
-		completableFuture.join();
-		assertThat(recipient1.getStatus()).isEqualTo(MessageStatus.SENT.toString());
-		assertThat(recipient1.getExternalId()).isEqualTo(uuid.toString());
-		verify(messagingIntegrationMock).sendSms(messageEntity, recipient1);
-		verify(recipientRepositoryMock).save(recipient1);
+		assertThat(recipient.getStatus()).isEqualTo(MessageStatus.SENT.toString());
+		assertThat(recipient.getExternalId()).isEqualTo(uuid.toString());
+		verify(messagingIntegrationMock).sendSms(messageEntity, recipient);
+		verify(recipientRepositoryMock).save(recipient);
 	}
 
 	@Test
-	void processSmsRequestToRecipient_exception() {
-		final var spy = Mockito.spy(messageService);
-		final var recipient1 = new RecipientEntity().withFirstName("john");
-		final var messageEntity = MessageEntity.create().withRecipients(List.of(recipient1));
-
-		when(messagingIntegrationMock.sendSms(messageEntity, recipient1)).thenThrow(new RuntimeException("Simulated exception"));
-
-		final var completableFuture = spy.sendSmsToRecipient(messageEntity, recipient1);
-
-		completableFuture.join();
-		assertThat(recipient1.getStatus()).isEqualTo(MessageStatus.FAILED.toString());
-		assertThat(recipient1.getStatusDetail()).isEqualTo("java.lang.RuntimeException: Simulated exception");
-		verify(messagingIntegrationMock).sendSms(messageEntity, recipient1);
-		verify(recipientRepositoryMock).save(recipient1);
-	}
-
-	@Test
-	void sendDigitalMailToRecipient_success() {
-		final var spy = Mockito.spy(messageService);
-		final var recipient1 = new RecipientEntity().withFirstName("john");
-		final var messageEntity = MessageEntity.create().withRecipients(List.of(recipient1));
+	void deliver_digitalMail() {
+		final var recipient = new RecipientEntity().withFirstName("john").withMessageType(MessageType.DIGITAL_MAIL);
+		final var messageEntity = MessageEntity.create().withRecipients(List.of(recipient));
 		final var uuid = UUID.randomUUID();
 		final var messageResult = new MessageResult()
 			.messageId(uuid)
@@ -577,80 +520,40 @@ class MessageServiceTest {
 		final var messageBatchResult = new MessageBatchResult()
 			.messages(List.of(messageResult));
 
-		when(messagingIntegrationMock.sendDigitalMail(messageEntity, recipient1)).thenReturn(messageBatchResult);
-		doCallRealMethod().when(spy).updateRecipient(messageResult, recipient1);
+		when(messagingIntegrationMock.sendDigitalMail(messageEntity, recipient)).thenReturn(messageBatchResult);
 
-		final var completableFuture = spy.sendDigitalMailToRecipient(messageEntity, recipient1);
+		messageService.deliver(messageEntity, recipient, SETTINGS_MAP);
 
-		completableFuture.join();
-		assertThat(recipient1.getStatus()).isEqualTo(MessageStatus.SENT.toString());
-		assertThat(recipient1.getExternalId()).isEqualTo(uuid.toString());
-		verify(messagingIntegrationMock).sendDigitalMail(messageEntity, recipient1);
-		verify(recipientRepositoryMock).save(recipient1);
+		assertThat(recipient.getStatus()).isEqualTo(MessageStatus.SENT.toString());
+		assertThat(recipient.getExternalId()).isEqualTo(uuid.toString());
+		verify(messagingIntegrationMock).sendDigitalMail(messageEntity, recipient);
+		verify(recipientRepositoryMock).save(recipient);
 	}
 
 	@Test
-	void sendDigitalMailToRecipient_exception() {
-		final var spy = Mockito.spy(messageService);
-		final var recipient1 = new RecipientEntity().withFirstName("john");
-		final var messageEntity = MessageEntity.create().withRecipients(List.of(recipient1));
-
-		when(messagingIntegrationMock.sendDigitalMail(messageEntity, recipient1)).thenThrow(new RuntimeException("Simulated exception"));
-
-		final var completableFuture = spy.sendDigitalMailToRecipient(messageEntity, recipient1);
-
-		completableFuture.join();
-		assertThat(recipient1.getStatus()).isEqualTo(MessageStatus.FAILED.toString());
-		assertThat(recipient1.getStatusDetail()).isEqualTo("java.lang.RuntimeException: Simulated exception");
-		verify(messagingIntegrationMock).sendDigitalMail(messageEntity, recipient1);
-		verify(recipientRepositoryMock).save(recipient1);
-	}
-
-	@Test
-	void sendSnailMailToRecipient_success() {
-		final var spy = Mockito.spy(messageService);
-		final var recipient1 = new RecipientEntity().withFirstName("john");
-		final var messageEntity = MessageEntity.create().withRecipients(List.of(recipient1));
+	void deliver_snailMail() {
+		final var recipient = new RecipientEntity().withFirstName("john").withMessageType(MessageType.SNAIL_MAIL);
+		final var messageEntity = MessageEntity.create().withRecipients(List.of(recipient));
 		final var uuid = UUID.randomUUID();
 		final var messageResult = new MessageResult()
 			.messageId(uuid)
 			.deliveries(List.of(new DeliveryResult()
 				.status(MessageStatus.SENT)));
 
-		when(messagingIntegrationMock.sendSnailMail(messageEntity, recipient1)).thenReturn(messageResult);
-		doCallRealMethod().when(spy).updateRecipient(messageResult, recipient1);
+		when(messagingIntegrationMock.sendSnailMail(messageEntity, recipient)).thenReturn(messageResult);
 
-		final var completableFuture = spy.sendSnailMailToRecipient(messageEntity, recipient1, SETTINGS_MAP);
+		messageService.deliver(messageEntity, recipient, SETTINGS_MAP);
 
-		completableFuture.join();
-		assertThat(recipient1.getStatus()).isEqualTo(MessageStatus.SENT.toString());
-		assertThat(recipient1.getExternalId()).isEqualTo(uuid.toString());
-		verify(messagingIntegrationMock).sendSnailMail(messageEntity, recipient1);
-		verify(recipientRepositoryMock).save(recipient1);
+		assertThat(recipient.getStatus()).isEqualTo(MessageStatus.SENT.toString());
+		assertThat(recipient.getExternalId()).isEqualTo(uuid.toString());
+		verify(messagingIntegrationMock).sendSnailMail(messageEntity, recipient);
+		verify(recipientRepositoryMock).save(recipient);
 	}
 
 	@Test
-	void sendSnailMailToRecipient_exception() {
-		final var spy = Mockito.spy(messageService);
-		final var recipient1 = new RecipientEntity().withFirstName("john");
-		final var messageEntity = MessageEntity.create().withRecipients(List.of(recipient1));
-
-		when(messagingIntegrationMock.sendSnailMail(messageEntity, recipient1)).thenThrow(new RuntimeException("Simulated exception"));
-
-		final var completableFuture = spy.sendSnailMailToRecipient(messageEntity, recipient1, SETTINGS_MAP);
-
-		completableFuture.join();
-		assertThat(recipient1.getStatus()).isEqualTo(MessageStatus.FAILED.toString());
-		assertThat(recipient1.getStatusDetail()).isEqualTo("java.lang.RuntimeException: Simulated exception");
-		verify(messagingIntegrationMock).sendSnailMail(messageEntity, recipient1);
-		verify(recipientRepositoryMock).save(recipient1);
-	}
-
-	@Test
-	void sendSnailMailToRecipient_callbackEmail_success() {
-		final var spy = Mockito.spy(messageService);
-		final var recipient1 = new RecipientEntity().withFirstName("john");
-		final var messageEntity = MessageEntity.create().withRecipients(List.of(recipient1));
+	void deliver_snailMail_callbackEmail() {
+		final var recipient = new RecipientEntity().withFirstName("john").withMessageType(MessageType.SNAIL_MAIL);
+		final var messageEntity = MessageEntity.create().withRecipients(List.of(recipient));
 		final var uuid = UUID.randomUUID();
 		final var messageResult = new MessageResult()
 			.messageId(uuid)
@@ -661,37 +564,41 @@ class MessageServiceTest {
 			"callback_email", "test@example.com",
 			"callback_email_subject", "Subject");
 
-		when(messagingIntegrationMock.sendCallbackEmail(messageEntity, recipient1, callbackSettingsMap)).thenReturn(messageResult);
-		doCallRealMethod().when(spy).updateRecipient(messageResult, recipient1);
+		when(messagingIntegrationMock.sendCallbackEmail(messageEntity, recipient, callbackSettingsMap)).thenReturn(messageResult);
 
-		final var completableFuture = spy.sendSnailMailToRecipient(messageEntity, recipient1, callbackSettingsMap);
+		messageService.deliver(messageEntity, recipient, callbackSettingsMap);
 
-		completableFuture.join();
-		assertThat(recipient1.getStatus()).isEqualTo(MessageStatus.SENT.toString());
-		assertThat(recipient1.getExternalId()).isEqualTo(uuid.toString());
-		verify(messagingIntegrationMock).sendCallbackEmail(messageEntity, recipient1, callbackSettingsMap);
-		verify(recipientRepositoryMock).save(recipient1);
+		assertThat(recipient.getStatus()).isEqualTo(MessageStatus.SENT.toString());
+		assertThat(recipient.getExternalId()).isEqualTo(uuid.toString());
+		verify(messagingIntegrationMock).sendCallbackEmail(messageEntity, recipient, callbackSettingsMap);
+		verify(recipientRepositoryMock).save(recipient);
 	}
 
 	@Test
-	void sendSnailMailToRecipient_callbackEmail_exception() {
-		final var spy = Mockito.spy(messageService);
-		final var recipient1 = new RecipientEntity().withFirstName("john");
-		final var messageEntity = MessageEntity.create().withRecipients(List.of(recipient1));
-		final var callbackSettingsMap = Map.of(
-			"snailmail_method", "Callback_Email",
-			"callback_email", "test@example.com",
-			"callback_email_subject", "Subject");
+	void deliver_unsupportedMessageType() {
+		final var recipient = new RecipientEntity().withFirstName("john").withMessageType(MessageType.LETTER);
+		final var messageEntity = MessageEntity.create().withRecipients(List.of(recipient));
 
-		when(messagingIntegrationMock.sendCallbackEmail(messageEntity, recipient1, callbackSettingsMap)).thenThrow(new RuntimeException("Simulated exception"));
+		messageService.deliver(messageEntity, recipient, SETTINGS_MAP);
 
-		final var completableFuture = spy.sendSnailMailToRecipient(messageEntity, recipient1, callbackSettingsMap);
+		assertThat(recipient.getStatus()).isEqualTo(FAILED);
+		assertThat(recipient.getStatusDetail()).isEqualTo("Unsupported message type: LETTER");
+		verify(recipientRepositoryMock).save(recipient);
+	}
 
-		completableFuture.join();
-		assertThat(recipient1.getStatus()).isEqualTo(MessageStatus.FAILED.toString());
-		assertThat(recipient1.getStatusDetail()).isEqualTo("java.lang.RuntimeException: Simulated exception");
-		verify(messagingIntegrationMock).sendCallbackEmail(messageEntity, recipient1, callbackSettingsMap);
-		verify(recipientRepositoryMock).save(recipient1);
+	@Test
+	void deliver_exception() {
+		final var recipient = new RecipientEntity().withFirstName("john").withMessageType(MessageType.SMS);
+		final var messageEntity = MessageEntity.create().withRecipients(List.of(recipient));
+
+		when(messagingIntegrationMock.sendSms(messageEntity, recipient)).thenThrow(new RuntimeException("Simulated exception"));
+
+		messageService.deliver(messageEntity, recipient, SETTINGS_MAP);
+
+		assertThat(recipient.getStatus()).isEqualTo(MessageStatus.FAILED.toString());
+		assertThat(recipient.getStatusDetail()).isEqualTo("Simulated exception");
+		verify(messagingIntegrationMock).sendSms(messageEntity, recipient);
+		verify(recipientRepositoryMock).save(recipient);
 	}
 
 	@Test
