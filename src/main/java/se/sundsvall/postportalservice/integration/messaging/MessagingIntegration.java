@@ -5,6 +5,8 @@ import generated.se.sundsvall.messaging.MessageBatchResult;
 import generated.se.sundsvall.messaging.MessageResult;
 import java.util.List;
 import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import se.sundsvall.postportalservice.integration.db.MessageEntity;
 import se.sundsvall.postportalservice.integration.db.RecipientEntity;
@@ -21,6 +23,8 @@ import static se.sundsvall.postportalservice.service.util.IdentifierUtil.getIden
 @Component
 public class MessagingIntegration {
 
+	private static final Logger LOG = LoggerFactory.getLogger(MessagingIntegration.class);
+
 	private final MessagingClient client;
 
 	public MessagingIntegration(final MessagingClient client) {
@@ -28,6 +32,7 @@ public class MessagingIntegration {
 	}
 
 	public MessageBatchResult sendDigitalMail(final MessageEntity messageEntity, final RecipientEntity recipientEntity) {
+		LOG.info("Sending digital mail to recipient with id {}", recipientEntity.getId());
 		RecipientId.init(recipientEntity.getId());
 		final var digitalMailRequest = toDigitalMailRequest(messageEntity, recipientEntity.getPartyId());
 
@@ -50,6 +55,7 @@ public class MessagingIntegration {
 	}
 
 	public MessageResult sendSms(final MessageEntity messageEntity, final RecipientEntity recipientEntity) {
+		LOG.info("Sending SMS to recipient with id {}", recipientEntity.getId());
 		RecipientId.init(recipientEntity.getId());
 		final var smsRequest = toSmsRequest(messageEntity, recipientEntity);
 
