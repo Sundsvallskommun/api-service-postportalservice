@@ -54,6 +54,12 @@ resilience4j:
         ignoreExceptions: se.sundsvall.dept44.exception.ClientProblem
       legalentity:
         ignoreExceptions: se.sundsvall.dept44.exception.ClientProblem
+      messageRepository: {}
+      attachmentRepository: {}
+      departmentRepository: {}
+      recipientRepository: {}
+      userRepository: {}
+      statisticsRepository: {}
 delivery:
   executor:
     # Concurrency limit towards the messaging service (the blocking call runs on the pool thread).
