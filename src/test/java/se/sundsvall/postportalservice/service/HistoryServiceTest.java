@@ -2,7 +2,6 @@ package se.sundsvall.postportalservice.service;
 
 import generated.se.sundsvall.digitalregisteredletter.LetterStatus;
 import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -33,6 +32,7 @@ import se.sundsvall.postportalservice.integration.digitalregisteredletter.Digita
 import se.sundsvall.postportalservice.integration.party.PartyIntegration;
 import se.sundsvall.postportalservice.service.mapper.HistoryMapper;
 
+import static java.time.ZoneOffset.UTC;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -51,7 +51,7 @@ import static se.sundsvall.postportalservice.integration.db.converter.MessageTyp
 @ExtendWith(MockitoExtension.class)
 class HistoryServiceTest {
 
-	private static final OffsetDateTime FIXED_CREATED = OffsetDateTime.of(2024, 6, 15, 12, 0, 0, 0, ZoneOffset.UTC);
+	private static final OffsetDateTime FIXED_CREATED = OffsetDateTime.of(2024, 6, 15, 12, 0, 0, 0, UTC);
 
 	@Mock
 	private Page<MessageEntity> pageMock;

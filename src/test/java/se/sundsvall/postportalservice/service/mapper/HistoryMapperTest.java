@@ -2,7 +2,6 @@ package se.sundsvall.postportalservice.service.mapper;
 
 import generated.se.sundsvall.digitalregisteredletter.LetterStatus;
 import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -10,13 +9,14 @@ import se.sundsvall.postportalservice.integration.db.AttachmentEntity;
 import se.sundsvall.postportalservice.integration.db.MessageEntity;
 import se.sundsvall.postportalservice.integration.db.RecipientEntity;
 
+import static java.time.ZoneOffset.UTC;
 import static org.assertj.core.api.Assertions.assertThat;
 import static se.sundsvall.postportalservice.integration.db.converter.MessageType.DIGITAL_MAIL;
 
 class HistoryMapperTest {
 
 	private static final HistoryMapper HISTORY_MAPPER = new HistoryMapper();
-	private static final OffsetDateTime FIXED_CREATED = OffsetDateTime.of(2024, 6, 15, 12, 0, 0, 0, ZoneOffset.UTC);
+	private static final OffsetDateTime FIXED_CREATED = OffsetDateTime.of(2024, 6, 15, 12, 0, 0, 0, UTC);
 
 	@Test
 	void toMessageList() {

@@ -2,7 +2,6 @@ package se.sundsvall.postportalservice.integration.db;
 
 import java.sql.Blob;
 import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -14,6 +13,7 @@ import static com.google.code.beanmatchers.BeanMatchers.hasValidBeanHashCode;
 import static com.google.code.beanmatchers.BeanMatchers.hasValidBeanToString;
 import static com.google.code.beanmatchers.BeanMatchers.hasValidGettersAndSetters;
 import static com.google.code.beanmatchers.BeanMatchers.registerValueGenerator;
+import static java.time.ZoneOffset.UTC;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -24,7 +24,7 @@ class AttachmentEntityTest {
 	private static final String FILE_NAME = "attachment.txt";
 	private static final String CONTENT_TYPE = "text/plain";
 	private static final String CONTENT_STRING = "contentString";
-	private static final OffsetDateTime CREATED = OffsetDateTime.of(2024, 6, 15, 12, 0, 0, 0, ZoneOffset.UTC);
+	private static final OffsetDateTime CREATED = OffsetDateTime.of(2024, 6, 15, 12, 0, 0, 0, UTC);
 	private static final AtomicInteger SEQUENCE = new AtomicInteger();
 	private final Blob blobMock = Mockito.mock(Blob.class);
 

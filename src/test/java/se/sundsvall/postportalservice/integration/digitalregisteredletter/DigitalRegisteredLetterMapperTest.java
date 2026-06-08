@@ -21,6 +21,7 @@ import se.sundsvall.postportalservice.integration.db.DepartmentEntity;
 import se.sundsvall.postportalservice.integration.db.MessageEntity;
 import se.sundsvall.postportalservice.integration.db.RecipientEntity;
 
+import static java.time.ZoneOffset.UTC;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
@@ -224,7 +225,7 @@ class DigitalRegisteredLetterMapperTest {
 	@Test
 	void toSigningInformation() {
 		final var status = "COMPLETED";
-		final var signed = OffsetDateTime.of(2024, 6, 15, 12, 0, 0, 0, java.time.ZoneOffset.UTC);
+		final var signed = OffsetDateTime.of(2024, 6, 15, 12, 0, 0, 0, UTC);
 		final var contentKey = "contentKey";
 		final var orderRef = "orderRef";
 		final var signature = "signature";

@@ -1,7 +1,6 @@
 package se.sundsvall.postportalservice.integration.db;
 
 import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.BeforeAll;
@@ -14,6 +13,7 @@ import static com.google.code.beanmatchers.BeanMatchers.hasValidBeanHashCodeExcl
 import static com.google.code.beanmatchers.BeanMatchers.hasValidBeanToStringExcluding;
 import static com.google.code.beanmatchers.BeanMatchers.hasValidGettersAndSetters;
 import static com.google.code.beanmatchers.BeanMatchers.registerValueGenerator;
+import static java.time.ZoneOffset.UTC;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -27,7 +27,7 @@ class MessageEntityTest {
 	private static final String BODY = "body";
 	private static final String CONTENT_TYPE = "contentType";
 	private static final String SUBJECT = "subject";
-	private static final OffsetDateTime CREATED = OffsetDateTime.of(2024, 6, 15, 12, 0, 0, 0, ZoneOffset.UTC);
+	private static final OffsetDateTime CREATED = OffsetDateTime.of(2024, 6, 15, 12, 0, 0, 0, UTC);
 	private static final AtomicInteger SEQUENCE = new AtomicInteger();
 
 	@BeforeAll
