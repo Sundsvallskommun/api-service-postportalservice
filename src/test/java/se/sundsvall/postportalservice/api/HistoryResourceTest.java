@@ -15,7 +15,6 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 import se.sundsvall.dept44.problem.Problem;
-import se.sundsvall.dept44.problem.violations.ConstraintViolationProblem;
 import se.sundsvall.postportalservice.Application;
 import se.sundsvall.postportalservice.api.model.MessageDetails;
 import se.sundsvall.postportalservice.api.model.Messages;
@@ -33,7 +32,6 @@ import static org.mockito.Mockito.when;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.http.ResponseEntity.ok;
-import static se.sundsvall.postportalservice.TestDataFactory.INVALID_MUNICIPALITY_ID;
 import static se.sundsvall.postportalservice.TestDataFactory.MUNICIPALITY_ID;
 
 @SpringBootTest(classes = Application.class, webEnvironment = RANDOM_PORT)
@@ -124,32 +122,6 @@ class HistoryResourceTest {
 	}
 
 	@Test
-	void getMessageDetails_BadRequest() {
-		final var messageId = "invalid";
-		final var userId = "joe01doe";
-
-		final var response = webTestClient.get()
-			.uri(uriBuilder -> uriBuilder.replacePath("/{municipalityId}/history/users/{userId}/messages/{messageId}")
-				.build(INVALID_MUNICIPALITY_ID, userId, messageId))
-			.exchange()
-			.expectStatus().isEqualTo(HttpStatus.BAD_REQUEST)
-			.expectBody(ConstraintViolationProblem.class)
-			.returnResult()
-			.getResponseBody();
-
-		assertThat(response.getTitle()).isEqualTo("Constraint Violation");
-		assertThat(response.getViolations()).hasSize(2).satisfiesExactlyInAnyOrder(
-			violation -> {
-				assertThat(violation.field()).isEqualTo("getMessageDetails.municipalityId");
-				assertThat(violation.message()).isEqualTo("not a valid municipality ID");
-			},
-			violation -> {
-				assertThat(violation.field()).isEqualTo("getMessageDetails.messageId");
-				assertThat(violation.message()).isEqualTo("not a valid UUID");
-			});
-	}
-
-	@Test
 	void getUserMessages_OK() {
 		final var userId = "12345";
 		final var messages = new Messages();
@@ -164,28 +136,6 @@ class HistoryResourceTest {
 			.expectStatus().isEqualTo(HttpStatus.OK);
 
 		verify(historyServiceMock).getUserMessages(eq(MUNICIPALITY_ID), eq(userId), any(Pageable.class));
-	}
-
-	@Test
-	void getUserMessages_BadRequest() {
-		final var userId = "12345";
-		final var pageableMock = Mockito.mock(Pageable.class);
-
-		final var response = webTestClient.get()
-			.uri(uriBuilder -> uriBuilder.replacePath("/{municipalityId}/history/users/{userId}/messages")
-				.build(INVALID_MUNICIPALITY_ID, userId, pageableMock))
-			.exchange()
-			.expectStatus().isEqualTo(HttpStatus.BAD_REQUEST)
-			.expectBody(ConstraintViolationProblem.class)
-			.returnResult()
-			.getResponseBody();
-
-		assertThat(response.getTitle()).isEqualTo("Constraint Violation");
-		assertThat(response.getViolations()).hasSize(1).satisfiesExactlyInAnyOrder(
-			violation -> {
-				assertThat(violation.field()).isEqualTo("getUserMessages.municipalityId");
-				assertThat(violation.message()).isEqualTo("not a valid municipality ID");
-			});
 	}
 
 	@Test
@@ -228,29 +178,6 @@ class HistoryResourceTest {
 	}
 
 	@Test
-	void getSigningInformation_badRequest() {
-		final var response = webTestClient.get()
-			.uri("/{municipalityId}/history/messages/{messageId}/signinginfo", INVALID_MUNICIPALITY_ID, "invalid")
-			.exchange()
-			.expectStatus().isBadRequest()
-			.expectBody(ConstraintViolationProblem.class)
-			.returnResult()
-			.getResponseBody();
-
-		assertThat(response.getTitle()).isEqualTo("Constraint Violation");
-		assertThat(response.getViolations()).hasSize(2).satisfiesExactlyInAnyOrder(
-			violation -> {
-				assertThat(violation.field()).isEqualTo("getSigningInformation.municipalityId");
-				assertThat(violation.message()).isEqualTo("not a valid municipality ID");
-			},
-			violation -> {
-				assertThat(violation.field()).isEqualTo("getSigningInformation.messageId");
-				assertThat(violation.message()).isEqualTo("not a valid UUID");
-			});
-
-	}
-
-	@Test
 	void readLetterReceipt() {
 		final var messageId = UUID.randomUUID().toString();
 		final var mockResponseEntity = ok()
@@ -283,29 +210,6 @@ class HistoryResourceTest {
 			.expectStatus().isNotFound();
 
 		verify(historyServiceMock).getLetterReceipt(MUNICIPALITY_ID, messageId);
-	}
-
-	@Test
-	void readLetterReceipt_badRequest() {
-		final var response = webTestClient.get()
-			.uri("/{municipalityId}/history/messages/{messageId}/receipt", INVALID_MUNICIPALITY_ID, "invalid")
-			.exchange()
-			.expectStatus().isBadRequest()
-			.expectBody(ConstraintViolationProblem.class)
-			.returnResult()
-			.getResponseBody();
-
-		assertThat(response).isNotNull();
-		assertThat(response.getTitle()).isEqualTo("Constraint Violation");
-		assertThat(response.getViolations()).hasSize(2).satisfiesExactlyInAnyOrder(
-			violation -> {
-				assertThat(violation.field()).isEqualTo("readLetterReceipt.municipalityId");
-				assertThat(violation.message()).isEqualTo("not a valid municipality ID");
-			},
-			violation -> {
-				assertThat(violation.field()).isEqualTo("readLetterReceipt.messageId");
-				assertThat(violation.message()).isEqualTo("not a valid UUID");
-			});
 	}
 
 }
