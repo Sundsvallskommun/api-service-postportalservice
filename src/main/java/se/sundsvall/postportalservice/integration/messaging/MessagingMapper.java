@@ -35,6 +35,7 @@ import static org.apache.commons.lang3.ObjectUtils.anyNull;
 import static org.springframework.http.HttpStatus.BAD_GATEWAY;
 import static se.sundsvall.postportalservice.service.util.MessagingSettingsUtil.SNAILMAIL_CALLBACK_EMAIL;
 import static se.sundsvall.postportalservice.service.util.MessagingSettingsUtil.SNAILMAIL_CALLBACK_SUBJECT;
+import static se.sundsvall.postportalservice.service.util.StringUtil.calculateRecipientName;
 
 public final class MessagingMapper {
 
@@ -49,19 +50,7 @@ public final class MessagingMapper {
 		""";
 
 	static String formatRecipientName(final RecipientEntity recipientEntity) {
-		final var firstName = recipientEntity.getFirstName();
-		final var lastName = recipientEntity.getLastName();
-		final var organizationName = recipientEntity.getOrganizationName();
-		final var hasPersonName = firstName != null && !firstName.isBlank() && lastName != null && !lastName.isBlank();
-		final var hasOrganizationName = organizationName != null && !organizationName.isBlank();
-
-		if (hasOrganizationName && hasPersonName) {
-			return "%s (att: %s %s)".formatted(organizationName, firstName, lastName);
-		}
-		if (hasOrganizationName) {
-			return organizationName;
-		}
-		return "%s %s".formatted(firstName, lastName);
+		return calculateRecipientName(recipientEntity.getFirstName(), recipientEntity.getLastName(), recipientEntity.getOrganizationName());
 	}
 
 	private static final String EMAIL_SENDER_NAME = "Postportalen";

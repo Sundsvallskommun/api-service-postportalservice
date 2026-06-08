@@ -15,7 +15,7 @@ import se.sundsvall.postportalservice.integration.db.converter.MessageType;
 
 import static java.util.Collections.emptyList;
 import static java.util.Optional.ofNullable;
-import static se.sundsvall.postportalservice.service.util.StringUtil.calculateFullName;
+import static se.sundsvall.postportalservice.service.util.StringUtil.calculateRecipientName;
 
 @Component
 public class HistoryMapper {
@@ -79,7 +79,7 @@ public class HistoryMapper {
 				.withCity(recipientEntity.getCity())
 				.withStreetAddress(recipientEntity.getStreetAddress())
 				.withMobileNumber(recipientEntity.getPhoneNumber())
-				.withName(calculateFullName(recipientEntity.getFirstName(), recipientEntity.getLastName()))
+				.withName(calculateRecipientName(recipientEntity.getFirstName(), recipientEntity.getLastName(), recipientEntity.getOrganizationName()))
 				.withMessageType(ofNullable(recipientEntity.getMessageType()).map(MessageType::name).orElse(null))
 				.withStatus(recipientEntity.getStatus())
 				.withZipCode(recipientEntity.getZipCode()))

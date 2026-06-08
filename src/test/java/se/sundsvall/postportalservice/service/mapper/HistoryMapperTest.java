@@ -402,6 +402,36 @@ class HistoryMapperTest {
 	}
 
 	@Test
+	void toRecipient_enterpriseUsesOrganizationName() {
+		final var recipientEntity = RecipientEntity.create()
+			.withOrganizationName("Acme AB")
+			.withMessageType(DIGITAL_MAIL)
+			.withPartyId("partyId")
+			.withStatus("status");
+
+		final var result = HISTORY_MAPPER.toRecipient(recipientEntity);
+
+		assertThat(result).isNotNull();
+		assertThat(result.getName()).isEqualTo("Acme AB");
+	}
+
+	@Test
+	void toRecipient_enterpriseWithContactPersonCombinesBoth() {
+		final var recipientEntity = RecipientEntity.create()
+			.withFirstName("John")
+			.withLastName("Doe")
+			.withOrganizationName("Acme AB")
+			.withMessageType(DIGITAL_MAIL)
+			.withPartyId("partyId")
+			.withStatus("status");
+
+		final var result = HISTORY_MAPPER.toRecipient(recipientEntity);
+
+		assertThat(result).isNotNull();
+		assertThat(result.getName()).isEqualTo("Acme AB (att: John Doe)");
+	}
+
+	@Test
 	void toRecipientFromNull() {
 		assertThat(HISTORY_MAPPER.toRecipient(null)).isNull();
 	}
