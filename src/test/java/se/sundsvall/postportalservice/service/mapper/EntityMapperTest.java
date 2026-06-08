@@ -48,7 +48,7 @@ class EntityMapperTest {
 	void toRecipientEntity_recipient_digitalMail() {
 		final var recipient = new Recipient()
 			.withPartyId(UUID.randomUUID().toString())
-			.withDeliveryMethod(Recipient.DeliveryMethod.DIGITAL_MAIL);
+			.withDeliveryMethod("DIGITAL_MAIL");
 
 		final var result = entityMapper.toRecipientEntity(recipient, PartyType.PRIVATE);
 
@@ -80,7 +80,7 @@ class EntityMapperTest {
 		final var recipient = new Recipient()
 			.withPartyId(UUID.randomUUID().toString())
 			.withAddress(address)
-			.withDeliveryMethod(Recipient.DeliveryMethod.SNAIL_MAIL);
+			.withDeliveryMethod("SNAIL_MAIL");
 
 		final var result = entityMapper.toRecipientEntity(recipient, PartyType.PRIVATE);
 
@@ -233,7 +233,7 @@ class EntityMapperTest {
 	void toRecipientEntity_recipient_withPartyType_enterprise() {
 		final var recipient = new Recipient()
 			.withPartyId(UUID.randomUUID().toString())
-			.withDeliveryMethod(Recipient.DeliveryMethod.DIGITAL_MAIL);
+			.withDeliveryMethod("DIGITAL_MAIL");
 
 		final var result = entityMapper.toRecipientEntity(recipient, PartyType.ENTERPRISE);
 

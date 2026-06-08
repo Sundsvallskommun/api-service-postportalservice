@@ -28,7 +28,6 @@ import se.sundsvall.postportalservice.api.model.KivraEligibilityRequest;
 import se.sundsvall.postportalservice.api.model.PrecheckCsvResponse;
 import se.sundsvall.postportalservice.api.model.PrecheckRequest;
 import se.sundsvall.postportalservice.api.model.PrecheckResponse;
-import se.sundsvall.postportalservice.api.model.PrecheckResponse.DeliveryMethod;
 import se.sundsvall.postportalservice.api.model.PrecheckResponse.PrecheckRecipient;
 import se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration;
 import se.sundsvall.postportalservice.service.PrecheckService;
@@ -145,8 +144,8 @@ class PrecheckResourceTest {
 		final var request = new PrecheckRequest(List.of("b46f0ca2-d2ad-43e8-8d50-3aeb949e3604", "fd99a03c-790c-4b87-bc4b-f4f73e4a2df4"));
 
 		final var precheckResponse = PrecheckResponse.of(List.of(
-			new PrecheckRecipient("b46f0ca2-d2ad-43e8-8d50-3aeb949e3604", "partyId-1", DeliveryMethod.DIGITAL_MAIL, null),
-			new PrecheckRecipient("fd99a03c-790c-4b87-bc4b-f4f73e4a2df4", "partyId-2", DeliveryMethod.DIGITAL_MAIL, null)));
+			new PrecheckRecipient("b46f0ca2-d2ad-43e8-8d50-3aeb949e3604", "partyId-1", "DIGITAL_MAIL", null),
+			new PrecheckRecipient("fd99a03c-790c-4b87-bc4b-f4f73e4a2df4", "partyId-2", "DIGITAL_MAIL", null)));
 
 		when(precheckServiceMock.precheckPartyIds(MUNICIPALITY_ID, request.partyIds())).thenReturn(precheckResponse);
 
@@ -164,8 +163,8 @@ class PrecheckResourceTest {
 
 		assertThat(response).isNotNull();
 		assertThat(response.precheckRecipients()).extracting("personalIdentityNumber", "partyId", "deliveryMethod").containsExactlyInAnyOrder(
-			tuple("b46f0ca2-d2ad-43e8-8d50-3aeb949e3604", "partyId-1", DeliveryMethod.DIGITAL_MAIL),
-			tuple("fd99a03c-790c-4b87-bc4b-f4f73e4a2df4", "partyId-2", DeliveryMethod.DIGITAL_MAIL));
+			tuple("b46f0ca2-d2ad-43e8-8d50-3aeb949e3604", "partyId-1", "DIGITAL_MAIL"),
+			tuple("fd99a03c-790c-4b87-bc4b-f4f73e4a2df4", "partyId-2", "DIGITAL_MAIL"));
 
 		verify(precheckServiceMock).precheckPartyIds(MUNICIPALITY_ID, request.partyIds());
 	}

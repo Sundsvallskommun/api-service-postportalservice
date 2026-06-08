@@ -18,7 +18,7 @@ import static se.sundsvall.postportalservice.TestDataFactory.createValidAddress;
 class RecipientTest {
 
 	private final String partyId = "6d0773d6-3e7f-4552-81bc-f0007af95adf";
-	private final Recipient.DeliveryMethod deliveryMethod = Recipient.DeliveryMethod.DIGITAL_MAIL;
+	private final String deliveryMethod = "DIGITAL_MAIL";
 	private final Address address = createValidAddress();
 
 	private final Validator validator = Validation.buildDefaultValidatorFactory().getValidator();

@@ -5,6 +5,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import java.util.Objects;
 import se.sundsvall.dept44.common.validators.annotation.ValidUuid;
+import se.sundsvall.postportalservice.api.validation.ValidDeliveryMethod;
 import se.sundsvall.postportalservice.api.validation.ValidRecipient;
 import se.sundsvall.postportalservice.api.validation.groups.SnailMailGroup;
 
@@ -16,18 +17,17 @@ public class Recipient {
 	@ValidUuid
 	private String partyId;
 
-	@Schema(description = "Delivery method for the recipient", examples = "DIGITAL_MAIL", implementation = DeliveryMethod.class)
+	@Schema(description = "Delivery method for the recipient", allowableValues = {
+		"DIGITAL_MAIL", "SNAIL_MAIL", "DELIVERY_NOT_POSSIBLE"
+	}, examples = "DIGITAL_MAIL")
 	@NotNull
-	private DeliveryMethod deliveryMethod;
+	@ValidDeliveryMethod
+	private String deliveryMethod;
 
 	@Schema(description = "Address details for the recipient, used for SNAIL_MAIL delivery method", implementation = Address.class)
 	@Valid
 	@NotNull(groups = SnailMailGroup.class)
 	private Address address;
-
-	public enum DeliveryMethod {
-		DIGITAL_MAIL, SNAIL_MAIL, DELIVERY_NOT_POSSIBLE
-	}
 
 	public static Recipient create() {
 		return new Recipient();
@@ -47,15 +47,15 @@ public class Recipient {
 
 	}
 
-	public DeliveryMethod getDeliveryMethod() {
+	public String getDeliveryMethod() {
 		return deliveryMethod;
 	}
 
-	public void setDeliveryMethod(DeliveryMethod deliveryMethod) {
+	public void setDeliveryMethod(String deliveryMethod) {
 		this.deliveryMethod = deliveryMethod;
 	}
 
-	public Recipient withDeliveryMethod(DeliveryMethod deliveryMethod) {
+	public Recipient withDeliveryMethod(String deliveryMethod) {
 		this.deliveryMethod = deliveryMethod;
 		return this;
 	}
@@ -87,7 +87,7 @@ public class Recipient {
 		if (o == null || getClass() != o.getClass())
 			return false;
 		Recipient recipient = (Recipient) o;
-		return Objects.equals(partyId, recipient.partyId) && deliveryMethod == recipient.deliveryMethod && Objects.equals(address, recipient.address);
+		return Objects.equals(partyId, recipient.partyId) && Objects.equals(deliveryMethod, recipient.deliveryMethod) && Objects.equals(address, recipient.address);
 	}
 
 	@Override

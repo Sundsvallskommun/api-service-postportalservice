@@ -7,7 +7,7 @@ info:
     url: https://opensource.org/licenses/MIT
   version: "1.7"
 servers:
-- url: http://localhost:60728
+- url: http://localhost:57468
   description: Generated server url
 paths:
   /{municipalityId}/precheck:
@@ -881,16 +881,16 @@ components:
     Problem:
       type: object
       properties:
-        title:
-          type: string
-        detail:
-          type: string
         instance:
           type: string
           format: uri
         type:
           type: string
           format: uri
+        title:
+          type: string
+        detail:
+          type: string
         status:
           type: integer
           format: int32
@@ -1060,13 +1060,6 @@ components:
           type:
           - string
           - "null"
-    DeliveryMethod:
-      type: string
-      description: Possible delivery methods
-      enum:
-      - DIGITAL_MAIL
-      - SNAIL_MAIL
-      - DELIVERY_NOT_POSSIBLE
     PrecheckRecipient:
       type: object
       description: Per-recipient delivery capability
@@ -1082,8 +1075,14 @@ components:
           examples:
           - da03b33e-9de2-45ac-8291-31a88de59410
         deliveryMethod:
-          $ref: "#/components/schemas/DeliveryMethod"
+          type: string
           description: Delivery method for the recipient
+          enum:
+          - DIGITAL_MAIL
+          - SNAIL_MAIL
+          - DELIVERY_NOT_POSSIBLE
+          examples:
+          - DIGITAL_MAIL
         reason:
           type: string
           description: Reason when delivery method isn't available or an upstream

@@ -55,7 +55,7 @@ class ValidRecipientConstraintValidatorTest {
 		var recipient = Recipient.create()
 			.withAddress(null)
 			.withPartyId(validPartyId)
-			.withDeliveryMethod(Recipient.DeliveryMethod.DIGITAL_MAIL);
+			.withDeliveryMethod("DIGITAL_MAIL");
 
 		var valid = validator.isValid(recipient, context);
 
@@ -67,7 +67,7 @@ class ValidRecipientConstraintValidatorTest {
 		var recipient = Recipient.create()
 			.withAddress(null)
 			.withPartyId(validPartyId)
-			.withDeliveryMethod(Recipient.DeliveryMethod.DELIVERY_NOT_POSSIBLE);
+			.withDeliveryMethod("DELIVERY_NOT_POSSIBLE");
 
 		var valid = validator.isValid(recipient, context);
 
@@ -79,7 +79,7 @@ class ValidRecipientConstraintValidatorTest {
 		var recipient = Recipient.create()
 			.withAddress(validAddress)
 			.withPartyId(validPartyId)
-			.withDeliveryMethod(Recipient.DeliveryMethod.SNAIL_MAIL);
+			.withDeliveryMethod("SNAIL_MAIL");
 
 		var valid = validator.isValid(recipient, context);
 
@@ -94,7 +94,7 @@ class ValidRecipientConstraintValidatorTest {
 		var recipient = Recipient.create()
 			.withAddress(null)
 			.withPartyId(validPartyId)
-			.withDeliveryMethod(Recipient.DeliveryMethod.SNAIL_MAIL);
+			.withDeliveryMethod("SNAIL_MAIL");
 
 		var valid = validator.isValid(recipient, context);
 

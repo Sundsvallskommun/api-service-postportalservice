@@ -28,7 +28,6 @@ import se.sundsvall.postportalservice.api.model.Address;
 import se.sundsvall.postportalservice.api.model.DigitalRegisteredLetterRequest;
 import se.sundsvall.postportalservice.api.model.LetterRequest;
 import se.sundsvall.postportalservice.api.model.Recipient;
-import se.sundsvall.postportalservice.api.model.Recipient.DeliveryMethod;
 import se.sundsvall.postportalservice.api.model.SmsCsvRequest;
 import se.sundsvall.postportalservice.api.model.SmsRecipient;
 import se.sundsvall.postportalservice.api.model.SmsRequest;
@@ -211,14 +210,14 @@ class MessageResourceTest {
 
 			Arguments.of("Missing address for recipient with digital mail delivery", createRequestWithSetTopAttributes()
 				.withRecipients(List.of(Recipient.create()
-					.withDeliveryMethod(DeliveryMethod.DIGITAL_MAIL)
+					.withDeliveryMethod("DIGITAL_MAIL")
 					.withPartyId("invalid"))),
 				List.of(
 					new Violation("recipients[0].partyId", "not a valid UUID"))),
 
 			Arguments.of("Missing address for recipient with snail mail delivery", createRequestWithSetTopAttributes()
 				.withRecipients(List.of(Recipient.create()
-					.withDeliveryMethod(DeliveryMethod.SNAIL_MAIL)
+					.withDeliveryMethod("SNAIL_MAIL")
 					.withPartyId(partyId))),
 				List.of(
 					new Violation("recipients[0].address", "must not be null"))),
@@ -226,7 +225,7 @@ class MessageResourceTest {
 			Arguments.of("Empty address for recipient with snail mail delivery", createRequestWithSetTopAttributes()
 				.withRecipients(List.of(Recipient.create()
 					.withAddress(Address.create())
-					.withDeliveryMethod(DeliveryMethod.SNAIL_MAIL)
+					.withDeliveryMethod("SNAIL_MAIL")
 					.withPartyId(partyId))),
 				List.of(
 					new Violation("recipients[0].address.city", "must not be blank"),

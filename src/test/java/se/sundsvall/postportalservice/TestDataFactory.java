@@ -28,7 +28,7 @@ public final class TestDataFactory {
 		return Recipient.create()
 			.withAddress(createValidAddress())
 			.withPartyId("6d0773d6-3e7f-4552-81bc-f0007af95adf")
-			.withDeliveryMethod(Recipient.DeliveryMethod.DIGITAL_MAIL);
+			.withDeliveryMethod("DIGITAL_MAIL");
 	}
 
 	public static Address createValidAddress() {
