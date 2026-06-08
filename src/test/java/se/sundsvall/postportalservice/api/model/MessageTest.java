@@ -11,6 +11,7 @@ import static com.google.code.beanmatchers.BeanMatchers.hasValidBeanHashCode;
 import static com.google.code.beanmatchers.BeanMatchers.hasValidBeanToString;
 import static com.google.code.beanmatchers.BeanMatchers.hasValidGettersAndSetters;
 import static com.google.code.beanmatchers.BeanMatchers.registerValueGenerator;
+import static java.time.Month.JANUARY;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.CoreMatchers.allOf;
 
@@ -20,7 +21,7 @@ class MessageTest {
 	private static final String MESSAGE_ID = "messageId";
 	private static final String SUBJECT = "subject";
 	private static final String TYPE = "type";
-	private static final LocalDateTime SENT_AT = LocalDateTime.of(2021, 1, 1, 12, 0, 0);
+	private static final LocalDateTime SENT_AT = LocalDateTime.of(2021, JANUARY, 1, 12, 0, 0);
 	private static final SigningStatus SIGNING_STATUS = SigningStatus.create();
 	private static final AtomicInteger SEQUENCE = new AtomicInteger();
 

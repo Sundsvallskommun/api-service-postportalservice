@@ -12,6 +12,7 @@ import static com.google.code.beanmatchers.BeanMatchers.hasValidBeanHashCode;
 import static com.google.code.beanmatchers.BeanMatchers.hasValidBeanToString;
 import static com.google.code.beanmatchers.BeanMatchers.hasValidGettersAndSetters;
 import static com.google.code.beanmatchers.BeanMatchers.registerValueGenerator;
+import static java.time.Month.JUNE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.CoreMatchers.allOf;
 
@@ -20,7 +21,7 @@ class MessageDetailsTest {
 	// MessageDetails attributes
 	private static final String SUBJECT = "subject";
 	private static final String BODY = "body";
-	private static final LocalDateTime SENT_AT = LocalDateTime.of(2024, 6, 15, 12, 0, 0);
+	private static final LocalDateTime SENT_AT = LocalDateTime.of(2024, JUNE, 15, 12, 0, 0);
 	private static final AtomicInteger SEQUENCE = new AtomicInteger();
 	private static final SigningStatus SIGNING_STATUS = new SigningStatus();
 	private static final List<MessageDetails.AttachmentDetails> ATTACHMENTS = List.of(new MessageDetails.AttachmentDetails());
