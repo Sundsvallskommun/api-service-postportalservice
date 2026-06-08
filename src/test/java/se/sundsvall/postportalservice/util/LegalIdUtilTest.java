@@ -75,7 +75,9 @@ class LegalIdUtilTest {
 	}
 
 	public static Stream<Arguments> legalIdProvider() {
-		final var today = LocalDate.now();
+		// LegalIdUtil.isAnAdult uses LocalDate.now() to compute age; the test must use the same "today" so generated
+		// birth dates land on the expected side of the 18-year boundary.
+		final var today = LocalDate.now(); // NOSONAR
 		final var formatter = DateTimeFormatter.ofPattern("uuuuMMdd");  // Using strict mode in the actual implementation
 
 		// Dynamic dates

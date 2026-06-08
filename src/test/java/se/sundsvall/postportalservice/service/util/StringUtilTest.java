@@ -26,4 +26,20 @@ class StringUtilTest {
 			Arguments.of("Test of trimming values for both first and last name", " Shimada ", " Tyndall ", "Shimada Tyndall"),
 			Arguments.of("Test of trimming values for both complex first and complex last name", " Captain Soren ", " Bane Rhineheart ", "Captain Soren Bane Rhineheart"));
 	}
+
+	@ParameterizedTest(name = "{0}")
+	@MethodSource("calculateRecipientNameProvider")
+	void calculateRecipientName(String testName, String firstName, String lastName, String organizationName, String expectedResult) {
+		assertThat(StringUtil.calculateRecipientName(firstName, lastName, organizationName)).isEqualTo(expectedResult);
+	}
+
+	private static Stream<Arguments> calculateRecipientNameProvider() {
+		return Stream.of(
+			Arguments.of("Nothing set", null, null, null, null),
+			Arguments.of("Only organisation name", null, null, "Acme AB", "Acme AB"),
+			Arguments.of("Only person name", "John", "Doe", null, "John Doe"),
+			Arguments.of("Both organisation and person name", "John", "Doe", "Acme AB", "Acme AB (att: John Doe)"),
+			Arguments.of("Organisation name + only first name", "John", null, "Acme AB", "Acme AB (att: John)"),
+			Arguments.of("Blank organisation name falls back to person name", "John", "Doe", "  ", "John Doe"));
+	}
 }

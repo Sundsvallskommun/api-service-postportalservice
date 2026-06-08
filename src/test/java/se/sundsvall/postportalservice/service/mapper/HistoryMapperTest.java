@@ -9,17 +9,19 @@ import se.sundsvall.postportalservice.integration.db.AttachmentEntity;
 import se.sundsvall.postportalservice.integration.db.MessageEntity;
 import se.sundsvall.postportalservice.integration.db.RecipientEntity;
 
+import static java.time.ZoneOffset.UTC;
 import static org.assertj.core.api.Assertions.assertThat;
 import static se.sundsvall.postportalservice.integration.db.converter.MessageType.DIGITAL_MAIL;
 
 class HistoryMapperTest {
 
 	private static final HistoryMapper HISTORY_MAPPER = new HistoryMapper();
+	private static final OffsetDateTime FIXED_CREATED = OffsetDateTime.of(2024, 6, 15, 12, 0, 0, 0, UTC);
 
 	@Test
 	void toMessageList() {
 		// Setup
-		final var created = OffsetDateTime.now();
+		final var created = FIXED_CREATED;
 		final var id = "id";
 		final var messageType = DIGITAL_MAIL;
 		final var recipients = List.of(RecipientEntity.create(), RecipientEntity.create(), RecipientEntity.create());
@@ -49,7 +51,7 @@ class HistoryMapperTest {
 	@Test
 	void toMessageListWhenSourceContainsNull() {
 		// Setup
-		final var created = OffsetDateTime.now();
+		final var created = FIXED_CREATED;
 		final var id = "id";
 		final var messageType = DIGITAL_MAIL;
 		final var recipients = List.of(RecipientEntity.create());
@@ -87,7 +89,7 @@ class HistoryMapperTest {
 	@Test
 	void toMessage() {
 		// Setup
-		final var created = OffsetDateTime.now();
+		final var created = FIXED_CREATED;
 		final var id = "id";
 		final var messageType = DIGITAL_MAIL;
 		final var recipients = List.of(RecipientEntity.create(), RecipientEntity.create());
@@ -136,7 +138,7 @@ class HistoryMapperTest {
 		// Setup
 		final var subject = "subject";
 		final var body = "body";
-		final var created = OffsetDateTime.now();
+		final var created = FIXED_CREATED;
 		final var attachment = AttachmentEntity.create();
 		final var recipient = RecipientEntity.create();
 		final var messageEntity = MessageEntity.create()
@@ -399,6 +401,36 @@ class HistoryMapperTest {
 
 		// Assert
 		assertThat(result).isNotNull().hasAllNullFieldsOrProperties();
+	}
+
+	@Test
+	void toRecipient_enterpriseUsesOrganizationName() {
+		final var recipientEntity = RecipientEntity.create()
+			.withOrganizationName("Acme AB")
+			.withMessageType(DIGITAL_MAIL)
+			.withPartyId("partyId")
+			.withStatus("status");
+
+		final var result = HISTORY_MAPPER.toRecipient(recipientEntity);
+
+		assertThat(result).isNotNull();
+		assertThat(result.getName()).isEqualTo("Acme AB");
+	}
+
+	@Test
+	void toRecipient_enterpriseWithContactPersonCombinesBoth() {
+		final var recipientEntity = RecipientEntity.create()
+			.withFirstName("John")
+			.withLastName("Doe")
+			.withOrganizationName("Acme AB")
+			.withMessageType(DIGITAL_MAIL)
+			.withPartyId("partyId")
+			.withStatus("status");
+
+		final var result = HISTORY_MAPPER.toRecipient(recipientEntity);
+
+		assertThat(result).isNotNull();
+		assertThat(result.getName()).isEqualTo("Acme AB (att: John Doe)");
 	}
 
 	@Test

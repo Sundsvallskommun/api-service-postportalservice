@@ -23,6 +23,7 @@ import se.sundsvall.postportalservice.api.model.SigningInformation;
 import se.sundsvall.postportalservice.api.model.SigningStatus;
 import se.sundsvall.postportalservice.service.HistoryService;
 
+import static java.time.ZoneOffset.UTC;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -196,7 +197,7 @@ class HistoryResourceTest {
 		final var orderReference = "orderReference";
 		final var signature = "signature";
 		final var oscpResponse = "ocspResponse";
-		final var signedAt = OffsetDateTime.now();
+		final var signedAt = OffsetDateTime.of(2024, 6, 15, 12, 0, 0, 0, UTC);
 		final var result = SigningInformation.create()
 			.withStatus(status)
 			.withContentKey(contentKey)
