@@ -16,8 +16,8 @@ import se.sundsvall.dept44.test.annotation.wiremock.WireMockAppTestSuite;
 import se.sundsvall.postportalservice.Application;
 
 @Sql(scripts = {
-	"/db/script/truncate.sql",
-	"/db/script/testdata.sql"
+	"/db/scripts/truncate.sql",
+	"/db/scripts/testdata.sql"
 })
 @WireMockAppTestSuite(files = "classpath:/AttachmentIT/", classes = Application.class)
 class AttachmentIT extends AbstractAppTest {

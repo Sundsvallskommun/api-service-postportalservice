@@ -122,18 +122,6 @@
 						</configuration>
 					</execution>
 					<execution>
-						<id>employee-api</id>
-						<goals>
-							<goal>generate</goal>
-						</goals>
-						<configuration>
-							<inputSpec>${project.basedir}/src/main/resources/integrations/employee.yml</inputSpec>
-							<configOptions>
-								<modelPackage>generated.se.sundsvall.employee</modelPackage>
-							</configOptions>
-						</configuration>
-					</execution>
-					<execution>
 						<id>messaging-api</id>
 						<goals>
 							<goal>generate</goal>

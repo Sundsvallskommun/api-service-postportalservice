@@ -28,9 +28,6 @@ spring:
           messaging:
             authorization-grant-type: client_credentials
             provider: messaging
-          employee:
-            authorization-grant-type: client_credentials
-            provider: employee
           party:
             authorization-grant-type: client_credentials
             provider: party
@@ -47,8 +44,6 @@ resilience4j:
   circuitbreaker:
     instances:
       messagingsettings:
-        ignoreExceptions: se.sundsvall.dept44.exception.ClientProblem
-      employee:
         ignoreExceptions: se.sundsvall.dept44.exception.ClientProblem
       messaging:
         ignoreExceptions: se.sundsvall.dept44.exception.ClientProblem

@@ -21,8 +21,6 @@ spring:
             token-uri: http://localhost:${wiremock.server.port:}/api-gateway/token
           messaging:
             token-uri: http://localhost:${wiremock.server.port:}/api-gateway/token
-          employee:
-            token-uri: http://localhost:${wiremock.server.port:}/api-gateway/token
           party:
             token-uri: http://localhost:${wiremock.server.port:}/api-gateway/token
           legalentity:
@@ -40,9 +38,6 @@ spring:
           messaging:
             client-id: the-client-id
             client-secret: the-client-secret
-          employee:
-            client-id: the-client-id
-            client-secret: the-client-secret
           party:
             client-id: the-client-id
             client-secret: the-client-secret
@@ -58,8 +53,6 @@ integration:
     url: http://localhost:${wiremock.server.port:}/api-messagingsettings
   messaging:
     url: http://localhost:${wiremock.server.port:}/api-messaging
-  employee:
-    url: http://localhost:${wiremock.server.port:}/api-employee
   party:
     url: http://localhost:${wiremock.server.port:}/api-party
   legalentity:
