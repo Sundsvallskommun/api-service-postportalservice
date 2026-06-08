@@ -107,7 +107,9 @@ public final class TestDataFactory {
 	 * @return          a 12-digit legal ID string
 	 */
 	public static String generateLegalId(final int yearsOld, final String suffix) {
-		final var birthDate = LocalDate.now().minusYears(yearsOld);
+		// LegalIdUtil.isAnAdult uses LocalDate.now() to compute age; this generator must use the same "today" so the
+		// resulting ID lands on the expected side of the 18-year boundary in age-categorisation tests.
+		final var birthDate = LocalDate.now().minusYears(yearsOld); // NOSONAR
 		final var dateFormatter = DateTimeFormatter.ofPattern("yyyyMMdd");
 		return birthDate.format(dateFormatter) + suffix;
 	}

@@ -196,7 +196,7 @@ class HistoryResourceTest {
 		final var orderReference = "orderReference";
 		final var signature = "signature";
 		final var oscpResponse = "ocspResponse";
-		final var signedAt = OffsetDateTime.now();
+		final var signedAt = OffsetDateTime.of(2024, 6, 15, 12, 0, 0, 0, java.time.ZoneOffset.UTC);
 		final var result = SigningInformation.create()
 			.withStatus(status)
 			.withContentKey(contentKey)

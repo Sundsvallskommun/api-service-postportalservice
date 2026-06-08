@@ -2,6 +2,7 @@ package se.sundsvall.postportalservice.service.mapper;
 
 import generated.se.sundsvall.digitalregisteredletter.LetterStatus;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -15,11 +16,12 @@ import static se.sundsvall.postportalservice.integration.db.converter.MessageTyp
 class HistoryMapperTest {
 
 	private static final HistoryMapper HISTORY_MAPPER = new HistoryMapper();
+	private static final OffsetDateTime FIXED_CREATED = OffsetDateTime.of(2024, 6, 15, 12, 0, 0, 0, ZoneOffset.UTC);
 
 	@Test
 	void toMessageList() {
 		// Setup
-		final var created = OffsetDateTime.now();
+		final var created = FIXED_CREATED;
 		final var id = "id";
 		final var messageType = DIGITAL_MAIL;
 		final var recipients = List.of(RecipientEntity.create(), RecipientEntity.create(), RecipientEntity.create());
@@ -49,7 +51,7 @@ class HistoryMapperTest {
 	@Test
 	void toMessageListWhenSourceContainsNull() {
 		// Setup
-		final var created = OffsetDateTime.now();
+		final var created = FIXED_CREATED;
 		final var id = "id";
 		final var messageType = DIGITAL_MAIL;
 		final var recipients = List.of(RecipientEntity.create());
@@ -87,7 +89,7 @@ class HistoryMapperTest {
 	@Test
 	void toMessage() {
 		// Setup
-		final var created = OffsetDateTime.now();
+		final var created = FIXED_CREATED;
 		final var id = "id";
 		final var messageType = DIGITAL_MAIL;
 		final var recipients = List.of(RecipientEntity.create(), RecipientEntity.create());
@@ -136,7 +138,7 @@ class HistoryMapperTest {
 		// Setup
 		final var subject = "subject";
 		final var body = "body";
-		final var created = OffsetDateTime.now();
+		final var created = FIXED_CREATED;
 		final var attachment = AttachmentEntity.create();
 		final var recipient = RecipientEntity.create();
 		final var messageEntity = MessageEntity.create()

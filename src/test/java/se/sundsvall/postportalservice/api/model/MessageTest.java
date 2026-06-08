@@ -1,7 +1,7 @@
 package se.sundsvall.postportalservice.api.model;
 
 import java.time.LocalDateTime;
-import java.util.Random;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -11,7 +11,6 @@ import static com.google.code.beanmatchers.BeanMatchers.hasValidBeanHashCode;
 import static com.google.code.beanmatchers.BeanMatchers.hasValidBeanToString;
 import static com.google.code.beanmatchers.BeanMatchers.hasValidGettersAndSetters;
 import static com.google.code.beanmatchers.BeanMatchers.registerValueGenerator;
-import static java.time.LocalDateTime.now;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.CoreMatchers.allOf;
 
@@ -23,10 +22,11 @@ class MessageTest {
 	private static final String TYPE = "type";
 	private static final LocalDateTime SENT_AT = LocalDateTime.of(2021, 1, 1, 12, 0, 0);
 	private static final SigningStatus SIGNING_STATUS = SigningStatus.create();
+	private static final AtomicInteger SEQUENCE = new AtomicInteger();
 
 	@BeforeAll
 	static void setup() {
-		registerValueGenerator(() -> now().plusDays(new Random().nextInt()), LocalDateTime.class);
+		registerValueGenerator(() -> SENT_AT.plusDays(SEQUENCE.incrementAndGet()), LocalDateTime.class);
 	}
 
 	@Test

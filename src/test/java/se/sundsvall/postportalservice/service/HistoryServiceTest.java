@@ -2,6 +2,7 @@ package se.sundsvall.postportalservice.service;
 
 import generated.se.sundsvall.digitalregisteredletter.LetterStatus;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -50,6 +51,8 @@ import static se.sundsvall.postportalservice.integration.db.converter.MessageTyp
 @ExtendWith(MockitoExtension.class)
 class HistoryServiceTest {
 
+	private static final OffsetDateTime FIXED_CREATED = OffsetDateTime.of(2024, 6, 15, 12, 0, 0, 0, ZoneOffset.UTC);
+
 	@Mock
 	private Page<MessageEntity> pageMock;
 
@@ -78,7 +81,7 @@ class HistoryServiceTest {
 	void getUserMessages_noDigitalRegisteredLettersCommunication(final MessageType messageType) {
 		final var username = "username";
 		final var messageEntity = MessageEntity.create()
-			.withCreated(OffsetDateTime.now())
+			.withCreated(FIXED_CREATED)
 			.withSubject("subject")
 			.withMessageType(messageType)
 			.withId("id");
@@ -126,7 +129,7 @@ class HistoryServiceTest {
 		final var signingProcessState = "signingProcessState";
 		final var recipientEntity = new RecipientEntity().withExternalId(letterId);
 		final var messageEntity = MessageEntity.create()
-			.withCreated(OffsetDateTime.now())
+			.withCreated(FIXED_CREATED)
 			.withSubject("subject")
 			.withMessageType(MessageType.DIGITAL_REGISTERED_LETTER)
 			.withId(messageId)
@@ -188,7 +191,7 @@ class HistoryServiceTest {
 		final var status = "COMPLETED";
 		final var recipientEntity = new RecipientEntity().withExternalId(letterId);
 		final var messageEntity = MessageEntity.create()
-			.withCreated(OffsetDateTime.now())
+			.withCreated(FIXED_CREATED)
 			.withSubject("subject")
 			.withMessageType(MessageType.DIGITAL_REGISTERED_LETTER)
 			.withId(messageId)
@@ -245,7 +248,7 @@ class HistoryServiceTest {
 	void getUserMessages_digitalRegisteredLetterWithMissingRecipientData(final String description, final List<RecipientEntity> recipients) {
 		final var username = "username";
 		final var messageEntity = MessageEntity.create()
-			.withCreated(OffsetDateTime.now())
+			.withCreated(FIXED_CREATED)
 			.withSubject("subject")
 			.withMessageType(MessageType.DIGITAL_REGISTERED_LETTER)
 			.withId("messageId")
@@ -286,7 +289,7 @@ class HistoryServiceTest {
 		final var partyId = "partyId123";
 		final var message = MessageEntity.create()
 			.withSubject("subject")
-			.withCreated(OffsetDateTime.now())
+			.withCreated(FIXED_CREATED)
 			.withAttachments(List.of())
 			.withRecipients(List.of(new RecipientEntity().withPartyId(partyId)));
 
@@ -338,7 +341,7 @@ class HistoryServiceTest {
 		final var recipientEntity = new RecipientEntity().withPartyId(partyId).withExternalId(letterId);
 		final var message = MessageEntity.create()
 			.withSubject("subject")
-			.withCreated(OffsetDateTime.now())
+			.withCreated(FIXED_CREATED)
 			.withAttachments(List.of())
 			.withRecipients(List.of(recipientEntity))
 			.withMessageType(DIGITAL_REGISTERED_LETTER)
@@ -385,7 +388,7 @@ class HistoryServiceTest {
 		final var recipientEntity = new RecipientEntity().withPartyId(partyId).withExternalId(letterId);
 		final var message = MessageEntity.create()
 			.withSubject("subject")
-			.withCreated(OffsetDateTime.now())
+			.withCreated(FIXED_CREATED)
 			.withAttachments(List.of())
 			.withRecipients(List.of(recipientEntity))
 			.withMessageType(DIGITAL_REGISTERED_LETTER)
@@ -425,7 +428,7 @@ class HistoryServiceTest {
 		final var recipientWithoutPartyId = new RecipientEntity().withPartyId(null).withPhoneNumber("+46701740610");
 		final var message = MessageEntity.create()
 			.withSubject("subject")
-			.withCreated(OffsetDateTime.now())
+			.withCreated(FIXED_CREATED)
 			.withAttachments(List.of())
 			.withRecipients(List.of(recipientWithPartyId1, recipientWithoutPartyId, recipientWithPartyId2));
 
@@ -469,7 +472,7 @@ class HistoryServiceTest {
 		final var smsRecipient2 = new RecipientEntity().withPartyId(null).withPhoneNumber("+46701740620");
 		final var message = MessageEntity.create()
 			.withSubject("subject")
-			.withCreated(OffsetDateTime.now())
+			.withCreated(FIXED_CREATED)
 			.withAttachments(List.of())
 			.withRecipients(List.of(smsRecipient1, smsRecipient2));
 
@@ -506,7 +509,7 @@ class HistoryServiceTest {
 		final var recipient2 = new RecipientEntity().withPartyId(partyId2);
 		final var message = MessageEntity.create()
 			.withSubject("subject")
-			.withCreated(OffsetDateTime.now())
+			.withCreated(FIXED_CREATED)
 			.withAttachments(List.of())
 			.withRecipients(List.of(recipient1, recipient2));
 

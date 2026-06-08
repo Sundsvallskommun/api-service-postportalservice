@@ -1,7 +1,8 @@
 package se.sundsvall.postportalservice.api.model;
 
 import java.time.OffsetDateTime;
-import java.util.Random;
+import java.time.ZoneOffset;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -11,7 +12,6 @@ import static com.google.code.beanmatchers.BeanMatchers.hasValidBeanHashCode;
 import static com.google.code.beanmatchers.BeanMatchers.hasValidBeanToString;
 import static com.google.code.beanmatchers.BeanMatchers.hasValidGettersAndSetters;
 import static com.google.code.beanmatchers.BeanMatchers.registerValueGenerator;
-import static java.time.OffsetDateTime.now;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.CoreMatchers.allOf;
 
@@ -19,7 +19,8 @@ class SigningInformationTest {
 
 	// SigningInformation attributes
 	private static final String STATUS = "status";
-	private static final OffsetDateTime SIGNED_AT = now();
+	private static final OffsetDateTime SIGNED_AT = OffsetDateTime.of(2024, 6, 15, 12, 0, 0, 0, ZoneOffset.UTC);
+	private static final AtomicInteger SEQUENCE = new AtomicInteger();
 	private static final String CONTENT_KEY = "contentKey";
 	private static final String ORDER_REFERENCE = "orderReference";
 	private static final String SIGNATURE = "signature";
@@ -39,7 +40,7 @@ class SigningInformationTest {
 
 	@BeforeAll
 	static void setup() {
-		registerValueGenerator(() -> now().plusDays(new Random().nextInt()), OffsetDateTime.class);
+		registerValueGenerator(() -> SIGNED_AT.plusDays(SEQUENCE.incrementAndGet()), OffsetDateTime.class);
 	}
 
 	@Test

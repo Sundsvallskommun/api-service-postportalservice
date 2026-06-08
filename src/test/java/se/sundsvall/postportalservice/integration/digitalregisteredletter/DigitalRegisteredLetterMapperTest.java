@@ -224,7 +224,7 @@ class DigitalRegisteredLetterMapperTest {
 	@Test
 	void toSigningInformation() {
 		final var status = "COMPLETED";
-		final var signed = OffsetDateTime.now();
+		final var signed = OffsetDateTime.of(2024, 6, 15, 12, 0, 0, 0, java.time.ZoneOffset.UTC);
 		final var contentKey = "contentKey";
 		final var orderRef = "orderRef";
 		final var signature = "signature";
