@@ -44,9 +44,9 @@ public class EntityMapper {
 			return null;
 		}
 		final var messageType = switch (recipient.getDeliveryMethod()) {
-			case DIGITAL_MAIL -> MessageType.DIGITAL_MAIL;
-			case SNAIL_MAIL -> MessageType.SNAIL_MAIL;
-			default -> null;
+			case "DIGITAL_MAIL" -> MessageType.DIGITAL_MAIL;
+			case "SNAIL_MAIL" -> MessageType.SNAIL_MAIL;
+			case null, default -> null;
 		};
 
 		final var recipientEntity = new RecipientEntity();

@@ -21,10 +21,10 @@ import static org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTest
 /**
  * StatisticsRepository tests.
  *
- * @see "/src/test/resources/db/script/testdata.sql for data setup"
+ * @see "/src/integration-test/resources/db/scripts/testdata.sql for data setup"
  */
 @Sql(scripts = {
-	"/db/script/testdata.sql"
+	"/db/scripts/testdata.sql"
 })
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = NONE)

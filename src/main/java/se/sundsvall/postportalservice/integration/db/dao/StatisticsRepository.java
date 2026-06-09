@@ -1,5 +1,6 @@
 package se.sundsvall.postportalservice.integration.db.dao;
 
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
@@ -19,6 +20,7 @@ public class StatisticsRepository {
 		this.jdbcTemplate = jdbcTemplate;
 	}
 
+	@CircuitBreaker(name = "statisticsRepository")
 	public List<Statistics> getDepartmentStatisticsByYearAndMonth(final String year, final String month) {
 		var parameters = Map.of("year", year, "month", month);
 		var sql = """

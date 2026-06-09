@@ -28,9 +28,6 @@ spring:
           messaging:
             authorization-grant-type: client_credentials
             provider: messaging
-          employee:
-            authorization-grant-type: client_credentials
-            provider: employee
           party:
             authorization-grant-type: client_credentials
             provider: party
@@ -48,12 +45,16 @@ resilience4j:
     instances:
       messagingsettings:
         ignoreExceptions: se.sundsvall.dept44.exception.ClientProblem
-      employee:
-        ignoreExceptions: se.sundsvall.dept44.exception.ClientProblem
       messaging:
         ignoreExceptions: se.sundsvall.dept44.exception.ClientProblem
       legalentity:
         ignoreExceptions: se.sundsvall.dept44.exception.ClientProblem
+      messageRepository: {}
+      attachmentRepository: {}
+      departmentRepository: {}
+      recipientRepository: {}
+      userRepository: {}
+      statisticsRepository: {}
 delivery:
   executor:
     # Concurrency limit towards the messaging service (the blocking call runs on the pool thread).

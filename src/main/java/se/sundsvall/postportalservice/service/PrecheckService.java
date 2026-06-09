@@ -17,7 +17,6 @@ import se.sundsvall.dept44.problem.Problem;
 import se.sundsvall.postportalservice.api.model.KivraEligibilityRequest;
 import se.sundsvall.postportalservice.api.model.PrecheckCsvResponse;
 import se.sundsvall.postportalservice.api.model.PrecheckResponse;
-import se.sundsvall.postportalservice.api.model.PrecheckResponse.DeliveryMethod;
 import se.sundsvall.postportalservice.api.model.PrecheckResponse.PrecheckRecipient;
 import se.sundsvall.postportalservice.integration.citizen.CitizenIntegration;
 import se.sundsvall.postportalservice.integration.db.RecipientEntity;
@@ -159,7 +158,7 @@ public class PrecheckService {
 		mailboxStatus.unreachableWithReason().forEach(unreachable -> reasonByPartyId.put(unreachable.partyId(), unreachable.reason()));
 
 		final var digital = mailboxStatus.reachable().stream()
-			.map(partyId -> new PrecheckRecipient(null, partyId, DeliveryMethod.DIGITAL_MAIL, null));
+			.map(partyId -> new PrecheckRecipient(null, partyId, DeliveryMethod.DIGITAL_MAIL.name(), null));
 
 		final var fallback = mailboxStatus.unreachable().stream()
 			.map(partyId -> {
@@ -167,9 +166,9 @@ public class PrecheckService {
 					.map(LegalEntity2::getAddress)
 					.isPresent();
 				if (hasAddress) {
-					return new PrecheckRecipient(null, partyId, DeliveryMethod.SNAIL_MAIL, null);
+					return new PrecheckRecipient(null, partyId, DeliveryMethod.SNAIL_MAIL.name(), null);
 				}
-				return new PrecheckRecipient(null, partyId, DeliveryMethod.DELIVERY_NOT_POSSIBLE, reasonByPartyId.get(partyId));
+				return new PrecheckRecipient(null, partyId, DeliveryMethod.DELIVERY_NOT_POSSIBLE.name(), reasonByPartyId.get(partyId));
 			});
 
 		return PrecheckResponse.of(Stream.concat(digital, fallback).toList());
@@ -339,21 +338,21 @@ public class PrecheckService {
 
 		// Map reachable by digital-mail
 		final var digitalMailRecipients = mailboxStatus.reachable().stream()
-			.map(partyId -> new PrecheckRecipient(null, partyId, DeliveryMethod.DIGITAL_MAIL, null));
+			.map(partyId -> new PrecheckRecipient(null, partyId, DeliveryMethod.DIGITAL_MAIL.name(), null));
 
 		// Map reachable by snail-mail
 		final var snailMailRecipients = categorizedCitizens.eligibleAdults().stream()
-			.map(simplifiedCitizen -> new PrecheckRecipient(null, simplifiedCitizen.partyId(), DeliveryMethod.SNAIL_MAIL, null));
+			.map(simplifiedCitizen -> new PrecheckRecipient(null, simplifiedCitizen.partyId(), DeliveryMethod.SNAIL_MAIL.name(), null));
 
 		// Map ineligible recipients with reason
 		final var ineligibleRecipients = categorizedCitizens.notRegisteredInSweden().stream()
 			.map(simplifiedCitizen -> new PrecheckRecipient(
-				null, simplifiedCitizen.partyId(), DeliveryMethod.DELIVERY_NOT_POSSIBLE, reasonByPartyId.get(simplifiedCitizen.partyId())));
+				null, simplifiedCitizen.partyId(), DeliveryMethod.DELIVERY_NOT_POSSIBLE.name(), reasonByPartyId.get(simplifiedCitizen.partyId())));
 
 		// Map ineligible minors with fixed reason
 		final var ineligibleMinorRecipients = categorizedCitizens.ineligibleMinors().stream()
 			.map(simplifiedCitizen -> new PrecheckRecipient(
-				null, simplifiedCitizen.partyId(), DeliveryMethod.DELIVERY_NOT_POSSIBLE, INELIGIBLE_MINOR));
+				null, simplifiedCitizen.partyId(), DeliveryMethod.DELIVERY_NOT_POSSIBLE.name(), INELIGIBLE_MINOR));
 
 		final var recipients = Stream.of(digitalMailRecipients, snailMailRecipients, ineligibleRecipients, ineligibleMinorRecipients)
 			.flatMap(Function.identity())

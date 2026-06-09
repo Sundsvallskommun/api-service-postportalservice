@@ -23,7 +23,6 @@ import org.springframework.web.multipart.MultipartFile;
 import se.sundsvall.dept44.problem.Problem;
 import se.sundsvall.dept44.test.annotation.resource.Load;
 import se.sundsvall.dept44.test.extension.ResourceLoaderExtension;
-import se.sundsvall.postportalservice.api.model.PrecheckResponse.DeliveryMethod;
 import se.sundsvall.postportalservice.api.model.PrecheckResponse.PrecheckRecipient;
 import se.sundsvall.postportalservice.integration.citizen.CitizenIntegration;
 import se.sundsvall.postportalservice.integration.db.RecipientEntity;
@@ -126,9 +125,9 @@ class PrecheckServiceTest {
 		assertThat(result.precheckRecipients()).hasSize(3)
 			.extracting(PrecheckRecipient::partyId, PrecheckRecipient::deliveryMethod)
 			.containsExactlyInAnyOrder(
-				tuple(digitalMailUuid, DeliveryMethod.DIGITAL_MAIL),
-				tuple(snailMailUuid, DeliveryMethod.SNAIL_MAIL),
-				tuple(notEligibleUuid, DeliveryMethod.DELIVERY_NOT_POSSIBLE));
+				tuple(digitalMailUuid, "DIGITAL_MAIL"),
+				tuple(snailMailUuid, "SNAIL_MAIL"),
+				tuple(notEligibleUuid, "DELIVERY_NOT_POSSIBLE"));
 
 		verify(partyIntegrationMock).getPartyTypes(MUNICIPALITY_ID, partyIds);
 		verify(mailboxStatusServiceMock).checkMailboxStatus(MUNICIPALITY_ID, partyIds);
@@ -490,7 +489,7 @@ class PrecheckServiceTest {
 
 		assertThat(result.precheckRecipients()).hasSize(1)
 			.extracting(PrecheckRecipient::partyId, PrecheckRecipient::deliveryMethod)
-			.containsExactly(tuple(partyId, DeliveryMethod.DIGITAL_MAIL));
+			.containsExactly(tuple(partyId, "DIGITAL_MAIL"));
 		verify(partyIntegrationMock).getPartyTypes(MUNICIPALITY_ID, partyIds);
 		verify(mailboxStatusServiceMock).checkMailboxStatus(MUNICIPALITY_ID, partyIds);
 		verify(legalEntityIntegrationMock).getLegalEntities(MUNICIPALITY_ID, List.of());
@@ -514,7 +513,7 @@ class PrecheckServiceTest {
 
 		assertThat(result.precheckRecipients()).hasSize(1)
 			.extracting(PrecheckRecipient::partyId, PrecheckRecipient::deliveryMethod)
-			.containsExactly(tuple(partyId, DeliveryMethod.SNAIL_MAIL));
+			.containsExactly(tuple(partyId, "SNAIL_MAIL"));
 		verify(partyIntegrationMock).getPartyTypes(MUNICIPALITY_ID, partyIds);
 		verify(mailboxStatusServiceMock).checkMailboxStatus(MUNICIPALITY_ID, partyIds);
 		verify(legalEntityIntegrationMock).getLegalEntities(MUNICIPALITY_ID, List.of(partyId));
@@ -534,7 +533,7 @@ class PrecheckServiceTest {
 
 		assertThat(result.precheckRecipients()).hasSize(1)
 			.extracting(PrecheckRecipient::partyId, PrecheckRecipient::deliveryMethod)
-			.containsExactly(tuple(partyId, DeliveryMethod.DELIVERY_NOT_POSSIBLE));
+			.containsExactly(tuple(partyId, "DELIVERY_NOT_POSSIBLE"));
 		verify(partyIntegrationMock).getPartyTypes(MUNICIPALITY_ID, partyIds);
 		verify(mailboxStatusServiceMock).checkMailboxStatus(MUNICIPALITY_ID, partyIds);
 		verify(legalEntityIntegrationMock).getLegalEntities(MUNICIPALITY_ID, List.of(partyId));

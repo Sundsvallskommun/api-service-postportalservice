@@ -8,6 +8,7 @@ import java.util.Set;
 import se.sundsvall.postportalservice.api.model.Recipient;
 import se.sundsvall.postportalservice.api.validation.ValidRecipient;
 import se.sundsvall.postportalservice.api.validation.groups.SnailMailGroup;
+import se.sundsvall.postportalservice.service.DeliveryMethod;
 
 public class ValidRecipientConstraintValidator implements ConstraintValidator<ValidRecipient, Recipient> {
 
@@ -18,7 +19,7 @@ public class ValidRecipientConstraintValidator implements ConstraintValidator<Va
 
 	@Override
 	public boolean isValid(final Recipient value, final ConstraintValidatorContext context) {
-		if (value.getDeliveryMethod() == Recipient.DeliveryMethod.SNAIL_MAIL) {
+		if (DeliveryMethod.SNAIL_MAIL.name().equals(value.getDeliveryMethod())) {
 			try (var factory = Validation.buildDefaultValidatorFactory()) {
 				var validator = factory.getValidator();
 				// Validates using SnailMailGroup
