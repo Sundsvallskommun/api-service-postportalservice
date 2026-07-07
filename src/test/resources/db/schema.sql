@@ -55,6 +55,17 @@
         primary key (id)
     ) engine=InnoDB;
 
+    create table signing (
+        created DATETIME,
+        attachment_id VARCHAR(36),
+        id VARCHAR(36) not null,
+        message_id VARCHAR(36),
+        provider VARCHAR(50),
+        provider_case_id VARCHAR(255),
+        status VARCHAR(50),
+        primary key (id)
+    ) engine=InnoDB;
+
     create table user (
         id VARCHAR(36) not null,
         username VARCHAR(100),
@@ -81,6 +92,12 @@
 
     create index IDX_RECIPIENT_MESSAGE_TYPE 
        on recipient (type);
+
+    create index IDX_SIGNING_MESSAGE_ID 
+       on signing (message_id);
+
+    create index IDX_SIGNING_PROVIDER_CASE_ID 
+       on signing (provider_case_id);
 
     create index IDX_USER_USERNAME 
        on user (username);
