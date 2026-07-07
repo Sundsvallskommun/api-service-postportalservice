@@ -12,6 +12,7 @@ import java.time.OffsetDateTime;
 import java.util.Objects;
 import org.hibernate.annotations.TimeZoneStorage;
 
+import static java.time.ZoneOffset.UTC;
 import static org.hibernate.annotations.TimeZoneStorageType.NORMALIZE;
 
 /**
@@ -54,7 +55,7 @@ public class SigningEntity {
 
 	@PrePersist
 	void prePersist() {
-		created = OffsetDateTime.now();
+		created = OffsetDateTime.now(UTC);
 	}
 
 	public static SigningEntity create() {
