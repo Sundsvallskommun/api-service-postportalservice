@@ -23,6 +23,7 @@ import java.util.Objects;
 import org.hibernate.annotations.TimeZoneStorage;
 import se.sundsvall.postportalservice.integration.db.converter.MessageType;
 
+import static java.time.ZoneOffset.UTC;
 import static org.hibernate.annotations.TimeZoneStorageType.NORMALIZE;
 
 @Entity
@@ -88,7 +89,7 @@ public class MessageEntity {
 
 	@PrePersist
 	void prePersist() {
-		created = OffsetDateTime.now();
+		created = OffsetDateTime.now(UTC);
 	}
 
 	public static MessageEntity create() {

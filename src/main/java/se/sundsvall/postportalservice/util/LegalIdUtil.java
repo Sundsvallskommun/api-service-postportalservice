@@ -2,6 +2,7 @@ package se.sundsvall.postportalservice.util;
 
 import java.time.LocalDate;
 import java.time.Period;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.ResolverStyle;
 
@@ -76,11 +77,11 @@ public final class LegalIdUtil {
 			var birthDate = LocalDate.parse(legalId.substring(0, 8), BIRTH_DATE_FORMATTER);
 
 			// Ensure the birthdate is not in the future
-			if (birthDate.isAfter(LocalDate.now())) {
+			if (birthDate.isAfter(LocalDate.now(ZoneId.systemDefault()))) {
 				return false;
 			}
 
-			var age = Period.between(birthDate, LocalDate.now()).getYears();
+			var age = Period.between(birthDate, LocalDate.now(ZoneId.systemDefault())).getYears();
 
 			return age >= ADULT_AGE;
 		} catch (final Exception _) {
