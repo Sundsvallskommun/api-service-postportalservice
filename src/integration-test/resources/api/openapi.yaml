@@ -7,7 +7,7 @@ info:
     url: https://opensource.org/licenses/MIT
   version: "1.7"
 servers:
-- url: http://localhost:57468
+- url: http://localhost:60093
   description: Generated server url
 paths:
   /{municipalityId}/precheck:
@@ -504,6 +504,65 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/Problem"
+  /{municipalityId}/messages/e-signing:
+    post:
+      tags:
+      - Message Resources
+      summary: Start a Comfact e-signing of a document.
+      operationId: sendESigning
+      parameters:
+      - name: X-Sent-By
+        in: header
+        required: true
+        schema:
+          type: string
+      - name: municipalityId
+        in: path
+        description: Municipality ID
+        required: true
+        schema:
+          type: string
+        example: 2281
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                request:
+                  $ref: "#/components/schemas/ESigningRequest"
+                attachments:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+              required:
+              - attachments
+              - request
+        required: true
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                oneOf:
+                - $ref: "#/components/schemas/Problem"
+                - $ref: "#/components/schemas/ConstraintViolationProblem"
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "502":
+          description: Bad Gateway
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
   /{municipalityId}/statistics/departments:
     get:
       tags:
@@ -881,16 +940,16 @@ components:
     Problem:
       type: object
       properties:
+        title:
+          type: string
+        detail:
+          type: string
         instance:
           type: string
           format: uri
         type:
           type: string
           format: uri
-        title:
-          type: string
-        detail:
-          type: string
         status:
           type: integer
           format: int32
@@ -1347,6 +1406,68 @@ components:
       - body
       - contentType
       - subject
+    ESigningRequest:
+      type: object
+      description: E-signing request model
+      properties:
+        subject:
+          type: string
+          description: The subject of the notification sent to the signatories
+          examples:
+          - Please sign the document
+          minLength: 1
+        body:
+          type: string
+          description: The body of the notification sent to the signatories
+          examples:
+          - "Dear John Doe, please sign the attached document."
+          minLength: 1
+        language:
+          type: string
+          description: The language used for the signing instance. Swedish is used
+            if not provided
+          examples:
+          - sv-SE
+        expires:
+          type: string
+          format: date-time
+          description: Optional date and time when the signing request expires
+          examples:
+          - 2026-12-31T23:59:59Z
+        signatories:
+          type: array
+          items:
+            $ref: "#/components/schemas/ESigningSignatory"
+          minItems: 1
+      required:
+      - body
+      - signatories
+      - subject
+    ESigningSignatory:
+      type: object
+      description: A signatory that should sign the document
+      properties:
+        partyId:
+          type: string
+          description: The party id of the signatory
+          examples:
+          - 6d0773d6-3e7f-4552-81bc-f0007af95adf
+        name:
+          type: string
+          description: The name of the signatory
+          examples:
+          - John Doe
+          minLength: 1
+        email:
+          type: string
+          format: email
+          description: The email address of the signatory
+          examples:
+          - john.doe@sundsvall.se
+          minLength: 1
+      required:
+      - email
+      - name
     Statistics:
       type: object
       description: Statistics model

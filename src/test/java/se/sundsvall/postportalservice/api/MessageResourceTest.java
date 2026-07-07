@@ -17,6 +17,8 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.web.multipart.MultipartFile;
 import se.sundsvall.postportalservice.Application;
 import se.sundsvall.postportalservice.api.model.DigitalRegisteredLetterRequest;
+import se.sundsvall.postportalservice.api.model.ESigningRequest;
+import se.sundsvall.postportalservice.api.model.ESigningSignatory;
 import se.sundsvall.postportalservice.api.model.LetterRequest;
 import se.sundsvall.postportalservice.api.model.SmsCsvRequest;
 import se.sundsvall.postportalservice.service.MessageService;
@@ -54,6 +56,9 @@ class MessageResourceTest {
 
 	@Captor
 	private ArgumentCaptor<DigitalRegisteredLetterRequest> digitalRegisteredLRequestCaptor;
+
+	@Captor
+	private ArgumentCaptor<ESigningRequest> esigningRequestCaptor;
 
 	@Captor
 	private ArgumentCaptor<List<MultipartFile>> attachmentsArgumentCaptor;
@@ -125,6 +130,41 @@ class MessageResourceTest {
 		});
 
 		verify(messageServiceMock).processDigitalRegisteredLetterRequest(MUNICIPALITY_ID, capturedRequest, capturedAttachments);
+	}
+
+	@Test
+	void sendESigning_Created() {
+		final var esigningRequest = ESigningRequest.create()
+			.withSubject("Please sign")
+			.withBody("Please sign the document")
+			.withSignatories(List.of(ESigningSignatory.create()
+				.withPartyId("6d0773d6-3e7f-4552-81bc-f0007af95adf").withName("John Doe").withEmail("john@sundsvall.se")));
+		final var multipartBodyBuilder = new MultipartBodyBuilder();
+		multipartBodyBuilder.part("request", esigningRequest, APPLICATION_JSON);
+		multipartBodyBuilder.part("attachments", "mockFile").filename("test123.pdf").contentType(APPLICATION_PDF);
+
+		when(messageServiceMock.processESigningRequest(eq(MUNICIPALITY_ID), esigningRequestCaptor.capture(), attachmentsArgumentCaptor.capture())).thenReturn("messageId");
+
+		webTestClient.post()
+			.uri(uriBuilder -> uriBuilder.replacePath("/{municipalityId}/messages/e-signing")
+				.build(MUNICIPALITY_ID))
+			.contentType(MULTIPART_FORM_DATA)
+			.header("X-Sent-By", "type=adAccount; joe01doe")
+			.body(fromMultipartData(multipartBodyBuilder.build()))
+			.exchange()
+			.expectStatus().isCreated()
+			.expectHeader().contentType(ALL_VALUE)
+			.expectHeader().location("/2281/history/users/joe01doe/messages/messageId");
+
+		final var capturedRequest = esigningRequestCaptor.getValue();
+		assertThat(capturedRequest).isEqualTo(esigningRequest);
+		final var capturedAttachments = attachmentsArgumentCaptor.getValue();
+		assertThat(capturedAttachments).allSatisfy(file -> {
+			assertThat(file.getOriginalFilename()).isEqualTo("test123.pdf");
+			assertThat(file.getContentType()).isEqualTo(APPLICATION_PDF.toString());
+		});
+
+		verify(messageServiceMock).processESigningRequest(MUNICIPALITY_ID, capturedRequest, capturedAttachments);
 	}
 
 	@Test

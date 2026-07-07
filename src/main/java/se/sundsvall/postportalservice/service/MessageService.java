@@ -1,5 +1,6 @@
 package se.sundsvall.postportalservice.service;
 
+import generated.se.sundsvall.esigning.StartSigningResponse;
 import generated.se.sundsvall.messaging.DeliveryResult;
 import generated.se.sundsvall.messaging.MessageResult;
 import generated.se.sundsvall.messaging.MessageStatus;
@@ -14,10 +15,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import se.sundsvall.dept44.problem.Problem;
 import se.sundsvall.dept44.support.Identifier;
 import se.sundsvall.postportalservice.api.model.DigitalRegisteredLetterRequest;
+import se.sundsvall.postportalservice.api.model.ESigningRequest;
 import se.sundsvall.postportalservice.api.model.LetterCsvRequest;
 import se.sundsvall.postportalservice.api.model.LetterRequest;
 import se.sundsvall.postportalservice.api.model.Recipient;
@@ -27,14 +30,18 @@ import se.sundsvall.postportalservice.integration.citizen.CitizenIntegration;
 import se.sundsvall.postportalservice.integration.db.DepartmentEntity;
 import se.sundsvall.postportalservice.integration.db.MessageEntity;
 import se.sundsvall.postportalservice.integration.db.RecipientEntity;
+import se.sundsvall.postportalservice.integration.db.SigningEntity;
 import se.sundsvall.postportalservice.integration.db.UserEntity;
 import se.sundsvall.postportalservice.integration.db.converter.MessageType;
 import se.sundsvall.postportalservice.integration.db.converter.PartyType;
 import se.sundsvall.postportalservice.integration.db.dao.DepartmentRepository;
 import se.sundsvall.postportalservice.integration.db.dao.MessageRepository;
 import se.sundsvall.postportalservice.integration.db.dao.RecipientRepository;
+import se.sundsvall.postportalservice.integration.db.dao.SigningRepository;
 import se.sundsvall.postportalservice.integration.db.dao.UserRepository;
 import se.sundsvall.postportalservice.integration.digitalregisteredletter.DigitalRegisteredLetterIntegration;
+import se.sundsvall.postportalservice.integration.esigning.EsigningIntegration;
+import se.sundsvall.postportalservice.integration.esigning.EsigningMapper;
 import se.sundsvall.postportalservice.integration.messaging.MessagingIntegration;
 import se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration;
 import se.sundsvall.postportalservice.integration.party.PartyIntegration;
@@ -44,10 +51,12 @@ import se.sundsvall.postportalservice.service.mapper.EntityMapper;
 import static java.util.Collections.emptyList;
 import static java.util.Optional.ofNullable;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
+import static org.springframework.http.MediaType.TEXT_PLAIN_VALUE;
 import static se.sundsvall.postportalservice.Constants.FAILED;
 import static se.sundsvall.postportalservice.Constants.PENDING;
 import static se.sundsvall.postportalservice.configuration.DeliveryExecutorConfiguration.DELIVERY_EXECUTOR;
 import static se.sundsvall.postportalservice.integration.db.converter.MessageType.DIGITAL_REGISTERED_LETTER;
+import static se.sundsvall.postportalservice.integration.db.converter.MessageType.E_SIGNING;
 import static se.sundsvall.postportalservice.integration.db.converter.MessageType.LETTER;
 import static se.sundsvall.postportalservice.integration.db.converter.MessageType.SMS;
 import static se.sundsvall.postportalservice.service.util.CsvUtil.parseLetterCsv;
@@ -85,6 +94,9 @@ public class MessageService {
 	private final RecipientRepository recipientRepository;
 	private final CitizenIntegration citizenIntegration;
 	private final PartyIntegration partyIntegration;
+	private final EsigningIntegration esigningIntegration;
+	private final EsigningMapper esigningMapper;
+	private final SigningRepository signingRepository;
 
 	public MessageService(
 		@Qualifier(DELIVERY_EXECUTOR) final ThreadPoolTaskExecutor deliveryExecutor,
@@ -99,7 +111,10 @@ public class MessageService {
 		final MessageRepository messageRepository,
 		final RecipientRepository recipientRepository,
 		final CitizenIntegration citizenIntegration,
-		final PartyIntegration partyIntegration) {
+		final PartyIntegration partyIntegration,
+		final EsigningIntegration esigningIntegration,
+		final EsigningMapper esigningMapper,
+		final SigningRepository signingRepository) {
 		this.deliveryExecutor = deliveryExecutor;
 		this.digitalRegisteredLetterIntegration = digitalRegisteredLetterIntegration;
 		this.messagingIntegration = messagingIntegration;
@@ -113,6 +128,9 @@ public class MessageService {
 		this.recipientRepository = recipientRepository;
 		this.citizenIntegration = citizenIntegration;
 		this.partyIntegration = partyIntegration;
+		this.esigningIntegration = esigningIntegration;
+		this.esigningMapper = esigningMapper;
+		this.signingRepository = signingRepository;
 	}
 
 	public String processDigitalRegisteredLetterRequest(final String municipalityId, final DigitalRegisteredLetterRequest request, final List<MultipartFile> attachments) {
@@ -141,6 +159,48 @@ public class MessageService {
 		digitalRegisteredLetterIntegration.sendLetter(message, recipient);
 
 		messageRepository.save(message);
+		return message.getId();
+	}
+
+	/**
+	 * Starts a Comfact e-signing case. Persists the message with one recipient per signatory (type {@code E_SIGNING},
+	 * status {@code PENDING}) and the uploaded document, then calls api-service-e-signing with the message id as
+	 * {@code customerReference} so every event callback can be correlated back to this message. The provider case is
+	 * recorded in a {@link SigningEntity}. The whole method is transactional - if the provider call fails nothing is
+	 * persisted, so no dangling case is left behind.
+	 */
+	@Transactional
+	public String processESigningRequest(final String municipalityId, final ESigningRequest request, final List<MultipartFile> attachments) {
+		final var settingsMap = messagingSettingsIntegration.getMessagingSettingsForUser(municipalityId);
+		final var message = createMessage(municipalityId, settingsMap, E_SIGNING, request.getSubject(), request.getBody(), TEXT_PLAIN_VALUE);
+
+		final var recipients = request.getSignatories().stream()
+			.map(signatory -> RecipientEntity.create()
+				.withPartyId(signatory.getPartyId())
+				.withEmail(signatory.getEmail())
+				.withFirstName(signatory.getName())
+				.withStatus(PENDING)
+				.withMessageType(E_SIGNING))
+			.toList();
+		message.setRecipients(recipients);
+
+		final var attachmentEntities = attachmentMapper.toAttachmentEntities(attachments);
+		message.setAttachments(attachmentEntities);
+
+		messageRepository.save(message);
+
+		final var document = attachmentEntities.getFirst();
+		final var startSigningRequest = esigningMapper.toStartSigningRequest(message, request, document);
+		final var response = esigningIntegration.createSigning(municipalityId, startSigningRequest);
+
+		final var signing = SigningEntity.create()
+			.withMessageId(message.getId())
+			.withAttachmentId(document.getId())
+			.withProviderCaseId(response.getProviderCaseId())
+			.withProvider(response.getProvider())
+			.withStatus(ofNullable(response.getStatus()).map(StartSigningResponse.StatusEnum::getValue).orElse(null));
+		signingRepository.save(signing);
+
 		return message.getId();
 	}
 

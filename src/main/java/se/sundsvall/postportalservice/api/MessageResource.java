@@ -24,6 +24,7 @@ import se.sundsvall.dept44.common.validators.annotation.ValidMunicipalityId;
 import se.sundsvall.dept44.problem.Problem;
 import se.sundsvall.dept44.support.Identifier;
 import se.sundsvall.postportalservice.api.model.DigitalRegisteredLetterRequest;
+import se.sundsvall.postportalservice.api.model.ESigningRequest;
 import se.sundsvall.postportalservice.api.model.LetterCsvRequest;
 import se.sundsvall.postportalservice.api.model.LetterRequest;
 import se.sundsvall.postportalservice.api.model.SmsCsvRequest;
@@ -110,6 +111,25 @@ class MessageResource {
 		Identifier.set(Identifier.parse(xSentBy));
 
 		final var messageId = messageService.processDigitalRegisteredLetterRequest(municipalityId, request, attachments);
+
+		return created(fromPath(MESSAGE_HISTORY_PATH)
+			.buildAndExpand(municipalityId, Identifier.get().getValue(), messageId).toUri())
+			.header(CONTENT_TYPE, ALL_VALUE)
+			.build();
+	}
+
+	@Operation(summary = "Start a Comfact e-signing of a document.", responses = {
+		@ApiResponse(responseCode = "200", description = "OK", useReturnTypeSchema = true)
+	})
+	@PostMapping(value = "/e-signing", produces = ALL_VALUE, consumes = MULTIPART_FORM_DATA_VALUE)
+	ResponseEntity<Void> sendESigning(
+		@RequestHeader(value = Identifier.HEADER_NAME) @ValidIdentifier final String xSentBy,
+		@Parameter(name = "municipalityId", description = "Municipality ID", example = "2281") @ValidMunicipalityId @PathVariable final String municipalityId,
+		@RequestPart(name = "request") @Valid final ESigningRequest request,
+		@RequestPart(name = "attachments") @ValidPdf @NotEmpty @NoDuplicateFileNames final List<MultipartFile> attachments) {
+		Identifier.set(Identifier.parse(xSentBy));
+
+		final var messageId = messageService.processESigningRequest(municipalityId, request, attachments);
 
 		return created(fromPath(MESSAGE_HISTORY_PATH)
 			.buildAndExpand(municipalityId, Identifier.get().getValue(), messageId).toUri())
