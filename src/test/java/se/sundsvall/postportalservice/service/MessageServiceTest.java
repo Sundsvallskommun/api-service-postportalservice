@@ -65,6 +65,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -178,7 +179,7 @@ class MessageServiceTest {
 			.withLanguage("sv-SE")
 			.withSignatories(List.of(ESigningSignatory.create()
 				.withPartyId("6d0773d6-3e7f-4552-81bc-f0007af95adf").withName("John Doe").withEmail("john@sundsvall.se")));
-		final var multipart = Mockito.mock(MultipartFile.class);
+		final var multipart = mock(MultipartFile.class);
 		final var attachments = List.of(multipart);
 		final var attachment = AttachmentEntity.create().withId("att-1").withFileName("doc.pdf").withContentType("application/pdf").withContentString("base64");
 		final var startSigningRequest = new StartSigningRequest();
