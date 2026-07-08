@@ -5,7 +5,7 @@ info:
   license:
     name: MIT License
     url: https://opensource.org/licenses/MIT
-  version: "1.7"
+  version: "1.8"
 servers:
 - url: http://localhost:60093
   description: Generated server url
@@ -1315,13 +1315,11 @@ components:
           minLength: 1
         country:
           type: string
-          description: Country
+          description: Country. Optional; typically omitted for domestic mail.
           examples:
           - Sweden
-          minLength: 1
       required:
       - city
-      - country
       - street
       - zipCode
     LetterRequest:
