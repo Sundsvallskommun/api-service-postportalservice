@@ -36,8 +36,7 @@ public class Address {
 	@NotBlank
 	private String city;
 
-	@Schema(description = "Country", examples = "Sweden")
-	@NotBlank
+	@Schema(description = "Country. Optional; typically omitted for domestic mail.", examples = "Sweden")
 	private String country;
 
 	public static Address create() {
