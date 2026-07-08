@@ -17,13 +17,13 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import org.hibernate.annotations.TimeZoneStorage;
 import se.sundsvall.postportalservice.integration.db.converter.MessageType;
 
-import static java.time.ZoneOffset.UTC;
 import static org.hibernate.annotations.TimeZoneStorageType.NORMALIZE;
 
 @Entity
@@ -89,7 +89,7 @@ public class MessageEntity {
 
 	@PrePersist
 	void prePersist() {
-		created = OffsetDateTime.now(UTC);
+		created = OffsetDateTime.now(ZoneId.systemDefault());
 	}
 
 	public static MessageEntity create() {
