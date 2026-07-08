@@ -1256,13 +1256,11 @@ components:
           minLength: 1
         country:
           type: string
-          description: Country
+          description: Country. Optional; typically omitted for domestic mail.
           examples:
           - Sweden
-          minLength: 1
       required:
       - city
-      - country
       - street
       - zipCode
     LetterRequest:
