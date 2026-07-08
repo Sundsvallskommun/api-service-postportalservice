@@ -7,8 +7,11 @@ info:
     url: https://opensource.org/licenses/MIT
   version: "1.8"
 servers:
-- url: http://localhost:60093
+- url: http://localhost:56555
   description: Generated server url
+tags:
+- name: E-signing
+  description: Inbound signing events from api-service-e-signing
 paths:
   /{municipalityId}/precheck:
     post:
@@ -539,6 +542,49 @@ paths:
               required:
               - attachments
               - request
+        required: true
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                oneOf:
+                - $ref: "#/components/schemas/Problem"
+                - $ref: "#/components/schemas/ConstraintViolationProblem"
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "502":
+          description: Bad Gateway
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+  /{municipalityId}/e-signing/events:
+    post:
+      tags:
+      - E-signing
+      summary: Receive a signing event and update the signing case
+      operationId: receiveSigningEvent
+      parameters:
+      - name: municipalityId
+        in: path
+        description: Municipality ID
+        required: true
+        schema:
+          type: string
+        example: 2281
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SigningEvent"
         required: true
       responses:
         "200":
@@ -1466,6 +1512,113 @@ components:
       required:
       - email
       - name
+    EventSignatory:
+      type: object
+      description: The signatory that acted in a signing event
+      properties:
+        partyId:
+          type: string
+          description: The party id of the signatory
+          examples:
+          - 6d0773d6-3e7f-4552-81bc-f0007af95adf
+        action:
+          type: string
+          description: The normalized action taken by the signatory
+          enum:
+          - APPROVED
+          - DECLINED
+          examples:
+          - APPROVED
+        reason:
+          type: string
+          description: "The reason given for the action, when provided"
+          examples:
+          - Not authorised to sign
+    SignedDocument:
+      type: object
+      description: A signed document received in a signing event
+      properties:
+        name:
+          type: string
+          description: Descriptive name of the document
+          examples:
+          - Employment contract
+        fileName:
+          type: string
+          description: The document file name including extension
+          examples:
+          - contract.pdf
+        mimeType:
+          type: string
+          description: The document mime type
+          examples:
+          - application/pdf
+        content:
+          type: string
+          description: Base64-encoded content of the signed document
+          minLength: 1
+      required:
+      - content
+    SigningEvent:
+      type: object
+      description: A provider-neutral signing event delivered by api-service-e-signing
+      properties:
+        customerReference:
+          type: string
+          description: The consumer's own reference echoed back by the provider (the
+            Postportalen message id)
+          examples:
+          - 550e8400-e29b-41d4-a716-446655440000
+        providerCaseId:
+          type: string
+          description: The signing provider's case id
+          examples:
+          - "1234567890"
+          minLength: 1
+        provider:
+          type: string
+          description: The id of the signing provider that produced the event
+          examples:
+          - comfact
+        eventType:
+          type: string
+          description: The normalized event type
+          enum:
+          - CASE_CREATED
+          - SIGNATORY_APPROVED
+          - SIGNATORY_DECLINED
+          - CASE_COMPLETED
+          - CASE_WITHDRAWN
+          - CASE_EXPIRED
+          - CASE_HALTED
+          - CASE_REACTIVATED
+          examples:
+          - CASE_COMPLETED
+        status:
+          type: string
+          description: The normalized case status
+          enum:
+          - INITIERAT
+          - INVANTAR_SIGNERING
+          - SIGNERAT
+          - UTGANGET
+          - FEL
+          examples:
+          - SIGNERAT
+        signatory:
+          $ref: "#/components/schemas/EventSignatory"
+          description: "The acting signatory, present on signatory events"
+        signedDocument:
+          $ref: "#/components/schemas/SignedDocument"
+          description: "The signed document, present only on a completed event"
+        occurredAt:
+          type: string
+          format: date-time
+          description: When the event occurred at the provider
+          examples:
+          - 2026-12-31T23:59:59Z
+      required:
+      - providerCaseId
     Statistics:
       type: object
       description: Statistics model

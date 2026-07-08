@@ -28,6 +28,22 @@ public class BlobUtil {
 			.orElse(null);
 	}
 
+	/**
+	 * Converts a Base64 encoded string to a {@link Blob}, e.g. when storing a signed document received inline in a
+	 * callback. Returns {@code null} for {@code null} input.
+	 *
+	 * @param  base64Content the Base64 encoded content
+	 * @return               the Blob, or {@code null} if the input was {@code null}
+	 */
+	public Blob convertBase64ToBlob(final String base64Content) {
+		return Optional.ofNullable(base64Content)
+			.map(content -> {
+				final var bytes = Base64.getDecoder().decode(content);
+				return getSession().getLobHelper().createBlob(new ByteArrayInputStream(bytes), bytes.length);
+			})
+			.orElse(null);
+	}
+
 	Session getSession() {
 		return entityManager.unwrap(Session.class);
 	}

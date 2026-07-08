@@ -289,3 +289,8 @@ VALUES
  '+46701740605'),
 ('6425c8eb-0119-433d-a4bd-efbd70a8c305', 'a8fec1ef-950f-4735-9c49-1a641043cdbb', 'SMS', 'SENT', '2025-08-06 12:03:00',
  '+46701740605');
+
+-- E-signing case
+INSERT INTO signing (id, message_id, provider_case_id, provider, status, attachment_id, created)
+VALUES ('7c9e6679-7425-40de-944b-e07fc1f90ae7', 'b2cd4957-228f-46f0-a263-d4eae2eb5f52', 'provider-case-1', 'comfact',
+        'INVANTAR_SIGNERING', '5f6757a4-f0c7-43c0-83b1-78cafb5b7291', '2025-09-05 10:00:00');
