@@ -99,6 +99,25 @@ class EntityMapperTest {
 	}
 
 	@Test
+	void toRecipientEntity_recipient_snailMail_allowsOmittedCountry() {
+		final var address = new Address()
+			.withFirstName("First")
+			.withLastName("Last")
+			.withStreet("Street 1")
+			.withZipCode("12345")
+			.withCity("City");
+		final var recipient = new Recipient()
+			.withPartyId(UUID.randomUUID().toString())
+			.withAddress(address)
+			.withDeliveryMethod("SNAIL_MAIL");
+
+		final var result = entityMapper.toRecipientEntity(recipient, PartyType.PRIVATE);
+
+		assertThat(result).isNotNull();
+		assertThat(result.getCountry()).isNull();
+	}
+
+	@Test
 	void toIneligibleMinorRecipientEntity() {
 		final var partyId = UUID.fromString(UUID.randomUUID().toString());
 		final var citizenExtended = new CitizenExtended()
@@ -146,6 +165,21 @@ class EntityMapperTest {
 		assertThat(result.getCountry()).isEqualTo(address.getCountry());
 		assertThat(result.getMessageType()).isEqualTo(MessageType.SNAIL_MAIL);
 		assertThat(result.getStatus()).isEqualTo(PENDING);
+	}
+
+	@Test
+	void toRecipientEntity_fromAddress_allowsOmittedCountry() {
+		final var address = new Address()
+			.withFirstName("john")
+			.withLastName("doe")
+			.withStreet("Main street 1")
+			.withZipCode("54321")
+			.withCity("Town");
+
+		final var result = entityMapper.toRecipientEntity(address);
+
+		assertThat(result).isNotNull();
+		assertThat(result.getCountry()).isNull();
 	}
 
 	@Test
