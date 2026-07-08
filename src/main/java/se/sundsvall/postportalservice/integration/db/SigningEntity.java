@@ -9,10 +9,10 @@ import jakarta.persistence.Index;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.util.Objects;
 import org.hibernate.annotations.TimeZoneStorage;
 
-import static java.time.ZoneOffset.UTC;
 import static org.hibernate.annotations.TimeZoneStorageType.NORMALIZE;
 
 /**
@@ -55,7 +55,7 @@ public class SigningEntity {
 
 	@PrePersist
 	void prePersist() {
-		created = OffsetDateTime.now(UTC);
+		created = OffsetDateTime.now(ZoneId.systemDefault());
 	}
 
 	public static SigningEntity create() {
