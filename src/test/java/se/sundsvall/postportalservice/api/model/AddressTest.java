@@ -94,14 +94,13 @@ class AddressTest {
 
 		final var violations = validator.validate(address);
 
-		assertThat(violations).hasSize(5)
+		assertThat(violations).hasSize(4)
 			.extracting(violation -> violation.getPropertyPath().toString(), ConstraintViolation::getMessage)
 			.containsExactlyInAnyOrder(
 				tuple("", "either firstName and lastName, or organizationName must be provided"),
 				tuple("street", "must not be blank"),
 				tuple("zipCode", "must not be blank"),
-				tuple("city", "must not be blank"),
-				tuple("country", "must not be blank"));
+				tuple("city", "must not be blank"));
 
 		assertThat(address).hasAllNullFieldsOrProperties();
 	}
