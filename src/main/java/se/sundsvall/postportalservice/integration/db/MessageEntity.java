@@ -14,6 +14,7 @@ import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import java.time.OffsetDateTime;
@@ -86,6 +87,11 @@ public class MessageEntity {
 	}, orphanRemoval = true, fetch = FetchType.EAGER)
 	@JoinColumn(name = "message_id", columnDefinition = "VARCHAR(36)", foreignKey = @ForeignKey(name = "FK_RECIPIENT_MESSAGE"))
 	private List<RecipientEntity> recipients = new ArrayList<>();
+
+	// Inverse side of the e-signing relationship; only present for E_SIGNING messages. Owning side (FK) is on
+	// SigningEntity.
+	@OneToOne(mappedBy = "message", fetch = FetchType.LAZY)
+	private SigningEntity signing;
 
 	@PrePersist
 	void prePersist() {
@@ -249,6 +255,19 @@ public class MessageEntity {
 
 	public MessageEntity withRecipients(List<RecipientEntity> recipients) {
 		this.recipients = recipients;
+		return this;
+	}
+
+	public SigningEntity getSigning() {
+		return signing;
+	}
+
+	public void setSigning(SigningEntity signing) {
+		this.signing = signing;
+	}
+
+	public MessageEntity withSigning(SigningEntity signing) {
+		this.signing = signing;
 		return this;
 	}
 

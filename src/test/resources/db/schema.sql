@@ -59,7 +59,7 @@
         created DATETIME,
         attachment_id VARCHAR(36),
         id VARCHAR(36) not null,
-        message_id VARCHAR(36),
+        message_id VARCHAR(36) not null,
         provider VARCHAR(50),
         provider_case_id VARCHAR(255),
         status VARCHAR(50),
@@ -93,11 +93,11 @@
     create index IDX_RECIPIENT_MESSAGE_TYPE 
        on recipient (type);
 
-    create index IDX_SIGNING_MESSAGE_ID 
-       on signing (message_id);
+    alter table if exists signing 
+       add constraint UKo2hm9s2h9lhcicc3dg6wp1mhl unique (attachment_id);
 
-    create index IDX_SIGNING_PROVIDER_CASE_ID 
-       on signing (provider_case_id);
+    alter table if exists signing 
+       add constraint UK9xocmb2f6qlwnshkex16tfl9v unique (message_id);
 
     create index IDX_USER_USERNAME 
        on user (username);
@@ -119,5 +119,15 @@
 
     alter table if exists recipient 
        add constraint FK_RECIPIENT_MESSAGE 
+       foreign key (message_id) 
+       references message (id);
+
+    alter table if exists signing 
+       add constraint FK_SIGNING_ATTACHMENT 
+       foreign key (attachment_id) 
+       references attachment (id);
+
+    alter table if exists signing 
+       add constraint FK_SIGNING_MESSAGE 
        foreign key (message_id) 
        references message (id);
