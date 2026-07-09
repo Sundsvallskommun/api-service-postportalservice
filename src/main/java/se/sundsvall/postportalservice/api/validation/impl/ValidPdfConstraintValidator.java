@@ -10,7 +10,8 @@ public class ValidPdfConstraintValidator implements ConstraintValidator<ValidPdf
 
 	@Override
 	public boolean isValid(final List<MultipartFile> files, final ConstraintValidatorContext context) {
-		return files.stream()
+		// Null is left to @NotEmpty/@NotNull to reject; this validator only checks the content type of present files.
+		return files == null || files.stream()
 			.map(MultipartFile::getContentType)
 			.allMatch("application/pdf"::equals);
 	}

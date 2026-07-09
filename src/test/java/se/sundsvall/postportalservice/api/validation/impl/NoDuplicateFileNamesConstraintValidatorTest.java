@@ -63,4 +63,9 @@ class NoDuplicateFileNamesConstraintValidatorTest {
 
 		assertThat(result).isFalse();
 	}
+
+	@Test
+	void nullFilesTest() {
+		assertThat(noDuplicateFileNamesConstraintValidator.isValid(null, context)).isTrue();
+	}
 }
