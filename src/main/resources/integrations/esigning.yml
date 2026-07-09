@@ -187,7 +187,12 @@ components:
             - 2026-12-31T23:59:59Z
         document:
           $ref: "#/components/schemas/SigningDocument"
-          description: The document to sign
+          description: The primary document to sign
+        attachments:
+          type: array
+          description: Optional additional documents (attachments) included in the signing alongside the primary document
+          items:
+            $ref: "#/components/schemas/SigningDocument"
         initiator:
           $ref: "#/components/schemas/Initiator"
           description: The initiator of the signing request

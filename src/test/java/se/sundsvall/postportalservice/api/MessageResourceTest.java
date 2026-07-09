@@ -61,6 +61,9 @@ class MessageResourceTest {
 	private ArgumentCaptor<ESigningRequest> esigningRequestCaptor;
 
 	@Captor
+	private ArgumentCaptor<MultipartFile> documentArgumentCaptor;
+
+	@Captor
 	private ArgumentCaptor<List<MultipartFile>> attachmentsArgumentCaptor;
 
 	@Autowired
@@ -141,9 +144,10 @@ class MessageResourceTest {
 				.withPartyId("6d0773d6-3e7f-4552-81bc-f0007af95adf").withName("John Doe").withEmail("john@sundsvall.se")));
 		final var multipartBodyBuilder = new MultipartBodyBuilder();
 		multipartBodyBuilder.part("request", esigningRequest, APPLICATION_JSON);
-		multipartBodyBuilder.part("attachments", "mockFile").filename("test123.pdf").contentType(APPLICATION_PDF);
+		multipartBodyBuilder.part("document", "documentFile").filename("document.pdf").contentType(APPLICATION_PDF);
+		multipartBodyBuilder.part("attachments", "attachmentFile").filename("attachment.pdf").contentType(APPLICATION_PDF);
 
-		when(messageServiceMock.processESigningRequest(eq(MUNICIPALITY_ID), esigningRequestCaptor.capture(), attachmentsArgumentCaptor.capture())).thenReturn("messageId");
+		when(messageServiceMock.processESigningRequest(eq(MUNICIPALITY_ID), esigningRequestCaptor.capture(), documentArgumentCaptor.capture(), attachmentsArgumentCaptor.capture())).thenReturn("messageId");
 
 		webTestClient.post()
 			.uri(uriBuilder -> uriBuilder.replacePath("/{municipalityId}/messages/e-signing")
@@ -158,13 +162,16 @@ class MessageResourceTest {
 
 		final var capturedRequest = esigningRequestCaptor.getValue();
 		assertThat(capturedRequest).isEqualTo(esigningRequest);
+		final var capturedDocument = documentArgumentCaptor.getValue();
+		assertThat(capturedDocument.getOriginalFilename()).isEqualTo("document.pdf");
+		assertThat(capturedDocument.getContentType()).isEqualTo(APPLICATION_PDF.toString());
 		final var capturedAttachments = attachmentsArgumentCaptor.getValue();
 		assertThat(capturedAttachments).allSatisfy(file -> {
-			assertThat(file.getOriginalFilename()).isEqualTo("test123.pdf");
+			assertThat(file.getOriginalFilename()).isEqualTo("attachment.pdf");
 			assertThat(file.getContentType()).isEqualTo(APPLICATION_PDF.toString());
 		});
 
-		verify(messageServiceMock).processESigningRequest(MUNICIPALITY_ID, capturedRequest, capturedAttachments);
+		verify(messageServiceMock).processESigningRequest(MUNICIPALITY_ID, capturedRequest, capturedDocument, capturedAttachments);
 	}
 
 	@Test

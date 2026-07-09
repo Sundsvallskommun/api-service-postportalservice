@@ -1,7 +1,6 @@
 package se.sundsvall.postportalservice.api.validation.impl;
 
 import jakarta.validation.ConstraintValidatorContext;
-import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -14,38 +13,32 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class ValidPdfConstraintValidatorTest {
+class ValidPdfFileConstraintValidatorTest {
 
 	@Mock
 	private ConstraintValidatorContext context;
 
 	@InjectMocks
-	private ValidPdfConstraintValidator validPdfConstraintValidator;
+	private ValidPdfFileConstraintValidator validPdfFileConstraintValidator;
 
 	@Test
-	void validMultipartFilesTest() {
+	void validPdfFileTest() {
 		var multipartFile = Mockito.mock(MultipartFile.class);
 		when(multipartFile.getContentType()).thenReturn("application/pdf");
-		var files = List.of(multipartFile, multipartFile);
 
-		var result = validPdfConstraintValidator.isValid(files, context);
-
-		assertThat(result).isTrue();
+		assertThat(validPdfFileConstraintValidator.isValid(multipartFile, context)).isTrue();
 	}
 
 	@Test
-	void invalidMultipartFilesTest() {
+	void invalidPdfFileTest() {
 		var multipartFile = Mockito.mock(MultipartFile.class);
 		when(multipartFile.getContentType()).thenReturn("text/plain");
-		var files = List.of(multipartFile, multipartFile);
 
-		var result = validPdfConstraintValidator.isValid(files, context);
-
-		assertThat(result).isFalse();
+		assertThat(validPdfFileConstraintValidator.isValid(multipartFile, context)).isFalse();
 	}
 
 	@Test
-	void nullFilesTest() {
-		assertThat(validPdfConstraintValidator.isValid(null, context)).isTrue();
+	void nullFileTest() {
+		assertThat(validPdfFileConstraintValidator.isValid(null, context)).isTrue();
 	}
 }

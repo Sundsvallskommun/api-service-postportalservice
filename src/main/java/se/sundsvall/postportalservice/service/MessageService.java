@@ -170,7 +170,7 @@ public class MessageService {
 	 * persisted, so no dangling case is left behind.
 	 */
 	@Transactional
-	public String processESigningRequest(final String municipalityId, final ESigningRequest request, final List<MultipartFile> attachments) {
+	public String processESigningRequest(final String municipalityId, final ESigningRequest request, final MultipartFile document, final List<MultipartFile> attachments) {
 		final var settingsMap = messagingSettingsIntegration.getMessagingSettingsForUser(municipalityId);
 		final var message = createMessage(municipalityId, settingsMap, E_SIGNING, request.getSubject(), request.getBody(), TEXT_PLAIN_VALUE);
 
@@ -184,13 +184,18 @@ public class MessageService {
 			.toList();
 		message.setRecipients(recipients);
 
-		final var attachmentEntities = attachmentMapper.toAttachmentEntities(attachments);
+		// Store the primary document first, followed by any attachments, all as message attachments.
+		final var files = new ArrayList<MultipartFile>();
+		files.add(document);
+		files.addAll(ofNullable(attachments).orElseGet(List::of));
+		final var attachmentEntities = attachmentMapper.toAttachmentEntities(files);
 		message.setAttachments(attachmentEntities);
 
 		messageRepository.save(message);
 
-		final var document = attachmentEntities.getFirst();
-		final var startSigningRequest = esigningMapper.toStartSigningRequest(message, request, document);
+		final var documentEntity = attachmentEntities.getFirst();
+		final var attachmentEntitiesToSign = attachmentEntities.subList(1, attachmentEntities.size());
+		final var startSigningRequest = esigningMapper.toStartSigningRequest(message, request, documentEntity, attachmentEntitiesToSign);
 		final var response = esigningIntegration.createSigning(municipalityId, startSigningRequest);
 
 		// The signing's attachment is left null; it is set to the signed (merged) document when the completion event arrives.
