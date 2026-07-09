@@ -542,4 +542,26 @@ class MessageResourceFailureTest {
 		});
 	}
 
+	@Test
+	void cancelESigning_BadRequest() {
+		final var response = webTestClient.delete()
+			.uri("/{municipalityId}/messages/e-signing/{messageId}", INVALID_MUNICIPALITY_ID, "invalid")
+			.exchange()
+			.expectStatus().isBadRequest()
+			.expectBody(ConstraintViolationProblem.class)
+			.returnResult()
+			.getResponseBody();
+
+		assertThat(response.getTitle()).isEqualTo("Constraint Violation");
+		assertThat(response.getViolations()).hasSize(2).satisfiesExactlyInAnyOrder(
+			violation -> {
+				assertThat(violation.field()).isEqualTo("cancelESigning.municipalityId");
+				assertThat(violation.message()).isEqualTo("not a valid municipality ID");
+			},
+			violation -> {
+				assertThat(violation.field()).isEqualTo("cancelESigning.messageId");
+				assertThat(violation.message()).isEqualTo("not a valid UUID");
+			});
+	}
+
 }

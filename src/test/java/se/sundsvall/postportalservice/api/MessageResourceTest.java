@@ -214,4 +214,16 @@ class MessageResourceTest {
 		verify(messageServiceMock).processCsvSmsRequest(eq(MUNICIPALITY_ID), any(SmsCsvRequest.class), any(MultipartFile.class));
 	}
 
+	@Test
+	void cancelESigning_NoContent() {
+		final var messageId = "9ce333ec-a473-438b-8406-a71e957dc107";
+
+		webTestClient.delete()
+			.uri("/{municipalityId}/messages/e-signing/{messageId}", MUNICIPALITY_ID, messageId)
+			.exchange()
+			.expectStatus().isNoContent();
+
+		verify(messageServiceMock).cancelESigning(MUNICIPALITY_ID, messageId);
+	}
+
 }
