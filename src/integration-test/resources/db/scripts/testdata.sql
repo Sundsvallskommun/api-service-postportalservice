@@ -289,3 +289,8 @@ VALUES
  '+46701740605'),
 ('6425c8eb-0119-433d-a4bd-efbd70a8c305', 'a8fec1ef-950f-4735-9c49-1a641043cdbb', 'SMS', 'SENT', '2025-08-06 12:03:00',
  '+46701740605');
+
+-- One e-signing case, linked to the digital-registered-letter message above (used by SigningRepository.findByMessageId)
+INSERT INTO signing (id, message_id, provider_case_id, provider, status, created)
+VALUES ('a1b2c3d4-0000-4000-8000-000000000001', '1decdead-52b8-42d9-aa62-5ef08c4a701e',
+        'comfact-case-1', 'comfact', 'INVANTAR_SIGNERING', '2025-09-07 12:05:00');
