@@ -40,9 +40,9 @@ class MessageEntityTest {
 		assertThat(MessageEntity.class, allOf(
 			hasValidBeanConstructor(),
 			hasValidGettersAndSetters(),
-			hasValidBeanHashCodeExcluding("attachments", "signing"),
-			hasValidBeanEqualsExcluding("attachments", "signing"),
-			hasValidBeanToStringExcluding("attachments", "signing")));
+			hasValidBeanHashCodeExcluding("attachments"),
+			hasValidBeanEqualsExcluding("attachments"),
+			hasValidBeanToStringExcluding("attachments")));
 	}
 
 	@Test
@@ -51,7 +51,6 @@ class MessageEntityTest {
 		var departmentEntity = new DepartmentEntity();
 		var attachments = new ArrayList<AttachmentEntity>();
 		var recipientEntities = new ArrayList<RecipientEntity>();
-		var signingEntity = new SigningEntity();
 
 		var messageEntity = MessageEntity.create()
 			.withId(ID)
@@ -65,8 +64,7 @@ class MessageEntityTest {
 			.withUser(userEntity)
 			.withDepartment(departmentEntity)
 			.withAttachments(attachments)
-			.withRecipients(recipientEntities)
-			.withSigning(signingEntity);
+			.withRecipients(recipientEntities);
 
 		assertThat(messageEntity.getId()).isEqualTo(ID);
 		assertThat(messageEntity.getMunicipalityId()).isEqualTo(MUNICIPALITY_ID);
@@ -80,7 +78,6 @@ class MessageEntityTest {
 		assertThat(messageEntity.getDepartment()).isEqualTo(departmentEntity);
 		assertThat(messageEntity.getAttachments()).isEqualTo(attachments);
 		assertThat(messageEntity.getRecipients()).isEqualTo(recipientEntities);
-		assertThat(messageEntity.getSigning()).isEqualTo(signingEntity);
 		assertThat(messageEntity).hasNoNullFieldsOrProperties();
 	}
 
@@ -91,7 +88,6 @@ class MessageEntityTest {
 		var departmentEntity = new DepartmentEntity();
 		var attachments = new ArrayList<AttachmentEntity>();
 		var recipientEntities = new ArrayList<RecipientEntity>();
-		var signingEntity = new SigningEntity();
 
 		messageEntity.setId(ID);
 		messageEntity.setMunicipalityId(MUNICIPALITY_ID);
@@ -105,7 +101,6 @@ class MessageEntityTest {
 		messageEntity.setDepartment(departmentEntity);
 		messageEntity.setAttachments(attachments);
 		messageEntity.setRecipients(recipientEntities);
-		messageEntity.setSigning(signingEntity);
 
 		assertThat(messageEntity.getId()).isEqualTo(ID);
 		assertThat(messageEntity.getMunicipalityId()).isEqualTo(MUNICIPALITY_ID);
@@ -119,7 +114,6 @@ class MessageEntityTest {
 		assertThat(messageEntity.getDepartment()).isEqualTo(departmentEntity);
 		assertThat(messageEntity.getAttachments()).isEqualTo(attachments);
 		assertThat(messageEntity.getRecipients()).isEqualTo(recipientEntities);
-		assertThat(messageEntity.getSigning()).isEqualTo(signingEntity);
 		assertThat(messageEntity).hasNoNullFieldsOrProperties();
 	}
 

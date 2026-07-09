@@ -55,6 +55,7 @@ resilience4j:
       recipientRepository: {}
       userRepository: {}
       statisticsRepository: {}
+      signingRepository: {}
 delivery:
   executor:
     # Concurrency limit towards the messaging service (the blocking call runs on the pool thread).
