@@ -193,9 +193,9 @@ public class MessageService {
 		final var startSigningRequest = esigningMapper.toStartSigningRequest(message, request, document);
 		final var response = esigningIntegration.createSigning(municipalityId, startSigningRequest);
 
+		// The signing's attachment is left null; it is set to the signed (merged) document when the completion event arrives.
 		final var signing = SigningEntity.create()
-			.withMessageId(message.getId())
-			.withAttachmentId(document.getId())
+			.withMessage(message)
 			.withProviderCaseId(response.getProviderCaseId())
 			.withProvider(response.getProvider())
 			.withStatus(ofNullable(response.getStatus()).map(StartSigningResponse.StatusEnum::getValue).orElse(null));

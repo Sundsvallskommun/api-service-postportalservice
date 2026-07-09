@@ -217,8 +217,8 @@ class MessageServiceTest {
 		assertThat(savedMessage.getRecipients().getFirst().getStatus()).isEqualTo("PENDING");
 
 		final var savedSigning = signingCaptor.getValue();
-		assertThat(savedSigning.getMessageId()).isEqualTo("msg-1");
-		assertThat(savedSigning.getAttachmentId()).isEqualTo("att-1");
+		assertThat(savedSigning.getMessage().getId()).isEqualTo("msg-1");
+		assertThat(savedSigning.getAttachment()).isNull();
 		assertThat(savedSigning.getProviderCaseId()).isEqualTo("case-1");
 		assertThat(savedSigning.getProvider()).isEqualTo("comfact");
 		assertThat(savedSigning.getStatus()).isEqualTo("INITIERAT");

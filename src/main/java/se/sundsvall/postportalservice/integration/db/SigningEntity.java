@@ -2,10 +2,12 @@ package se.sundsvall.postportalservice.integration.db;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.ForeignKey;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.Index;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import java.time.OffsetDateTime;
@@ -16,17 +18,13 @@ import org.hibernate.annotations.TimeZoneStorage;
 import static org.hibernate.annotations.TimeZoneStorageType.NORMALIZE;
 
 /**
- * Case-level record for an e-signing (message type {@code E_SIGNING}). Holds the provider correlation
- * ({@code providerCaseId}, {@code provider}) and the normalized case {@code status}, and points at the
- * {@code attachment} that holds the document being signed (overwritten in place with the signed PDF on completion).
- * It owns its {@code message_id} and {@code attachment_id} references, so {@link MessageEntity} and
- * {@link RecipientEntity} stay untouched. Per-signatory status lives on the message's recipients, keyed by party id.
+ * Case-level record for an e-signing (message type {@code E_SIGNING}). Linked to its {@link MessageEntity} both ways
+ * ({@code message.getSigning()}), and - once the case is signed - to the {@link AttachmentEntity} that holds the signed
+ * document (the merged signed PDF Comfact returns; {@code null} until completion). Per-signatory status lives on the
+ * message's recipients, keyed by party id.
  */
 @Entity
-@Table(name = "signing", indexes = {
-	@Index(name = "IDX_SIGNING_MESSAGE_ID", columnList = "message_id"),
-	@Index(name = "IDX_SIGNING_PROVIDER_CASE_ID", columnList = "provider_case_id")
-})
+@Table(name = "signing")
 public class SigningEntity {
 
 	@Id
@@ -34,8 +32,9 @@ public class SigningEntity {
 	@Column(name = "id", columnDefinition = "VARCHAR(36)")
 	private String id;
 
-	@Column(name = "message_id", columnDefinition = "VARCHAR(36)")
-	private String messageId;
+	@OneToOne(optional = false)
+	@JoinColumn(name = "message_id", columnDefinition = "VARCHAR(36)", foreignKey = @ForeignKey(name = "FK_SIGNING_MESSAGE"))
+	private MessageEntity message;
 
 	@Column(name = "provider_case_id", columnDefinition = "VARCHAR(255)")
 	private String providerCaseId;
@@ -46,8 +45,9 @@ public class SigningEntity {
 	@Column(name = "status", columnDefinition = "VARCHAR(50)")
 	private String status;
 
-	@Column(name = "attachment_id", columnDefinition = "VARCHAR(36)")
-	private String attachmentId;
+	@OneToOne
+	@JoinColumn(name = "attachment_id", columnDefinition = "VARCHAR(36)", foreignKey = @ForeignKey(name = "FK_SIGNING_ATTACHMENT"))
+	private AttachmentEntity attachment;
 
 	@Column(name = "created", columnDefinition = "DATETIME")
 	@TimeZoneStorage(NORMALIZE)
@@ -75,16 +75,16 @@ public class SigningEntity {
 		return this;
 	}
 
-	public String getMessageId() {
-		return messageId;
+	public MessageEntity getMessage() {
+		return message;
 	}
 
-	public void setMessageId(String messageId) {
-		this.messageId = messageId;
+	public void setMessage(MessageEntity message) {
+		this.message = message;
 	}
 
-	public SigningEntity withMessageId(String messageId) {
-		this.messageId = messageId;
+	public SigningEntity withMessage(MessageEntity message) {
+		this.message = message;
 		return this;
 	}
 
@@ -127,16 +127,16 @@ public class SigningEntity {
 		return this;
 	}
 
-	public String getAttachmentId() {
-		return attachmentId;
+	public AttachmentEntity getAttachment() {
+		return attachment;
 	}
 
-	public void setAttachmentId(String attachmentId) {
-		this.attachmentId = attachmentId;
+	public void setAttachment(AttachmentEntity attachment) {
+		this.attachment = attachment;
 	}
 
-	public SigningEntity withAttachmentId(String attachmentId) {
-		this.attachmentId = attachmentId;
+	public SigningEntity withAttachment(AttachmentEntity attachment) {
+		this.attachment = attachment;
 		return this;
 	}
 
@@ -153,29 +153,28 @@ public class SigningEntity {
 		return this;
 	}
 
+	// message and attachment are intentionally excluded from equals/hashCode/toString to avoid bidirectional recursion
+	// and touching lazy proxies.
 	@Override
 	public boolean equals(Object o) {
 		if (o == null || getClass() != o.getClass())
 			return false;
 		SigningEntity that = (SigningEntity) o;
-		return Objects.equals(id, that.id) && Objects.equals(messageId, that.messageId) && Objects.equals(providerCaseId, that.providerCaseId) && Objects.equals(provider, that.provider) && Objects.equals(status, that.status)
-			&& Objects.equals(attachmentId, that.attachmentId) && Objects.equals(created, that.created);
+		return Objects.equals(id, that.id) && Objects.equals(providerCaseId, that.providerCaseId) && Objects.equals(provider, that.provider) && Objects.equals(status, that.status) && Objects.equals(created, that.created);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(id, messageId, providerCaseId, provider, status, attachmentId, created);
+		return Objects.hash(id, providerCaseId, provider, status, created);
 	}
 
 	@Override
 	public String toString() {
 		return "SigningEntity{" +
 			"id='" + id + '\'' +
-			", messageId='" + messageId + '\'' +
 			", providerCaseId='" + providerCaseId + '\'' +
 			", provider='" + provider + '\'' +
 			", status='" + status + '\'' +
-			", attachmentId='" + attachmentId + '\'' +
 			", created=" + created +
 			'}';
 	}
