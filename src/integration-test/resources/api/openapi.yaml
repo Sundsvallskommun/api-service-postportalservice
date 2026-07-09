@@ -7,7 +7,7 @@ info:
     url: https://opensource.org/licenses/MIT
   version: "1.8"
 servers:
-- url: http://localhost:55292
+- url: http://localhost:50387
   description: Generated server url
 tags:
 - name: E-signing
@@ -534,15 +534,17 @@ paths:
               properties:
                 request:
                   $ref: "#/components/schemas/ESigningRequest"
+                document:
+                  type: string
+                  format: binary
                 attachments:
                   type: array
                   items:
                     type: string
                     format: binary
               required:
-              - attachments
+              - document
               - request
-        required: true
       responses:
         "200":
           description: OK
