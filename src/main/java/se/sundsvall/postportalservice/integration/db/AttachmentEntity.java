@@ -14,6 +14,7 @@ import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 import java.sql.Blob;
 import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.util.Objects;
 import org.hibernate.annotations.TimeZoneStorage;
 
@@ -51,7 +52,7 @@ public class AttachmentEntity {
 
 	@PrePersist
 	void prePersist() {
-		created = OffsetDateTime.now();
+		created = OffsetDateTime.now(ZoneId.systemDefault());
 	}
 
 	public static AttachmentEntity create() {

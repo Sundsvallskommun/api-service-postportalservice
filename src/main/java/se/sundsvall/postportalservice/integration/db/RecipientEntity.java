@@ -11,6 +11,7 @@ import jakarta.persistence.Index;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.util.Objects;
 import org.hibernate.annotations.TimeZoneStorage;
 import se.sundsvall.postportalservice.integration.db.converter.MessageType;
@@ -90,7 +91,7 @@ public class RecipientEntity {
 
 	@PrePersist
 	void prePersist() {
-		created = OffsetDateTime.now();
+		created = OffsetDateTime.now(ZoneId.systemDefault());
 	}
 
 	public static RecipientEntity create() {
