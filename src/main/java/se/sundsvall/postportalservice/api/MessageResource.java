@@ -12,6 +12,7 @@ import jakarta.validation.constraints.NotEmpty;
 import java.util.List;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -21,6 +22,7 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import se.sundsvall.dept44.common.validators.annotation.ValidMunicipalityId;
+import se.sundsvall.dept44.common.validators.annotation.ValidUuid;
 import se.sundsvall.dept44.problem.Problem;
 import se.sundsvall.dept44.support.Identifier;
 import se.sundsvall.postportalservice.api.model.DigitalRegisteredLetterRequest;
@@ -40,6 +42,7 @@ import static org.springframework.http.MediaType.ALL_VALUE;
 import static org.springframework.http.MediaType.APPLICATION_PROBLEM_JSON_VALUE;
 import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;
 import static org.springframework.http.ResponseEntity.created;
+import static org.springframework.http.ResponseEntity.noContent;
 import static org.springframework.web.util.UriComponentsBuilder.fromPath;
 
 @Validated
@@ -135,6 +138,20 @@ class MessageResource {
 			.buildAndExpand(municipalityId, Identifier.get().getValue(), messageId).toUri())
 			.header(CONTENT_TYPE, ALL_VALUE)
 			.build();
+	}
+
+	@Operation(summary = "Cancel an ongoing Comfact e-signing.", responses = {
+		@ApiResponse(responseCode = "204", description = "No Content"),
+		@ApiResponse(responseCode = "404", description = "Not Found", content = @Content(mediaType = APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = Problem.class)))
+	})
+	@DeleteMapping(value = "/e-signing/{messageId}", produces = ALL_VALUE)
+	ResponseEntity<Void> cancelESigning(
+		@Parameter(name = "municipalityId", description = "Municipality ID", example = "2281") @ValidMunicipalityId @PathVariable final String municipalityId,
+		@Parameter(name = "messageId", description = "Message ID", example = "9ce333ec-a473-438b-8406-a71e957dc107") @PathVariable @ValidUuid final String messageId) {
+
+		messageService.cancelESigning(municipalityId, messageId);
+
+		return noContent().build();
 	}
 
 	@Operation(summary = "Send an SMS", responses = {
