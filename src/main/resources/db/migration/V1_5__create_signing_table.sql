@@ -1,13 +1,15 @@
 CREATE TABLE signing
 (
     id               VARCHAR(36)  NOT NULL,
-    message_id       VARCHAR(36)  NULL,
+    message_id       VARCHAR(36)  NOT NULL,
     provider_case_id VARCHAR(255) NULL,
     provider         VARCHAR(50)  NULL,
     status           VARCHAR(50)  NULL,
     attachment_id    VARCHAR(36)  NULL,
     created          datetime     NULL,
-    CONSTRAINT pk_signing PRIMARY KEY (id)
+    CONSTRAINT pk_signing PRIMARY KEY (id),
+    CONSTRAINT UK_SIGNING_MESSAGE UNIQUE (message_id),
+    CONSTRAINT UK_SIGNING_ATTACHMENT UNIQUE (attachment_id)
 );
 
 ALTER TABLE signing
@@ -15,7 +17,3 @@ ALTER TABLE signing
 
 ALTER TABLE signing
     ADD CONSTRAINT FK_SIGNING_ON_ATTACHMENT FOREIGN KEY (attachment_id) REFERENCES attachment (id);
-
-CREATE INDEX IDX_SIGNING_MESSAGE_ID ON signing (message_id);
-
-CREATE INDEX IDX_SIGNING_PROVIDER_CASE_ID ON signing (provider_case_id);
