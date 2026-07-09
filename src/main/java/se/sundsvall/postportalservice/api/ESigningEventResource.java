@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import se.sundsvall.dept44.common.validators.annotation.ValidMunicipalityId;
+import se.sundsvall.dept44.common.validators.annotation.ValidUuid;
 import se.sundsvall.dept44.problem.Problem;
 import se.sundsvall.postportalservice.api.model.SigningEvent;
 import se.sundsvall.postportalservice.service.SigningEventService;
@@ -41,14 +42,15 @@ class ESigningEventResource {
 		this.signingEventService = signingEventService;
 	}
 
-	@Operation(summary = "Receive a signing event and update the signing case", responses = {
+	@Operation(summary = "Receive a signing event and update the signing case identified by the message id", responses = {
 		@ApiResponse(responseCode = "200", description = "OK", useReturnTypeSchema = true)
 	})
-	@PostMapping(value = "/events", consumes = APPLICATION_JSON_VALUE)
+	@PostMapping(value = "/events/{messageId}", consumes = APPLICATION_JSON_VALUE)
 	ResponseEntity<Void> receiveSigningEvent(
 		@Parameter(name = "municipalityId", description = "Municipality ID", example = "2281") @ValidMunicipalityId @PathVariable final String municipalityId,
+		@Parameter(name = "messageId", description = "The Postportalen message id the signing case belongs to", example = "550e8400-e29b-41d4-a716-446655440000") @ValidUuid @PathVariable final String messageId,
 		@Valid @RequestBody final SigningEvent event) {
-		signingEventService.handleSigningEvent(municipalityId, event);
+		signingEventService.handleSigningEvent(municipalityId, messageId, event);
 		return ok().build();
 	}
 }

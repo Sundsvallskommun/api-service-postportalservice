@@ -7,7 +7,7 @@ info:
     url: https://opensource.org/licenses/MIT
   version: "1.8"
 servers:
-- url: http://localhost:56555
+- url: http://localhost:55292
   description: Generated server url
 tags:
 - name: E-signing
@@ -566,11 +566,12 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/Problem"
-  /{municipalityId}/e-signing/events:
+  /{municipalityId}/e-signing/events/{messageId}:
     post:
       tags:
       - E-signing
-      summary: Receive a signing event and update the signing case
+      summary: Receive a signing event and update the signing case identified by the
+        message id
       operationId: receiveSigningEvent
       parameters:
       - name: municipalityId
@@ -580,6 +581,13 @@ paths:
         schema:
           type: string
         example: 2281
+      - name: messageId
+        in: path
+        description: The Postportalen message id the signing case belongs to
+        required: true
+        schema:
+          type: string
+        example: 550e8400-e29b-41d4-a716-446655440000
       requestBody:
         content:
           application/json:

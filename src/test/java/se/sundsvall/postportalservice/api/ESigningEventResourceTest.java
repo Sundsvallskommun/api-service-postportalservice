@@ -35,10 +35,12 @@ class ESigningEventResourceTest {
 	@Autowired
 	private WebTestClient webTestClient;
 
+	private static final String MESSAGE_ID = "550e8400-e29b-41d4-a716-446655440000";
+
 	@Test
 	void receiveSigningEvent() {
 		final var event = SigningEvent.create()
-			.withCustomerReference("msg-1")
+			.withCustomerReference(MESSAGE_ID)
 			.withProviderCaseId("1234567890")
 			.withProvider("comfact")
 			.withEventType("CASE_COMPLETED")
@@ -47,12 +49,12 @@ class ESigningEventResourceTest {
 			.withSignedDocument(SignedDocument.create().withFileName("signed.pdf").withContent("c2lnbmVk"));
 
 		webTestClient.post()
-			.uri(uriBuilder -> uriBuilder.path("/{municipalityId}/e-signing/events").build(Map.of("municipalityId", MUNICIPALITY_ID)))
+			.uri(uriBuilder -> uriBuilder.path("/{municipalityId}/e-signing/events/{messageId}").build(Map.of("municipalityId", MUNICIPALITY_ID, "messageId", MESSAGE_ID)))
 			.bodyValue(event)
 			.exchange()
 			.expectStatus().isOk();
 
-		verify(signingEventServiceMock).handleSigningEvent(eq(MUNICIPALITY_ID), any(SigningEvent.class));
+		verify(signingEventServiceMock).handleSigningEvent(eq(MUNICIPALITY_ID), eq(MESSAGE_ID), any(SigningEvent.class));
 		verifyNoMoreInteractions(signingEventServiceMock);
 	}
 }

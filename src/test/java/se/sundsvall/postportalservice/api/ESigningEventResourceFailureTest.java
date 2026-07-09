@@ -32,23 +32,26 @@ class ESigningEventResourceFailureTest {
 	@Autowired
 	private WebTestClient webTestClient;
 
+	private static final String MESSAGE_ID = "550e8400-e29b-41d4-a716-446655440000";
+
 	private static SigningEvent validEvent() {
 		return SigningEvent.create().withProviderCaseId("1234567890").withEventType("CASE_COMPLETED").withStatus("SIGNERAT");
 	}
 
 	private static Stream<Arguments> badRequests() {
 		return Stream.of(
-			Arguments.of("2281", SigningEvent.create().withEventType("CASE_COMPLETED").withStatus("SIGNERAT")), // missing providerCaseId
-			Arguments.of("2281", validEvent().withEventType("SOMETHING_ELSE")), // unknown event type
-			Arguments.of("2281", validEvent().withStatus("BANANA")), // unknown status
-			Arguments.of("invalid", validEvent())); // invalid municipality id
+			Arguments.of("2281", MESSAGE_ID, SigningEvent.create().withEventType("CASE_COMPLETED").withStatus("SIGNERAT")), // missing providerCaseId
+			Arguments.of("2281", MESSAGE_ID, validEvent().withEventType("SOMETHING_ELSE")), // unknown event type
+			Arguments.of("2281", MESSAGE_ID, validEvent().withStatus("BANANA")), // unknown status
+			Arguments.of("2281", "not-a-uuid", validEvent()), // invalid message id
+			Arguments.of("invalid", MESSAGE_ID, validEvent())); // invalid municipality id
 	}
 
 	@ParameterizedTest
 	@MethodSource("badRequests")
-	void receiveSigningEvent_badRequest(final String municipalityId, final SigningEvent event) {
+	void receiveSigningEvent_badRequest(final String municipalityId, final String messageId, final SigningEvent event) {
 		webTestClient.post()
-			.uri("/" + municipalityId + "/e-signing/events")
+			.uri("/" + municipalityId + "/e-signing/events/" + messageId)
 			.bodyValue(event)
 			.exchange()
 			.expectStatus().isBadRequest()
