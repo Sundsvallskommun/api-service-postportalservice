@@ -54,8 +54,8 @@ public class SigningEntity {
 	@Column(name = "status", columnDefinition = "VARCHAR(50)")
 	private String status;
 
-	// Nullable owning-side @OneToOne: it is eager. Hibernate cannot lazily proxy a nullable to-one without bytecode
-	// enhancement, so fetch = LAZY would be silently ignored here. Loaded at most once per signing, so eager is fine.
+	// Eager: a nullable owning @OneToOne can't be lazily proxied without bytecode enhancement. Negligible - a signing is
+	// only ever loaded one at a time.
 	@OneToOne
 	@JoinColumn(name = "attachment_id", columnDefinition = "VARCHAR(36)", foreignKey = @ForeignKey(name = "FK_SIGNING_ATTACHMENT"))
 	private AttachmentEntity attachment;
