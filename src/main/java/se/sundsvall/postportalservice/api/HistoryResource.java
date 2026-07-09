@@ -93,4 +93,16 @@ class HistoryResource {
 		return historyService.getLetterReceipt(municipalityId, messageId);
 	}
 
+	@GetMapping(value = "/messages/{messageId}/signed-document", produces = ALL_VALUE)
+	@Operation(summary = "Download the signed document for an e-signing message", description = "Streams the signed (merged) PDF produced once the e-signing case has completed", responses = {
+		@ApiResponse(responseCode = "200", description = "Successful Operation - OK", content = @Content(mediaType = ALL_VALUE, schema = @Schema(type = "string", format = "binary"))),
+		@ApiResponse(responseCode = "404", description = "Not Found", content = @Content(mediaType = APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = Problem.class)))
+	})
+	ResponseEntity<StreamingResponseBody> downloadSignedDocument(
+		@Parameter(name = "municipalityId", description = "Municipality ID", example = "2281") @ValidMunicipalityId @PathVariable final String municipalityId,
+		@Parameter(name = "messageId", description = "Message ID", example = "9ce333ec-a473-438b-8406-a71e957dc107") @PathVariable @ValidUuid final String messageId) {
+
+		return historyService.getSignedDocument(municipalityId, messageId);
+	}
+
 }
