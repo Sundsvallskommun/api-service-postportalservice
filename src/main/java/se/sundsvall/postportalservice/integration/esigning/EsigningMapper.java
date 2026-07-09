@@ -6,6 +6,7 @@ import generated.se.sundsvall.esigning.Signatory;
 import generated.se.sundsvall.esigning.SigningDocument;
 import generated.se.sundsvall.esigning.StartSigningRequest;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -24,17 +25,24 @@ public final class EsigningMapper {
 	/**
 	 * Builds the provider-neutral e-signing request. The message id is passed as {@code customerReference} so the provider
 	 * echoes it back in every callback, letting Postportalservice correlate the case. The initiator is derived from the
-	 * sending department, and the single uploaded document is sent inline as base64.
+	 * sending department, and the primary document plus any attachments are sent inline as base64.
 	 */
-	public StartSigningRequest toStartSigningRequest(final MessageEntity message, final ESigningRequest request, final AttachmentEntity document) {
+	public StartSigningRequest toStartSigningRequest(final MessageEntity message, final ESigningRequest request, final AttachmentEntity document, final List<AttachmentEntity> attachments) {
 		return new StartSigningRequest()
 			.customerReference(message.getId())
 			.language(request.getLanguage())
 			.expires(request.getExpires())
 			.document(toSigningDocument(document))
+			.attachments(toSigningDocuments(attachments))
 			.initiator(toInitiator(message.getDepartment()))
 			.notificationMessage(new Message().subject(message.getSubject()).body(message.getBody()))
 			.signatories(toSignatories(request.getSignatories()));
+	}
+
+	List<SigningDocument> toSigningDocuments(final List<AttachmentEntity> attachments) {
+		return Optional.ofNullable(attachments).orElseGet(List::of).stream()
+			.map(this::toSigningDocument)
+			.toList();
 	}
 
 	SigningDocument toSigningDocument(final AttachmentEntity attachment) {

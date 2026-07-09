@@ -126,10 +126,11 @@ class MessageResource {
 		@RequestHeader(value = Identifier.HEADER_NAME) @ValidIdentifier final String xSentBy,
 		@Parameter(name = "municipalityId", description = "Municipality ID", example = "2281") @ValidMunicipalityId @PathVariable final String municipalityId,
 		@RequestPart(name = "request") @Valid final ESigningRequest request,
-		@RequestPart(name = "attachments") @ValidPdf @NotEmpty @NoDuplicateFileNames final List<MultipartFile> attachments) {
+		@RequestPart(name = "document") @ValidPdf final MultipartFile document,
+		@RequestPart(name = "attachments", required = false) @ValidPdf @NoDuplicateFileNames final List<MultipartFile> attachments) {
 		Identifier.set(Identifier.parse(xSentBy));
 
-		final var messageId = messageService.processESigningRequest(municipalityId, request, attachments);
+		final var messageId = messageService.processESigningRequest(municipalityId, request, document, attachments);
 
 		return created(fromPath(MESSAGE_HISTORY_PATH)
 			.buildAndExpand(municipalityId, Identifier.get().getValue(), messageId).toUri())

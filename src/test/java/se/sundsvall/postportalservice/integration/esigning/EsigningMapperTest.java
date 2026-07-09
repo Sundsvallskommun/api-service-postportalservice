@@ -35,8 +35,12 @@ class EsigningMapperTest {
 			.withFileName("document.pdf")
 			.withContentType("application/pdf")
 			.withContentString("base64content");
+		final var attachment = AttachmentEntity.create()
+			.withFileName("attachment.pdf")
+			.withContentType("application/pdf")
+			.withContentString("attachmentBase64");
 
-		final var result = mapper.toStartSigningRequest(message, request, document);
+		final var result = mapper.toStartSigningRequest(message, request, document, List.of(attachment));
 
 		assertThat(result.getCustomerReference()).isEqualTo("msg-1");
 		assertThat(result.getLanguage()).isEqualTo("sv-SE");
@@ -44,6 +48,9 @@ class EsigningMapperTest {
 		assertThat(result.getDocument().getFileName()).isEqualTo("document.pdf");
 		assertThat(result.getDocument().getMimeType()).isEqualTo("application/pdf");
 		assertThat(result.getDocument().getContent()).isEqualTo("base64content");
+		assertThat(result.getAttachments()).hasSize(1);
+		assertThat(result.getAttachments().getFirst().getFileName()).isEqualTo("attachment.pdf");
+		assertThat(result.getAttachments().getFirst().getContent()).isEqualTo("attachmentBase64");
 		assertThat(result.getInitiator().getName()).isEqualTo("Sundsvall Municipality");
 		assertThat(result.getInitiator().getOrganization()).isEqualTo("Sundsvall Municipality");
 		assertThat(result.getInitiator().getEmail()).isEqualTo("dept@sundsvall.se");
@@ -63,5 +70,10 @@ class EsigningMapperTest {
 		assertThat(initiator).isNotNull();
 		assertThat(initiator.getName()).isNull();
 		assertThat(initiator.getEmail()).isNull();
+	}
+
+	@Test
+	void toSigningDocumentsHandlesNull() {
+		assertThat(mapper.toSigningDocuments(null)).isEmpty();
 	}
 }

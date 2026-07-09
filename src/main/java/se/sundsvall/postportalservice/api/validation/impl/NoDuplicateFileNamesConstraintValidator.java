@@ -12,6 +12,11 @@ public class NoDuplicateFileNamesConstraintValidator implements ConstraintValida
 
 	@Override
 	public boolean isValid(final List<MultipartFile> value, final ConstraintValidatorContext context) {
+		// Null is left to @NotEmpty/@NotNull to reject; nothing to check when no files are present.
+		if (value == null) {
+			return true;
+		}
+
 		final var documentNames = value.stream()
 			.map(MultipartFile::getOriginalFilename)
 			.map(string -> Optional.ofNullable(string).map(String::toLowerCase).orElse(""))
