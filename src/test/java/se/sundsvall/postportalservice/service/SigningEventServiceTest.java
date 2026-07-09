@@ -24,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -46,13 +47,13 @@ class SigningEventServiceTest {
 
 	@Test
 	void handleSigningEvent_completedStoresSignedDocumentAsNewAttachment() {
-		final var signing = SigningEntity.create().withId("s1").withStatus("INVANTAR_SIGNERING");
-		final var message = MessageEntity.create().withId(MESSAGE_ID).withSigning(signing);
+		final var message = MessageEntity.create().withId(MESSAGE_ID);
+		final var signing = SigningEntity.create().withId("s1").withStatus("INVANTAR_SIGNERING").withMessage(message);
 		final var blob = mock(Blob.class);
 		final var event = SigningEvent.create().withStatus("SIGNERAT")
 			.withSignedDocument(SignedDocument.create().withFileName("signed.pdf").withMimeType("application/pdf").withContent("c2lnbmVk"));
 
-		when(messageRepositoryMock.findById(MESSAGE_ID)).thenReturn(Optional.of(message));
+		when(signingRepositoryMock.findByMessageId(MESSAGE_ID)).thenReturn(Optional.of(signing));
 		when(blobUtilMock.convertBase64ToBlob("c2lnbmVk")).thenReturn(blob);
 
 		service.handleSigningEvent(MUNICIPALITY_ID, MESSAGE_ID, event);
@@ -72,30 +73,30 @@ class SigningEventServiceTest {
 	@Test
 	void handleSigningEvent_signatoryApprovedMarksRecipientSigned() {
 		final var recipient = RecipientEntity.create().withId("r1").withPartyId("p1").withStatus("PENDING");
-		final var signing = SigningEntity.create().withId("s1").withStatus("INVANTAR_SIGNERING");
-		final var message = MessageEntity.create().withId(MESSAGE_ID).withSigning(signing).withRecipients(new ArrayList<>(List.of(recipient)));
+		final var message = MessageEntity.create().withId(MESSAGE_ID).withRecipients(new ArrayList<>(List.of(recipient)));
+		final var signing = SigningEntity.create().withId("s1").withStatus("INVANTAR_SIGNERING").withMessage(message);
 		final var event = SigningEvent.create().withStatus("INVANTAR_SIGNERING")
 			.withSignatory(EventSignatory.create().withPartyId("p1").withAction("APPROVED"));
 
-		when(messageRepositoryMock.findById(MESSAGE_ID)).thenReturn(Optional.of(message));
+		when(signingRepositoryMock.findByMessageId(MESSAGE_ID)).thenReturn(Optional.of(signing));
 
 		service.handleSigningEvent(MUNICIPALITY_ID, MESSAGE_ID, event);
 
 		assertThat(recipient.getStatus()).isEqualTo("SIGNED");
 		verify(recipientRepositoryMock).save(recipient);
 		verify(signingRepositoryMock).save(signing);
-		verifyNoInteractions(blobUtilMock);
+		verifyNoInteractions(blobUtilMock, messageRepositoryMock);
 	}
 
 	@Test
 	void handleSigningEvent_signatoryDeclinedMarksRecipientDeclinedWithReason() {
 		final var recipient = RecipientEntity.create().withId("r1").withPartyId("p1").withStatus("PENDING");
-		final var signing = SigningEntity.create().withId("s1").withStatus("INVANTAR_SIGNERING");
-		final var message = MessageEntity.create().withId(MESSAGE_ID).withSigning(signing).withRecipients(new ArrayList<>(List.of(recipient)));
+		final var message = MessageEntity.create().withId(MESSAGE_ID).withRecipients(new ArrayList<>(List.of(recipient)));
+		final var signing = SigningEntity.create().withId("s1").withStatus("INVANTAR_SIGNERING").withMessage(message);
 		final var event = SigningEvent.create().withStatus("FEL")
 			.withSignatory(EventSignatory.create().withPartyId("p1").withAction("DECLINED").withReason("Not authorised"));
 
-		when(messageRepositoryMock.findById(MESSAGE_ID)).thenReturn(Optional.of(message));
+		when(signingRepositoryMock.findByMessageId(MESSAGE_ID)).thenReturn(Optional.of(signing));
 
 		service.handleSigningEvent(MUNICIPALITY_ID, MESSAGE_ID, event);
 
@@ -107,38 +108,27 @@ class SigningEventServiceTest {
 
 	@Test
 	void handleSigningEvent_terminalStatusNotRegressed() {
-		final var signing = SigningEntity.create().withId("s1").withStatus("SIGNERAT");
-		final var message = MessageEntity.create().withId(MESSAGE_ID).withSigning(signing);
+		final var message = MessageEntity.create().withId(MESSAGE_ID);
+		final var signing = SigningEntity.create().withId("s1").withStatus("SIGNERAT").withMessage(message);
 		final var event = SigningEvent.create().withStatus("INVANTAR_SIGNERING");
 
-		when(messageRepositoryMock.findById(MESSAGE_ID)).thenReturn(Optional.of(message));
+		when(signingRepositoryMock.findByMessageId(MESSAGE_ID)).thenReturn(Optional.of(signing));
 
 		service.handleSigningEvent(MUNICIPALITY_ID, MESSAGE_ID, event);
 
 		assertThat(signing.getStatus()).isEqualTo("SIGNERAT");
 		verify(signingRepositoryMock).save(signing);
-		verifyNoInteractions(recipientRepositoryMock, blobUtilMock);
+		verifyNoInteractions(recipientRepositoryMock, blobUtilMock, messageRepositoryMock);
 	}
 
 	@Test
-	void handleSigningEvent_unknownMessageIgnored() {
-		when(messageRepositoryMock.findById("unknown")).thenReturn(Optional.empty());
+	void handleSigningEvent_noSigningCaseIgnored() {
+		when(signingRepositoryMock.findByMessageId("unknown")).thenReturn(Optional.empty());
 
 		service.handleSigningEvent(MUNICIPALITY_ID, "unknown", SigningEvent.create().withStatus("SIGNERAT"));
 
-		verify(messageRepositoryMock).findById("unknown");
-		verifyNoInteractions(recipientRepositoryMock, signingRepositoryMock, blobUtilMock);
-	}
-
-	@Test
-	void handleSigningEvent_messageWithoutSigningIgnored() {
-		final var message = MessageEntity.create().withId(MESSAGE_ID);
-
-		when(messageRepositoryMock.findById(MESSAGE_ID)).thenReturn(Optional.of(message));
-
-		service.handleSigningEvent(MUNICIPALITY_ID, MESSAGE_ID, SigningEvent.create().withStatus("SIGNERAT"));
-
-		verify(messageRepositoryMock).findById(MESSAGE_ID);
-		verifyNoInteractions(recipientRepositoryMock, signingRepositoryMock, blobUtilMock);
+		verify(signingRepositoryMock).findByMessageId("unknown");
+		verifyNoMoreInteractions(signingRepositoryMock);
+		verifyNoInteractions(messageRepositoryMock, recipientRepositoryMock, blobUtilMock);
 	}
 }

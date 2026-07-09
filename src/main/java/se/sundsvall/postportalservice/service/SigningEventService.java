@@ -26,10 +26,12 @@ import static se.sundsvall.postportalservice.Constants.SIGNERAT;
 /**
  * Consumes the normalized signing events relayed by api-service-e-signing. The message id is supplied as a path
  * variable
- * (the {@code customerReference} the provider echoes back), so the signing case is reached directly via
- * {@code message.getSigning()}. Applies a guarded status transition (the terminal {@code SIGNERAT} state is never
- * regressed), updates the acting recipient by party id, and - on completion - stores the signed (merged) document as a
- * new attachment the signing points at. The handler is transactional and idempotent, so redelivered events are safe.
+ * (the {@code customerReference} the provider echoes back), so the signing case is reached via
+ * {@code signingRepository.findByMessageId(messageId)}. Applies a guarded status transition (the terminal
+ * {@code SIGNERAT} state is never regressed), updates the acting recipient by party id, and - on completion - stores
+ * the
+ * signed (merged) document as a new attachment the signing points at. The handler is transactional and idempotent, so
+ * redelivered events are safe.
  */
 @Service
 public class SigningEventService {
@@ -54,8 +56,7 @@ public class SigningEventService {
 
 	@Transactional
 	public void handleSigningEvent(final String municipalityId, final String messageId, final SigningEvent event) {
-		final var message = messageRepository.findById(messageId).orElse(null);
-		final var signing = Optional.ofNullable(message).map(MessageEntity::getSigning).orElse(null);
+		final var signing = signingRepository.findByMessageId(messageId).orElse(null);
 		if (signing == null) {
 			// Ack unknown cases so the provider stops retrying - the create flow persists the signing synchronously, so a
 			// message without a signing here is genuinely not an e-signing case.
@@ -63,6 +64,7 @@ public class SigningEventService {
 				sanitizeForLogging(messageId), sanitizeForLogging(municipalityId));
 			return;
 		}
+		final var message = signing.getMessage();
 
 		applyStatus(signing, event.getStatus());
 		Optional.ofNullable(event.getSignatory()).ifPresent(signatory -> updateRecipient(message, signatory));
