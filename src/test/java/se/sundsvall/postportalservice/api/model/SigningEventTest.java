@@ -50,7 +50,7 @@ class SigningEventTest {
 			.withProviderCaseId("1234567890")
 			.withProvider("comfact")
 			.withEventType("CASE_COMPLETED")
-			.withStatus("SIGNERAT")
+			.withStatus("SIGNED")
 			.withSignatory(EventSignatory.create().withPartyId("p1"))
 			.withSignedDocument(SignedDocument.create().withContent("c2lnbmVk"))
 			.withOccurredAt(OCCURRED_AT);
@@ -59,7 +59,7 @@ class SigningEventTest {
 		assertThat(event.getProviderCaseId()).isEqualTo("1234567890");
 		assertThat(event.getProvider()).isEqualTo("comfact");
 		assertThat(event.getEventType()).isEqualTo("CASE_COMPLETED");
-		assertThat(event.getStatus()).isEqualTo("SIGNERAT");
+		assertThat(event.getStatus()).isEqualTo("SIGNED");
 		assertThat(event.getSignatory()).isNotNull();
 		assertThat(event.getSignedDocument()).isNotNull();
 		assertThat(event.getOccurredAt()).isEqualTo(OCCURRED_AT);
@@ -81,7 +81,7 @@ class SigningEventTest {
 		final var event = SigningEvent.create()
 			.withProviderCaseId("1234567890")
 			.withEventType("CASE_COMPLETED")
-			.withStatus("SIGNERAT");
+			.withStatus("SIGNED");
 
 		assertThat(validator.validate(event)).isEmpty();
 	}

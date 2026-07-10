@@ -48,9 +48,9 @@ class SigningEventServiceTest {
 	@Test
 	void handleSigningEvent_completedStoresSignedDocumentAsNewAttachment() {
 		final var message = MessageEntity.create().withId(MESSAGE_ID);
-		final var signing = SigningEntity.create().withId("s1").withStatus("INVANTAR_SIGNERING").withMessage(message);
+		final var signing = SigningEntity.create().withId("s1").withStatus("PENDING").withMessage(message);
 		final var blob = mock(Blob.class);
-		final var event = SigningEvent.create().withStatus("SIGNERAT")
+		final var event = SigningEvent.create().withStatus("SIGNED")
 			.withSignedDocument(SignedDocument.create().withFileName("signed.pdf").withMimeType("application/pdf").withContent("c2lnbmVk"));
 
 		when(signingRepositoryMock.findByMessageId(MESSAGE_ID)).thenReturn(Optional.of(signing));
@@ -58,7 +58,7 @@ class SigningEventServiceTest {
 
 		service.handleSigningEvent(MUNICIPALITY_ID, MESSAGE_ID, event);
 
-		assertThat(signing.getStatus()).isEqualTo("SIGNERAT");
+		assertThat(signing.getStatus()).isEqualTo("SIGNED");
 		assertThat(message.getAttachments()).hasSize(1);
 		final var signedAttachment = message.getAttachments().getFirst();
 		assertThat(signedAttachment.getFileName()).isEqualTo("signed.pdf");
@@ -74,8 +74,8 @@ class SigningEventServiceTest {
 	void handleSigningEvent_signatoryApprovedMarksRecipientSigned() {
 		final var recipient = RecipientEntity.create().withId("r1").withPartyId("p1").withStatus("PENDING");
 		final var message = MessageEntity.create().withId(MESSAGE_ID).withRecipients(new ArrayList<>(List.of(recipient)));
-		final var signing = SigningEntity.create().withId("s1").withStatus("INVANTAR_SIGNERING").withMessage(message);
-		final var event = SigningEvent.create().withStatus("INVANTAR_SIGNERING")
+		final var signing = SigningEntity.create().withId("s1").withStatus("PENDING").withMessage(message);
+		final var event = SigningEvent.create().withStatus("PENDING")
 			.withSignatory(EventSignatory.create().withPartyId("p1").withAction("APPROVED"));
 
 		when(signingRepositoryMock.findByMessageId(MESSAGE_ID)).thenReturn(Optional.of(signing));
@@ -92,8 +92,8 @@ class SigningEventServiceTest {
 	void handleSigningEvent_signatoryDeclinedMarksRecipientDeclinedWithReason() {
 		final var recipient = RecipientEntity.create().withId("r1").withPartyId("p1").withStatus("PENDING");
 		final var message = MessageEntity.create().withId(MESSAGE_ID).withRecipients(new ArrayList<>(List.of(recipient)));
-		final var signing = SigningEntity.create().withId("s1").withStatus("INVANTAR_SIGNERING").withMessage(message);
-		final var event = SigningEvent.create().withStatus("FEL")
+		final var signing = SigningEntity.create().withId("s1").withStatus("PENDING").withMessage(message);
+		final var event = SigningEvent.create().withStatus("FAILED")
 			.withSignatory(EventSignatory.create().withPartyId("p1").withAction("DECLINED").withReason("Not authorised"));
 
 		when(signingRepositoryMock.findByMessageId(MESSAGE_ID)).thenReturn(Optional.of(signing));
@@ -102,21 +102,21 @@ class SigningEventServiceTest {
 
 		assertThat(recipient.getStatus()).isEqualTo("DECLINED");
 		assertThat(recipient.getStatusDetail()).isEqualTo("Not authorised");
-		assertThat(signing.getStatus()).isEqualTo("FEL");
+		assertThat(signing.getStatus()).isEqualTo("FAILED");
 		verify(recipientRepositoryMock).save(recipient);
 	}
 
 	@Test
 	void handleSigningEvent_terminalStatusNotRegressed() {
 		final var message = MessageEntity.create().withId(MESSAGE_ID);
-		final var signing = SigningEntity.create().withId("s1").withStatus("SIGNERAT").withMessage(message);
-		final var event = SigningEvent.create().withStatus("INVANTAR_SIGNERING");
+		final var signing = SigningEntity.create().withId("s1").withStatus("SIGNED").withMessage(message);
+		final var event = SigningEvent.create().withStatus("PENDING");
 
 		when(signingRepositoryMock.findByMessageId(MESSAGE_ID)).thenReturn(Optional.of(signing));
 
 		service.handleSigningEvent(MUNICIPALITY_ID, MESSAGE_ID, event);
 
-		assertThat(signing.getStatus()).isEqualTo("SIGNERAT");
+		assertThat(signing.getStatus()).isEqualTo("SIGNED");
 		verify(signingRepositoryMock).save(signing);
 		verifyNoInteractions(recipientRepositoryMock, blobUtilMock, messageRepositoryMock);
 	}
@@ -125,7 +125,7 @@ class SigningEventServiceTest {
 	void handleSigningEvent_noSigningCaseIgnored() {
 		when(signingRepositoryMock.findByMessageId("unknown")).thenReturn(Optional.empty());
 
-		service.handleSigningEvent(MUNICIPALITY_ID, "unknown", SigningEvent.create().withStatus("SIGNERAT"));
+		service.handleSigningEvent(MUNICIPALITY_ID, "unknown", SigningEvent.create().withStatus("SIGNED"));
 
 		verify(signingRepositoryMock).findByMessageId("unknown");
 		verifyNoMoreInteractions(signingRepositoryMock);

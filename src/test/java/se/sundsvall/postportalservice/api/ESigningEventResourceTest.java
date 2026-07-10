@@ -44,7 +44,7 @@ class ESigningEventResourceTest {
 			.withProviderCaseId("1234567890")
 			.withProvider("comfact")
 			.withEventType("CASE_COMPLETED")
-			.withStatus("SIGNERAT")
+			.withStatus("SIGNED")
 			.withSignatory(EventSignatory.create().withPartyId("6d0773d6-3e7f-4552-81bc-f0007af95adf").withAction("APPROVED"))
 			.withSignedDocument(SignedDocument.create().withFileName("signed.pdf").withContent("c2lnbmVk"));
 

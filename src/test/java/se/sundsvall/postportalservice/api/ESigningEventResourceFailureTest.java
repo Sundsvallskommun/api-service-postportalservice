@@ -35,12 +35,12 @@ class ESigningEventResourceFailureTest {
 	private static final String MESSAGE_ID = "550e8400-e29b-41d4-a716-446655440000";
 
 	private static SigningEvent validEvent() {
-		return SigningEvent.create().withProviderCaseId("1234567890").withEventType("CASE_COMPLETED").withStatus("SIGNERAT");
+		return SigningEvent.create().withProviderCaseId("1234567890").withEventType("CASE_COMPLETED").withStatus("SIGNED");
 	}
 
 	private static Stream<Arguments> badRequests() {
 		return Stream.of(
-			Arguments.of("2281", MESSAGE_ID, SigningEvent.create().withEventType("CASE_COMPLETED").withStatus("SIGNERAT")), // missing providerCaseId
+			Arguments.of("2281", MESSAGE_ID, SigningEvent.create().withEventType("CASE_COMPLETED").withStatus("SIGNED")), // missing providerCaseId
 			Arguments.of("2281", MESSAGE_ID, validEvent().withEventType("SOMETHING_ELSE")), // unknown event type
 			Arguments.of("2281", MESSAGE_ID, validEvent().withStatus("BANANA")), // unknown status
 			Arguments.of("2281", "not-a-uuid", validEvent()), // invalid message id

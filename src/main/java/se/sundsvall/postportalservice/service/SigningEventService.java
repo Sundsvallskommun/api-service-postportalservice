@@ -21,15 +21,13 @@ import static org.springframework.http.MediaType.APPLICATION_PDF_VALUE;
 import static se.sundsvall.dept44.util.LogUtils.sanitizeForLogging;
 import static se.sundsvall.postportalservice.Constants.DECLINED;
 import static se.sundsvall.postportalservice.Constants.SIGNED;
-import static se.sundsvall.postportalservice.Constants.SIGNERAT;
 
 /**
  * Consumes the normalized signing events relayed by api-service-e-signing. The message id is supplied as a path
  * variable
  * (the {@code customerReference} the provider echoes back), so the signing case is reached via
- * {@code signingRepository.findByMessageId(messageId)}. Applies a guarded status transition (the terminal
- * {@code SIGNERAT} state is never regressed), updates the acting recipient by party id, and - on completion - stores
- * the
+ * {@code signingRepository.findByMessageId(messageId)}. Applies a guarded status transition (a signed case is never
+ * regressed), updates the acting recipient by party id, and - on completion - stores the
  * signed (merged) document as a new attachment the signing points at. The handler is transactional and idempotent, so
  * redelivered events are safe.
  */
@@ -74,12 +72,12 @@ public class SigningEventService {
 	}
 
 	/**
-	 * Guarded status transition: {@code SIGNERAT} is terminal (a signed case stays signed), everything else applies the
+	 * Guarded status transition: {@code SIGNED} is terminal (a signed case stays signed), everything else applies the
 	 * incoming status (forward progress and reactivation both flow through).
 	 */
 	void applyStatus(final SigningEntity signing, final String newStatus) {
-		if (SIGNERAT.equals(signing.getStatus())) {
-			LOG.info("Signing case {} is already {} (terminal); ignoring status {}", signing.getId(), SIGNERAT, newStatus);
+		if (SIGNED.equals(signing.getStatus())) {
+			LOG.info("Signing case {} is already {} (terminal); ignoring status {}", sanitizeForLogging(signing.getId()), SIGNED, sanitizeForLogging(newStatus));
 			return;
 		}
 		signing.setStatus(newStatus);

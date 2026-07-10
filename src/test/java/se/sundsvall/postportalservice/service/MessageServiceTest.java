@@ -185,7 +185,7 @@ class MessageServiceTest {
 		final var documentEntity = AttachmentEntity.create().withId("doc-1").withFileName("document.pdf").withContentType("application/pdf").withContentString("base64doc");
 		final var attachmentEntity = AttachmentEntity.create().withId("att-1").withFileName("attachment.pdf").withContentType("application/pdf").withContentString("base64att");
 		final var startSigningRequest = new StartSigningRequest();
-		final var response = new StartSigningResponse().providerCaseId("case-1").provider("comfact").status(StartSigningResponse.StatusEnum.INITIERAT);
+		final var response = new StartSigningResponse().providerCaseId("case-1").provider("comfact").status(StartSigningResponse.StatusEnum.INITIATED);
 
 		when(messagingSettingsIntegrationMock.getMessagingSettingsForUser(MUNICIPALITY_ID)).thenReturn(SETTINGS_MAP);
 		when(userRepositoryMock.findByUsernameIgnoreCase(USERNAME)).thenReturn(Optional.empty());
@@ -226,7 +226,7 @@ class MessageServiceTest {
 		assertThat(savedSigning.getAttachment()).isNull();
 		assertThat(savedSigning.getProviderCaseId()).isEqualTo("case-1");
 		assertThat(savedSigning.getProvider()).isEqualTo("comfact");
-		assertThat(savedSigning.getStatus()).isEqualTo("INITIERAT");
+		assertThat(savedSigning.getStatus()).isEqualTo("INITIATED");
 	}
 
 	/**
