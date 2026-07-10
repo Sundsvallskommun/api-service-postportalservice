@@ -4,6 +4,7 @@ import generated.se.sundsvall.esigning.StartSigningRequest;
 import generated.se.sundsvall.esigning.StartSigningResponse;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -23,5 +24,10 @@ public interface EsigningClient {
 	StartSigningResponse createSigning(
 		@PathVariable final String municipalityId,
 		@RequestBody final StartSigningRequest request);
+
+	@DeleteMapping(path = "/{municipalityId}/e-signing/signings/{providerCaseId}")
+	void cancelSigning(
+		@PathVariable final String municipalityId,
+		@PathVariable final String providerCaseId);
 
 }

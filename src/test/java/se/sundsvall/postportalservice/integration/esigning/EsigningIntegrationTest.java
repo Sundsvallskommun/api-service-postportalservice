@@ -36,4 +36,14 @@ class EsigningIntegrationTest {
 		verify(clientMock).createSigning(MUNICIPALITY_ID, request);
 		verifyNoMoreInteractions(clientMock);
 	}
+
+	@Test
+	void cancelSigning() {
+		final var providerCaseId = "case-1";
+
+		esigningIntegration.cancelSigning(MUNICIPALITY_ID, providerCaseId);
+
+		verify(clientMock).cancelSigning(MUNICIPALITY_ID, providerCaseId);
+		verifyNoMoreInteractions(clientMock);
+	}
 }

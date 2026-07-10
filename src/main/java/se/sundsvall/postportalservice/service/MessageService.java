@@ -51,9 +51,12 @@ import se.sundsvall.postportalservice.service.mapper.EntityMapper;
 import static java.util.Collections.emptyList;
 import static java.util.Optional.ofNullable;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
+import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.http.MediaType.TEXT_PLAIN_VALUE;
+import static se.sundsvall.postportalservice.Constants.CANCELLED;
 import static se.sundsvall.postportalservice.Constants.FAILED;
 import static se.sundsvall.postportalservice.Constants.PENDING;
+import static se.sundsvall.postportalservice.Constants.SIGNED;
 import static se.sundsvall.postportalservice.configuration.DeliveryExecutorConfiguration.DELIVERY_EXECUTOR;
 import static se.sundsvall.postportalservice.integration.db.converter.MessageType.DIGITAL_REGISTERED_LETTER;
 import static se.sundsvall.postportalservice.integration.db.converter.MessageType.E_SIGNING;
@@ -204,6 +207,25 @@ public class MessageService {
 		signingRepository.save(signing);
 
 		return message.getId();
+	}
+
+	/**
+	 * Cancels an ongoing e-signing case: withdraws it at the provider (via api-service-e-signing) and marks the local
+	 * case as {@code CANCELLED}. A case that has already completed ({@code SIGNED}) cannot be cancelled. The provider also
+	 * confirms the withdrawal asynchronously through the signing-event callback, which re-applies the terminal state.
+	 */
+	@Transactional
+	public void cancelESigning(final String municipalityId, final String messageId) {
+		final var signing = signingRepository.findByMessageId(messageId)
+			.orElseThrow(() -> Problem.valueOf(NOT_FOUND, "No e-signing case found for message with id '%s'".formatted(messageId)));
+
+		if (SIGNED.equals(signing.getStatus())) {
+			throw Problem.valueOf(BAD_REQUEST, "Cannot cancel a signing that is already completed");
+		}
+
+		esigningIntegration.cancelSigning(municipalityId, signing.getProviderCaseId());
+		signing.setStatus(CANCELLED);
+		signingRepository.save(signing);
 	}
 
 	public String processCsvLetterRequest(final String municipalityId, final LetterCsvRequest request, final MultipartFile csvFile, final List<MultipartFile> attachments) {

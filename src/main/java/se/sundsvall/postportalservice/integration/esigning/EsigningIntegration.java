@@ -17,4 +17,8 @@ public class EsigningIntegration {
 		return client.createSigning(municipalityId, request);
 	}
 
+	public void cancelSigning(final String municipalityId, final String providerCaseId) {
+		client.cancelSigning(municipalityId, providerCaseId);
+	}
+
 }
