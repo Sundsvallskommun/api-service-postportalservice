@@ -12,7 +12,6 @@ import se.sundsvall.postportalservice.api.model.SigningEvent;
 import se.sundsvall.postportalservice.integration.db.AttachmentEntity;
 import se.sundsvall.postportalservice.integration.db.MessageEntity;
 import se.sundsvall.postportalservice.integration.db.SigningEntity;
-import se.sundsvall.postportalservice.integration.db.dao.MessageRepository;
 import se.sundsvall.postportalservice.integration.db.dao.RecipientRepository;
 import se.sundsvall.postportalservice.integration.db.dao.SigningRepository;
 import se.sundsvall.postportalservice.service.util.BlobUtil;
@@ -21,15 +20,13 @@ import static org.springframework.http.MediaType.APPLICATION_PDF_VALUE;
 import static se.sundsvall.dept44.util.LogUtils.sanitizeForLogging;
 import static se.sundsvall.postportalservice.Constants.DECLINED;
 import static se.sundsvall.postportalservice.Constants.SIGNED;
-import static se.sundsvall.postportalservice.Constants.SIGNERAT;
 
 /**
  * Consumes the normalized signing events relayed by api-service-e-signing. The message id is supplied as a path
  * variable
  * (the {@code customerReference} the provider echoes back), so the signing case is reached via
- * {@code signingRepository.findByMessageId(messageId)}. Applies a guarded status transition (the terminal
- * {@code SIGNERAT} state is never regressed), updates the acting recipient by party id, and - on completion - stores
- * the
+ * {@code signingRepository.findByMessageId(messageId)}. Applies a guarded status transition (a signed case is never
+ * regressed), updates the acting recipient by party id, and - on completion - stores the
  * signed (merged) document as a new attachment the signing points at. The handler is transactional and idempotent, so
  * redelivered events are safe.
  */
@@ -38,17 +35,14 @@ public class SigningEventService {
 
 	private static final Logger LOG = LoggerFactory.getLogger(SigningEventService.class);
 
-	private final MessageRepository messageRepository;
 	private final RecipientRepository recipientRepository;
 	private final SigningRepository signingRepository;
 	private final BlobUtil blobUtil;
 
 	public SigningEventService(
-		final MessageRepository messageRepository,
 		final RecipientRepository recipientRepository,
 		final SigningRepository signingRepository,
 		final BlobUtil blobUtil) {
-		this.messageRepository = messageRepository;
 		this.recipientRepository = recipientRepository;
 		this.signingRepository = signingRepository;
 		this.blobUtil = blobUtil;
@@ -68,18 +62,18 @@ public class SigningEventService {
 
 		applyStatus(signing, event.getStatus());
 		Optional.ofNullable(event.getSignatory()).ifPresent(signatory -> updateRecipient(message, signatory));
-		Optional.ofNullable(event.getSignedDocument()).ifPresent(document -> storeSignedDocument(message, signing, document));
+		Optional.ofNullable(event.getSignedDocument()).ifPresent(document -> storeSignedDocument(signing, document));
 
 		signingRepository.save(signing);
 	}
 
 	/**
-	 * Guarded status transition: {@code SIGNERAT} is terminal (a signed case stays signed), everything else applies the
+	 * Guarded status transition: {@code SIGNED} is terminal (a signed case stays signed), everything else applies the
 	 * incoming status (forward progress and reactivation both flow through).
 	 */
 	void applyStatus(final SigningEntity signing, final String newStatus) {
-		if (SIGNERAT.equals(signing.getStatus())) {
-			LOG.info("Signing case {} is already {} (terminal); ignoring status {}", signing.getId(), SIGNERAT, newStatus);
+		if (SIGNED.equals(signing.getStatus())) {
+			LOG.info("Signing case {} is already {} (terminal); ignoring status {}", sanitizeForLogging(signing.getId()), SIGNED, sanitizeForLogging(newStatus));
 			return;
 		}
 		signing.setStatus(newStatus);
@@ -101,17 +95,15 @@ public class SigningEventService {
 	}
 
 	/**
-	 * Stores the signed document (the merged signed PDF Comfact returns) as a new attachment on the message and points the
-	 * signing at it. The original uploaded document(s) are kept.
+	 * Stores the signed document (the merged signed PDF Comfact returns) on the signing. The original uploaded document(s)
+	 * remain as message attachments.
 	 */
-	void storeSignedDocument(final MessageEntity message, final SigningEntity signing, final SignedDocument document) {
+	void storeSignedDocument(final SigningEntity signing, final SignedDocument document) {
 		final var signedAttachment = AttachmentEntity.create()
 			.withFileName(document.getFileName())
 			.withContentType(Optional.ofNullable(document.getMimeType()).orElse(APPLICATION_PDF_VALUE))
 			.withContent(blobUtil.convertBase64ToBlob(document.getContent()));
 
-		message.getAttachments().add(signedAttachment);
-		messageRepository.save(message); // cascade-persists the new attachment and assigns its id
 		signing.setAttachment(signedAttachment);
 	}
 }

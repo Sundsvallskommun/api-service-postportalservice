@@ -1,5 +1,6 @@
 package se.sundsvall.postportalservice.integration.db;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -56,7 +57,9 @@ public class SigningEntity {
 
 	// Eager: a nullable owning @OneToOne can't be lazily proxied without bytecode enhancement. Negligible - a signing is
 	// only ever loaded one at a time.
-	@OneToOne
+	@OneToOne(cascade = {
+		CascadeType.MERGE, CascadeType.PERSIST
+	})
 	@JoinColumn(name = "attachment_id", columnDefinition = "VARCHAR(36)", foreignKey = @ForeignKey(name = "FK_SIGNING_ATTACHMENT"))
 	private AttachmentEntity attachment;
 

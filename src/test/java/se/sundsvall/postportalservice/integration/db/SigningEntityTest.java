@@ -20,7 +20,7 @@ class SigningEntityTest {
 	private static final String ID = "123e4567-e89b-12d3-a456-426614174000";
 	private static final String PROVIDER_CASE_ID = "1234567890";
 	private static final String PROVIDER = "comfact";
-	private static final String STATUS = "INITIERAT";
+	private static final String STATUS = "INITIATED";
 	private static final OffsetDateTime CREATED = OffsetDateTime.of(2024, 6, 15, 12, 0, 0, 0, UTC);
 	private static final AtomicInteger SEQUENCE = new AtomicInteger();
 

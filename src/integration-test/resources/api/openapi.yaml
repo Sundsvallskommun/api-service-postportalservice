@@ -7,7 +7,7 @@ info:
     url: https://opensource.org/licenses/MIT
   version: "1.8"
 servers:
-- url: http://localhost:54002
+- url: http://localhost:52228
   description: Generated server url
 tags:
 - name: E-signing
@@ -545,6 +545,7 @@ paths:
               required:
               - document
               - request
+        required: true
       responses:
         "200":
           description: OK
@@ -826,6 +827,63 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/SigningInformation"
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                oneOf:
+                - $ref: "#/components/schemas/Problem"
+                - $ref: "#/components/schemas/ConstraintViolationProblem"
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "502":
+          description: Bad Gateway
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+  /{municipalityId}/history/messages/{messageId}/signed-document:
+    get:
+      tags:
+      - History Resources
+      summary: Download the signed document for an e-signing message
+      description: Streams the signed (merged) PDF produced once the e-signing case
+        has completed
+      operationId: downloadSignedDocument
+      parameters:
+      - name: municipalityId
+        in: path
+        description: Municipality ID
+        required: true
+        schema:
+          type: string
+        example: 2281
+      - name: messageId
+        in: path
+        description: Message ID
+        required: true
+        schema:
+          type: string
+        example: 9ce333ec-a473-438b-8406-a71e957dc107
+      responses:
+        "200":
+          description: Successful Operation - OK
+          content:
+            '*/*':
+              schema:
+                type: string
+                format: binary
         "404":
           description: Not Found
           content:
@@ -1658,13 +1716,13 @@ components:
           type: string
           description: The normalized case status
           enum:
-          - INITIERAT
-          - INVANTAR_SIGNERING
-          - SIGNERAT
-          - UTGANGET
-          - FEL
+          - INITIATED
+          - PENDING
+          - SIGNED
+          - EXPIRED
+          - FAILED
           examples:
-          - SIGNERAT
+          - SIGNED
         signatory:
           $ref: "#/components/schemas/EventSignatory"
           description: "The acting signatory, present on signatory events"

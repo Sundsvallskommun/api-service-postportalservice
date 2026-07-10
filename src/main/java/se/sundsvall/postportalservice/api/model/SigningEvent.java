@@ -30,10 +30,10 @@ public class SigningEvent {
 	private String eventType;
 
 	@OneOf(value = {
-		"INITIERAT", "INVANTAR_SIGNERING", "SIGNERAT", "UTGANGET", "FEL"
+		"INITIATED", "PENDING", "SIGNED", "EXPIRED", "FAILED"
 	}, message = "The provided status is not a known signing status.")
-	@Schema(description = "The normalized case status", examples = "SIGNERAT", allowableValues = {
-		"INITIERAT", "INVANTAR_SIGNERING", "SIGNERAT", "UTGANGET", "FEL"
+	@Schema(description = "The normalized case status", examples = "SIGNED", allowableValues = {
+		"INITIATED", "PENDING", "SIGNED", "EXPIRED", "FAILED"
 	})
 	private String status;
 

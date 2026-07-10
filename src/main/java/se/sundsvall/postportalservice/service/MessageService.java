@@ -54,9 +54,8 @@ import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.http.MediaType.TEXT_PLAIN_VALUE;
 import static se.sundsvall.postportalservice.Constants.FAILED;
-import static se.sundsvall.postportalservice.Constants.FEL;
 import static se.sundsvall.postportalservice.Constants.PENDING;
-import static se.sundsvall.postportalservice.Constants.SIGNERAT;
+import static se.sundsvall.postportalservice.Constants.SIGNED;
 import static se.sundsvall.postportalservice.configuration.DeliveryExecutorConfiguration.DELIVERY_EXECUTOR;
 import static se.sundsvall.postportalservice.integration.db.converter.MessageType.DIGITAL_REGISTERED_LETTER;
 import static se.sundsvall.postportalservice.integration.db.converter.MessageType.E_SIGNING;
@@ -187,18 +186,15 @@ public class MessageService {
 			.toList();
 		message.setRecipients(recipients);
 
-		// Store the primary document first, followed by any attachments, all as message attachments.
-		final var files = new ArrayList<MultipartFile>();
-		files.add(document);
-		files.addAll(ofNullable(attachments).orElseGet(List::of));
-		final var attachmentEntities = attachmentMapper.toAttachmentEntities(files);
-		message.setAttachments(attachmentEntities);
+		final var documentEntity = attachmentMapper.toAttachmentEntity(document);
+		final var attachmentEntities = attachmentMapper.toAttachmentEntities(attachments);
+		final var messageAttachments = new ArrayList<>(List.of(documentEntity));
+		messageAttachments.addAll(attachmentEntities);
+		message.setAttachments(messageAttachments);
 
 		messageRepository.save(message);
 
-		final var documentEntity = attachmentEntities.getFirst();
-		final var attachmentEntitiesToSign = attachmentEntities.subList(1, attachmentEntities.size());
-		final var startSigningRequest = esigningMapper.toStartSigningRequest(message, request, documentEntity, attachmentEntitiesToSign);
+		final var startSigningRequest = esigningMapper.toStartSigningRequest(message, request, documentEntity, attachmentEntities);
 		final var response = esigningIntegration.createSigning(municipalityId, startSigningRequest);
 
 		// The signing's attachment is left null; it is set to the signed (merged) document when the completion event arrives.
@@ -214,7 +210,7 @@ public class MessageService {
 
 	/**
 	 * Cancels an ongoing e-signing case: withdraws it at the provider (via api-service-e-signing) and marks the local
-	 * case as {@code FEL}. A case that has already completed ({@code SIGNERAT}) cannot be cancelled. The provider also
+	 * case as {@code FAILED}. A case that has already completed ({@code SIGNED}) cannot be cancelled. The provider also
 	 * confirms the withdrawal asynchronously through the signing-event callback, which re-applies the same status.
 	 */
 	@Transactional
@@ -222,12 +218,12 @@ public class MessageService {
 		final var signing = signingRepository.findByMessageId(messageId)
 			.orElseThrow(() -> Problem.valueOf(NOT_FOUND, "No e-signing case found for message with id '%s'".formatted(messageId)));
 
-		if (SIGNERAT.equals(signing.getStatus())) {
+		if (SIGNED.equals(signing.getStatus())) {
 			throw Problem.valueOf(BAD_REQUEST, "Cannot cancel a signing that is already completed");
 		}
 
 		esigningIntegration.cancelSigning(municipalityId, signing.getProviderCaseId());
-		signing.setStatus(FEL);
+		signing.setStatus(FAILED);
 		signingRepository.save(signing);
 	}
 

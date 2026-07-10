@@ -226,13 +226,13 @@ components:
           type: string
           description: The normalized status of the signing case
           enum:
-            - INITIERAT
-            - INVANTAR_SIGNERING
-            - SIGNERAT
-            - UTGANGET
-            - FEL
+            - INITIATED
+            - PENDING
+            - SIGNED
+            - EXPIRED
+            - FAILED
           examples:
-            - INITIERAT
+            - INITIATED
         provider:
           type: string
           description: The id of the signing provider that handled the request

@@ -130,4 +130,27 @@ class HistoryResourceFailureTest {
 			});
 	}
 
+	@Test
+	void downloadSignedDocument_badRequest() {
+		final var response = webTestClient.get()
+			.uri("/{municipalityId}/history/messages/{messageId}/signed-document", INVALID_MUNICIPALITY_ID, "invalid")
+			.exchange()
+			.expectStatus().isBadRequest()
+			.expectBody(ConstraintViolationProblem.class)
+			.returnResult()
+			.getResponseBody();
+
+		assertThat(response).isNotNull();
+		assertThat(response.getTitle()).isEqualTo("Constraint Violation");
+		assertThat(response.getViolations()).hasSize(2).satisfiesExactlyInAnyOrder(
+			violation -> {
+				assertThat(violation.field()).isEqualTo("downloadSignedDocument.municipalityId");
+				assertThat(violation.message()).isEqualTo("not a valid municipality ID");
+			},
+			violation -> {
+				assertThat(violation.field()).isEqualTo("downloadSignedDocument.messageId");
+				assertThat(violation.message()).isEqualTo("not a valid UUID");
+			});
+	}
+
 }

@@ -17,12 +17,16 @@ import se.sundsvall.postportalservice.api.model.Message;
 import se.sundsvall.postportalservice.api.model.MessageDetails;
 import se.sundsvall.postportalservice.api.model.Messages;
 import se.sundsvall.postportalservice.api.model.SigningInformation;
+import se.sundsvall.postportalservice.integration.db.AttachmentEntity;
 import se.sundsvall.postportalservice.integration.db.MessageEntity;
+import se.sundsvall.postportalservice.integration.db.SigningEntity;
 import se.sundsvall.postportalservice.integration.db.dao.MessageRepository;
+import se.sundsvall.postportalservice.integration.db.dao.SigningRepository;
 import se.sundsvall.postportalservice.integration.digitalregisteredletter.DigitalRegisteredLetterIntegration;
 import se.sundsvall.postportalservice.integration.party.PartyIntegration;
 import se.sundsvall.postportalservice.service.mapper.HistoryMapper;
 
+import static org.springframework.http.HttpHeaders.CONTENT_DISPOSITION;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static se.sundsvall.postportalservice.integration.db.converter.MessageType.DIGITAL_REGISTERED_LETTER;
 
@@ -30,15 +34,21 @@ import static se.sundsvall.postportalservice.integration.db.converter.MessageTyp
 public class HistoryService {
 	private final DigitalRegisteredLetterIntegration digitalRegisteredLetterIntegration;
 	private final MessageRepository messageRepository;
+	private final SigningRepository signingRepository;
+	private final AttachmentService attachmentService;
 	private final HistoryMapper historyMapper;
 	private final PartyIntegration partyIntegration;
 
 	public HistoryService(
 		final DigitalRegisteredLetterIntegration digitalRegisteredLetterIntegration,
 		final MessageRepository messageRepository,
+		final SigningRepository signingRepository,
+		final AttachmentService attachmentService,
 		final HistoryMapper historyMapper, final PartyIntegration partyIntegration) {
 		this.digitalRegisteredLetterIntegration = digitalRegisteredLetterIntegration;
 		this.messageRepository = messageRepository;
+		this.signingRepository = signingRepository;
+		this.attachmentService = attachmentService;
 		this.historyMapper = historyMapper;
 		this.partyIntegration = partyIntegration;
 	}
@@ -123,6 +133,25 @@ public class HistoryService {
 		final var letterId = getLetterIdFromMessage(message);
 
 		return digitalRegisteredLetterIntegration.getLetterReceipt(municipalityId, letterId);
+	}
+
+	/**
+	 * Streams the signed (merged) document for an e-signing message. The signed PDF is stored as an attachment the
+	 * signing case points at once the case completes; until then (or for a non-e-signing message) there is nothing to
+	 * download and a 404 is returned.
+	 */
+	public ResponseEntity<StreamingResponseBody> getSignedDocument(final String municipalityId, final String messageId) {
+		final var signedAttachmentId = signingRepository.findByMessageId(messageId)
+			.map(SigningEntity::getAttachment)
+			.map(AttachmentEntity::getId)
+			.orElseThrow(() -> Problem.valueOf(NOT_FOUND, "No signed document available for message with id '%s'".formatted(messageId)));
+
+		final var attachmentData = attachmentService.getAttachmentData(municipalityId, signedAttachmentId);
+
+		return ResponseEntity.ok()
+			.header(CONTENT_DISPOSITION, attachmentData.contentDisposition().toString())
+			.contentType(attachmentData.contentType())
+			.body(attachmentData.contentStream());
 	}
 
 	private MessageEntity getDigitalRegisteredLetterMessage(final String messageId) {

@@ -20,14 +20,18 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.ContentDisposition;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 import se.sundsvall.dept44.problem.Problem;
 import se.sundsvall.postportalservice.api.model.SigningInformation;
 import se.sundsvall.postportalservice.api.model.SigningStatus;
+import se.sundsvall.postportalservice.integration.db.AttachmentEntity;
 import se.sundsvall.postportalservice.integration.db.MessageEntity;
 import se.sundsvall.postportalservice.integration.db.RecipientEntity;
+import se.sundsvall.postportalservice.integration.db.SigningEntity;
 import se.sundsvall.postportalservice.integration.db.converter.MessageType;
 import se.sundsvall.postportalservice.integration.db.dao.MessageRepository;
+import se.sundsvall.postportalservice.integration.db.dao.SigningRepository;
 import se.sundsvall.postportalservice.integration.digitalregisteredletter.DigitalRegisteredLetterIntegration;
 import se.sundsvall.postportalservice.integration.party.PartyIntegration;
 import se.sundsvall.postportalservice.service.mapper.HistoryMapper;
@@ -44,6 +48,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
+import static org.springframework.http.HttpHeaders.CONTENT_DISPOSITION;
+import static org.springframework.http.HttpStatus.OK;
+import static org.springframework.http.MediaType.APPLICATION_PDF;
 import static org.springframework.http.ResponseEntity.ok;
 import static se.sundsvall.postportalservice.TestDataFactory.MUNICIPALITY_ID;
 import static se.sundsvall.postportalservice.integration.db.converter.MessageType.DIGITAL_REGISTERED_LETTER;
@@ -68,12 +75,18 @@ class HistoryServiceTest {
 	@Mock
 	private PartyIntegration partyIntegrationMock;
 
+	@Mock
+	private SigningRepository signingRepositoryMock;
+
+	@Mock
+	private AttachmentService attachmentServiceMock;
+
 	@InjectMocks
 	private HistoryService historyService;
 
 	@AfterEach
 	void ensureNoUnexpectedMockInteractions() {
-		verifyNoMoreInteractions(messageRepositoryMock, pageMock, historyMapperMock, digitalRegisteredLetterIntegrationMock, partyIntegrationMock);
+		verifyNoMoreInteractions(messageRepositoryMock, pageMock, historyMapperMock, digitalRegisteredLetterIntegrationMock, partyIntegrationMock, signingRepositoryMock, attachmentServiceMock);
 	}
 
 	@ParameterizedTest
@@ -606,6 +619,54 @@ class HistoryServiceTest {
 		verify(messageRepositoryMock).findByIdAndMessageType(messageId, DIGITAL_REGISTERED_LETTER);
 		verify(digitalRegisteredLetterIntegrationMock).getLetterReceipt(MUNICIPALITY_ID, externalId);
 		verifyNoMoreInteractions(messageRepositoryMock, digitalRegisteredLetterIntegrationMock);
+	}
+
+	@Test
+	void getSignedDocument() {
+		final var messageId = "messageId";
+		final var attachmentId = "attachmentId";
+		final var signing = SigningEntity.create().withAttachment(new AttachmentEntity().withId(attachmentId));
+		final StreamingResponseBody stream = outputStream -> outputStream.write("signed".getBytes());
+		final var contentDisposition = ContentDisposition.attachment().filename("signed.pdf").build();
+		final var attachmentData = new AttachmentService.AttachmentData(contentDisposition, APPLICATION_PDF, stream);
+
+		when(signingRepositoryMock.findByMessageId(messageId)).thenReturn(Optional.of(signing));
+		when(attachmentServiceMock.getAttachmentData(MUNICIPALITY_ID, attachmentId)).thenReturn(attachmentData);
+
+		final var result = historyService.getSignedDocument(MUNICIPALITY_ID, messageId);
+
+		assertThat(result.getStatusCode()).isEqualTo(OK);
+		assertThat(result.getHeaders().getFirst(CONTENT_DISPOSITION)).isEqualTo(contentDisposition.toString());
+		assertThat(result.getHeaders().getContentType()).isEqualTo(APPLICATION_PDF);
+		assertThat(result.getBody()).isSameAs(stream);
+		verify(signingRepositoryMock).findByMessageId(messageId);
+		verify(attachmentServiceMock).getAttachmentData(MUNICIPALITY_ID, attachmentId);
+	}
+
+	@Test
+	void getSignedDocument_noSigningCase() {
+		final var messageId = "messageId";
+		when(signingRepositoryMock.findByMessageId(messageId)).thenReturn(Optional.empty());
+
+		assertThatThrownBy(() -> historyService.getSignedDocument(MUNICIPALITY_ID, messageId))
+			.isInstanceOf(Problem.class)
+			.hasMessageContaining("Not Found: No signed document available for message with id '%s'".formatted(messageId));
+
+		verify(signingRepositoryMock).findByMessageId(messageId);
+		verifyNoInteractions(attachmentServiceMock);
+	}
+
+	@Test
+	void getSignedDocument_notSignedYet() {
+		final var messageId = "messageId";
+		when(signingRepositoryMock.findByMessageId(messageId)).thenReturn(Optional.of(SigningEntity.create()));
+
+		assertThatThrownBy(() -> historyService.getSignedDocument(MUNICIPALITY_ID, messageId))
+			.isInstanceOf(Problem.class)
+			.hasMessageContaining("Not Found: No signed document available for message with id '%s'".formatted(messageId));
+
+		verify(signingRepositoryMock).findByMessageId(messageId);
+		verifyNoInteractions(attachmentServiceMock);
 	}
 
 }

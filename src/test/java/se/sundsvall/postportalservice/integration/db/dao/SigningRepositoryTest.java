@@ -36,7 +36,7 @@ class SigningRepositoryTest {
 				assertThat(signing.getMessage().getId()).isEqualTo("b2cd4957-228f-46f0-a263-d4eae2eb5f52");
 				assertThat(signing.getAttachment().getId()).isEqualTo("5f6757a4-f0c7-43c0-83b1-78cafb5b7291");
 				assertThat(signing.getProvider()).isEqualTo("comfact");
-				assertThat(signing.getStatus()).isEqualTo("INVANTAR_SIGNERING");
+				assertThat(signing.getStatus()).isEqualTo("PENDING");
 			});
 	}
 
@@ -49,7 +49,7 @@ class SigningRepositoryTest {
 			assertThat(signing.getMessage().getId()).isEqualTo(MESSAGE_ID);
 			assertThat(signing.getProviderCaseId()).isEqualTo("comfact-case-1");
 			assertThat(signing.getProvider()).isEqualTo("comfact");
-			assertThat(signing.getStatus()).isEqualTo("INVANTAR_SIGNERING");
+			assertThat(signing.getStatus()).isEqualTo("PENDING");
 		});
 	}
 

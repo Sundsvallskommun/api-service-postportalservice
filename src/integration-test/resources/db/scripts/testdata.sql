@@ -293,9 +293,9 @@ VALUES
 -- E-signing case with a signed-document attachment (consume AppTest: relationships + signed doc)
 INSERT INTO signing (id, message_id, provider_case_id, provider, status, attachment_id, created)
 VALUES ('7c9e6679-7425-40de-944b-e07fc1f90ae7', 'b2cd4957-228f-46f0-a263-d4eae2eb5f52', 'provider-case-1', 'comfact',
-        'INVANTAR_SIGNERING', '5f6757a4-f0c7-43c0-83b1-78cafb5b7291', '2025-09-05 10:00:00');
+        'PENDING', '5f6757a4-f0c7-43c0-83b1-78cafb5b7291', '2025-09-05 10:00:00');
 
 -- E-signing case linked to the digital-registered-letter message above (used by SigningRepository.findByMessageId)
 INSERT INTO signing (id, message_id, provider_case_id, provider, status, created)
 VALUES ('a1b2c3d4-0000-4000-8000-000000000001', '1decdead-52b8-42d9-aa62-5ef08c4a701e',
-        'comfact-case-1', 'comfact', 'INVANTAR_SIGNERING', '2025-09-07 12:05:00');
+        'comfact-case-1', 'comfact', 'PENDING', '2025-09-07 12:05:00');

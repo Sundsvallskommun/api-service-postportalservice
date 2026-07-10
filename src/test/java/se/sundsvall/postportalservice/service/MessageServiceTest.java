@@ -187,12 +187,13 @@ class MessageServiceTest {
 		final var documentEntity = AttachmentEntity.create().withId("doc-1").withFileName("document.pdf").withContentType("application/pdf").withContentString("base64doc");
 		final var attachmentEntity = AttachmentEntity.create().withId("att-1").withFileName("attachment.pdf").withContentType("application/pdf").withContentString("base64att");
 		final var startSigningRequest = new StartSigningRequest();
-		final var response = new StartSigningResponse().providerCaseId("case-1").provider("comfact").status(StartSigningResponse.StatusEnum.INITIERAT);
+		final var response = new StartSigningResponse().providerCaseId("case-1").provider("comfact").status(StartSigningResponse.StatusEnum.INITIATED);
 
 		when(messagingSettingsIntegrationMock.getMessagingSettingsForUser(MUNICIPALITY_ID)).thenReturn(SETTINGS_MAP);
 		when(userRepositoryMock.findByUsernameIgnoreCase(USERNAME)).thenReturn(Optional.empty());
 		when(departmentRepositoryMock.findByOrganizationId("departmentId")).thenReturn(Optional.empty());
-		when(attachmentMapperMock.toAttachmentEntities(any())).thenReturn(List.of(documentEntity, attachmentEntity));
+		when(attachmentMapperMock.toAttachmentEntity(documentFile)).thenReturn(documentEntity);
+		when(attachmentMapperMock.toAttachmentEntities(attachments)).thenReturn(List.of(attachmentEntity));
 		doAnswer(invocation -> {
 			invocation.getArgument(0, MessageEntity.class).setId("msg-1");
 			return invocation.getArgument(0);
@@ -206,9 +207,8 @@ class MessageServiceTest {
 		verify(messagingSettingsIntegrationMock).getMessagingSettingsForUser(MUNICIPALITY_ID);
 		verify(userRepositoryMock).findByUsernameIgnoreCase(USERNAME);
 		verify(departmentRepositoryMock).findByOrganizationId("departmentId");
-		final var filesCaptor = ArgumentCaptor.forClass(List.class);
-		verify(attachmentMapperMock).toAttachmentEntities(filesCaptor.capture());
-		assertThat(filesCaptor.getValue()).containsExactly(documentFile, attachmentFile);
+		verify(attachmentMapperMock).toAttachmentEntity(documentFile);
+		verify(attachmentMapperMock).toAttachmentEntities(attachments);
 		verify(messageRepositoryMock).save(messageEntityCaptor.capture());
 		verify(esigningMapperMock).toStartSigningRequest(any(MessageEntity.class), eq(request), eq(documentEntity), eq(List.of(attachmentEntity)));
 		verify(esigningIntegrationMock).createSigning(MUNICIPALITY_ID, startSigningRequest);
@@ -228,18 +228,18 @@ class MessageServiceTest {
 		assertThat(savedSigning.getAttachment()).isNull();
 		assertThat(savedSigning.getProviderCaseId()).isEqualTo("case-1");
 		assertThat(savedSigning.getProvider()).isEqualTo("comfact");
-		assertThat(savedSigning.getStatus()).isEqualTo("INITIERAT");
+		assertThat(savedSigning.getStatus()).isEqualTo("INITIATED");
 	}
 
 	@Test
 	void cancelESigning() {
 		final var messageId = "msg-1";
-		final var signing = SigningEntity.create().withProviderCaseId("case-1").withStatus("INVANTAR_SIGNERING");
+		final var signing = SigningEntity.create().withProviderCaseId("case-1").withStatus("PENDING");
 		when(signingRepositoryMock.findByMessageId(messageId)).thenReturn(Optional.of(signing));
 
 		messageService.cancelESigning(MUNICIPALITY_ID, messageId);
 
-		assertThat(signing.getStatus()).isEqualTo("FEL");
+		assertThat(signing.getStatus()).isEqualTo(FAILED);
 		verify(signingRepositoryMock).findByMessageId(messageId);
 		verify(esigningIntegrationMock).cancelSigning(MUNICIPALITY_ID, "case-1");
 		verify(signingRepositoryMock).save(signing);
@@ -261,7 +261,7 @@ class MessageServiceTest {
 	@Test
 	void cancelESigning_alreadyCompleted() {
 		final var messageId = "msg-1";
-		final var signing = SigningEntity.create().withProviderCaseId("case-1").withStatus("SIGNERAT");
+		final var signing = SigningEntity.create().withProviderCaseId("case-1").withStatus("SIGNED");
 		when(signingRepositoryMock.findByMessageId(messageId)).thenReturn(Optional.of(signing));
 
 		assertThatThrownBy(() -> messageService.cancelESigning(MUNICIPALITY_ID, messageId))
