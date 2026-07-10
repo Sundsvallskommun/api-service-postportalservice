@@ -1,6 +1,8 @@
 package se.sundsvall.postportalservice.service;
 
 import generated.se.sundsvall.citizen.CitizenExtended;
+import generated.se.sundsvall.esigning.StartSigningRequest;
+import generated.se.sundsvall.esigning.StartSigningResponse;
 import generated.se.sundsvall.messaging.DeliveryResult;
 import generated.se.sundsvall.messaging.MessageBatchResult;
 import generated.se.sundsvall.messaging.MessageResult;
@@ -29,6 +31,8 @@ import se.sundsvall.dept44.problem.Problem;
 import se.sundsvall.dept44.support.Identifier;
 import se.sundsvall.postportalservice.TestDataFactory;
 import se.sundsvall.postportalservice.api.model.Address;
+import se.sundsvall.postportalservice.api.model.ESigningRequest;
+import se.sundsvall.postportalservice.api.model.ESigningSignatory;
 import se.sundsvall.postportalservice.api.model.Recipient;
 import se.sundsvall.postportalservice.api.model.SmsRecipient;
 import se.sundsvall.postportalservice.integration.citizen.CitizenIntegration;
@@ -36,14 +40,18 @@ import se.sundsvall.postportalservice.integration.db.AttachmentEntity;
 import se.sundsvall.postportalservice.integration.db.DepartmentEntity;
 import se.sundsvall.postportalservice.integration.db.MessageEntity;
 import se.sundsvall.postportalservice.integration.db.RecipientEntity;
+import se.sundsvall.postportalservice.integration.db.SigningEntity;
 import se.sundsvall.postportalservice.integration.db.UserEntity;
 import se.sundsvall.postportalservice.integration.db.converter.MessageType;
 import se.sundsvall.postportalservice.integration.db.converter.PartyType;
 import se.sundsvall.postportalservice.integration.db.dao.DepartmentRepository;
 import se.sundsvall.postportalservice.integration.db.dao.MessageRepository;
 import se.sundsvall.postportalservice.integration.db.dao.RecipientRepository;
+import se.sundsvall.postportalservice.integration.db.dao.SigningRepository;
 import se.sundsvall.postportalservice.integration.db.dao.UserRepository;
 import se.sundsvall.postportalservice.integration.digitalregisteredletter.DigitalRegisteredLetterIntegration;
+import se.sundsvall.postportalservice.integration.esigning.EsigningIntegration;
+import se.sundsvall.postportalservice.integration.esigning.EsigningMapper;
 import se.sundsvall.postportalservice.integration.messaging.MessagingIntegration;
 import se.sundsvall.postportalservice.integration.messagingsettings.MessagingSettingsIntegration;
 import se.sundsvall.postportalservice.integration.party.PartyIntegration;
@@ -57,6 +65,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -127,6 +136,15 @@ class MessageServiceTest {
 	@Mock
 	private ThreadPoolTaskExecutor deliveryExecutorMock;
 
+	@Mock
+	private EsigningIntegration esigningIntegrationMock;
+
+	@Mock
+	private EsigningMapper esigningMapperMock;
+
+	@Mock
+	private SigningRepository signingRepositoryMock;
+
 	@Captor
 	private ArgumentCaptor<MessageEntity> messageEntityCaptor;
 
@@ -149,7 +167,61 @@ class MessageServiceTest {
 			messagingIntegrationMock, messagingSettingsIntegrationMock,
 			departmentRepositoryMock, userRepositoryMock,
 			messageRepositoryMock, recipientRepositoryMock, digitalRegisteredLetterIntegrationMock,
-			citizenIntegrationMock, partyIntegrationMock);
+			citizenIntegrationMock, partyIntegrationMock,
+			esigningIntegrationMock, esigningMapperMock, signingRepositoryMock);
+	}
+
+	@Test
+	void processESigningRequest() {
+		final var request = ESigningRequest.create()
+			.withSubject("Please sign")
+			.withBody("Please sign the document")
+			.withLanguage("sv-SE")
+			.withSignatories(List.of(ESigningSignatory.create()
+				.withPartyId("6d0773d6-3e7f-4552-81bc-f0007af95adf").withName("John Doe").withEmail("john@sundsvall.se")));
+		final var multipart = mock(MultipartFile.class);
+		final var attachments = List.of(multipart);
+		final var attachment = AttachmentEntity.create().withId("att-1").withFileName("doc.pdf").withContentType("application/pdf").withContentString("base64");
+		final var startSigningRequest = new StartSigningRequest();
+		final var response = new StartSigningResponse().providerCaseId("case-1").provider("comfact").status(StartSigningResponse.StatusEnum.INITIERAT);
+
+		when(messagingSettingsIntegrationMock.getMessagingSettingsForUser(MUNICIPALITY_ID)).thenReturn(SETTINGS_MAP);
+		when(userRepositoryMock.findByUsernameIgnoreCase(USERNAME)).thenReturn(Optional.empty());
+		when(departmentRepositoryMock.findByOrganizationId("departmentId")).thenReturn(Optional.empty());
+		when(attachmentMapperMock.toAttachmentEntities(attachments)).thenReturn(List.of(attachment));
+		doAnswer(invocation -> {
+			invocation.getArgument(0, MessageEntity.class).setId("msg-1");
+			return invocation.getArgument(0);
+		}).when(messageRepositoryMock).save(any(MessageEntity.class));
+		when(esigningMapperMock.toStartSigningRequest(any(MessageEntity.class), eq(request), eq(attachment))).thenReturn(startSigningRequest);
+		when(esigningIntegrationMock.createSigning(MUNICIPALITY_ID, startSigningRequest)).thenReturn(response);
+
+		final var result = messageService.processESigningRequest(MUNICIPALITY_ID, request, attachments);
+
+		assertThat(result).isEqualTo("msg-1");
+		verify(messagingSettingsIntegrationMock).getMessagingSettingsForUser(MUNICIPALITY_ID);
+		verify(userRepositoryMock).findByUsernameIgnoreCase(USERNAME);
+		verify(departmentRepositoryMock).findByOrganizationId("departmentId");
+		verify(attachmentMapperMock).toAttachmentEntities(attachments);
+		verify(messageRepositoryMock).save(messageEntityCaptor.capture());
+		verify(esigningMapperMock).toStartSigningRequest(any(MessageEntity.class), eq(request), eq(attachment));
+		verify(esigningIntegrationMock).createSigning(MUNICIPALITY_ID, startSigningRequest);
+		final var signingCaptor = ArgumentCaptor.forClass(SigningEntity.class);
+		verify(signingRepositoryMock).save(signingCaptor.capture());
+
+		final var savedMessage = messageEntityCaptor.getValue();
+		assertThat(savedMessage.getMessageType()).isEqualTo(MessageType.E_SIGNING);
+		assertThat(savedMessage.getRecipients()).hasSize(1);
+		assertThat(savedMessage.getRecipients().getFirst().getPartyId()).isEqualTo("6d0773d6-3e7f-4552-81bc-f0007af95adf");
+		assertThat(savedMessage.getRecipients().getFirst().getMessageType()).isEqualTo(MessageType.E_SIGNING);
+		assertThat(savedMessage.getRecipients().getFirst().getStatus()).isEqualTo("PENDING");
+
+		final var savedSigning = signingCaptor.getValue();
+		assertThat(savedSigning.getMessage().getId()).isEqualTo("msg-1");
+		assertThat(savedSigning.getAttachment()).isNull();
+		assertThat(savedSigning.getProviderCaseId()).isEqualTo("case-1");
+		assertThat(savedSigning.getProvider()).isEqualTo("comfact");
+		assertThat(savedSigning.getStatus()).isEqualTo("INITIERAT");
 	}
 
 	/**

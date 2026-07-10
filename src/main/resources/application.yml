@@ -34,6 +34,9 @@ spring:
           legalentity:
             authorization-grant-type: client_credentials
             provider: legalentity
+          esigning:
+            authorization-grant-type: client_credentials
+            provider: esigning
 openapi:
   title: Postportalservice
   name: postportalservice
@@ -55,6 +58,7 @@ resilience4j:
       recipientRepository: {}
       userRepository: {}
       statisticsRepository: {}
+      signingRepository: {}
 delivery:
   executor:
     # Concurrency limit towards the messaging service (the blocking call runs on the pool thread).

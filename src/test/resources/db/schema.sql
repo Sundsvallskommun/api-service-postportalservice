@@ -130,4 +130,5 @@
     alter table if exists signing 
        add constraint FK_SIGNING_MESSAGE 
        foreign key (message_id) 
-       references message (id);
+       references message (id) 
+       on delete cascade;
