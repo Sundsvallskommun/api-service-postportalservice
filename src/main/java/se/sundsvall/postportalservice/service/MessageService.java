@@ -184,18 +184,15 @@ public class MessageService {
 			.toList();
 		message.setRecipients(recipients);
 
-		// Store the primary document first, followed by any attachments, all as message attachments.
-		final var files = new ArrayList<MultipartFile>();
-		files.add(document);
-		files.addAll(ofNullable(attachments).orElseGet(List::of));
-		final var attachmentEntities = attachmentMapper.toAttachmentEntities(files);
-		message.setAttachments(attachmentEntities);
+		final var documentEntity = attachmentMapper.toAttachmentEntity(document);
+		final var attachmentEntities = attachmentMapper.toAttachmentEntities(attachments);
+		final var messageAttachments = new ArrayList<>(List.of(documentEntity));
+		messageAttachments.addAll(attachmentEntities);
+		message.setAttachments(messageAttachments);
 
 		messageRepository.save(message);
 
-		final var documentEntity = attachmentEntities.getFirst();
-		final var attachmentEntitiesToSign = attachmentEntities.subList(1, attachmentEntities.size());
-		final var startSigningRequest = esigningMapper.toStartSigningRequest(message, request, documentEntity, attachmentEntitiesToSign);
+		final var startSigningRequest = esigningMapper.toStartSigningRequest(message, request, documentEntity, attachmentEntities);
 		final var response = esigningIntegration.createSigning(municipalityId, startSigningRequest);
 
 		// The signing's attachment is left null; it is set to the signed (merged) document when the completion event arrives.

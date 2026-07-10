@@ -190,7 +190,8 @@ class MessageServiceTest {
 		when(messagingSettingsIntegrationMock.getMessagingSettingsForUser(MUNICIPALITY_ID)).thenReturn(SETTINGS_MAP);
 		when(userRepositoryMock.findByUsernameIgnoreCase(USERNAME)).thenReturn(Optional.empty());
 		when(departmentRepositoryMock.findByOrganizationId("departmentId")).thenReturn(Optional.empty());
-		when(attachmentMapperMock.toAttachmentEntities(any())).thenReturn(List.of(documentEntity, attachmentEntity));
+		when(attachmentMapperMock.toAttachmentEntity(documentFile)).thenReturn(documentEntity);
+		when(attachmentMapperMock.toAttachmentEntities(attachments)).thenReturn(List.of(attachmentEntity));
 		doAnswer(invocation -> {
 			invocation.getArgument(0, MessageEntity.class).setId("msg-1");
 			return invocation.getArgument(0);
@@ -204,9 +205,8 @@ class MessageServiceTest {
 		verify(messagingSettingsIntegrationMock).getMessagingSettingsForUser(MUNICIPALITY_ID);
 		verify(userRepositoryMock).findByUsernameIgnoreCase(USERNAME);
 		verify(departmentRepositoryMock).findByOrganizationId("departmentId");
-		final var filesCaptor = ArgumentCaptor.forClass(List.class);
-		verify(attachmentMapperMock).toAttachmentEntities(filesCaptor.capture());
-		assertThat(filesCaptor.getValue()).containsExactly(documentFile, attachmentFile);
+		verify(attachmentMapperMock).toAttachmentEntity(documentFile);
+		verify(attachmentMapperMock).toAttachmentEntities(attachments);
 		verify(messageRepositoryMock).save(messageEntityCaptor.capture());
 		verify(esigningMapperMock).toStartSigningRequest(any(MessageEntity.class), eq(request), eq(documentEntity), eq(List.of(attachmentEntity)));
 		verify(esigningIntegrationMock).createSigning(MUNICIPALITY_ID, startSigningRequest);
