@@ -212,4 +212,39 @@ class HistoryResourceTest {
 		verify(historyServiceMock).getLetterReceipt(MUNICIPALITY_ID, messageId);
 	}
 
+	@Test
+	void downloadSignedDocument() {
+		final var messageId = UUID.randomUUID().toString();
+		final var mockResponseEntity = ok()
+			.header("Content-Type", "application/pdf")
+			.body((StreamingResponseBody) outputStream -> outputStream.write("signed data".getBytes()));
+
+		when(historyServiceMock.getSignedDocument(MUNICIPALITY_ID, messageId)).thenReturn(mockResponseEntity);
+
+		final var bytes = webTestClient.get()
+			.uri("/{municipalityId}/history/messages/{messageId}/signed-document", MUNICIPALITY_ID, messageId)
+			.exchange()
+			.expectStatus().isOk()
+			.expectBody(byte[].class)
+			.returnResult()
+			.getResponseBody();
+
+		assertThat(bytes).isNotNull().isEqualTo("signed data".getBytes());
+		verify(historyServiceMock).getSignedDocument(MUNICIPALITY_ID, messageId);
+	}
+
+	@Test
+	void downloadSignedDocument_notFound() {
+		final var messageId = UUID.randomUUID().toString();
+
+		when(historyServiceMock.getSignedDocument(MUNICIPALITY_ID, messageId)).thenThrow(Problem.valueOf(NOT_FOUND));
+
+		webTestClient.get()
+			.uri("/{municipalityId}/history/messages/{messageId}/signed-document", MUNICIPALITY_ID, messageId)
+			.exchange()
+			.expectStatus().isNotFound();
+
+		verify(historyServiceMock).getSignedDocument(MUNICIPALITY_ID, messageId);
+	}
+
 }
