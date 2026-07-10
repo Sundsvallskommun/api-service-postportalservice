@@ -1,5 +1,6 @@
 package se.sundsvall.postportalservice.integration.db;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -54,9 +55,11 @@ public class SigningEntity {
 	@Column(name = "status", columnDefinition = "VARCHAR(50)")
 	private String status;
 
-	// Nullable owning-side @OneToOne: it is eager. Hibernate cannot lazily proxy a nullable to-one without bytecode
-	// enhancement, so fetch = LAZY would be silently ignored here. Loaded at most once per signing, so eager is fine.
-	@OneToOne
+	// Eager: a nullable owning @OneToOne can't be lazily proxied without bytecode enhancement. Negligible - a signing is
+	// only ever loaded one at a time.
+	@OneToOne(cascade = {
+		CascadeType.MERGE, CascadeType.PERSIST
+	})
 	@JoinColumn(name = "attachment_id", columnDefinition = "VARCHAR(36)", foreignKey = @ForeignKey(name = "FK_SIGNING_ATTACHMENT"))
 	private AttachmentEntity attachment;
 

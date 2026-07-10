@@ -43,4 +43,9 @@ class ValidPdfConstraintValidatorTest {
 
 		assertThat(result).isFalse();
 	}
+
+	@Test
+	void nullFilesTest() {
+		assertThat(validPdfConstraintValidator.isValid(null, context)).isTrue();
+	}
 }

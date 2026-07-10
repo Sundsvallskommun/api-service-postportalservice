@@ -1,0 +1,109 @@
+package se.sundsvall.postportalservice.service;
+
+import java.util.Objects;
+import java.util.Optional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import se.sundsvall.postportalservice.api.model.EventSignatory;
+import se.sundsvall.postportalservice.api.model.SignedDocument;
+import se.sundsvall.postportalservice.api.model.SigningEvent;
+import se.sundsvall.postportalservice.integration.db.AttachmentEntity;
+import se.sundsvall.postportalservice.integration.db.MessageEntity;
+import se.sundsvall.postportalservice.integration.db.SigningEntity;
+import se.sundsvall.postportalservice.integration.db.dao.RecipientRepository;
+import se.sundsvall.postportalservice.integration.db.dao.SigningRepository;
+import se.sundsvall.postportalservice.service.util.BlobUtil;
+
+import static org.springframework.http.MediaType.APPLICATION_PDF_VALUE;
+import static se.sundsvall.dept44.util.LogUtils.sanitizeForLogging;
+import static se.sundsvall.postportalservice.Constants.DECLINED;
+import static se.sundsvall.postportalservice.Constants.SIGNED;
+
+/**
+ * Consumes the normalized signing events relayed by api-service-e-signing. The message id is supplied as a path
+ * variable
+ * (the {@code customerReference} the provider echoes back), so the signing case is reached via
+ * {@code signingRepository.findByMessageId(messageId)}. Applies a guarded status transition (a signed case is never
+ * regressed), updates the acting recipient by party id, and - on completion - stores the
+ * signed (merged) document as a new attachment the signing points at. The handler is transactional and idempotent, so
+ * redelivered events are safe.
+ */
+@Service
+public class SigningEventService {
+
+	private static final Logger LOG = LoggerFactory.getLogger(SigningEventService.class);
+
+	private final RecipientRepository recipientRepository;
+	private final SigningRepository signingRepository;
+	private final BlobUtil blobUtil;
+
+	public SigningEventService(
+		final RecipientRepository recipientRepository,
+		final SigningRepository signingRepository,
+		final BlobUtil blobUtil) {
+		this.recipientRepository = recipientRepository;
+		this.signingRepository = signingRepository;
+		this.blobUtil = blobUtil;
+	}
+
+	@Transactional
+	public void handleSigningEvent(final String municipalityId, final String messageId, final SigningEvent event) {
+		final var signing = signingRepository.findByMessageId(messageId).orElse(null);
+		if (signing == null) {
+			// Ack unknown cases so the provider stops retrying - the create flow persists the signing synchronously, so a
+			// message without a signing here is genuinely not an e-signing case.
+			LOG.warn("Received signing event for message id {} in municipalityId {} that has no signing case - ignoring",
+				sanitizeForLogging(messageId), sanitizeForLogging(municipalityId));
+			return;
+		}
+		final var message = signing.getMessage();
+
+		applyStatus(signing, event.getStatus());
+		Optional.ofNullable(event.getSignatory()).ifPresent(signatory -> updateRecipient(message, signatory));
+		Optional.ofNullable(event.getSignedDocument()).ifPresent(document -> storeSignedDocument(signing, document));
+
+		signingRepository.save(signing);
+	}
+
+	/**
+	 * Guarded status transition: {@code SIGNED} is terminal (a signed case stays signed), everything else applies the
+	 * incoming status (forward progress and reactivation both flow through).
+	 */
+	void applyStatus(final SigningEntity signing, final String newStatus) {
+		if (SIGNED.equals(signing.getStatus())) {
+			LOG.info("Signing case {} is already {} (terminal); ignoring status {}", sanitizeForLogging(signing.getId()), SIGNED, sanitizeForLogging(newStatus));
+			return;
+		}
+		signing.setStatus(newStatus);
+	}
+
+	void updateRecipient(final MessageEntity message, final EventSignatory signatory) {
+		message.getRecipients().stream()
+			.filter(recipient -> Objects.equals(signatory.getPartyId(), recipient.getPartyId()))
+			.findFirst()
+			.ifPresent(recipient -> {
+				recipient.setStatus(toRecipientStatus(signatory.getAction()));
+				recipient.setStatusDetail(signatory.getReason());
+				recipientRepository.save(recipient);
+			});
+	}
+
+	static String toRecipientStatus(final String action) {
+		return "DECLINED".equals(action) ? DECLINED : SIGNED;
+	}
+
+	/**
+	 * Stores the signed document (the merged signed PDF Comfact returns) on the signing. The original uploaded document(s)
+	 * remain as message attachments.
+	 */
+	void storeSignedDocument(final SigningEntity signing, final SignedDocument document) {
+		final var signedAttachment = AttachmentEntity.create()
+			.withFileName(document.getFileName())
+			.withContentType(Optional.ofNullable(document.getMimeType()).orElse(APPLICATION_PDF_VALUE))
+			.withContent(blobUtil.convertBase64ToBlob(document.getContent()));
+
+		signing.setAttachment(signedAttachment);
+	}
+}

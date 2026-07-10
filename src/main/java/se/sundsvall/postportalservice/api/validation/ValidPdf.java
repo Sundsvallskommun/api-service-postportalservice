@@ -7,12 +7,15 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import se.sundsvall.postportalservice.api.validation.impl.ValidPdfConstraintValidator;
+import se.sundsvall.postportalservice.api.validation.impl.ValidPdfFileConstraintValidator;
 
 @Target({
 	ElementType.FIELD, ElementType.CONSTRUCTOR, ElementType.PARAMETER, ElementType.TYPE_USE
 })
 @Retention(RetentionPolicy.RUNTIME)
-@Constraint(validatedBy = ValidPdfConstraintValidator.class)
+@Constraint(validatedBy = {
+	ValidPdfConstraintValidator.class, ValidPdfFileConstraintValidator.class
+})
 public @interface ValidPdf {
 
 	String message() default "content type must be application/pdf";

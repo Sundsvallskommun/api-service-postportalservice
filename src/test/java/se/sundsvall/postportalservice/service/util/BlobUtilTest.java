@@ -20,6 +20,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -47,6 +49,27 @@ class BlobUtilTest {
 		final var result = blobUtil.getSession();
 
 		assertThat(result).isEqualTo(session);
+	}
+
+	@Test
+	void convertBase64ToBlob_OK() {
+		final var spy = spy(blobUtil);
+		final var session = mock(Session.class);
+		when(spy.getSession()).thenReturn(session);
+		final var lobHelper = mock(LobHelper.class);
+		when(session.getLobHelper()).thenReturn(lobHelper);
+		final var blob = mock(Blob.class);
+		when(lobHelper.createBlob(any(), eq(6L))).thenReturn(blob); // "c2lnbmVk" decodes to 6 bytes
+
+		final var result = spy.convertBase64ToBlob("c2lnbmVk");
+
+		assertThat(result).isSameAs(blob);
+		verify(entityManagerMock).unwrap(any());
+	}
+
+	@Test
+	void convertBase64ToBlob_null() {
+		assertThat(blobUtil.convertBase64ToBlob(null)).isNull();
 	}
 
 	@Test

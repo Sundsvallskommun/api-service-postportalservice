@@ -179,38 +179,43 @@ class MessageServiceTest {
 			.withLanguage("sv-SE")
 			.withSignatories(List.of(ESigningSignatory.create()
 				.withPartyId("6d0773d6-3e7f-4552-81bc-f0007af95adf").withName("John Doe").withEmail("john@sundsvall.se")));
-		final var multipart = mock(MultipartFile.class);
-		final var attachments = List.of(multipart);
-		final var attachment = AttachmentEntity.create().withId("att-1").withFileName("doc.pdf").withContentType("application/pdf").withContentString("base64");
+		final var documentFile = mock(MultipartFile.class);
+		final var attachmentFile = mock(MultipartFile.class);
+		final var attachments = List.of(attachmentFile);
+		final var documentEntity = AttachmentEntity.create().withId("doc-1").withFileName("document.pdf").withContentType("application/pdf").withContentString("base64doc");
+		final var attachmentEntity = AttachmentEntity.create().withId("att-1").withFileName("attachment.pdf").withContentType("application/pdf").withContentString("base64att");
 		final var startSigningRequest = new StartSigningRequest();
-		final var response = new StartSigningResponse().providerCaseId("case-1").provider("comfact").status(StartSigningResponse.StatusEnum.INITIERAT);
+		final var response = new StartSigningResponse().providerCaseId("case-1").provider("comfact").status(StartSigningResponse.StatusEnum.INITIATED);
 
 		when(messagingSettingsIntegrationMock.getMessagingSettingsForUser(MUNICIPALITY_ID)).thenReturn(SETTINGS_MAP);
 		when(userRepositoryMock.findByUsernameIgnoreCase(USERNAME)).thenReturn(Optional.empty());
 		when(departmentRepositoryMock.findByOrganizationId("departmentId")).thenReturn(Optional.empty());
-		when(attachmentMapperMock.toAttachmentEntities(attachments)).thenReturn(List.of(attachment));
+		when(attachmentMapperMock.toAttachmentEntity(documentFile)).thenReturn(documentEntity);
+		when(attachmentMapperMock.toAttachmentEntities(attachments)).thenReturn(List.of(attachmentEntity));
 		doAnswer(invocation -> {
 			invocation.getArgument(0, MessageEntity.class).setId("msg-1");
 			return invocation.getArgument(0);
 		}).when(messageRepositoryMock).save(any(MessageEntity.class));
-		when(esigningMapperMock.toStartSigningRequest(any(MessageEntity.class), eq(request), eq(attachment))).thenReturn(startSigningRequest);
+		when(esigningMapperMock.toStartSigningRequest(any(MessageEntity.class), eq(request), eq(documentEntity), eq(List.of(attachmentEntity)))).thenReturn(startSigningRequest);
 		when(esigningIntegrationMock.createSigning(MUNICIPALITY_ID, startSigningRequest)).thenReturn(response);
 
-		final var result = messageService.processESigningRequest(MUNICIPALITY_ID, request, attachments);
+		final var result = messageService.processESigningRequest(MUNICIPALITY_ID, request, documentFile, attachments);
 
 		assertThat(result).isEqualTo("msg-1");
 		verify(messagingSettingsIntegrationMock).getMessagingSettingsForUser(MUNICIPALITY_ID);
 		verify(userRepositoryMock).findByUsernameIgnoreCase(USERNAME);
 		verify(departmentRepositoryMock).findByOrganizationId("departmentId");
+		verify(attachmentMapperMock).toAttachmentEntity(documentFile);
 		verify(attachmentMapperMock).toAttachmentEntities(attachments);
 		verify(messageRepositoryMock).save(messageEntityCaptor.capture());
-		verify(esigningMapperMock).toStartSigningRequest(any(MessageEntity.class), eq(request), eq(attachment));
+		verify(esigningMapperMock).toStartSigningRequest(any(MessageEntity.class), eq(request), eq(documentEntity), eq(List.of(attachmentEntity)));
 		verify(esigningIntegrationMock).createSigning(MUNICIPALITY_ID, startSigningRequest);
 		final var signingCaptor = ArgumentCaptor.forClass(SigningEntity.class);
 		verify(signingRepositoryMock).save(signingCaptor.capture());
 
 		final var savedMessage = messageEntityCaptor.getValue();
 		assertThat(savedMessage.getMessageType()).isEqualTo(MessageType.E_SIGNING);
+		assertThat(savedMessage.getAttachments()).containsExactly(documentEntity, attachmentEntity);
 		assertThat(savedMessage.getRecipients()).hasSize(1);
 		assertThat(savedMessage.getRecipients().getFirst().getPartyId()).isEqualTo("6d0773d6-3e7f-4552-81bc-f0007af95adf");
 		assertThat(savedMessage.getRecipients().getFirst().getMessageType()).isEqualTo(MessageType.E_SIGNING);
@@ -221,7 +226,7 @@ class MessageServiceTest {
 		assertThat(savedSigning.getAttachment()).isNull();
 		assertThat(savedSigning.getProviderCaseId()).isEqualTo("case-1");
 		assertThat(savedSigning.getProvider()).isEqualTo("comfact");
-		assertThat(savedSigning.getStatus()).isEqualTo("INITIERAT");
+		assertThat(savedSigning.getStatus()).isEqualTo("INITIATED");
 	}
 
 	/**
