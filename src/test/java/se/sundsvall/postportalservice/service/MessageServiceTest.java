@@ -74,6 +74,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.http.HttpStatus.BAD_GATEWAY;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
+import static se.sundsvall.postportalservice.Constants.CANCELLED;
 import static se.sundsvall.postportalservice.Constants.FAILED;
 import static se.sundsvall.postportalservice.Constants.SENT;
 import static se.sundsvall.postportalservice.TestDataFactory.MUNICIPALITY_ID;
@@ -239,7 +240,7 @@ class MessageServiceTest {
 
 		messageService.cancelESigning(MUNICIPALITY_ID, messageId);
 
-		assertThat(signing.getStatus()).isEqualTo(FAILED);
+		assertThat(signing.getStatus()).isEqualTo(CANCELLED);
 		verify(signingRepositoryMock).findByMessageId(messageId);
 		verify(esigningIntegrationMock).cancelSigning(MUNICIPALITY_ID, "case-1");
 		verify(signingRepositoryMock).save(signing);

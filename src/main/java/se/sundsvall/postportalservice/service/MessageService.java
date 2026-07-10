@@ -53,6 +53,7 @@ import static java.util.Optional.ofNullable;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.http.MediaType.TEXT_PLAIN_VALUE;
+import static se.sundsvall.postportalservice.Constants.CANCELLED;
 import static se.sundsvall.postportalservice.Constants.FAILED;
 import static se.sundsvall.postportalservice.Constants.PENDING;
 import static se.sundsvall.postportalservice.Constants.SIGNED;
@@ -210,8 +211,8 @@ public class MessageService {
 
 	/**
 	 * Cancels an ongoing e-signing case: withdraws it at the provider (via api-service-e-signing) and marks the local
-	 * case as {@code FAILED}. A case that has already completed ({@code SIGNED}) cannot be cancelled. The provider also
-	 * confirms the withdrawal asynchronously through the signing-event callback, which re-applies the same status.
+	 * case as {@code CANCELLED}. A case that has already completed ({@code SIGNED}) cannot be cancelled. The provider also
+	 * confirms the withdrawal asynchronously through the signing-event callback, which re-applies the terminal state.
 	 */
 	@Transactional
 	public void cancelESigning(final String municipalityId, final String messageId) {
@@ -223,7 +224,7 @@ public class MessageService {
 		}
 
 		esigningIntegration.cancelSigning(municipalityId, signing.getProviderCaseId());
-		signing.setStatus(FAILED);
+		signing.setStatus(CANCELLED);
 		signingRepository.save(signing);
 	}
 
