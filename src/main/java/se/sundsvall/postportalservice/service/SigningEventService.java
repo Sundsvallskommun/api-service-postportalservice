@@ -12,7 +12,6 @@ import se.sundsvall.postportalservice.api.model.SigningEvent;
 import se.sundsvall.postportalservice.integration.db.AttachmentEntity;
 import se.sundsvall.postportalservice.integration.db.MessageEntity;
 import se.sundsvall.postportalservice.integration.db.SigningEntity;
-import se.sundsvall.postportalservice.integration.db.dao.MessageRepository;
 import se.sundsvall.postportalservice.integration.db.dao.RecipientRepository;
 import se.sundsvall.postportalservice.integration.db.dao.SigningRepository;
 import se.sundsvall.postportalservice.service.util.BlobUtil;
@@ -36,17 +35,14 @@ public class SigningEventService {
 
 	private static final Logger LOG = LoggerFactory.getLogger(SigningEventService.class);
 
-	private final MessageRepository messageRepository;
 	private final RecipientRepository recipientRepository;
 	private final SigningRepository signingRepository;
 	private final BlobUtil blobUtil;
 
 	public SigningEventService(
-		final MessageRepository messageRepository,
 		final RecipientRepository recipientRepository,
 		final SigningRepository signingRepository,
 		final BlobUtil blobUtil) {
-		this.messageRepository = messageRepository;
 		this.recipientRepository = recipientRepository;
 		this.signingRepository = signingRepository;
 		this.blobUtil = blobUtil;
@@ -66,7 +62,7 @@ public class SigningEventService {
 
 		applyStatus(signing, event.getStatus());
 		Optional.ofNullable(event.getSignatory()).ifPresent(signatory -> updateRecipient(message, signatory));
-		Optional.ofNullable(event.getSignedDocument()).ifPresent(document -> storeSignedDocument(message, signing, document));
+		Optional.ofNullable(event.getSignedDocument()).ifPresent(document -> storeSignedDocument(signing, document));
 
 		signingRepository.save(signing);
 	}
@@ -99,17 +95,15 @@ public class SigningEventService {
 	}
 
 	/**
-	 * Stores the signed document (the merged signed PDF Comfact returns) as a new attachment on the message and points the
-	 * signing at it. The original uploaded document(s) are kept.
+	 * Stores the signed document (the merged signed PDF Comfact returns) on the signing. The original uploaded document(s)
+	 * remain as message attachments.
 	 */
-	void storeSignedDocument(final MessageEntity message, final SigningEntity signing, final SignedDocument document) {
+	void storeSignedDocument(final SigningEntity signing, final SignedDocument document) {
 		final var signedAttachment = AttachmentEntity.create()
 			.withFileName(document.getFileName())
 			.withContentType(Optional.ofNullable(document.getMimeType()).orElse(APPLICATION_PDF_VALUE))
 			.withContent(blobUtil.convertBase64ToBlob(document.getContent()));
 
-		message.getAttachments().add(signedAttachment);
-		messageRepository.save(message); // cascade-persists the new attachment and assigns its id
 		signing.setAttachment(signedAttachment);
 	}
 }

@@ -545,6 +545,7 @@ paths:
               required:
               - document
               - request
+        required: true
       responses:
         "200":
           description: OK

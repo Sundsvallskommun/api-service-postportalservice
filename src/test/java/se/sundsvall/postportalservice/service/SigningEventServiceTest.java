@@ -15,7 +15,6 @@ import se.sundsvall.postportalservice.api.model.SigningEvent;
 import se.sundsvall.postportalservice.integration.db.MessageEntity;
 import se.sundsvall.postportalservice.integration.db.RecipientEntity;
 import se.sundsvall.postportalservice.integration.db.SigningEntity;
-import se.sundsvall.postportalservice.integration.db.dao.MessageRepository;
 import se.sundsvall.postportalservice.integration.db.dao.RecipientRepository;
 import se.sundsvall.postportalservice.integration.db.dao.SigningRepository;
 import se.sundsvall.postportalservice.service.util.BlobUtil;
@@ -34,8 +33,6 @@ class SigningEventServiceTest {
 	private static final String MESSAGE_ID = "550e8400-e29b-41d4-a716-446655440000";
 
 	@Mock
-	private MessageRepository messageRepositoryMock;
-	@Mock
 	private RecipientRepository recipientRepositoryMock;
 	@Mock
 	private SigningRepository signingRepositoryMock;
@@ -46,7 +43,7 @@ class SigningEventServiceTest {
 	private SigningEventService service;
 
 	@Test
-	void handleSigningEvent_completedStoresSignedDocumentAsNewAttachment() {
+	void handleSigningEvent_completedStoresSignedDocumentOnSigning() {
 		final var message = MessageEntity.create().withId(MESSAGE_ID);
 		final var signing = SigningEntity.create().withId("s1").withStatus("PENDING").withMessage(message);
 		final var blob = mock(Blob.class);
@@ -59,13 +56,11 @@ class SigningEventServiceTest {
 		service.handleSigningEvent(MUNICIPALITY_ID, MESSAGE_ID, event);
 
 		assertThat(signing.getStatus()).isEqualTo("SIGNED");
-		assertThat(message.getAttachments()).hasSize(1);
-		final var signedAttachment = message.getAttachments().getFirst();
+		assertThat(message.getAttachments()).isEmpty();
+		final var signedAttachment = signing.getAttachment();
 		assertThat(signedAttachment.getFileName()).isEqualTo("signed.pdf");
 		assertThat(signedAttachment.getContentType()).isEqualTo("application/pdf");
 		assertThat(signedAttachment.getContent()).isSameAs(blob);
-		assertThat(signing.getAttachment()).isSameAs(signedAttachment);
-		verify(messageRepositoryMock).save(message);
 		verify(signingRepositoryMock).save(signing);
 		verifyNoInteractions(recipientRepositoryMock);
 	}
@@ -85,7 +80,7 @@ class SigningEventServiceTest {
 		assertThat(recipient.getStatus()).isEqualTo("SIGNED");
 		verify(recipientRepositoryMock).save(recipient);
 		verify(signingRepositoryMock).save(signing);
-		verifyNoInteractions(blobUtilMock, messageRepositoryMock);
+		verifyNoInteractions(blobUtilMock);
 	}
 
 	@Test
@@ -118,7 +113,7 @@ class SigningEventServiceTest {
 
 		assertThat(signing.getStatus()).isEqualTo("SIGNED");
 		verify(signingRepositoryMock).save(signing);
-		verifyNoInteractions(recipientRepositoryMock, blobUtilMock, messageRepositoryMock);
+		verifyNoInteractions(recipientRepositoryMock, blobUtilMock);
 	}
 
 	@Test
@@ -129,6 +124,6 @@ class SigningEventServiceTest {
 
 		verify(signingRepositoryMock).findByMessageId("unknown");
 		verifyNoMoreInteractions(signingRepositoryMock);
-		verifyNoInteractions(messageRepositoryMock, recipientRepositoryMock, blobUtilMock);
+		verifyNoInteractions(recipientRepositoryMock, blobUtilMock);
 	}
 }
