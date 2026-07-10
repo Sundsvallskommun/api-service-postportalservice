@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import java.util.List;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -126,7 +127,7 @@ class MessageResource {
 		@RequestHeader(value = Identifier.HEADER_NAME) @ValidIdentifier final String xSentBy,
 		@Parameter(name = "municipalityId", description = "Municipality ID", example = "2281") @ValidMunicipalityId @PathVariable final String municipalityId,
 		@RequestPart(name = "request") @Valid final ESigningRequest request,
-		@RequestPart(name = "document") @ValidPdf final MultipartFile document,
+		@RequestPart(name = "document") @NotNull @ValidPdf final MultipartFile document,
 		@RequestPart(name = "attachments", required = false) @ValidPdf @NoDuplicateFileNames final List<MultipartFile> attachments) {
 		Identifier.set(Identifier.parse(xSentBy));
 

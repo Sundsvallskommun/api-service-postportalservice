@@ -545,6 +545,7 @@ paths:
               required:
               - document
               - request
+        required: true
       responses:
         "200":
           description: OK
@@ -1665,13 +1666,13 @@ components:
           type: string
           description: The normalized case status
           enum:
-          - INITIERAT
-          - INVANTAR_SIGNERING
-          - SIGNERAT
-          - UTGANGET
-          - FEL
+          - INITIATED
+          - PENDING
+          - SIGNED
+          - EXPIRED
+          - FAILED
           examples:
-          - SIGNERAT
+          - SIGNED
         signatory:
           $ref: "#/components/schemas/EventSignatory"
           description: "The acting signatory, present on signatory events"
