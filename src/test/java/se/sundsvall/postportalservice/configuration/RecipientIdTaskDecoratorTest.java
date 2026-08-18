@@ -1,17 +1,19 @@
 package se.sundsvall.postportalservice.configuration;
 
 import java.util.HashMap;
+import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.MDC;
+import se.sundsvall.dept44.support.Identifier;
 import se.sundsvall.postportalservice.service.util.RecipientId;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class MdcTaskDecoratorTest {
+class RecipientIdTaskDecoratorTest {
 
-	private final MdcTaskDecorator decorator = new MdcTaskDecorator();
+	private final RecipientIdTaskDecorator decorator = new RecipientIdTaskDecorator();
 
 	@BeforeEach
 	void setUp() {
@@ -23,6 +25,7 @@ class MdcTaskDecoratorTest {
 	@AfterEach
 	void tearDown() {
 		MDC.clear();
+		Identifier.remove();
 	}
 
 	@Test
@@ -58,5 +61,20 @@ class MdcTaskDecoratorTest {
 
 		assertThat(RecipientId.get()).isNull();
 		assertThat(MDC.get(RecipientId.MDC_RECIPIENT_ID_KEY)).isNull();
+	}
+
+	@Test
+	void propagatesIdentifierToTaskThreadAndCleansUpAfter() {
+		Identifier.set(Identifier.create().withType(Identifier.Type.AD_ACCOUNT).withValue("joe001doe"));
+		final var seenInsideTask = new AtomicReference<Identifier>();
+
+		final var decorated = decorator.decorate(() -> seenInsideTask.set(Identifier.get()));
+
+		Identifier.remove();
+		decorated.run();
+
+		assertThat(seenInsideTask.get()).isNotNull()
+			.extracting(Identifier::getValue).isEqualTo("joe001doe");
+		assertThat(Identifier.get()).isNull();
 	}
 }
