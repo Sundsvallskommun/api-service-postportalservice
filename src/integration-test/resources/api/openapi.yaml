@@ -1217,7 +1217,7 @@ components:
           - string
           - "null"
     StatusType:
-      type: "null"
+      type: object
       properties:
         statusCode:
           type:
@@ -1229,7 +1229,7 @@ components:
           - string
           - "null"
     ThrowableProblem:
-      type: "null"
+      type: object
       properties:
         cause:
           type: "null"
