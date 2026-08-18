@@ -13,7 +13,7 @@ class DeliveryExecutorConfigurationTest {
 	void letterDeliveryExecutorIsConfiguredFromProperties() {
 		final var properties = new DeliveryExecutorProperties(4, 15);
 
-		final var executor = configuration.letterDeliveryExecutor(properties, new MdcTaskDecorator());
+		final var executor = configuration.letterDeliveryExecutor(properties, new RecipientIdTaskDecorator());
 
 		assertThat(executor.getCorePoolSize()).isEqualTo(4);
 		assertThat(executor.getMaxPoolSize()).isEqualTo(4);
@@ -23,7 +23,7 @@ class DeliveryExecutorConfigurationTest {
 
 	@Test
 	void letterDeliveryExecutorMetricsIsCreated() {
-		final var executor = configuration.letterDeliveryExecutor(new DeliveryExecutorProperties(4, 15), new MdcTaskDecorator());
+		final var executor = configuration.letterDeliveryExecutor(new DeliveryExecutorProperties(4, 15), new RecipientIdTaskDecorator());
 
 		final var metrics = configuration.letterDeliveryExecutorMetrics(executor);
 

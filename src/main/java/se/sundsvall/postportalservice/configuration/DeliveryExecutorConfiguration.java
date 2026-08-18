@@ -21,7 +21,7 @@ public class DeliveryExecutorConfiguration {
 	public static final String DELIVERY_EXECUTOR = "letterDeliveryExecutor";
 
 	@Bean(name = DELIVERY_EXECUTOR, destroyMethod = "shutdown")
-	ThreadPoolTaskExecutor letterDeliveryExecutor(final DeliveryExecutorProperties properties, final MdcTaskDecorator mdcTaskDecorator) {
+	ThreadPoolTaskExecutor letterDeliveryExecutor(final DeliveryExecutorProperties properties, final RecipientIdTaskDecorator recipientIdTaskDecorator) {
 		final var executor = new ThreadPoolTaskExecutor();
 
 		executor.setCorePoolSize(properties.poolSize());
@@ -29,7 +29,7 @@ public class DeliveryExecutorConfiguration {
 		executor.setQueueCapacity(Integer.MAX_VALUE);
 
 		executor.setThreadNamePrefix("letter-delivery-");
-		executor.setTaskDecorator(mdcTaskDecorator);
+		executor.setTaskDecorator(recipientIdTaskDecorator);
 
 		// Graceful shutdown, tries to handle in-flight messages before shutting down.
 		executor.setWaitForTasksToCompleteOnShutdown(true);
