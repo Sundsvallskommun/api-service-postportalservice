@@ -40,24 +40,24 @@ public class SmsQueuePublisher {
 	public void publish(final SmsQueueMessage smsQueueMessage) {
 		final var exchange = properties.exchange();
 		final var routingKey = properties.routingKey();
-		final var correlationData = new CorrelationData(smsQueueMessage.recipientId());
+		final var recipientId = smsQueueMessage.recipientId();
+		final var correlationData = new CorrelationData(recipientId);
 
 		rabbitTemplate.convertAndSend(exchange, routingKey, smsQueueMessage, correlationData);
 
-		final var confirm = awaitConfirm(correlationData, smsQueueMessage.recipientId());
+		final var confirm = awaitConfirm(correlationData, recipientId);
 
 		// A basic.return always precedes the basic.ack, so by now an unroutable message has been handed back to us.
 		Optional.ofNullable(correlationData.getReturned()).ifPresent(returned -> {
 			throw Problem.valueOf(BAD_GATEWAY, "SMS for recipient %s was not routable by exchange %s with routing key %s: %s"
-				.formatted(smsQueueMessage.recipientId(), exchange, routingKey, returned.getReplyText()));
+				.formatted(recipientId, exchange, routingKey, returned.getReplyText()));
 		});
 
 		if (!confirm.ack()) {
-			throw Problem.valueOf(BAD_GATEWAY, "SMS for recipient %s was rejected by the broker: %s"
-				.formatted(smsQueueMessage.recipientId(), confirm.reason()));
+			throw Problem.valueOf(BAD_GATEWAY, "SMS for recipient %s was rejected by the broker: %s".formatted(recipientId, confirm.reason()));
 		}
 
-		LOG.info("Published SMS for recipient {} (exchange={}, routingKey={})", smsQueueMessage.recipientId(), exchange, routingKey);
+		LOG.info("Published SMS for recipient {} (exchange={}, routingKey={})", recipientId, exchange, routingKey);
 	}
 
 	private CorrelationData.Confirm awaitConfirm(final CorrelationData correlationData, final String recipientId) {
