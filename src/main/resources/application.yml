@@ -17,8 +17,16 @@ spring:
     # Connection settings are supplied per environment - see the rabbitmq block further down.
     publisher-confirm-type: correlated
     publisher-returns: true
+    # observation-enabled feeds Actuator's timer metrics for publish and receive. Instrumentation is not environment
+    # config - only the exporter is - and a round trip is hardest to follow in the environments where it cannot be
+    # watched in a terminal. Nothing in dept44 wires a tracer, so this yields metrics, not spans linking the publish
+    # to the outcome that answers it.
     template:
       mandatory: true
+      observation-enabled: true
+    listener:
+      simple:
+        observation-enabled: true
   security:
     oauth2:
       client:
@@ -50,6 +58,11 @@ openapi:
   version: '@project.version@'
 logging:
   config: classpath:/custom-logback.xml
+  level:
+    # The publish and the outcome are on different threads, so INFO on both is what makes a
+    # round trip readable in the log.
+    se.sundsvall.postportalservice.integration.rabbitmq: INFO
+    se.sundsvall.postportalservice.service.SmsStatusService: INFO
 resilience4j:
   circuitbreaker:
     instances:
