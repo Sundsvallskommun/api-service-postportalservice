@@ -281,7 +281,6 @@ class MessageSmsIT extends AbstractAppTest {
 		appTest.verifyAllStubs();
 	}
 
-
 	@Test
 	void test07_smsStaysPendingUntilStatusArrives() {
 		// Models messaging still working through its retry ladder: the SMS is on the queue, nothing has come back.
@@ -316,7 +315,6 @@ class MessageSmsIT extends AbstractAppTest {
 		});
 		appTest.verifyAllStubs();
 	}
-
 
 	@Test
 	void test08_duplicateOutcomeDoesNotRevise() {
@@ -356,5 +354,4 @@ class MessageSmsIT extends AbstractAppTest {
 				}));
 		appTest.verifyAllStubs();
 	}
-
 }

@@ -1,6 +1,5 @@
 package se.sundsvall.postportalservice.integration.rabbitmq;
 
-import java.util.concurrent.CompletableFuture;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -123,7 +122,7 @@ class SmsQueuePublisherTest {
 		doAnswer(invocation -> {
 			final var correlationData = invocation.getArgument(3, CorrelationData.class);
 			correlationData.setReturned(returnedMessage);
-			((CompletableFuture<CorrelationData.Confirm>) correlationData.getFuture()).complete(confirm);
+			correlationData.getFuture().complete(confirm);
 			return null;
 		}).when(rabbitTemplateMock).convertAndSend(eq(EXCHANGE), eq(ROUTING_KEY), any(Object.class), any(CorrelationData.class));
 	}
