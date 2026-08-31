@@ -65,14 +65,11 @@ public class MessagingQueueStub {
 	 * messaging's publish and its ack looks like from this side.
 	 */
 	public void publishOutcome(final String recipientId, final boolean failed) {
-		rabbitTemplate.convertAndSend(
-			STATUS_EXCHANGE,
-			failed ? FAILED_ROUTING_KEY : SENT_ROUTING_KEY,
-			new SmsStatusMessage(
-				recipientId,
-				failed ? FAILED : SENT,
-				failed ? null : UUID.randomUUID().toString(),
-				failed ? "Invalid mobile number" : null));
+		final var statusMessage = failed
+			? new SmsStatusMessage(recipientId, FAILED, null, "Invalid mobile number")
+			: new SmsStatusMessage(recipientId, SENT, UUID.randomUUID().toString(), null);
+
+		rabbitTemplate.convertAndSend(STATUS_EXCHANGE, failed ? FAILED_ROUTING_KEY : SENT_ROUTING_KEY, statusMessage);
 	}
 
 	public void reset() {

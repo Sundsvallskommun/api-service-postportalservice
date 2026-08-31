@@ -26,6 +26,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -77,7 +78,7 @@ class SmsDeliveryServiceTest {
 
 	@Test
 	void deliverSms_queuePathPublishesAndReportsNoResult() {
-		final var service = new SmsDeliveryService(messagingIntegrationMock, recipientRepositoryMock, Optional.of(smsQueuePublisherMock));
+		final var service = queuePathService();
 		final var messageEntity = messageEntity();
 		final var recipientEntity = recipientEntity();
 
@@ -97,11 +98,11 @@ class SmsDeliveryServiceTest {
 
 	@Test
 	void deliverSms_queuePathMarksPendingBeforePublishing() {
-		final var service = new SmsDeliveryService(messagingIntegrationMock, recipientRepositoryMock, Optional.of(smsQueuePublisherMock));
+		final var service = queuePathService();
 		final var messageEntity = messageEntity();
 		final var recipientEntity = recipientEntity();
 
-		final var inOrder = org.mockito.Mockito.inOrder(recipientRepositoryMock, smsQueuePublisherMock);
+		final var inOrder = inOrder(recipientRepositoryMock, smsQueuePublisherMock);
 
 		service.deliverSms(messageEntity, recipientEntity);
 
@@ -112,7 +113,7 @@ class SmsDeliveryServiceTest {
 
 	@Test
 	void deliverSms_queuePathPropagatesPublishFailure() {
-		final var service = new SmsDeliveryService(messagingIntegrationMock, recipientRepositoryMock, Optional.of(smsQueuePublisherMock));
+		final var service = queuePathService();
 		final var messageEntity = messageEntity();
 		final var recipientEntity = recipientEntity();
 
@@ -126,11 +127,15 @@ class SmsDeliveryServiceTest {
 
 	@Test
 	void deliverSms_queuePathPutsRecipientIdInMdc() {
-		final var service = new SmsDeliveryService(messagingIntegrationMock, recipientRepositoryMock, Optional.of(smsQueuePublisherMock));
+		final var service = queuePathService();
 
 		service.deliverSms(messageEntity(), recipientEntity());
 
 		assertThat(RecipientId.get()).isEqualTo(RECIPIENT_ID);
+	}
+
+	private SmsDeliveryService queuePathService() {
+		return new SmsDeliveryService(messagingIntegrationMock, recipientRepositoryMock, Optional.of(smsQueuePublisherMock));
 	}
 
 	private static MessageEntity messageEntity() {

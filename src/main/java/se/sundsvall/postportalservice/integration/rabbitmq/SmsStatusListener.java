@@ -74,20 +74,15 @@ class SmsStatusListener {
 	 */
 	SmsStatusMessage resolve(final SmsStatusMessage smsStatusMessage, final String routingKey) {
 		final var fromPayload = toOutcome(smsStatusMessage.status());
-		final var fromRoutingKey = switch (trimToEmpty(routingKey)) {
-			case SENT_ROUTING_KEY -> SENT;
-			case FAILED_ROUTING_KEY -> FAILED;
-			default -> null;
-		};
+		final var fromRoutingKey = toRoutingKeyOutcome(routingKey);
 
 		if (fromPayload == null) {
 			// The routing key is worth trusting here only because the payload offered nothing to trust instead.
 			final var outcome = ofNullable(fromRoutingKey).orElse(FAILED);
-			LOG.warn("Unrecognised SMS outcome '{}' for recipient {}, recording {}",
-				sanitizeForLogging(smsStatusMessage.status()), smsStatusMessage.recipientId(), outcome);
+			final var reported = sanitizeForLogging(smsStatusMessage.status());
+			LOG.warn("Unrecognised SMS outcome '{}' for recipient {}, recording {}", reported, smsStatusMessage.recipientId(), outcome);
 
-			return new SmsStatusMessage(smsStatusMessage.recipientId(), outcome, smsStatusMessage.externalId(),
-				"Unrecognised outcome '%s' reported by messaging".formatted(sanitizeForLogging(smsStatusMessage.status())));
+			return withOutcome(smsStatusMessage, outcome, "Unrecognised outcome '%s' reported by messaging".formatted(reported));
 		}
 
 		if (fromRoutingKey != null && !fromRoutingKey.equals(fromPayload)) {
@@ -97,7 +92,7 @@ class SmsStatusListener {
 
 		return fromPayload.equals(smsStatusMessage.status())
 			? smsStatusMessage
-			: new SmsStatusMessage(smsStatusMessage.recipientId(), fromPayload, smsStatusMessage.externalId(), smsStatusMessage.statusDetail());
+			: withOutcome(smsStatusMessage, fromPayload, smsStatusMessage.statusDetail());
 	}
 
 	/**
@@ -110,5 +105,17 @@ class SmsStatusListener {
 			case FAILED -> FAILED;
 			default -> null;
 		};
+	}
+
+	private static String toRoutingKeyOutcome(final String routingKey) {
+		return switch (trimToEmpty(routingKey)) {
+			case SENT_ROUTING_KEY -> SENT;
+			case FAILED_ROUTING_KEY -> FAILED;
+			default -> null;
+		};
+	}
+
+	private static SmsStatusMessage withOutcome(final SmsStatusMessage smsStatusMessage, final String status, final String statusDetail) {
+		return new SmsStatusMessage(smsStatusMessage.recipientId(), status, smsStatusMessage.externalId(), statusDetail);
 	}
 }

@@ -3,6 +3,7 @@ package se.sundsvall.postportalservice.service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import se.sundsvall.postportalservice.integration.db.RecipientEntity;
 import se.sundsvall.postportalservice.integration.db.dao.RecipientRepository;
 import se.sundsvall.postportalservice.integration.rabbitmq.SmsStatusMessage;
 
@@ -38,6 +39,33 @@ public class SmsStatusService {
 		this.recipientRepository = recipientRepository;
 	}
 
+	public void handleSmsStatus(final SmsStatusMessage smsStatusMessage) {
+		recipientRepository.findById(smsStatusMessage.recipientId())
+			.ifPresentOrElse(
+				recipientEntity -> applyOutcome(recipientEntity, smsStatusMessage),
+				() -> LOG.warn("Received SMS status for unknown recipient with id {}, ignoring it", smsStatusMessage.recipientId()));
+	}
+
+	private void applyOutcome(final RecipientEntity recipientEntity, final SmsStatusMessage smsStatusMessage) {
+		// SENT is never revised. It is the one state a duplicate can only make less true, and it also lets a genuine
+		// outcome correct a recipient this service marked FAILED on an unconfirmed publish.
+		if (SENT.equals(recipientEntity.getStatus())) {
+			LOG.info("Recipient with id {} is already SENT, ignoring duplicate outcome", recipientEntity.getId());
+			return;
+		}
+
+		// A status we cannot read is a delivery we cannot vouch for, so it counts as a failure.
+		final var status = isBlank(smsStatusMessage.status()) ? FAILED : smsStatusMessage.status();
+
+		LOG.info("Updating recipient with id {}, Status: {}, ExternalId: {}", recipientEntity.getId(), status, smsStatusMessage.externalId());
+		recipientEntity.setStatus(status);
+		recipientEntity.setStatusDetail(smsStatusMessage.statusDetail());
+		ofNullable(smsStatusMessage.externalId())
+			.filter(externalId -> isStorable(externalId, recipientEntity.getId()))
+			.ifPresent(recipientEntity::setExternalId);
+		recipientRepository.save(recipientEntity);
+	}
+
 	private static boolean isStorable(final String externalId, final String recipientId) {
 		if (externalId.length() > MAX_EXTERNAL_ID_LENGTH) {
 			// The outcome itself is worth more than the id it came with, so record the outcome and drop the id.
@@ -45,29 +73,5 @@ public class SmsStatusService {
 			return false;
 		}
 		return true;
-	}
-
-	public void handleSmsStatus(final SmsStatusMessage smsStatusMessage) {
-		recipientRepository.findById(smsStatusMessage.recipientId())
-			.ifPresentOrElse(recipientEntity -> {
-				// SENT is never revised. It is the one state a duplicate can only make less true, and it also lets a
-				// genuine outcome correct a recipient this service marked FAILED on an unconfirmed publish.
-				if (SENT.equals(recipientEntity.getStatus())) {
-					LOG.info("Recipient with id {} is already SENT, ignoring duplicate outcome", recipientEntity.getId());
-					return;
-				}
-
-				// A status we cannot read is a delivery we cannot vouch for, so it counts as a failure.
-				final var status = isBlank(smsStatusMessage.status()) ? FAILED : smsStatusMessage.status();
-
-				LOG.info("Updating recipient with id {}, Status: {}, ExternalId: {}", recipientEntity.getId(), status, smsStatusMessage.externalId());
-				recipientEntity.setStatus(status);
-				recipientEntity.setStatusDetail(smsStatusMessage.statusDetail());
-				ofNullable(smsStatusMessage.externalId())
-					.filter(externalId -> isStorable(externalId, recipientEntity.getId()))
-					.ifPresent(recipientEntity::setExternalId);
-				recipientRepository.save(recipientEntity);
-			},
-				() -> LOG.warn("Received SMS status for unknown recipient with id {}, ignoring it", smsStatusMessage.recipientId()));
 	}
 }
