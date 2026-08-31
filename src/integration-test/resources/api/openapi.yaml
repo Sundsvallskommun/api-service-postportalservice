@@ -2024,6 +2024,7 @@ components:
           type: string
           description: Status of the message to this recipient
           examples:
+          - PENDING
           - SENT
           - NOT_SENT
           - FAILED
