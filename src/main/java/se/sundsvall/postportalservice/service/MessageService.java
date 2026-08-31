@@ -100,6 +100,7 @@ public class MessageService {
 	private final EsigningIntegration esigningIntegration;
 	private final EsigningMapper esigningMapper;
 	private final SigningRepository signingRepository;
+	private final SmsDeliveryService smsDeliveryService;
 
 	public MessageService(
 		@Qualifier(DELIVERY_EXECUTOR) final ThreadPoolTaskExecutor deliveryExecutor,
@@ -117,7 +118,8 @@ public class MessageService {
 		final PartyIntegration partyIntegration,
 		final EsigningIntegration esigningIntegration,
 		final EsigningMapper esigningMapper,
-		final SigningRepository signingRepository) {
+		final SigningRepository signingRepository,
+		final SmsDeliveryService smsDeliveryService) {
 		this.deliveryExecutor = deliveryExecutor;
 		this.digitalRegisteredLetterIntegration = digitalRegisteredLetterIntegration;
 		this.messagingIntegration = messagingIntegration;
@@ -134,6 +136,7 @@ public class MessageService {
 		this.esigningIntegration = esigningIntegration;
 		this.esigningMapper = esigningMapper;
 		this.signingRepository = signingRepository;
+		this.smsDeliveryService = smsDeliveryService;
 	}
 
 	public String processDigitalRegisteredLetterRequest(final String municipalityId, final DigitalRegisteredLetterRequest request, final List<MultipartFile> attachments) {
@@ -333,7 +336,7 @@ public class MessageService {
 	void deliver(final MessageEntity messageEntity, final RecipientEntity recipientEntity, final Map<String, String> settingsMap) {
 		try {
 			final var messageResult = switch (recipientEntity.getMessageType()) {
-				case SMS -> messagingIntegration.sendSms(messageEntity, recipientEntity);
+				case SMS -> smsDeliveryService.deliverSms(messageEntity, recipientEntity);
 				case DIGITAL_MAIL -> messagingIntegration.sendDigitalMail(messageEntity, recipientEntity).getMessages().getFirst();
 				case SNAIL_MAIL -> deliverSnailMailOrCallback(messageEntity, recipientEntity, settingsMap);
 				default -> {

@@ -12,6 +12,13 @@ spring:
   jpa:
     hibernate:
       ddl-auto: none
+  rabbitmq:
+    # Correlated confirms plus returns are what let a publish be reported as failed instead of silently dropped.
+    # Connection settings are supplied per environment - see the rabbitmq block further down.
+    publisher-confirm-type: correlated
+    publisher-returns: true
+    template:
+      mandatory: true
   security:
     oauth2:
       client:
@@ -59,6 +66,28 @@ resilience4j:
       userRepository: {}
       statisticsRepository: {}
       signingRepository: {}
+# SMS delivery over RabbitMQ towards the messaging service.
+#
+# Connection settings (spring.rabbitmq.host/port/virtual-host/username/password) are supplied per environment and are
+# deliberately not committed here. Only the names of the topology objects live here, since those are the contract with
+# messaging - they are owned and declared by the messaging-topology-operator via GitOps, and the AMQP user has an empty
+# configure permission, so this service must never declare a queue, exchange or binding.
+#
+# While disabled, SMS keeps going over the messaging REST API and no AMQP connection is opened at all.
+rabbitmq:
+  enabled: false
+  # Outbound: messaging owns the inbound hub and the outcome hub; this service owns only the status queue it consumes.
+  exchange: api-fabriken.messaging
+  routing-key: sms
+  # Inbound: bound to api-fabriken.messaging.status on 'sms.*', so it carries both sms.sent and sms.failed. Exactly one
+  # terminal outcome arrives per send request, which is why nothing here polls or times out.
+  status-queue: api-fabriken.postportal.sms-status
+  publish-confirm-timeout-seconds: 5
+# Do not let the broker's reachability gate service health.
+management:
+  health:
+    rabbit:
+      enabled: false
 delivery:
   executor:
     # Concurrency limit towards the messaging service (the blocking call runs on the pool thread).

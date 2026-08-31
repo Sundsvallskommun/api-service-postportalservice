@@ -1,0 +1,55 @@
+[
+	{
+		"id": "c9383d10-6fb5-4fc1-bd0a-50bf5a24d5b7",
+		"municipalityId": "2281",
+		"created": "2024-01-15T10:20:30Z",
+		"updated": "2024-06-10T14:25:00Z",
+		"values": [
+			{
+				"key": "organization_number",
+				"value": "1234567890",
+				"type": "STRING"
+			},
+			{
+				"key": "folder_name",
+				"value": "sundsvall",
+				"type": "STRING"
+			},
+			{
+				"key": "sms_sender",
+				"value": "sundsvall",
+				"type": "STRING"
+			},
+			{
+				"key": "support_text",
+				"value": "support text",
+				"type": "STRING"
+			},
+			{
+				"key": "contact_information_url",
+				"value": "http://test.se/test",
+				"type": "STRING"
+			},
+			{
+				"key": "contact_information_phone_number",
+				"value": "+46123456789321",
+				"type": "STRING"
+			},
+			{
+				"key": "contact_information_email",
+				"value": "test@test.com",
+				"type": "STRING"
+			},
+			{
+				"key": "department_name",
+				"value": "name",
+				"type": "STRING"
+			},
+			{
+				"key": "department_id",
+				"value": "12345",
+				"type": "STRING"
+			}
+		]
+	}
+]

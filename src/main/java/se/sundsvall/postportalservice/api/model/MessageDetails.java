@@ -243,7 +243,7 @@ public class MessageDetails {
 		private String messageType;
 
 		@Schema(description = "Status of the message to this recipient", accessMode = Schema.AccessMode.READ_ONLY, examples = {
-			"SENT", "NOT_SENT", "FAILED"
+			"PENDING", "SENT", "NOT_SENT", "FAILED"
 		})
 		private String status;
 

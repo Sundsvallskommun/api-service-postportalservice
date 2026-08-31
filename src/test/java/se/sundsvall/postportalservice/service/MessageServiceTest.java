@@ -76,6 +76,7 @@ import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static se.sundsvall.postportalservice.Constants.CANCELLED;
 import static se.sundsvall.postportalservice.Constants.FAILED;
+import static se.sundsvall.postportalservice.Constants.PENDING;
 import static se.sundsvall.postportalservice.Constants.SENT;
 import static se.sundsvall.postportalservice.TestDataFactory.MUNICIPALITY_ID;
 import static se.sundsvall.postportalservice.service.util.MessagingSettingsUtil.CONTACT_INFORMATION_EMAIL;
@@ -148,6 +149,9 @@ class MessageServiceTest {
 	@Mock
 	private SigningRepository signingRepositoryMock;
 
+	@Mock
+	private SmsDeliveryService smsDeliveryServiceMock;
+
 	@Captor
 	private ArgumentCaptor<MessageEntity> messageEntityCaptor;
 
@@ -171,7 +175,8 @@ class MessageServiceTest {
 			departmentRepositoryMock, userRepositoryMock,
 			messageRepositoryMock, recipientRepositoryMock, digitalRegisteredLetterIntegrationMock,
 			citizenIntegrationMock, partyIntegrationMock,
-			esigningIntegrationMock, esigningMapperMock, signingRepositoryMock);
+			esigningIntegrationMock, esigningMapperMock, signingRepositoryMock,
+			smsDeliveryServiceMock);
 	}
 
 	@Test
@@ -619,14 +624,30 @@ class MessageServiceTest {
 			.deliveries(List.of(new DeliveryResult()
 				.status(MessageStatus.SENT)));
 
-		when(messagingIntegrationMock.sendSms(messageEntity, recipient)).thenReturn(messageResult);
+		when(smsDeliveryServiceMock.deliverSms(messageEntity, recipient)).thenReturn(messageResult);
 
 		messageService.deliver(messageEntity, recipient, SETTINGS_MAP);
 
 		assertThat(recipient.getStatus()).isEqualTo(MessageStatus.SENT.toString());
 		assertThat(recipient.getExternalId()).isEqualTo(uuid.toString());
-		verify(messagingIntegrationMock).sendSms(messageEntity, recipient);
+		verify(smsDeliveryServiceMock).deliverSms(messageEntity, recipient);
 		verify(recipientRepositoryMock).save(recipient);
+	}
+
+	@Test
+	void deliver_sms_noResultLeavesRecipientUntouched() {
+		// The queue path reports no result - the outcome arrives later on the status queue.
+		final var recipient = new RecipientEntity().withFirstName("john").withMessageType(MessageType.SMS).withStatus(PENDING);
+		final var messageEntity = MessageEntity.create().withRecipients(List.of(recipient));
+
+		when(smsDeliveryServiceMock.deliverSms(messageEntity, recipient)).thenReturn(null);
+
+		messageService.deliver(messageEntity, recipient, SETTINGS_MAP);
+
+		assertThat(recipient.getStatus()).isEqualTo(PENDING);
+		assertThat(recipient.getExternalId()).isNull();
+		verify(smsDeliveryServiceMock).deliverSms(messageEntity, recipient);
+		verifyNoInteractions(recipientRepositoryMock);
 	}
 
 	@Test
@@ -712,13 +733,13 @@ class MessageServiceTest {
 		final var recipient = new RecipientEntity().withFirstName("john").withMessageType(MessageType.SMS);
 		final var messageEntity = MessageEntity.create().withRecipients(List.of(recipient));
 
-		when(messagingIntegrationMock.sendSms(messageEntity, recipient)).thenThrow(new RuntimeException("Simulated exception"));
+		when(smsDeliveryServiceMock.deliverSms(messageEntity, recipient)).thenThrow(new RuntimeException("Simulated exception"));
 
 		messageService.deliver(messageEntity, recipient, SETTINGS_MAP);
 
 		assertThat(recipient.getStatus()).isEqualTo(MessageStatus.FAILED.toString());
 		assertThat(recipient.getStatusDetail()).isEqualTo("Simulated exception");
-		verify(messagingIntegrationMock).sendSms(messageEntity, recipient);
+		verify(smsDeliveryServiceMock).deliverSms(messageEntity, recipient);
 		verify(recipientRepositoryMock).save(recipient);
 	}
 
