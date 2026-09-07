@@ -27,6 +27,8 @@ spring:
             token-uri: http://localhost:${wiremock.server.port:}/api-gateway/token
           esigning:
             token-uri: http://localhost:${wiremock.server.port:}/api-gateway/token
+          object-store:
+            token-uri: http://localhost:${wiremock.server.port:}/api-gateway/token
         registration:
           citizen:
             client-id: the-client-id
@@ -40,6 +42,9 @@ spring:
           messaging:
             client-id: the-client-id
             client-secret: the-client-secret
+          object-store:
+            client-id: the-client-id
+            client-secret: the-client-secret
           party:
             client-id: the-client-id
             client-secret: the-client-secret
@@ -50,6 +55,11 @@ spring:
             client-id: the-client-id
             client-secret: the-client-secret
 integration:
+  object-store:
+    url: http://localhost:${wiremock.server.port:}/object-store
+    bucket: messaging-attachments
+    connect-timeout: 10
+    read-timeout: 20
   citizen:
     url: http://localhost:${wiremock.server.port:}/api-citizen
   digitalregisteredletter:

@@ -1,5 +1,6 @@
 package se.sundsvall.postportalservice.integration.rabbitmq;
 
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -26,27 +27,31 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 @ExtendWith(MockitoExtension.class)
-class SmsQueuePublisherTest {
+class EmailQueuePublisherTest {
 
 	private static final String EXCHANGE = "api-fabriken.messaging";
-	private static final String ROUTING_KEY = "sms";
+	private static final String ROUTING_KEY = "email";
 	private static final String RECIPIENT_ID = "8a2a0c66-8a4a-4a8b-9a91-b3b0e8dbb0f9";
 
-	private static final SmsQueueMessage MESSAGE = new SmsQueueMessage(
+	private static final String OBJECT_ID = "f8e2bd3c-1a6b-4f5e-9d0a-2c7b1e4f6a58";
+
+	private static final EmailQueueMessage MESSAGE = new EmailQueueMessage(
 		"2281", "1a2b3c", RECIPIENT_ID, "6d0773d6-3e7f-4552-81bc-f0007af95adf",
-		"+46701740605", "Sundsvall", "Department", "Hello", "joe01doe; type=adAccount", "PostPortalService");
+		"recipient@example.com", "Subject", "Hello", null, "Postportalen", "noreply@postportal.se", null,
+		List.of(new EmailQueueMessage.Attachment("file.txt", "text/plain", OBJECT_ID)),
+		"joe01doe; type=adAccount", "PostPortalService");
 
 	@Mock
 	private RabbitTemplate rabbitTemplateMock;
 
-	private SmsQueuePublisher publisher;
+	private EmailQueuePublisher publisher;
 
 	@BeforeEach
 	void setUp() {
-		publisher = new SmsQueuePublisher(rabbitTemplateMock, new RabbitIntegrationProperties(
+		publisher = new EmailQueuePublisher(rabbitTemplateMock, new RabbitIntegrationProperties(
 			true, EXCHANGE, 1,
-			new RabbitIntegrationProperties.Channel(ROUTING_KEY, "api-fabriken.postportal.sms-status"),
-			new RabbitIntegrationProperties.Channel("email", "api-fabriken.postportal.email-status")));
+			new RabbitIntegrationProperties.Channel("sms", "api-fabriken.postportal.sms-status"),
+			new RabbitIntegrationProperties.Channel(ROUTING_KEY, "api-fabriken.postportal.email-status")));
 	}
 
 	@Test
@@ -55,7 +60,7 @@ class SmsQueuePublisherTest {
 
 		publisher.publish(MESSAGE);
 
-		final var captor = ArgumentCaptor.forClass(SmsQueueMessage.class);
+		final var captor = ArgumentCaptor.forClass(EmailQueueMessage.class);
 		verify(rabbitTemplateMock).convertAndSend(eq(EXCHANGE), eq(ROUTING_KEY), captor.capture(), any(CorrelationData.class));
 		verifyNoMoreInteractions(rabbitTemplateMock);
 		assertThat(captor.getValue()).isEqualTo(MESSAGE);
@@ -111,6 +116,20 @@ class SmsQueuePublisherTest {
 
 		// Propagates rather than being swallowed - the caller is what marks the recipient FAILED.
 		assertThatExceptionOfType(AmqpException.class).isThrownBy(() -> publisher.publish(MESSAGE));
+	}
+
+	@Test
+	void publish_carriesAttachmentsByReferenceOnly() {
+		confirmWith(new CorrelationData.Confirm(true, null), null);
+
+		publisher.publish(MESSAGE);
+
+		final var captor = ArgumentCaptor.forClass(EmailQueueMessage.class);
+		verify(rabbitTemplateMock).convertAndSend(eq(EXCHANGE), eq(ROUTING_KEY), captor.capture(), any(CorrelationData.class));
+		// What goes onto a quorum queue is an id, never the bytes: they would be replicated across three nodes, parked
+		// in a wait queue for every retry, and kept in the parking lot after a give-up.
+		assertThat(captor.getValue().attachments()).singleElement()
+			.satisfies(attachment -> assertThat(attachment.objectId()).isEqualTo(OBJECT_ID));
 	}
 
 	@Test
