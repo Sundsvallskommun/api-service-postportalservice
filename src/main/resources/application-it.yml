@@ -1,4 +1,11 @@
 spring:
+  # The application must never declare topology in a real environment - its AMQP user has an empty configure
+  # permission, and dynamic is false in application.yml for exactly that reason. Here the test configuration stands in
+  # for the messaging-topology-operator and declares the queues the container starts against, so RabbitAdmin has to be
+  # allowed to run. The declarations live in test scope only, which is what keeps the test a check of the real
+  # contract rather than of a topology the service invented for itself.
+  rabbitmq:
+    dynamic: true
   flyway:
     enabled: true
   jpa:

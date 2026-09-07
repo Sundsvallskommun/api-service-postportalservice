@@ -9,6 +9,8 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 
+import static se.sundsvall.postportalservice.apptest.support.MessagingQueueStub.EMAIL_STATUS_BINDING_PATTERN;
+import static se.sundsvall.postportalservice.apptest.support.MessagingQueueStub.EMAIL_STATUS_QUEUE;
 import static se.sundsvall.postportalservice.apptest.support.MessagingQueueStub.STATUS_BINDING_PATTERN;
 import static se.sundsvall.postportalservice.apptest.support.MessagingQueueStub.STATUS_EXCHANGE;
 import static se.sundsvall.postportalservice.apptest.support.MessagingQueueStub.STATUS_QUEUE;
@@ -56,6 +58,17 @@ public class RabbitTestTopologyConfiguration {
 	Binding statusBinding() {
 		// sms.* catches sms.sent and sms.failed, and any later sms.<outcome>.
 		return BindingBuilder.bind(statusQueue()).to(statusExchange()).with(STATUS_BINDING_PATTERN);
+	}
+
+	@Bean
+	Queue emailStatusQueue() {
+		return QueueBuilder.durable(EMAIL_STATUS_QUEUE).build();
+	}
+
+	@Bean
+	Binding emailStatusBinding() {
+		// email.* catches email.sent and email.failed, on the same outcome hub the SMS binding uses.
+		return BindingBuilder.bind(emailStatusQueue()).to(statusExchange()).with(EMAIL_STATUS_BINDING_PATTERN);
 	}
 
 	@Bean
