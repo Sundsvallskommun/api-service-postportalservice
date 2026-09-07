@@ -41,6 +41,8 @@ spring:
             token-uri: http://token.url
           esigning:
             token-uri: http://token.url
+          object-store:
+            token-uri: http://token.url
         registration:
           citizen:
             client-id: the-client-id
@@ -54,6 +56,9 @@ spring:
           messaging:
             client-id: the-client-id
             client-secret: the-client-secret
+          object-store:
+            client-id: the-client-id
+            client-secret: the-client-secret
           party:
             client-id: the-client-id
             client-secret: the-client-secret
@@ -64,6 +69,11 @@ spring:
             client-id: the-client-id
             client-secret: the-client-secret
 integration:
+  object-store:
+    url: http://object-store.local
+    bucket: messaging-attachments
+    connect-timeout: 10
+    read-timeout: 20
   citizen:
     url: http://citizen.local
     connect-timeout: 10
