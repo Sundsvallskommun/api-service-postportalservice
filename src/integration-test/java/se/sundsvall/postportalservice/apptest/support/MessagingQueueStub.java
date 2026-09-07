@@ -34,6 +34,12 @@ public class MessagingQueueStub {
 	public static final String SENT_ROUTING_KEY = "sms.sent";
 	public static final String FAILED_ROUTING_KEY = "sms.failed";
 
+	// The e-mail channel's own objects. Only the status queue is declared for the tests: nothing here consumes the
+	// e-mail work queue yet, but the listener refuses to start against a queue that does not exist, which is the same
+	// reason the topology has to be synced before the service is deployed.
+	public static final String EMAIL_STATUS_QUEUE = "api-fabriken.postportal.email-status";
+	public static final String EMAIL_STATUS_BINDING_PATTERN = "email.*";
+
 	private static final Logger LOG = LoggerFactory.getLogger(MessagingQueueStub.class);
 
 	private final RabbitTemplate rabbitTemplate;
