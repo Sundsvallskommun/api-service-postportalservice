@@ -152,6 +152,9 @@ class MessageServiceTest {
 	@Mock
 	private SmsDeliveryService smsDeliveryServiceMock;
 
+	@Mock
+	private EmailDeliveryService emailDeliveryServiceMock;
+
 	@Captor
 	private ArgumentCaptor<MessageEntity> messageEntityCaptor;
 
@@ -176,7 +179,7 @@ class MessageServiceTest {
 			messageRepositoryMock, recipientRepositoryMock, digitalRegisteredLetterIntegrationMock,
 			citizenIntegrationMock, partyIntegrationMock,
 			esigningIntegrationMock, esigningMapperMock, signingRepositoryMock,
-			smsDeliveryServiceMock);
+			smsDeliveryServiceMock, emailDeliveryServiceMock);
 	}
 
 	@Test
@@ -706,13 +709,13 @@ class MessageServiceTest {
 			"callback_email", "test@example.com",
 			"callback_email_subject", "Subject");
 
-		when(messagingIntegrationMock.sendCallbackEmail(messageEntity, recipient, callbackSettingsMap)).thenReturn(messageResult);
+		when(emailDeliveryServiceMock.deliverEmail(messageEntity, recipient, callbackSettingsMap)).thenReturn(messageResult);
 
 		messageService.deliver(messageEntity, recipient, callbackSettingsMap);
 
 		assertThat(recipient.getStatus()).isEqualTo(MessageStatus.SENT.toString());
 		assertThat(recipient.getExternalId()).isEqualTo(uuid.toString());
-		verify(messagingIntegrationMock).sendCallbackEmail(messageEntity, recipient, callbackSettingsMap);
+		verify(emailDeliveryServiceMock).deliverEmail(messageEntity, recipient, callbackSettingsMap);
 		verify(recipientRepositoryMock).save(recipient);
 	}
 

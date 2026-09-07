@@ -17,6 +17,11 @@ spring:
     # Connection settings are supplied per environment - see the rabbitmq block further down.
     publisher-confirm-type: correlated
     publisher-returns: true
+    # No RabbitAdmin, and never a Declarable bean. The AMQP user has an empty configure permission by design, so an
+    # attempt to declare a queue fails with ACCESS_REFUSED and the status listener never starts - while
+    # /actuator/health stays green, because the Rabbit health indicator below is deliberately off. Outcomes would then
+    # queue up unread and every recipient would sit at PENDING with nothing saying why.
+    dynamic: false
     # observation-enabled feeds Actuator's timer metrics for publish and receive. Instrumentation is not environment
     # config - only the exporter is - and a round trip is hardest to follow in the environments where it cannot be
     # watched in a terminal. Nothing in dept44 wires a tracer, so this yields metrics, not spans linking the publish
@@ -43,6 +48,9 @@ spring:
           messaging:
             authorization-grant-type: client_credentials
             provider: messaging
+          object-store:
+            authorization-grant-type: client_credentials
+            provider: object-store
           party:
             authorization-grant-type: client_credentials
             provider: party
@@ -86,16 +94,21 @@ resilience4j:
 # messaging - they are owned and declared by the messaging-topology-operator via GitOps, and the AMQP user has an empty
 # configure permission, so this service must never declare a queue, exchange or binding.
 #
-# While disabled, SMS keeps going over the messaging REST API and no AMQP connection is opened at all.
+# While disabled, both channels keep going over the messaging REST API and no AMQP connection is opened at all.
 rabbitmq:
   enabled: false
-  # Outbound: messaging owns the inbound hub and the outcome hub; this service owns only the status queue it consumes.
+  # Outbound: messaging owns the inbound hub and the outcome hub; this service owns only the status queues it consumes.
+  # The exchange is shared by both channels and routes by key.
   exchange: api-fabriken.messaging
-  routing-key: sms
-  # Inbound: bound to api-fabriken.messaging.status on 'sms.*', so it carries both sms.sent and sms.failed. Exactly one
-  # terminal outcome arrives per send request, which is why nothing here polls or times out.
-  status-queue: api-fabriken.postportal.sms-status
   publish-confirm-timeout-seconds: 5
+  # Each status queue is bound to api-fabriken.messaging.status on '<channel>.*', so it carries both the sent and the
+  # failed outcome. Exactly one terminal outcome arrives per send request, which is why nothing here polls or times out.
+  sms:
+    routing-key: sms
+    status-queue: api-fabriken.postportal.sms-status
+  email:
+    routing-key: email
+    status-queue: api-fabriken.postportal.email-status
 # Do not let the broker's reachability gate service health.
 management:
   health:

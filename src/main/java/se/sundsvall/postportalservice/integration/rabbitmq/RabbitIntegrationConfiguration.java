@@ -10,7 +10,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * Wiring for the SMS queue path towards the messaging service.
+ * Wiring for the SMS and e-mail queue paths towards the messaging service.
  * <p>
  * The whole path is inert unless {@code rabbitmq.enabled=true}. Without these beans the connection factory stays lazy
  * and the application opens no AMQP connection at all, so the Feign fallback in
@@ -43,8 +43,18 @@ public class RabbitIntegrationConfiguration {
 	public record RabbitIntegrationProperties(
 		@DefaultValue("false") boolean enabled,
 		@DefaultValue("api-fabriken.messaging") String exchange,
-		@DefaultValue("sms") String routingKey,
-		@DefaultValue("api-fabriken.postportal.sms-status") String statusQueue,
-		@DefaultValue("5") int publishConfirmTimeoutSeconds) {
+		@DefaultValue("5") int publishConfirmTimeoutSeconds,
+		@DefaultValue Channel sms,
+		@DefaultValue Channel email) {
+
+		/**
+		 * One block per channel. The inbound exchange is shared - it is messaging's hub and routes by key - but the
+		 * status queue is not: each channel binds its own queue to the outcome exchange, so that a consumer of one
+		 * channel's outcomes is never handed the other's.
+		 */
+		public record Channel(
+			String routingKey,
+			String statusQueue) {
+		}
 	}
 }

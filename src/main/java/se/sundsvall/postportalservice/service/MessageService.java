@@ -101,6 +101,7 @@ public class MessageService {
 	private final EsigningMapper esigningMapper;
 	private final SigningRepository signingRepository;
 	private final SmsDeliveryService smsDeliveryService;
+	private final EmailDeliveryService emailDeliveryService;
 
 	public MessageService(
 		@Qualifier(DELIVERY_EXECUTOR) final ThreadPoolTaskExecutor deliveryExecutor,
@@ -119,7 +120,8 @@ public class MessageService {
 		final EsigningIntegration esigningIntegration,
 		final EsigningMapper esigningMapper,
 		final SigningRepository signingRepository,
-		final SmsDeliveryService smsDeliveryService) {
+		final SmsDeliveryService smsDeliveryService,
+		final EmailDeliveryService emailDeliveryService) {
 		this.deliveryExecutor = deliveryExecutor;
 		this.digitalRegisteredLetterIntegration = digitalRegisteredLetterIntegration;
 		this.messagingIntegration = messagingIntegration;
@@ -137,6 +139,7 @@ public class MessageService {
 		this.esigningMapper = esigningMapper;
 		this.signingRepository = signingRepository;
 		this.smsDeliveryService = smsDeliveryService;
+		this.emailDeliveryService = emailDeliveryService;
 	}
 
 	public String processDigitalRegisteredLetterRequest(final String municipalityId, final DigitalRegisteredLetterRequest request, final List<MultipartFile> attachments) {
@@ -362,7 +365,7 @@ public class MessageService {
 		// If callback email is configured, send as email instead of snail mail.
 		if (SNAILMAIL_METHOD_VALUE.equals(settingsMap.get(SNAILMAIL_METHOD))) {
 			LOG.info("Snail mail method is set to {}, sending callback email instead.", SNAILMAIL_METHOD_VALUE);
-			return messagingIntegration.sendCallbackEmail(messageEntity, recipientEntity, settingsMap);
+			return emailDeliveryService.deliverEmail(messageEntity, recipientEntity, settingsMap);
 		}
 
 		return messagingIntegration.sendSnailMail(messageEntity, recipientEntity);

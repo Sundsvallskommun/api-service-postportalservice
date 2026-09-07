@@ -16,48 +16,48 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.springframework.http.HttpStatus.BAD_GATEWAY;
 
 /**
- * Publishes an SMS onto the messaging service's inbound exchange.
+ * Publishes an e-mail onto the messaging service's inbound exchange.
  * <p>
- * Unlike messaging's own outbound mirror this is the primary delivery path, so a failure must never be swallowed: a
- * dropped message is a text message the recipient never receives, with nothing in the database to say so. Every publish
- * therefore waits for a broker confirmation and raises on a NACK, an unroutable return or a timeout, which leaves the
- * caller to mark the recipient FAILED.
+ * As with SMS this is the primary delivery path, so a failure must never be swallowed: a dropped message is a mail the
+ * recipient never receives, with nothing in the database to say so. Every publish therefore waits for a broker
+ * confirmation and raises on a NACK, an unroutable return or a timeout, which leaves the caller to mark the recipient
+ * FAILED.
  */
 @Component
 @ConditionalOnProperty(name = "rabbitmq.enabled", havingValue = "true")
-public class SmsQueuePublisher {
+public class EmailQueuePublisher {
 
-	private static final Logger LOG = LoggerFactory.getLogger(SmsQueuePublisher.class);
+	private static final Logger LOG = LoggerFactory.getLogger(EmailQueuePublisher.class);
 
 	private final RabbitTemplate rabbitTemplate;
 	private final RabbitIntegrationProperties properties;
 
-	public SmsQueuePublisher(final RabbitTemplate rabbitTemplate, final RabbitIntegrationProperties properties) {
+	public EmailQueuePublisher(final RabbitTemplate rabbitTemplate, final RabbitIntegrationProperties properties) {
 		this.rabbitTemplate = rabbitTemplate;
 		this.properties = properties;
 	}
 
-	public void publish(final SmsQueueMessage smsQueueMessage) {
+	public void publish(final EmailQueueMessage emailQueueMessage) {
 		final var exchange = properties.exchange();
-		final var routingKey = properties.sms().routingKey();
-		final var recipientId = smsQueueMessage.recipientId();
+		final var routingKey = properties.email().routingKey();
+		final var recipientId = emailQueueMessage.recipientId();
 		final var correlationData = new CorrelationData(recipientId);
 
-		rabbitTemplate.convertAndSend(exchange, routingKey, smsQueueMessage, correlationData);
+		rabbitTemplate.convertAndSend(exchange, routingKey, emailQueueMessage, correlationData);
 
 		final var confirm = awaitConfirm(correlationData, recipientId);
 
 		// A basic.return always precedes the basic.ack, so by now an unroutable message has been handed back to us.
 		Optional.ofNullable(correlationData.getReturned()).ifPresent(returned -> {
-			throw Problem.valueOf(BAD_GATEWAY, "SMS for recipient %s was not routable by exchange %s with routing key %s: %s"
+			throw Problem.valueOf(BAD_GATEWAY, "E-mail for recipient %s was not routable by exchange %s with routing key %s: %s"
 				.formatted(recipientId, exchange, routingKey, returned.getReplyText()));
 		});
 
 		if (!confirm.ack()) {
-			throw Problem.valueOf(BAD_GATEWAY, "SMS for recipient %s was rejected by the broker: %s".formatted(recipientId, confirm.reason()));
+			throw Problem.valueOf(BAD_GATEWAY, "E-mail for recipient %s was rejected by the broker: %s".formatted(recipientId, confirm.reason()));
 		}
 
-		LOG.info("Published SMS for recipient {} (exchange={}, routingKey={})", recipientId, exchange, routingKey);
+		LOG.info("Published e-mail for recipient {} (exchange={}, routingKey={})", recipientId, exchange, routingKey);
 	}
 
 	private CorrelationData.Confirm awaitConfirm(final CorrelationData correlationData, final String recipientId) {
@@ -65,9 +65,9 @@ public class SmsQueuePublisher {
 			return correlationData.getFuture().get(properties.publishConfirmTimeoutSeconds(), SECONDS);
 		} catch (final InterruptedException e) {
 			Thread.currentThread().interrupt();
-			throw Problem.valueOf(BAD_GATEWAY, "Interrupted while waiting for broker confirmation of SMS for recipient %s".formatted(recipientId));
+			throw Problem.valueOf(BAD_GATEWAY, "Interrupted while waiting for broker confirmation of e-mail for recipient %s".formatted(recipientId));
 		} catch (final ExecutionException | TimeoutException e) {
-			throw Problem.valueOf(BAD_GATEWAY, "No broker confirmation of SMS for recipient %s within %d seconds"
+			throw Problem.valueOf(BAD_GATEWAY, "No broker confirmation of e-mail for recipient %s within %d seconds"
 				.formatted(recipientId, properties.publishConfirmTimeoutSeconds()));
 		}
 	}
