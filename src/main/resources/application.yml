@@ -70,7 +70,7 @@ logging:
     # The publish and the outcome are on different threads, so INFO on both is what makes a
     # round trip readable in the log.
     se.sundsvall.postportalservice.integration.rabbitmq: INFO
-    se.sundsvall.postportalservice.service.SmsStatusService: INFO
+    se.sundsvall.postportalservice.service.RecipientStatusService: INFO
 resilience4j:
   circuitbreaker:
     instances:
