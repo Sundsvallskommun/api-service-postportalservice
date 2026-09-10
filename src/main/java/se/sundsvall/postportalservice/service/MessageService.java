@@ -363,7 +363,7 @@ public class MessageService {
 		LOG.info("Sending snail mail to recipient with id {}", recipientEntity.getId());
 
 		// If callback email is configured, send as email instead of snail mail.
-		if (SNAILMAIL_METHOD_VALUE.equals(settingsMap.get(SNAILMAIL_METHOD))) {
+		if (SNAILMAIL_METHOD_VALUE.equalsIgnoreCase(settingsMap.get(SNAILMAIL_METHOD))) {
 			LOG.info("Snail mail method is set to {}, sending callback email instead.", SNAILMAIL_METHOD_VALUE);
 			return emailDeliveryService.deliverEmail(messageEntity, recipientEntity, settingsMap);
 		}
