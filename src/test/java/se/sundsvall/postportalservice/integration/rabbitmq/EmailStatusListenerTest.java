@@ -9,7 +9,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import se.sundsvall.postportalservice.service.EmailStatusService;
+import se.sundsvall.postportalservice.service.RecipientStatusService;
 import se.sundsvall.postportalservice.service.util.RecipientId;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -27,7 +27,7 @@ class EmailStatusListenerTest {
 	private static final EmailStatusMessage STATUS_MESSAGE = new EmailStatusMessage(RECIPIENT_ID, "SENT", EXTERNAL_ID, null);
 
 	@Mock
-	private EmailStatusService emailStatusServiceMock;
+	private RecipientStatusService recipientStatusServiceMock;
 
 	@InjectMocks
 	private EmailStatusListener listener;
@@ -46,8 +46,8 @@ class EmailStatusListenerTest {
 	void receive() {
 		listener.receive(STATUS_MESSAGE, "email.sent");
 
-		verify(emailStatusServiceMock).handleEmailStatus(STATUS_MESSAGE);
-		verifyNoMoreInteractions(emailStatusServiceMock);
+		verify(recipientStatusServiceMock).handleStatus(STATUS_MESSAGE);
+		verifyNoMoreInteractions(recipientStatusServiceMock);
 	}
 
 	@Test
@@ -55,8 +55,8 @@ class EmailStatusListenerTest {
 		// A disagreement is a producer bug; parking the message would strand the recipient at PENDING instead.
 		listener.receive(STATUS_MESSAGE, "email.failed");
 
-		verify(emailStatusServiceMock).handleEmailStatus(STATUS_MESSAGE);
-		verifyNoMoreInteractions(emailStatusServiceMock);
+		verify(recipientStatusServiceMock).handleStatus(STATUS_MESSAGE);
+		verifyNoMoreInteractions(recipientStatusServiceMock);
 	}
 
 	@ParameterizedTest
@@ -107,8 +107,8 @@ class EmailStatusListenerTest {
 		// Dead-lettering rewrites the routing key, so a replayed message need not carry a recognisable one.
 		listener.receive(STATUS_MESSAGE, null);
 
-		verify(emailStatusServiceMock).handleEmailStatus(STATUS_MESSAGE);
-		verifyNoMoreInteractions(emailStatusServiceMock);
+		verify(recipientStatusServiceMock).handleStatus(STATUS_MESSAGE);
+		verifyNoMoreInteractions(recipientStatusServiceMock);
 	}
 
 	@Test
@@ -120,7 +120,7 @@ class EmailStatusListenerTest {
 
 	@Test
 	void receive_clearsRecipientIdFromMdcOnFailure() {
-		doThrow(new RuntimeException("boom")).when(emailStatusServiceMock).handleEmailStatus(STATUS_MESSAGE);
+		doThrow(new RuntimeException("boom")).when(recipientStatusServiceMock).handleStatus(STATUS_MESSAGE);
 
 		assertThatExceptionOfType(RuntimeException.class).isThrownBy(() -> listener.receive(STATUS_MESSAGE, "email.sent"));
 

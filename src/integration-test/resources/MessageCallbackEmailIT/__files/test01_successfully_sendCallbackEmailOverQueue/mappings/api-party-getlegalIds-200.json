@@ -1,0 +1,17 @@
+{
+	"request": {
+		"method": "POST",
+		"url": "/api-party/2281/PRIVATE/legalIds"
+	},
+	"response": {
+		"status": 200,
+		"headers": {
+			"Content-Type": "application/json"
+		},
+		"jsonBody": {
+			"7a1234bc-56de-7890-1234-56789abcdef0": "198001022389",
+			"7a1234bc-56de-7890-1234-56789abcdef1": "198001022390",
+			"7a1234bc-56de-7890-1234-56789abcdef2": "198001022391"
+		}
+	}
+}

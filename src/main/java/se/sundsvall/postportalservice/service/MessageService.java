@@ -102,6 +102,8 @@ public class MessageService {
 	private final SigningRepository signingRepository;
 	private final SmsDeliveryService smsDeliveryService;
 	private final EmailDeliveryService emailDeliveryService;
+	private final DigitalMailDeliveryService digitalMailDeliveryService;
+	private final SnailMailDeliveryService snailMailDeliveryService;
 
 	public MessageService(
 		@Qualifier(DELIVERY_EXECUTOR) final ThreadPoolTaskExecutor deliveryExecutor,
@@ -121,7 +123,9 @@ public class MessageService {
 		final EsigningMapper esigningMapper,
 		final SigningRepository signingRepository,
 		final SmsDeliveryService smsDeliveryService,
-		final EmailDeliveryService emailDeliveryService) {
+		final EmailDeliveryService emailDeliveryService,
+		final DigitalMailDeliveryService digitalMailDeliveryService,
+		final SnailMailDeliveryService snailMailDeliveryService) {
 		this.deliveryExecutor = deliveryExecutor;
 		this.digitalRegisteredLetterIntegration = digitalRegisteredLetterIntegration;
 		this.messagingIntegration = messagingIntegration;
@@ -140,6 +144,8 @@ public class MessageService {
 		this.signingRepository = signingRepository;
 		this.smsDeliveryService = smsDeliveryService;
 		this.emailDeliveryService = emailDeliveryService;
+		this.digitalMailDeliveryService = digitalMailDeliveryService;
+		this.snailMailDeliveryService = snailMailDeliveryService;
 	}
 
 	public String processDigitalRegisteredLetterRequest(final String municipalityId, final DigitalRegisteredLetterRequest request, final List<MultipartFile> attachments) {
@@ -340,7 +346,7 @@ public class MessageService {
 		try {
 			final var messageResult = switch (recipientEntity.getMessageType()) {
 				case SMS -> smsDeliveryService.deliverSms(messageEntity, recipientEntity);
-				case DIGITAL_MAIL -> messagingIntegration.sendDigitalMail(messageEntity, recipientEntity).getMessages().getFirst();
+				case DIGITAL_MAIL -> digitalMailDeliveryService.deliverDigitalMail(messageEntity, recipientEntity);
 				case SNAIL_MAIL -> deliverSnailMailOrCallback(messageEntity, recipientEntity, settingsMap);
 				default -> {
 					LOG.error("Unsupported message type: {}, for recipient with id: {}", recipientEntity.getMessageType(), recipientEntity.getId());
@@ -368,7 +374,7 @@ public class MessageService {
 			return emailDeliveryService.deliverEmail(messageEntity, recipientEntity, settingsMap);
 		}
 
-		return messagingIntegration.sendSnailMail(messageEntity, recipientEntity);
+		return snailMailDeliveryService.deliverSnailMail(messageEntity, recipientEntity);
 	}
 
 	void updateRecipient(final MessageResult messageResult, final RecipientEntity recipientEntity) {

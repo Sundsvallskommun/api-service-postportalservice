@@ -46,6 +46,13 @@ public class AttachmentEntity {
 	@Transient
 	private String contentString;
 
+	// The object store id the content was uploaded under, for the same reason contentString exists: the delivery
+	// executor calls one delivery per recipient against this one shared instance, and without somewhere to remember
+	// the id the same bytes are uploaded once per recipient rather than once per message. Transient because it is
+	// scratch space on the in-memory entity, not state worth a column - it dies with the MessageEntity.
+	@Transient
+	private String objectId;
+
 	@Column(name = "created", columnDefinition = "DATETIME")
 	@TimeZoneStorage(NORMALIZE)
 	private OffsetDateTime created;
@@ -70,6 +77,19 @@ public class AttachmentEntity {
 
 	public void setContentString(String contentString) {
 		this.contentString = contentString;
+	}
+
+	public AttachmentEntity withObjectId(String objectId) {
+		this.objectId = objectId;
+		return this;
+	}
+
+	public String getObjectId() {
+		return objectId;
+	}
+
+	public void setObjectId(String objectId) {
+		this.objectId = objectId;
 	}
 
 	public String getId() {
@@ -138,12 +158,12 @@ public class AttachmentEntity {
 			return false;
 		AttachmentEntity that = (AttachmentEntity) o;
 		return Objects.equals(id, that.id) && Objects.equals(fileName, that.fileName) && Objects.equals(contentType, that.contentType) && Objects.equals(content, that.content) && Objects.equals(contentString,
-			that.contentString) && Objects.equals(created, that.created);
+			that.contentString) && Objects.equals(objectId, that.objectId) && Objects.equals(created, that.created);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(id, fileName, contentType, content, contentString, created);
+		return Objects.hash(id, fileName, contentType, content, contentString, objectId, created);
 	}
 
 	@Override
@@ -154,6 +174,7 @@ public class AttachmentEntity {
 			", contentType='" + contentType + '\'' +
 			", content=" + content +
 			", contentString='" + contentString + '\'' +
+			", objectId='" + objectId + '\'' +
 			", created=" + created +
 			'}';
 	}

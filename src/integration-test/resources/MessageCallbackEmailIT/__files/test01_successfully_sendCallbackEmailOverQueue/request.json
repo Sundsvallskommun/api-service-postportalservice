@@ -1,0 +1,43 @@
+{
+	"subject": "This is the subject of the letter",
+	"body": "This is the body of the letter",
+	"contentType": "text/plain",
+	"recipients": [
+		{
+			"partyId": "7a1234bc-56de-7890-1234-56789abcdef0",
+			"deliveryMethod": "SNAIL_MAIL",
+			"address": {
+				"firstName": "John",
+				"lastName": "Doe",
+				"street": "Main Street 1",
+				"zipCode": "12345",
+				"city": "Sundsvall",
+				"country": "Sweden"
+			}
+		},
+		{
+			"partyId": "7a1234bc-56de-7890-1234-56789abcdef1",
+			"deliveryMethod": "SNAIL_MAIL",
+			"address": {
+				"firstName": "Jane",
+				"lastName": "Doe",
+				"street": "Main Street 2",
+				"zipCode": "12345",
+				"city": "Sundsvall",
+				"country": "Sweden"
+			}
+		},
+		{
+			"partyId": "7a1234bc-56de-7890-1234-56789abcdef2",
+			"deliveryMethod": "SNAIL_MAIL",
+			"address": {
+				"firstName": "Jack",
+				"lastName": "Doe",
+				"street": "Main Street 3",
+				"zipCode": "12345",
+				"city": "Sundsvall",
+				"country": "Sweden"
+			}
+		}
+	]
+}

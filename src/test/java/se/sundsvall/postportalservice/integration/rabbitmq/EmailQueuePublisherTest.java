@@ -14,7 +14,6 @@ import org.springframework.amqp.core.ReturnedMessage;
 import org.springframework.amqp.rabbit.connection.CorrelationData;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import se.sundsvall.dept44.problem.ThrowableProblem;
-import se.sundsvall.postportalservice.integration.rabbitmq.RabbitIntegrationConfiguration.RabbitIntegrationProperties;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
@@ -25,6 +24,7 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static se.sundsvall.postportalservice.integration.rabbitmq.RabbitTestFixtures.properties;
 
 @ExtendWith(MockitoExtension.class)
 class EmailQueuePublisherTest {
@@ -48,10 +48,7 @@ class EmailQueuePublisherTest {
 
 	@BeforeEach
 	void setUp() {
-		publisher = new EmailQueuePublisher(rabbitTemplateMock, new RabbitIntegrationProperties(
-			true, EXCHANGE, 1,
-			new RabbitIntegrationProperties.Channel("sms", "api-fabriken.postportal.sms-status"),
-			new RabbitIntegrationProperties.Channel(ROUTING_KEY, "api-fabriken.postportal.email-status")));
+		publisher = new EmailQueuePublisher(rabbitTemplateMock, properties());
 	}
 
 	@Test

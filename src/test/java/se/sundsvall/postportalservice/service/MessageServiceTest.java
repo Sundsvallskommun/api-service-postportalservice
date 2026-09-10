@@ -4,7 +4,6 @@ import generated.se.sundsvall.citizen.CitizenExtended;
 import generated.se.sundsvall.esigning.StartSigningRequest;
 import generated.se.sundsvall.esigning.StartSigningResponse;
 import generated.se.sundsvall.messaging.DeliveryResult;
-import generated.se.sundsvall.messaging.MessageBatchResult;
 import generated.se.sundsvall.messaging.MessageResult;
 import generated.se.sundsvall.messaging.MessageStatus;
 import java.util.LinkedHashMap;
@@ -155,6 +154,12 @@ class MessageServiceTest {
 	@Mock
 	private EmailDeliveryService emailDeliveryServiceMock;
 
+	@Mock
+	private DigitalMailDeliveryService digitalMailDeliveryServiceMock;
+
+	@Mock
+	private SnailMailDeliveryService snailMailDeliveryServiceMock;
+
 	@Captor
 	private ArgumentCaptor<MessageEntity> messageEntityCaptor;
 
@@ -179,7 +184,8 @@ class MessageServiceTest {
 			messageRepositoryMock, recipientRepositoryMock, digitalRegisteredLetterIntegrationMock,
 			citizenIntegrationMock, partyIntegrationMock,
 			esigningIntegrationMock, esigningMapperMock, signingRepositoryMock,
-			smsDeliveryServiceMock, emailDeliveryServiceMock);
+			smsDeliveryServiceMock, emailDeliveryServiceMock,
+			digitalMailDeliveryServiceMock, snailMailDeliveryServiceMock);
 	}
 
 	@Test
@@ -662,17 +668,31 @@ class MessageServiceTest {
 			.messageId(uuid)
 			.deliveries(List.of(new DeliveryResult()
 				.status(MessageStatus.SENT)));
-		final var messageBatchResult = new MessageBatchResult()
-			.messages(List.of(messageResult));
 
-		when(messagingIntegrationMock.sendDigitalMail(messageEntity, recipient)).thenReturn(messageBatchResult);
+		when(digitalMailDeliveryServiceMock.deliverDigitalMail(messageEntity, recipient)).thenReturn(messageResult);
 
 		messageService.deliver(messageEntity, recipient, SETTINGS_MAP);
 
 		assertThat(recipient.getStatus()).isEqualTo(MessageStatus.SENT.toString());
 		assertThat(recipient.getExternalId()).isEqualTo(uuid.toString());
-		verify(messagingIntegrationMock).sendDigitalMail(messageEntity, recipient);
+		verify(digitalMailDeliveryServiceMock).deliverDigitalMail(messageEntity, recipient);
 		verify(recipientRepositoryMock).save(recipient);
+	}
+
+	@Test
+	void deliver_digitalMail_noResultLeavesRecipientUntouched() {
+		// The queue path reports no result - the outcome arrives later on the status queue.
+		final var recipient = new RecipientEntity().withFirstName("john").withMessageType(MessageType.DIGITAL_MAIL).withStatus(PENDING);
+		final var messageEntity = MessageEntity.create().withRecipients(List.of(recipient));
+
+		when(digitalMailDeliveryServiceMock.deliverDigitalMail(messageEntity, recipient)).thenReturn(null);
+
+		messageService.deliver(messageEntity, recipient, SETTINGS_MAP);
+
+		assertThat(recipient.getStatus()).isEqualTo(PENDING);
+		assertThat(recipient.getExternalId()).isNull();
+		verify(digitalMailDeliveryServiceMock).deliverDigitalMail(messageEntity, recipient);
+		verifyNoInteractions(recipientRepositoryMock);
 	}
 
 	@Test
@@ -685,14 +705,30 @@ class MessageServiceTest {
 			.deliveries(List.of(new DeliveryResult()
 				.status(MessageStatus.SENT)));
 
-		when(messagingIntegrationMock.sendSnailMail(messageEntity, recipient)).thenReturn(messageResult);
+		when(snailMailDeliveryServiceMock.deliverSnailMail(messageEntity, recipient)).thenReturn(messageResult);
 
 		messageService.deliver(messageEntity, recipient, SETTINGS_MAP);
 
 		assertThat(recipient.getStatus()).isEqualTo(MessageStatus.SENT.toString());
 		assertThat(recipient.getExternalId()).isEqualTo(uuid.toString());
-		verify(messagingIntegrationMock).sendSnailMail(messageEntity, recipient);
+		verify(snailMailDeliveryServiceMock).deliverSnailMail(messageEntity, recipient);
 		verify(recipientRepositoryMock).save(recipient);
+	}
+
+	@Test
+	void deliver_snailMail_noResultLeavesRecipientUntouched() {
+		// The queue path reports no result - the outcome arrives later on the status queue.
+		final var recipient = new RecipientEntity().withFirstName("john").withMessageType(MessageType.SNAIL_MAIL).withStatus(PENDING);
+		final var messageEntity = MessageEntity.create().withRecipients(List.of(recipient));
+
+		when(snailMailDeliveryServiceMock.deliverSnailMail(messageEntity, recipient)).thenReturn(null);
+
+		messageService.deliver(messageEntity, recipient, SETTINGS_MAP);
+
+		assertThat(recipient.getStatus()).isEqualTo(PENDING);
+		assertThat(recipient.getExternalId()).isNull();
+		verify(snailMailDeliveryServiceMock).deliverSnailMail(messageEntity, recipient);
+		verifyNoInteractions(recipientRepositoryMock);
 	}
 
 	@Test

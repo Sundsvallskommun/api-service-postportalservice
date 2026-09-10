@@ -23,5 +23,7 @@ public record SmsQueueMessage(
 	String department,
 	String message,
 	String sentBy,
-	String origin) {
+	String origin)
+	implements
+	QueueMessage {
 }
