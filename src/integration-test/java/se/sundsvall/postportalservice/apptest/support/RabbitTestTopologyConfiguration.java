@@ -9,8 +9,18 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 
+import static se.sundsvall.postportalservice.apptest.support.MessagingQueueStub.DIGITAL_MAIL_STATUS_BINDING_PATTERN;
+import static se.sundsvall.postportalservice.apptest.support.MessagingQueueStub.DIGITAL_MAIL_STATUS_QUEUE;
+import static se.sundsvall.postportalservice.apptest.support.MessagingQueueStub.DIGITAL_MAIL_WORK_QUEUE;
+import static se.sundsvall.postportalservice.apptest.support.MessagingQueueStub.DIGITAL_MAIL_WORK_ROUTING_KEY;
 import static se.sundsvall.postportalservice.apptest.support.MessagingQueueStub.EMAIL_STATUS_BINDING_PATTERN;
 import static se.sundsvall.postportalservice.apptest.support.MessagingQueueStub.EMAIL_STATUS_QUEUE;
+import static se.sundsvall.postportalservice.apptest.support.MessagingQueueStub.EMAIL_WORK_QUEUE;
+import static se.sundsvall.postportalservice.apptest.support.MessagingQueueStub.EMAIL_WORK_ROUTING_KEY;
+import static se.sundsvall.postportalservice.apptest.support.MessagingQueueStub.SNAIL_MAIL_STATUS_BINDING_PATTERN;
+import static se.sundsvall.postportalservice.apptest.support.MessagingQueueStub.SNAIL_MAIL_STATUS_QUEUE;
+import static se.sundsvall.postportalservice.apptest.support.MessagingQueueStub.SNAIL_MAIL_WORK_QUEUE;
+import static se.sundsvall.postportalservice.apptest.support.MessagingQueueStub.SNAIL_MAIL_WORK_ROUTING_KEY;
 import static se.sundsvall.postportalservice.apptest.support.MessagingQueueStub.STATUS_BINDING_PATTERN;
 import static se.sundsvall.postportalservice.apptest.support.MessagingQueueStub.STATUS_EXCHANGE;
 import static se.sundsvall.postportalservice.apptest.support.MessagingQueueStub.STATUS_QUEUE;
@@ -61,6 +71,16 @@ public class RabbitTestTopologyConfiguration {
 	}
 
 	@Bean
+	Queue emailWorkQueue() {
+		return QueueBuilder.durable(EMAIL_WORK_QUEUE).build();
+	}
+
+	@Bean
+	Binding emailWorkBinding() {
+		return BindingBuilder.bind(emailWorkQueue()).to(workExchange()).with(EMAIL_WORK_ROUTING_KEY);
+	}
+
+	@Bean
 	Queue emailStatusQueue() {
 		return QueueBuilder.durable(EMAIL_STATUS_QUEUE).build();
 	}
@@ -69,6 +89,48 @@ public class RabbitTestTopologyConfiguration {
 	Binding emailStatusBinding() {
 		// email.* catches email.sent and email.failed, on the same outcome hub the SMS binding uses.
 		return BindingBuilder.bind(emailStatusQueue()).to(statusExchange()).with(EMAIL_STATUS_BINDING_PATTERN);
+	}
+
+	@Bean
+	Queue digitalMailWorkQueue() {
+		return QueueBuilder.durable(DIGITAL_MAIL_WORK_QUEUE).build();
+	}
+
+	@Bean
+	Binding digitalMailWorkBinding() {
+		return BindingBuilder.bind(digitalMailWorkQueue()).to(workExchange()).with(DIGITAL_MAIL_WORK_ROUTING_KEY);
+	}
+
+	@Bean
+	Queue digitalMailStatusQueue() {
+		return QueueBuilder.durable(DIGITAL_MAIL_STATUS_QUEUE).build();
+	}
+
+	@Bean
+	Binding digitalMailStatusBinding() {
+		// digital-mail.* is two words, not three. A channel named "digital.mail" would make the outcome key three
+		// words and this pattern would stop matching it.
+		return BindingBuilder.bind(digitalMailStatusQueue()).to(statusExchange()).with(DIGITAL_MAIL_STATUS_BINDING_PATTERN);
+	}
+
+	@Bean
+	Queue snailMailWorkQueue() {
+		return QueueBuilder.durable(SNAIL_MAIL_WORK_QUEUE).build();
+	}
+
+	@Bean
+	Binding snailMailWorkBinding() {
+		return BindingBuilder.bind(snailMailWorkQueue()).to(workExchange()).with(SNAIL_MAIL_WORK_ROUTING_KEY);
+	}
+
+	@Bean
+	Queue snailMailStatusQueue() {
+		return QueueBuilder.durable(SNAIL_MAIL_STATUS_QUEUE).build();
+	}
+
+	@Bean
+	Binding snailMailStatusBinding() {
+		return BindingBuilder.bind(snailMailStatusQueue()).to(statusExchange()).with(SNAIL_MAIL_STATUS_BINDING_PATTERN);
 	}
 
 	@Bean

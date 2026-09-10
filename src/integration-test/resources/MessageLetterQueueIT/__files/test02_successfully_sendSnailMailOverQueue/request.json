@@ -1,0 +1,21 @@
+{
+	"subject": "This is the subject of the letter",
+	"body": "This is the body of the letter",
+	"contentType": "text/plain",
+	"recipients": [
+		{
+			"partyId": "7a1234bc-56de-7890-1234-56789abcdef0",
+			"deliveryMethod": "SNAIL_MAIL",
+			"address": {
+				"firstName": "John",
+				"lastName": "Doe",
+				"street": "Main Street 1",
+				"apartmentNumber": "1101",
+				"careOf": "c/o Jane Doe",
+				"zipCode": "12345",
+				"city": "Sundsvall",
+				"country": "Sweden"
+			}
+		}
+	]
+}
