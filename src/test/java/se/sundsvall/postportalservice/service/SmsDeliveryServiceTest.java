@@ -49,6 +49,9 @@ class SmsDeliveryServiceTest {
 	@Mock
 	private SmsQueuePublisher smsQueuePublisherMock;
 
+	@Mock
+	private AttachmentUploadService attachmentUploadServiceMock;
+
 	@BeforeEach
 	@AfterEach
 	void clearRecipientId() {
@@ -61,7 +64,7 @@ class SmsDeliveryServiceTest {
 
 	@Test
 	void deliverSms_restPathWhenQueueDisabled() {
-		final var service = new SmsDeliveryService(messagingIntegrationMock, recipientRepositoryMock, Optional.empty());
+		final var service = new SmsDeliveryService(messagingIntegrationMock, recipientRepositoryMock, attachmentUploadServiceMock, Optional.empty());
 		final var messageEntity = messageEntity();
 		final var recipientEntity = recipientEntity();
 		final var messageResult = new MessageResult().messageId(UUID.randomUUID());
@@ -73,7 +76,7 @@ class SmsDeliveryServiceTest {
 		assertThat(result).isSameAs(messageResult);
 		verify(messagingIntegrationMock).sendSms(messageEntity, recipientEntity);
 		verifyNoMoreInteractions(messagingIntegrationMock);
-		verifyNoInteractions(recipientRepositoryMock, smsQueuePublisherMock);
+		verifyNoInteractions(recipientRepositoryMock, smsQueuePublisherMock, attachmentUploadServiceMock);
 	}
 
 	@Test
@@ -134,8 +137,17 @@ class SmsDeliveryServiceTest {
 		assertThat(RecipientId.get()).isEqualTo(RECIPIENT_ID);
 	}
 
+	@Test
+	void deliverSms_queuePathUploadsNothing() {
+		// An SMS is its body and nothing else. Uploading a letter's attachments here would leave objects in the store
+		// that no message ever names, sitting there until their TTL expired.
+		queuePathService().deliverSms(messageEntity(), recipientEntity());
+
+		verifyNoInteractions(attachmentUploadServiceMock);
+	}
+
 	private SmsDeliveryService queuePathService() {
-		return new SmsDeliveryService(messagingIntegrationMock, recipientRepositoryMock, Optional.of(smsQueuePublisherMock));
+		return new SmsDeliveryService(messagingIntegrationMock, recipientRepositoryMock, attachmentUploadServiceMock, Optional.of(smsQueuePublisherMock));
 	}
 
 	private static MessageEntity messageEntity() {

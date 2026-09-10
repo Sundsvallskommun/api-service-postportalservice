@@ -87,7 +87,7 @@ resilience4j:
       userRepository: {}
       statisticsRepository: {}
       signingRepository: {}
-# SMS delivery over RabbitMQ towards the messaging service.
+# Outgoing delivery over RabbitMQ towards the messaging service.
 #
 # Connection settings (spring.rabbitmq.host/port/virtual-host/username/password) are supplied per environment and are
 # deliberately not committed here. Only the names of the topology objects live here, since those are the contract with
@@ -98,7 +98,7 @@ resilience4j:
 rabbitmq:
   enabled: false
   # Outbound: messaging owns the inbound hub and the outcome hub; this service owns only the status queues it consumes.
-  # The exchange is shared by both channels and routes by key.
+  # The exchange is shared by every channel and routes by key.
   exchange: api-fabriken.messaging
   publish-confirm-timeout-seconds: 5
   # Each status queue is bound to api-fabriken.messaging.status on '<channel>.*', so it carries both the sent and the
@@ -109,6 +109,15 @@ rabbitmq:
   email:
     routing-key: email
     status-queue: api-fabriken.postportal.email-status
+  # Hyphens, never dots. The outcome exchange is a topic exchange where "." separates words and "*" matches exactly one
+  # of them, so a channel named "digital.mail" would make "digital.mail.sent" three words and the bindings would start
+  # matching the wrong things.
+  digital-mail:
+    routing-key: digital-mail
+    status-queue: api-fabriken.postportal.digital-mail-status
+  snail-mail:
+    routing-key: snail-mail
+    status-queue: api-fabriken.postportal.snail-mail-status
 # Do not let the broker's reachability gate service health.
 management:
   health:

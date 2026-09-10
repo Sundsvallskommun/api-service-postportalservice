@@ -24,6 +24,7 @@ class AttachmentEntityTest {
 	private static final String FILE_NAME = "attachment.txt";
 	private static final String CONTENT_TYPE = "text/plain";
 	private static final String CONTENT_STRING = "contentString";
+	private static final String OBJECT_ID = "f8e2bd3c-1a6b-4f5e-9d0a-2c7b1e4f6a58";
 	private static final OffsetDateTime CREATED = OffsetDateTime.of(2024, 6, 15, 12, 0, 0, 0, UTC);
 	private static final AtomicInteger SEQUENCE = new AtomicInteger();
 	private final Blob blobMock = Mockito.mock(Blob.class);
@@ -53,6 +54,7 @@ class AttachmentEntityTest {
 		attachmentEntity.setContent(blobMock);
 		attachmentEntity.setCreated(CREATED);
 		attachmentEntity.setContentString(CONTENT_STRING);
+		attachmentEntity.setObjectId(OBJECT_ID);
 
 		assertThat(attachmentEntity.getId()).isEqualTo(ID);
 		assertThat(attachmentEntity.getFileName()).isEqualTo(FILE_NAME);
@@ -60,6 +62,7 @@ class AttachmentEntityTest {
 		assertThat(attachmentEntity.getContent()).isEqualTo(blobMock);
 		assertThat(attachmentEntity.getCreated()).isEqualTo(CREATED);
 		assertThat(attachmentEntity.getContentString()).isEqualTo(CONTENT_STRING);
+		assertThat(attachmentEntity.getObjectId()).isEqualTo(OBJECT_ID);
 		assertThat(attachmentEntity).hasNoNullFieldsOrProperties();
 	}
 

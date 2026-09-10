@@ -1,0 +1,18 @@
+{
+	"request": {
+		"method": "PUT",
+		"urlPathPattern": "/object-store/objects/messaging-attachments/[0-9a-f-]{36}"
+	},
+	"response": {
+		"status": 200,
+		"headers": {
+			"Content-Type": "application/json"
+		},
+		"jsonBody": {
+			"id": "d7a0b6ba-1f4d-4d9f-9a01-6a4f0a9c1f77",
+			"fileName": "first.pdf",
+			"contentType": "application/pdf",
+			"size": 1024
+		}
+	}
+}

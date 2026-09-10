@@ -73,7 +73,7 @@ class EmailDeliveryServiceTest {
 
 	@Test
 	void deliverEmail_restPathWhenQueueDisabled() {
-		final var service = new EmailDeliveryService(messagingIntegrationMock, recipientRepositoryMock, objectStoreIntegrationMock, Optional.empty());
+		final var service = new EmailDeliveryService(messagingIntegrationMock, recipientRepositoryMock, attachmentUploadService(), Optional.empty());
 		final var messageEntity = messageEntity();
 		final var recipientEntity = recipientEntity();
 		final var messageResult = new MessageResult().messageId(UUID.randomUUID());
@@ -169,7 +169,13 @@ class EmailDeliveryServiceTest {
 	}
 
 	private EmailDeliveryService queuePathService() {
-		return new EmailDeliveryService(messagingIntegrationMock, recipientRepositoryMock, objectStoreIntegrationMock, Optional.of(emailQueuePublisherMock));
+		return new EmailDeliveryService(messagingIntegrationMock, recipientRepositoryMock, attachmentUploadService(), Optional.of(emailQueuePublisherMock));
+	}
+
+	// The upload service is real rather than mocked, so that the assertions below keep saying something about the
+	// object store rather than about a stand-in for it. Its own memoisation is covered in AttachmentUploadServiceTest.
+	private AttachmentUploadService attachmentUploadService() {
+		return new AttachmentUploadService(objectStoreIntegrationMock);
 	}
 
 	private static MessageEntity messageEntity() {
