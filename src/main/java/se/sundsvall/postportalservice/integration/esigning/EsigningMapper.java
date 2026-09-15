@@ -32,7 +32,7 @@ public final class EsigningMapper {
 			.customerReference(message.getId())
 			.language(request.getLanguage())
 			.expires(request.getExpires())
-			.document(toSigningDocument(document))
+			.document(toSigningDocument(document, message.getSubject()))
 			.attachments(toSigningDocuments(attachments))
 			.initiator(toInitiator(message.getDepartment()))
 			.notificationMessage(new Message().subject(message.getSubject()).body(message.getBody()))
@@ -41,12 +41,18 @@ public final class EsigningMapper {
 
 	List<SigningDocument> toSigningDocuments(final List<AttachmentEntity> attachments) {
 		return Optional.ofNullable(attachments).orElseGet(List::of).stream()
-			.map(this::toSigningDocument)
+			.map(attachment -> toSigningDocument(attachment, null))
 			.toList();
 	}
 
-	SigningDocument toSigningDocument(final AttachmentEntity attachment) {
+	/**
+	 * The name is what the signatory sees in the notification e-mail ("UNDERSKRIFTEN AVSER DOKUMENTET: ..."); without it
+	 * the provider falls back to the raw file name. Only the document being signed carries it - attachments are listed by
+	 * file name.
+	 */
+	SigningDocument toSigningDocument(final AttachmentEntity attachment, final String name) {
 		return new SigningDocument()
+			.name(name)
 			.fileName(attachment.getFileName())
 			.mimeType(attachment.getContentType())
 			.content(attachment.getContentString());
