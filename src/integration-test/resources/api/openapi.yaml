@@ -1583,7 +1583,6 @@ components:
           description: The body of the notification sent to the signatories
           examples:
           - "Dear John Doe, please sign the attached document."
-          minLength: 1
         language:
           type: string
           description: The language used for the signing instance. Swedish is used
@@ -1602,7 +1601,6 @@ components:
             $ref: "#/components/schemas/ESigningSignatory"
           minItems: 1
       required:
-      - body
       - signatories
       - subject
     ESigningSignatory:
