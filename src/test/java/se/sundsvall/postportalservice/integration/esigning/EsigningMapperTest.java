@@ -45,10 +45,12 @@ class EsigningMapperTest {
 		assertThat(result.getCustomerReference()).isEqualTo("msg-1");
 		assertThat(result.getLanguage()).isEqualTo("sv-SE");
 		assertThat(result.getExpires()).isEqualTo(expires);
+		assertThat(result.getDocument().getName()).isEqualTo("Please sign");
 		assertThat(result.getDocument().getFileName()).isEqualTo("document.pdf");
 		assertThat(result.getDocument().getMimeType()).isEqualTo("application/pdf");
 		assertThat(result.getDocument().getContent()).isEqualTo("base64content");
 		assertThat(result.getAttachments()).hasSize(1);
+		assertThat(result.getAttachments().getFirst().getName()).isNull();
 		assertThat(result.getAttachments().getFirst().getFileName()).isEqualTo("attachment.pdf");
 		assertThat(result.getAttachments().getFirst().getContent()).isEqualTo("attachmentBase64");
 		assertThat(result.getInitiator().getName()).isEqualTo("Sundsvall Municipality");

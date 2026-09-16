@@ -17,8 +17,9 @@ public class ESigningRequest {
 	@NotBlank
 	private String subject;
 
+	// Optional: Comfact accepts a signing without a notification body and simply renders the e-mail without that
+	// section, so the sender is not forced to write a text just to satisfy the API.
 	@Schema(description = "The body of the notification sent to the signatories", examples = "Dear John Doe, please sign the attached document.")
-	@NotBlank
 	private String body;
 
 	@Schema(description = "The language used for the signing instance. Swedish is used if not provided", examples = "sv-SE")

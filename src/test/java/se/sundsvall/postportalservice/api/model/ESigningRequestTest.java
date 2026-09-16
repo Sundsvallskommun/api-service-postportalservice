@@ -68,7 +68,6 @@ class ESigningRequestTest {
 			.extracting(violation -> violation.getPropertyPath().toString(), ConstraintViolation::getMessage)
 			.containsExactlyInAnyOrder(
 				tuple("subject", "must not be blank"),
-				tuple("body", "must not be blank"),
 				tuple("signatories", "must not be empty"));
 	}
 
@@ -77,6 +76,15 @@ class ESigningRequestTest {
 		final var request = ESigningRequest.create()
 			.withSubject("Please sign")
 			.withBody("Please sign the document")
+			.withSignatories(List.of(ESigningSignatory.create().withPartyId("6d0773d6-3e7f-4552-81bc-f0007af95adf").withName("John Doe").withEmail("john.doe@sundsvall.se")));
+
+		assertThat(validator.validate(request)).isEmpty();
+	}
+
+	@Test
+	void validateBeanWithoutBody() {
+		final var request = ESigningRequest.create()
+			.withSubject("Please sign")
 			.withSignatories(List.of(ESigningSignatory.create().withPartyId("6d0773d6-3e7f-4552-81bc-f0007af95adf").withName("John Doe").withEmail("john.doe@sundsvall.se")));
 
 		assertThat(validator.validate(request)).isEmpty();
