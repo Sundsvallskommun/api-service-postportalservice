@@ -2,9 +2,11 @@ package se.sundsvall.postportalservice.integration.messaging;
 
 import generated.se.sundsvall.messaging.DigitalMailAttachment;
 import generated.se.sundsvall.messaging.DigitalMailRequest;
+import generated.se.sundsvall.messaging.EmailSender;
 import generated.se.sundsvall.messaging.SmsBatchRequest;
 import generated.se.sundsvall.messaging.SmsRequest;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -125,6 +127,39 @@ class MessagingMapperTest {
 		assertThat(result.getFilename()).isEqualTo(attachmentEntity.getFileName());
 		assertThat(result.getContentType()).isEqualTo(DigitalMailAttachment.ContentTypeEnum.APPLICATION_PDF);
 		assertThat(result.getContent()).isEqualTo("contentString");
+	}
+
+	@Test
+	void toEmailSender() {
+		final var result = MessagingMapper.toEmailSender("Postportalen", "noreply@postportal.se");
+
+		assertThat(result.getName()).isEqualTo("Postportalen");
+		assertThat(result.getAddress()).isEqualTo("noreply@postportal.se");
+	}
+
+	@Test
+	void toEmailRequest() {
+		final var partyId = UUID.randomUUID().toString();
+		final var recipientEntity = RecipientEntity.create()
+			.withPartyId(partyId)
+			.withFirstName("Jane")
+			.withLastName("Doe")
+			.withStreetAddress("Storgatan 1")
+			.withCareOf("c/o Someone")
+			.withZipCode("12345")
+			.withCity("Sundsvall");
+		final var settingsMap = Map.of(
+			"callback_email", "callback@example.com",
+			"callback_email_subject", "Subject");
+		final var sender = new EmailSender().name("Postportalen").address("noreply@postportal.se");
+
+		final var result = MessagingMapper.toEmailRequest(recipientEntity, settingsMap, sender);
+
+		assertThat(result.getParty().getPartyId()).isEqualTo(UUID.fromString(partyId));
+		assertThat(result.getEmailAddress()).isEqualTo("callback@example.com");
+		assertThat(result.getSubject()).isEqualTo("Subject");
+		assertThat(result.getSender()).isSameAs(sender);
+		assertThat(result.getMessage()).contains("Jane Doe", "Storgatan 1", "c/o Someone", "12345", "Sundsvall");
 	}
 
 	@Test

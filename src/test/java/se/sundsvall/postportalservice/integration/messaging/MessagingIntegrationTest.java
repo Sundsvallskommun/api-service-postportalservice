@@ -16,20 +16,22 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import se.sundsvall.dept44.problem.Problem;
 import se.sundsvall.postportalservice.integration.db.AttachmentEntity;
 import se.sundsvall.postportalservice.integration.db.DepartmentEntity;
 import se.sundsvall.postportalservice.integration.db.MessageEntity;
 import se.sundsvall.postportalservice.integration.db.RecipientEntity;
 import se.sundsvall.postportalservice.integration.db.UserEntity;
 import se.sundsvall.postportalservice.integration.db.converter.MessageType;
+import se.sundsvall.postportalservice.integration.messaging.configuration.MessagingProperties;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -46,6 +48,8 @@ import static se.sundsvall.postportalservice.TestDataFactory.SUNDSVALL_MUNICIPAL
 class MessagingIntegrationTest {
 
 	private static final String HEADER_VALUE = "John Wick; type=adAccount";
+	private static final String SENDER_NAME = "Postportalen";
+	private static final String SENDER_ADDRESS = "noreply@postportal.se";
 
 	@Mock
 	private MessagingClient messagingClientMock;
@@ -62,8 +66,13 @@ class MessagingIntegrationTest {
 	@Captor
 	private ArgumentCaptor<EmailRequest> emailRequestCaptor;
 
-	@InjectMocks
 	private MessagingIntegration messagingIntegration;
+
+	@BeforeEach
+	void setUp() {
+		final var properties = new MessagingProperties(5, 30, new MessagingProperties.CallbackEmailSender(SENDER_NAME, Map.of(MUNICIPALITY_ID, SENDER_ADDRESS)));
+		messagingIntegration = new MessagingIntegration(messagingClientMock, properties);
+	}
 
 	@AfterEach
 	void verifyInteractions() {
@@ -232,8 +241,8 @@ class MessagingIntegrationTest {
 		assertThat(emailRequest.getEmailAddress()).isEqualTo("callback@example.com");
 		assertThat(emailRequest.getSubject()).isEqualTo("Subject");
 		assertThat(emailRequest.getMessage()).contains("Jane", "Doe", "Storgatan 1", "12345", "Sundsvall");
-		assertThat(emailRequest.getSender().getName()).isEqualTo("Postportalen");
-		assertThat(emailRequest.getSender().getAddress()).isEqualTo("noreply@postportal.se");
+		assertThat(emailRequest.getSender().getName()).isEqualTo(SENDER_NAME);
+		assertThat(emailRequest.getSender().getAddress()).isEqualTo(SENDER_ADDRESS);
 		assertThat(emailRequest.getParty().getPartyId()).isEqualTo(UUID.fromString(partyId));
 		assertThat(emailRequest.getAttachments()).hasSize(1).allSatisfy(attachment -> {
 			assertThat(attachment.getName()).isEqualTo("file.pdf");
@@ -242,6 +251,23 @@ class MessagingIntegrationTest {
 		});
 
 		verify(messagingClientMock).sendEmail(HEADER_VALUE, ORIGIN, MUNICIPALITY_ID, emailRequest, false);
+	}
+
+	@Test
+	void sendCallbackEmail_noSenderAddressConfiguredForMunicipality() {
+		final var messageEntity = MessageEntity.create()
+			.withMunicipalityId("2262")
+			.withUser(UserEntity.create().withUsername("John Wick"));
+		final var recipientEntity = RecipientEntity.create()
+			.withId("recipient-id")
+			.withPartyId("00000000-0000-0000-0000-000000000001");
+		final var settingsMap = Map.of(
+			"callback_email", "callback@example.com",
+			"callback_email_subject", "Subject");
+
+		assertThatThrownBy(() -> messagingIntegration.sendCallbackEmail(messageEntity, recipientEntity, settingsMap))
+			.isInstanceOf(Problem.class)
+			.hasMessageContaining("No callback e-mail sender address configured for municipalityId '2262'");
 	}
 
 	@Test
@@ -270,7 +296,7 @@ class MessagingIntegrationTest {
 			"callback_email_subject", "Subject");
 
 		assertThatThrownBy(() -> messagingIntegration.sendCallbackEmail(messageEntity, recipientEntity, settingsMap))
-			.isInstanceOf(se.sundsvall.dept44.problem.Problem.class)
+			.isInstanceOf(Problem.class)
 			.hasMessageContaining("Couldn't read blob from entity");
 	}
 
