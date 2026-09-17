@@ -147,13 +147,33 @@ integration:
    url: http://dependency_service_url
  digitalregisteredletter:
    url: http://dependency_service_url
+ esigning:
+   url: http://dependency_service_url
+ legalentity:
+   url: http://dependency_service_url
  messagingsettings:
    url: http://dependency_service_url
  messaging:
    url: http://dependency_service_url
- employee:
+ party:
    url: http://dependency_service_url
 
+```
+
+- **Callback E-mail Sender:**
+
+When a letter can not be delivered as snail mail, a callback e-mail is sent to the department instead. The sender
+address of that e-mail is municipality specific, since it has to match a domain the municipality is allowed to send
+from. Requests for a municipality without a configured address fail with `500 Internal Server Error`.
+
+```yaml
+integration:
+  messaging:
+    callback-email-sender:
+      name: Postportalen
+      addresses:
+        "2281": noreply@postportal.se
+        "2260": ange@ange.se
 ```
 
 ### Database Initialization

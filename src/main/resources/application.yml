@@ -66,6 +66,12 @@ delivery:
     pool-size: 8
     await-termination-seconds: 30
 integration:
+  messaging:
+    callback-email-sender:
+      name: Postportalen
+      addresses:
+        "2281": noreply@postportal.se
+        "2260": ange@ange.se
   party:
     chunk:
       maxLegalIdsPerCall: 1000

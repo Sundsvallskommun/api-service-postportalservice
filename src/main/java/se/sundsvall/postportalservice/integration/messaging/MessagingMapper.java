@@ -53,9 +53,6 @@ public final class MessagingMapper {
 		return calculateRecipientName(recipientEntity.getFirstName(), recipientEntity.getLastName(), recipientEntity.getOrganizationName());
 	}
 
-	private static final String EMAIL_SENDER_NAME = "Postportalen";
-	private static final String EMAIL_SENDER_ADDRESS = "noreply@postportal.se";
-
 	private MessagingMapper() {}
 
 	public static SmsRequest toSmsRequest(final MessageEntity messageEntity, final RecipientEntity recipientEntity) {
@@ -152,7 +149,13 @@ public final class MessagingMapper {
 		return emailAttachments;
 	}
 
-	public static EmailRequest toEmailRequest(final RecipientEntity recipientEntity, final Map<String, String> settingsMap) {
+	public static EmailSender toEmailSender(final String name, final String address) {
+		return new EmailSender()
+			.name(name)
+			.address(address);
+	}
+
+	public static EmailRequest toEmailRequest(final RecipientEntity recipientEntity, final Map<String, String> settingsMap, final EmailSender sender) {
 		// Extract email and subject from messagingSettings
 		final var emailAddress = settingsMap.get(SNAILMAIL_CALLBACK_EMAIL);
 		final var emailSubject = settingsMap.get(SNAILMAIL_CALLBACK_SUBJECT);
@@ -161,9 +164,7 @@ public final class MessagingMapper {
 			.party(new EmailRequestParty().partyId(UUID.fromString(recipientEntity.getPartyId())))
 			.emailAddress(emailAddress)
 			.subject(emailSubject)
-			.sender(new EmailSender()
-				.address(EMAIL_SENDER_ADDRESS)
-				.name(EMAIL_SENDER_NAME))
+			.sender(sender)
 			.message(MAIL_CONTENT.formatted(
 				formatRecipientName(recipientEntity),
 				recipientEntity.getStreetAddress(),
