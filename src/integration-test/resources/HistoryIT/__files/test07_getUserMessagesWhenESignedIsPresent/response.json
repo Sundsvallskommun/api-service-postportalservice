@@ -1,0 +1,22 @@
+{
+	"messages": [
+		{
+			"messageId": "e5160000-0000-4000-8000-000000000001",
+			"subject": "E-signing subject",
+			"type": "E_SIGNING",
+			"sentAt": "2025-09-10T10:00:00",
+			"signingStatus": {
+				"letterState": "SENT",
+				"signingProcessState": "PENDING"
+			},
+			"numberOfRecipients": 1
+		}
+	],
+	"_meta": {
+		"page": 1,
+		"limit": 20,
+		"count": 1,
+		"totalRecords": 1,
+		"totalPages": 1
+	}
+}
