@@ -47,6 +47,7 @@ public class EmailDeliveryService extends QueuedDeliveryService<EmailQueueMessag
 	@Override
 	protected EmailQueueMessage toQueueMessage(final MessageEntity messageEntity, final RecipientEntity recipientEntity,
 		final Map<String, String> settingsMap, final List<String> objectIds) {
-		return toEmailQueueMessage(messageEntity, recipientEntity, settingsMap, objectIds);
+		final var sender = messagingIntegration.resolveCallbackEmailSender(messageEntity.getMunicipalityId());
+		return toEmailQueueMessage(messageEntity, recipientEntity, settingsMap, sender, objectIds);
 	}
 }

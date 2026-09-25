@@ -45,16 +45,17 @@ public final class RabbitMapper {
 	 * than carried inline. The caller does the uploading, since a failure to store is a failure to send and belongs
 	 * where the recipient can be marked for it.
 	 *
+	 * @param sender    the municipality's callback e-mail sender, resolved by the caller exactly as the REST path does
 	 * @param objectIds the stored object id for each of the message's attachments, in the same order
 	 */
 	public static EmailQueueMessage toEmailQueueMessage(final MessageEntity messageEntity, final RecipientEntity recipientEntity,
-		final Map<String, String> settingsMap, final List<String> objectIds) {
+		final Map<String, String> settingsMap, final EmailSender sender, final List<String> objectIds) {
 
 		if (anyNull(messageEntity, recipientEntity, settingsMap, objectIds)) {
 			return null;
 		}
 
-		final var emailRequest = MessagingMapper.toEmailRequest(recipientEntity, settingsMap);
+		final var emailRequest = MessagingMapper.toEmailRequest(recipientEntity, settingsMap, sender);
 
 		return new EmailQueueMessage(
 			messageEntity.getMunicipalityId(),

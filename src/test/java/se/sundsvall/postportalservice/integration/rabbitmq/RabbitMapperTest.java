@@ -1,5 +1,6 @@
 package se.sundsvall.postportalservice.integration.rabbitmq;
 
+import generated.se.sundsvall.messaging.EmailSender;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
@@ -23,6 +24,10 @@ class RabbitMapperTest {
 	private static final Map<String, String> SETTINGS = Map.of(
 		"callback_email", "callback@example.com",
 		"callback_email_subject", "Subject");
+
+	private static final EmailSender SENDER = new EmailSender()
+		.name("Postportalen")
+		.address("sender@example.com");
 
 	@Test
 	void toSmsQueueMessage_mapsEveryField() {
@@ -74,11 +79,11 @@ class RabbitMapperTest {
 			.withZipCode("85230")
 			.withCity("Sundsvall");
 
-		final var result = toEmailQueueMessage(messageEntity, recipientEntity, SETTINGS, List.of(OBJECT_ID));
+		final var result = toEmailQueueMessage(messageEntity, recipientEntity, SETTINGS, SENDER, List.of(OBJECT_ID));
 
 		// Everything but the attachments is built by the same mapper the REST path uses, so that switching a deployment
 		// between the two cannot change what the recipient reads.
-		final var restRequest = MessagingMapper.toEmailRequest(recipientEntity, SETTINGS);
+		final var restRequest = MessagingMapper.toEmailRequest(recipientEntity, SETTINGS, SENDER);
 		assertThat(result.emailAddress()).isEqualTo(restRequest.getEmailAddress());
 		assertThat(result.subject()).isEqualTo(restRequest.getSubject());
 		assertThat(result.message()).isEqualTo(restRequest.getMessage());
@@ -95,7 +100,7 @@ class RabbitMapperTest {
 	void toEmailQueueMessage_carriesAttachmentsByReferenceInOrder() {
 		final var result = toEmailQueueMessage(messageEntityWithAttachment(), RecipientEntity.create()
 			.withId("8a2a0c66-8a4a-4a8b-9a91-b3b0e8dbb0f9")
-			.withPartyId("6d0773d6-3e7f-4552-81bc-f0007af95adf"), SETTINGS, List.of(OBJECT_ID));
+			.withPartyId("6d0773d6-3e7f-4552-81bc-f0007af95adf"), SETTINGS, SENDER, List.of(OBJECT_ID));
 
 		// The object ids are positional: the caller uploads in the order the attachments are held, and the reference
 		// for each one has to line up with the file it names.
@@ -110,10 +115,10 @@ class RabbitMapperTest {
 	void toEmailQueueMessage_nullArguments() {
 		final var recipientEntity = RecipientEntity.create();
 
-		assertThat(toEmailQueueMessage(null, recipientEntity, SETTINGS, List.of())).isNull();
-		assertThat(toEmailQueueMessage(MessageEntity.create(), null, SETTINGS, List.of())).isNull();
-		assertThat(toEmailQueueMessage(MessageEntity.create(), recipientEntity, null, List.of())).isNull();
-		assertThat(toEmailQueueMessage(MessageEntity.create(), recipientEntity, SETTINGS, null)).isNull();
+		assertThat(toEmailQueueMessage(null, recipientEntity, SETTINGS, SENDER, List.of())).isNull();
+		assertThat(toEmailQueueMessage(MessageEntity.create(), null, SETTINGS, SENDER, List.of())).isNull();
+		assertThat(toEmailQueueMessage(MessageEntity.create(), recipientEntity, null, SENDER, List.of())).isNull();
+		assertThat(toEmailQueueMessage(MessageEntity.create(), recipientEntity, SETTINGS, SENDER, null)).isNull();
 	}
 
 	private static MessageEntity messageEntityWithAttachment() {

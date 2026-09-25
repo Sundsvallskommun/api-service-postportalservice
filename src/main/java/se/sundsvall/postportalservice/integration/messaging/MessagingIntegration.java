@@ -100,7 +100,7 @@ public class MessagingIntegration {
 	 * @return                  the sender to use on the callback e-mail
 	 * @throws ThrowableProblem if no sender address is configured for the municipality
 	 */
-	private EmailSender resolveCallbackEmailSender(final String municipalityId) {
+	public EmailSender resolveCallbackEmailSender(final String municipalityId) {
 		final var callbackEmailSender = properties.callbackEmailSender();
 		final var address = callbackEmailSender.addresses().get(municipalityId);
 		if (isBlank(address)) {

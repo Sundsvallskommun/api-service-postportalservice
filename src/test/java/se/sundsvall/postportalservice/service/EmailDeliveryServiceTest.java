@@ -1,5 +1,6 @@
 package se.sundsvall.postportalservice.service;
 
+import generated.se.sundsvall.messaging.EmailSender;
 import generated.se.sundsvall.messaging.MessageResult;
 import java.util.List;
 import java.util.Map;
@@ -37,6 +38,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.http.HttpStatus.BAD_GATEWAY;
+import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
 import static se.sundsvall.postportalservice.Constants.PENDING;
 
 @ExtendWith(MockitoExtension.class)
@@ -48,6 +50,10 @@ class EmailDeliveryServiceTest {
 	private static final Map<String, String> SETTINGS = Map.of(
 		"callback_email", "callback@example.com",
 		"callback_email_subject", "Subject");
+
+	private static final EmailSender SENDER = new EmailSender()
+		.name("Postportalen")
+		.address("sender@example.com");
 
 	@Mock
 	private MessagingIntegration messagingIntegrationMock;
@@ -96,6 +102,7 @@ class EmailDeliveryServiceTest {
 		final var recipientEntity = recipientEntity();
 
 		when(objectStoreIntegrationMock.store(any(AttachmentEntity.class))).thenReturn(OBJECT_ID);
+		when(messagingIntegrationMock.resolveCallbackEmailSender("2281")).thenReturn(SENDER);
 
 		final var result = service.deliverEmail(messageEntity, recipientEntity, SETTINGS);
 
@@ -109,7 +116,11 @@ class EmailDeliveryServiceTest {
 		assertThat(attachment.objectId()).isEqualTo(OBJECT_ID);
 		assertThat(attachment.name()).isEqualTo("file.txt");
 		assertThat(captor.getValue().recipientId()).isEqualTo(RECIPIENT_ID);
-		verifyNoInteractions(messagingIntegrationMock);
+		// Same per-municipality sender as the REST path, and no REST call.
+		assertThat(captor.getValue().senderName()).isEqualTo("Postportalen");
+		assertThat(captor.getValue().senderAddress()).isEqualTo("sender@example.com");
+		verify(messagingIntegrationMock).resolveCallbackEmailSender("2281");
+		verifyNoMoreInteractions(messagingIntegrationMock);
 	}
 
 	@Test
@@ -154,6 +165,22 @@ class EmailDeliveryServiceTest {
 		assertThatExceptionOfType(ThrowableProblem.class)
 			.isThrownBy(() -> service.deliverEmail(messageEntity(), recipientEntity(), SETTINGS));
 
+		verify(messagingIntegrationMock, never()).sendCallbackEmail(any(), any(), any());
+	}
+
+	@Test
+	void deliverEmail_queuePathPropagatesMissingSenderWithoutPublishing() {
+		final var service = queuePathService();
+
+		when(objectStoreIntegrationMock.store(any(AttachmentEntity.class))).thenReturn(OBJECT_ID);
+		when(messagingIntegrationMock.resolveCallbackEmailSender("2281"))
+			.thenThrow(Problem.valueOf(INTERNAL_SERVER_ERROR, "No callback e-mail sender address configured for municipalityId '2281'"));
+
+		// Not sending beats sending from another municipality's domain. The caller turns this into a FAILED recipient.
+		assertThatExceptionOfType(ThrowableProblem.class)
+			.isThrownBy(() -> service.deliverEmail(messageEntity(), recipientEntity(), SETTINGS));
+
+		verifyNoInteractions(emailQueuePublisherMock);
 		verify(messagingIntegrationMock, never()).sendCallbackEmail(any(), any(), any());
 	}
 
