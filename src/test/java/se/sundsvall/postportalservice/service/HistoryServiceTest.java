@@ -397,8 +397,60 @@ class HistoryServiceTest {
 
 	}
 
-	@Test
-	void getUserMessages_eSigningMissingRecipientData() {}
+	private static Stream<Arguments> eSigningMissingRecipientDataProvider() {
+		return Stream.of(
+			Arguments.of("recipient is null", null),
+			Arguments.of("recipients is empty", List.of()),
+			Arguments.of("recipient status is null", List.of(new RecipientEntity().withStatus(null))));
+	}
+
+	@ParameterizedTest(name = "{0}")
+	@MethodSource("eSigningMissingRecipientDataProvider")
+	void getUserMessages_eSigningMissingRecipientData(final String description, final List<RecipientEntity> recipients) {
+		final var username = "username";
+		final var messageId = "messageId";
+		final var messageEntity = MessageEntity.create()
+			.withCreated(FIXED_CREATED)
+			.withSubject("subject")
+			.withMessageType(MessageType.E_SIGNING)
+			.withId(messageId)
+			.withRecipients(recipients);
+		final var messageEntities = List.of(messageEntity);
+		final var signingEntity = SigningEntity.create().withMessage(messageEntity).withStatus("PENDING");
+		final var expectedLetterStatus = new LetterStatus().letterId(messageId).signingInformation("PENDING");
+
+		when(messageRepositoryMock.findAllByMunicipalityIdAndUserUsernameIgnoreCase(eq(MUNICIPALITY_ID), eq(username), any(Pageable.class))).thenReturn(pageMock);
+		when(signingRepositoryMock.findAllByMessageIdIn(List.of(messageId))).thenReturn(List.of(signingEntity));
+		when(pageMock.getContent()).thenReturn(messageEntities);
+		when(pageMock.getSort()).thenReturn(Sort.unsorted());
+		when(pageMock.getSize()).thenReturn(1);
+		when(pageMock.getNumber()).thenReturn(0);
+		when(pageMock.getNumberOfElements()).thenReturn(1);
+		when(pageMock.getTotalElements()).thenReturn(1L);
+		when(pageMock.getTotalPages()).thenReturn(1);
+
+		final var messages = historyService.getUserMessages(MUNICIPALITY_ID, username, Pageable.unpaged());
+
+		assertThat(messages).isNotNull().satisfies(result -> {
+			assertThat(result.getMessages()).allSatisfy(message -> {
+				assertThat(message.getMessageId()).isEqualTo(messageEntity.getId());
+				assertThat(message.getSubject()).isEqualTo(messageEntity.getSubject());
+				assertThat(message.getSentAt()).isEqualTo(messageEntity.getCreated().toLocalDateTime());
+				assertThat(message.getType()).isEqualTo(messageEntity.getMessageType().toString());
+				assertThat(message.getSigningStatus()).isNotNull().satisfies(status -> {
+					assertThat(status.getLetterState()).isNull();
+					assertThat(status.getSigningProcessState()).isEqualTo("PENDING");
+				});
+			});
+		});
+		verify(messageRepositoryMock).findAllByMunicipalityIdAndUserUsernameIgnoreCase(eq(MUNICIPALITY_ID), eq(username), any(Pageable.class));
+		verify(signingRepositoryMock).findAllByMessageIdIn(List.of(messageId));
+		verify(historyMapperMock).toMessageList(messageEntities);
+		verify(historyMapperMock).toMessage(messageEntity);
+		verify(historyMapperMock).toSigningStatus(expectedLetterStatus);
+		verify(pageMock, times(3)).getContent();
+		verifyNoInteractions(digitalRegisteredLetterIntegrationMock);
+	}
 
 	@Test
 	void getUserMessages_multipleTypesWithStatus() {
