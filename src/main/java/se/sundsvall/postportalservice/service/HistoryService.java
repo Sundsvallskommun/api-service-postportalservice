@@ -1,9 +1,11 @@
 package se.sundsvall.postportalservice.service;
 
+import generated.se.sundsvall.digitalregisteredletter.LetterStatus;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.springframework.data.domain.Page;
@@ -17,8 +19,10 @@ import se.sundsvall.postportalservice.api.model.Message;
 import se.sundsvall.postportalservice.api.model.MessageDetails;
 import se.sundsvall.postportalservice.api.model.Messages;
 import se.sundsvall.postportalservice.api.model.SigningInformation;
+import se.sundsvall.postportalservice.api.model.SigningStatus;
 import se.sundsvall.postportalservice.integration.db.AttachmentEntity;
 import se.sundsvall.postportalservice.integration.db.MessageEntity;
+import se.sundsvall.postportalservice.integration.db.RecipientEntity;
 import se.sundsvall.postportalservice.integration.db.SigningEntity;
 import se.sundsvall.postportalservice.integration.db.dao.MessageRepository;
 import se.sundsvall.postportalservice.integration.db.dao.SigningRepository;
@@ -29,6 +33,7 @@ import se.sundsvall.postportalservice.service.mapper.HistoryMapper;
 import static org.springframework.http.HttpHeaders.CONTENT_DISPOSITION;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static se.sundsvall.postportalservice.integration.db.converter.MessageType.DIGITAL_REGISTERED_LETTER;
+import static se.sundsvall.postportalservice.integration.db.converter.MessageType.E_SIGNING;
 
 @Service
 public class HistoryService {
@@ -87,6 +92,14 @@ public class HistoryService {
 					if (message != null)
 						message.setSigningStatus(historyMapper.toSigningStatus(status));
 				});
+		}
+
+		final var eSigningEntities = page.getContent().stream()
+			.filter(entity -> E_SIGNING.equals(entity.getMessageType()))
+			.toList();
+
+		if (!eSigningEntities.isEmpty()) {
+			decorateESigningMessagesWithStatus(eSigningEntities, messageById);
 		}
 
 		return messages;
@@ -162,6 +175,39 @@ public class HistoryService {
 	private String getLetterIdFromMessage(final MessageEntity message) {
 		// Digital registered letters are always sent to a single recipient
 		return message.getRecipients().getFirst().getExternalId();
+	}
+
+	private void decorateESigningMessagesWithStatus(final List<MessageEntity> eSigningEntities, final Map<String, Message> messageById) {
+		final var messageIds = eSigningEntities.stream()
+			.map(MessageEntity::getId)
+			.toList();
+
+		final var signingByMessageId = signingRepository.findAllByMessageIdIn(messageIds)
+			.stream().collect(Collectors.toMap(
+				signing -> signing.getMessage().getId(),
+				Function.identity()));
+
+		eSigningEntities.stream().filter(entity -> signingByMessageId.containsKey(entity.getId()))
+			.forEach(entity -> messageById.get(entity.getId())
+				.setSigningStatus(toESigningStatus(entity, signingByMessageId.get(entity.getId()))));
+	}
+
+	private SigningStatus toESigningStatus(final MessageEntity message, final SigningEntity signing) {
+		final var signingStatus = Optional.ofNullable(signing)
+			.map(SigningEntity::getStatus)
+			.orElse(null);
+		final var recipientStatus = Optional.ofNullable(message.getRecipients()).orElse(List.of()).stream()
+			.map(RecipientEntity::getStatus)
+			.filter(Objects::nonNull)
+			.findFirst()
+			.orElse(null);
+
+		final var letterStatus = new LetterStatus()
+			.letterId(message.getId())
+			.status(recipientStatus)
+			.signingInformation(signingStatus);
+
+		return historyMapper.toSigningStatus(letterStatus);
 	}
 
 }

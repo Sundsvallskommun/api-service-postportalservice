@@ -299,3 +299,21 @@ VALUES ('7c9e6679-7425-40de-944b-e07fc1f90ae7', 'b2cd4957-228f-46f0-a263-d4eae2e
 INSERT INTO signing (id, message_id, provider_case_id, provider, status, created)
 VALUES ('a1b2c3d4-0000-4000-8000-000000000001', '1decdead-52b8-42d9-aa62-5ef08c4a701e',
         'comfact-case-1', 'comfact', 'PENDING', '2025-09-07 12:05:00');
+
+-- E-signing test data (added user intentionally jumps to user4, since user3 is used for tests covering non-existing users)
+INSERT INTO user (id, username)
+VALUES ('e5160000-0000-4000-8000-0000000000aa', 'user4');
+
+INSERT INTO message (id, subject, municipality_id, user_id, message_type, created)
+VALUES ('e5160000-0000-4000-8000-000000000001', 'E-signing subject', '2281',
+        'e5160000-0000-4000-8000-0000000000aa', 'E_SIGNING', '2025-09-10 10:00:00');
+
+-- Recipient status -> letterState
+INSERT INTO recipient (id, message_id, type, status, created)
+VALUES ('e5160000-0000-4000-8000-0000000000b1', 'e5160000-0000-4000-8000-000000000001',
+        'E_SIGNING', 'SENT', '2025-09-10 10:01:00');
+
+-- Signing status -> signingProcessState
+INSERT INTO signing (id, message_id, provider_case_id, provider, status, created)
+VALUES ('e5160000-0000-4000-8000-0000000000c1', 'e5160000-0000-4000-8000-000000000001',
+        'comfact-case-2', 'comfact', 'PENDING', '2025-09-10 10:02:00');
