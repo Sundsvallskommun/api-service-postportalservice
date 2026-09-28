@@ -35,6 +35,7 @@ class MessageDetailsTest {
 	private static final String NAME = "name";
 	private static final String PARTY_ID = "partyId";
 	private static final String MOBILE_NUMBER = "mobileNumber";
+	private static final String EMAIL = "email";
 	private static final String STREET_ADDRESS = "streetAddress";
 	private static final String ZIP_CODE = "zipCode";
 	private static final String CITY = "city";
@@ -112,6 +113,7 @@ class MessageDetailsTest {
 		bean.setName(NAME);
 		bean.setPartyId(PARTY_ID);
 		bean.setMobileNumber(MOBILE_NUMBER);
+		bean.setEmail(EMAIL);
 		bean.setStreetAddress(STREET_ADDRESS);
 		bean.setZipCode(ZIP_CODE);
 		bean.setCity(CITY);
@@ -121,6 +123,7 @@ class MessageDetailsTest {
 		assertThat(bean.getName()).isEqualTo(NAME);
 		assertThat(bean.getPartyId()).isEqualTo(PARTY_ID);
 		assertThat(bean.getMobileNumber()).isEqualTo(MOBILE_NUMBER);
+		assertThat(bean.getEmail()).isEqualTo(EMAIL);
 		assertThat(bean.getStreetAddress()).isEqualTo(STREET_ADDRESS);
 		assertThat(bean.getZipCode()).isEqualTo(ZIP_CODE);
 		assertThat(bean.getCity()).isEqualTo(CITY);
@@ -164,6 +167,7 @@ class MessageDetailsTest {
 			.withName(NAME)
 			.withPartyId(PARTY_ID)
 			.withMobileNumber(MOBILE_NUMBER)
+			.withEmail(EMAIL)
 			.withStreetAddress(STREET_ADDRESS)
 			.withZipCode(ZIP_CODE)
 			.withCity(CITY)
@@ -173,6 +177,7 @@ class MessageDetailsTest {
 		assertThat(bean.getName()).isEqualTo(NAME);
 		assertThat(bean.getPartyId()).isEqualTo(PARTY_ID);
 		assertThat(bean.getMobileNumber()).isEqualTo(MOBILE_NUMBER);
+		assertThat(bean.getEmail()).isEqualTo(EMAIL);
 		assertThat(bean.getStreetAddress()).isEqualTo(STREET_ADDRESS);
 		assertThat(bean.getZipCode()).isEqualTo(ZIP_CODE);
 		assertThat(bean.getCity()).isEqualTo(CITY);
@@ -195,7 +200,7 @@ class MessageDetailsTest {
 	@Test
 	void MessageDetails_RecipientDetails_constructorTest() {
 		assertThat(new MessageDetails.RecipientDetails()).hasAllNullFieldsOrProperties();
-		assertThat(new MessageDetails.RecipientDetails()).hasOnlyFields("name", "partyId", "legalId", "mobileNumber", "streetAddress", "zipCode", "city", "messageType", "status");
+		assertThat(new MessageDetails.RecipientDetails()).hasOnlyFields("name", "partyId", "legalId", "mobileNumber", "email", "streetAddress", "zipCode", "city", "messageType", "status");
 	}
 
 }

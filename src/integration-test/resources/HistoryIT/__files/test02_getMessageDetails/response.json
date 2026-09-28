@@ -287,6 +287,7 @@
 			"status": "SENT"
 		},
 		{
+			"email": "john.wick@example.com",
 			"name": "John Wick",
 			"partyId": "b2b2b2b2-b2b2-b2b2-b2b2-b2b2b2b2b2b2",
 			"legalId": "198001262626",

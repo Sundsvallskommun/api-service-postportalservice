@@ -80,6 +80,7 @@ public class HistoryMapper {
 				.withStreetAddress(recipientEntity.getStreetAddress())
 				.withMobileNumber(recipientEntity.getPhoneNumber())
 				.withName(calculateRecipientName(recipientEntity.getFirstName(), recipientEntity.getLastName(), recipientEntity.getOrganizationName()))
+				.withEmail(recipientEntity.getEmail())
 				.withMessageType(ofNullable(recipientEntity.getMessageType()).map(MessageType::name).orElse(null))
 				.withStatus(recipientEntity.getStatus())
 				.withZipCode(recipientEntity.getZipCode()))

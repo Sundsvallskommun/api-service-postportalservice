@@ -299,3 +299,6 @@ VALUES ('7c9e6679-7425-40de-944b-e07fc1f90ae7', 'b2cd4957-228f-46f0-a263-d4eae2e
 INSERT INTO signing (id, message_id, provider_case_id, provider, status, created)
 VALUES ('a1b2c3d4-0000-4000-8000-000000000001', '1decdead-52b8-42d9-aa62-5ef08c4a701e',
         'comfact-case-1', 'comfact', 'PENDING', '2025-09-07 12:05:00');
+
+-- Mail to showcase in recipients response
+UPDATE recipient SET email = 'john.wick@example.com' WHERE party_id = 'b2b2b2b2-b2b2-b2b2-b2b2-b2b2b2b2b2b2';
