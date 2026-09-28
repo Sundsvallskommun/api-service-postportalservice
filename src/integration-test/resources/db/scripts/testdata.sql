@@ -300,6 +300,9 @@ INSERT INTO signing (id, message_id, provider_case_id, provider, status, created
 VALUES ('a1b2c3d4-0000-4000-8000-000000000001', '1decdead-52b8-42d9-aa62-5ef08c4a701e',
         'comfact-case-1', 'comfact', 'PENDING', '2025-09-07 12:05:00');
 
+-- Mail to showcase in recipients response
+UPDATE recipient SET email = 'john.wick@example.com' WHERE party_id = 'b2b2b2b2-b2b2-b2b2-b2b2-b2b2b2b2b2b2';
+
 -- E-signing test data (added user intentionally jumps to user4, since user3 is used for tests covering non-existing users)
 INSERT INTO user (id, username)
 VALUES ('e5160000-0000-4000-8000-0000000000aa', 'user4');

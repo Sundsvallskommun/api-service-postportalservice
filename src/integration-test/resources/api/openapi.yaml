@@ -1,13 +1,13 @@
 openapi: 3.1.0
 info:
   title: Postportalservice
-  contact: {}
+  contact: { }
   license:
     name: MIT License
     url: https://opensource.org/licenses/MIT
   version: "1.9"
 servers:
-  - url: http://localhost:54283
+  - url: http://localhost:60812
     description: Generated server url
 tags:
   - name: E-signing
@@ -1110,9 +1110,9 @@ components:
         type:
           type: string
           format: uri
-        title:
-          type: string
         detail:
+          type: string
+        title:
           type: string
         status:
           type: integer
@@ -1152,7 +1152,7 @@ components:
           format: uri
         parameters:
           type: object
-          additionalProperties: {}
+          additionalProperties: { }
         detail:
           type:
             - string
@@ -1253,7 +1253,7 @@ components:
           format: uri
         parameters:
           type: object
-          additionalProperties: {}
+          additionalProperties: { }
         title:
           type:
             - string
@@ -1999,6 +1999,12 @@ components:
           examples:
             - "+46701234567"
           readOnly: true
+        email:
+          type: string
+          description: E-mail address
+          examples:
+            - johnDoe@email.com
+          readOnly: true
         streetAddress:
           type: string
           description: Street address
@@ -2092,4 +2098,4 @@ components:
         surname:
           type: string
           description: Last name of the signing party
-  securitySchemes: {}
+  securitySchemes: { }

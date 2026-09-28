@@ -277,6 +277,7 @@ class HistoryMapperTest {
 		final var lastName = "lastName";
 		final var messageType = DIGITAL_MAIL;
 		final var phoneNumber = "phoneNumber";
+		final var email = "email";
 		final var partyId = "partyId";
 		final var status = "status";
 		final var streetAddress = "streetAddress";
@@ -287,6 +288,7 @@ class HistoryMapperTest {
 			.withLastName(lastName)
 			.withMessageType(messageType)
 			.withPhoneNumber(phoneNumber)
+			.withEmail(email)
 			.withPartyId(partyId)
 			.withStatus(status)
 			.withStreetAddress(streetAddress)
@@ -300,6 +302,7 @@ class HistoryMapperTest {
 			assertThat(recipient.getCity()).isEqualTo(city);
 			assertThat(recipient.getMessageType()).isEqualTo(messageType.name());
 			assertThat(recipient.getMobileNumber()).isEqualTo(phoneNumber);
+			assertThat(recipient.getEmail()).isEqualTo(email);
 			assertThat(recipient.getName()).isEqualTo(firstName + " " + lastName);
 			assertThat(recipient.getPartyId()).isEqualTo(partyId);
 			assertThat(recipient.getStatus()).isEqualTo(status);
@@ -316,6 +319,7 @@ class HistoryMapperTest {
 		final var lastName = "lastName";
 		final var messageType = DIGITAL_MAIL;
 		final var phoneNumber = "phoneNumber";
+		final var email = "email";
 		final var partyId = "partyId";
 		final var status = "status";
 		final var streetAddress = "streetAddress";
@@ -326,6 +330,7 @@ class HistoryMapperTest {
 			.withLastName(lastName)
 			.withMessageType(messageType)
 			.withPhoneNumber(phoneNumber)
+			.withEmail(email)
 			.withPartyId(partyId)
 			.withStatus(status)
 			.withStreetAddress(streetAddress)
@@ -341,6 +346,7 @@ class HistoryMapperTest {
 			assertThat(recipient.getCity()).isEqualTo(city);
 			assertThat(recipient.getMessageType()).isEqualTo(messageType.name());
 			assertThat(recipient.getMobileNumber()).isEqualTo(phoneNumber);
+			assertThat(recipient.getEmail()).isEqualTo(email);
 			assertThat(recipient.getName()).isEqualTo(firstName + " " + lastName);
 			assertThat(recipient.getPartyId()).isEqualTo(partyId);
 			assertThat(recipient.getStatus()).isEqualTo(status);
@@ -362,6 +368,7 @@ class HistoryMapperTest {
 		final var lastName = "lastName";
 		final var messageType = DIGITAL_MAIL;
 		final var phoneNumber = "phoneNumber";
+		final var email = "email";
 		final var partyId = "partyId";
 		final var status = "status";
 		final var streetAddress = "streetAddress";
@@ -372,6 +379,7 @@ class HistoryMapperTest {
 			.withLastName(lastName)
 			.withMessageType(messageType)
 			.withPhoneNumber(phoneNumber)
+			.withEmail(email)
 			.withPartyId(partyId)
 			.withStatus(status)
 			.withStreetAddress(streetAddress)
@@ -385,6 +393,7 @@ class HistoryMapperTest {
 		assertThat(result.getCity()).isEqualTo(city);
 		assertThat(result.getMessageType()).isEqualTo(messageType.name());
 		assertThat(result.getMobileNumber()).isEqualTo(phoneNumber);
+		assertThat(result.getEmail()).isEqualTo(email);
 		assertThat(result.getName()).isEqualTo("%s %s".formatted(firstName, lastName));
 		assertThat(result.getPartyId()).isEqualTo(partyId);
 		assertThat(result.getStatus()).isEqualTo(status);

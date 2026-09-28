@@ -228,6 +228,9 @@ public class MessageDetails {
 		@Schema(description = "Mobile number", accessMode = Schema.AccessMode.READ_ONLY, examples = "+46701234567")
 		private String mobileNumber;
 
+		@Schema(description = "E-mail address", accessMode = Schema.AccessMode.READ_ONLY, examples = "johnDoe@email.com")
+		private String email;
+
 		@Schema(description = "Street address", accessMode = Schema.AccessMode.READ_ONLY, examples = "Main Street 5")
 		private String streetAddress;
 
@@ -274,6 +277,19 @@ public class MessageDetails {
 
 		public RecipientDetails withMobileNumber(final String mobileNumber) {
 			this.mobileNumber = mobileNumber;
+			return this;
+		}
+
+		public String getEmail() {
+			return email;
+		}
+
+		public void setEmail(String email) {
+			this.email = email;
+		}
+
+		public RecipientDetails withEmail(final String email) {
+			this.email = email;
 			return this;
 		}
 
@@ -373,13 +389,13 @@ public class MessageDetails {
 			if (o == null || getClass() != o.getClass())
 				return false;
 			final RecipientDetails that = (RecipientDetails) o;
-			return Objects.equals(name, that.name) && Objects.equals(partyId, that.partyId) && Objects.equals(legalId, that.legalId) && Objects.equals(mobileNumber, that.mobileNumber) && Objects.equals(
-				streetAddress, that.streetAddress) && Objects.equals(zipCode, that.zipCode) && Objects.equals(city, that.city) && Objects.equals(messageType, that.messageType) && Objects.equals(status, that.status);
+			return Objects.equals(name, that.name) && Objects.equals(partyId, that.partyId) && Objects.equals(legalId, that.legalId) && Objects.equals(mobileNumber, that.mobileNumber) && Objects.equals(email, that.email)
+				&& Objects.equals(streetAddress, that.streetAddress) && Objects.equals(zipCode, that.zipCode) && Objects.equals(city, that.city) && Objects.equals(messageType, that.messageType) && Objects.equals(status, that.status);
 		}
 
 		@Override
 		public int hashCode() {
-			return Objects.hash(name, partyId, legalId, mobileNumber, streetAddress, zipCode, city, messageType, status);
+			return Objects.hash(name, partyId, legalId, mobileNumber, email, streetAddress, zipCode, city, messageType, status);
 		}
 
 		@Override
@@ -389,6 +405,7 @@ public class MessageDetails {
 				", partyId='" + partyId + '\'' +
 				", legalId='" + legalId + '\'' +
 				", mobileNumber='" + mobileNumber + '\'' +
+				", email='" + email + '\'' +
 				", streetAddress='" + streetAddress + '\'' +
 				", zipCode='" + zipCode + '\'' +
 				", city='" + city + '\'' +
