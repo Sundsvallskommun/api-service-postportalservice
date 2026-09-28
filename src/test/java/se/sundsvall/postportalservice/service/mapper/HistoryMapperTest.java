@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 import se.sundsvall.postportalservice.integration.db.AttachmentEntity;
 import se.sundsvall.postportalservice.integration.db.MessageEntity;
 import se.sundsvall.postportalservice.integration.db.RecipientEntity;
+import se.sundsvall.postportalservice.integration.db.SigningEntity;
 
 import static java.time.ZoneOffset.UTC;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -470,4 +471,35 @@ class HistoryMapperTest {
 	void toSigningStatusFromNull() {
 		assertThat(HISTORY_MAPPER.toSigningStatus(null)).isNull();
 	}
+
+	@Test
+	void toESigningStatus() {
+		// Setup
+		final var status = "status";
+		final var signing = new SigningEntity()
+			.withStatus(status);
+
+		// Act
+		final var result = HISTORY_MAPPER.toESigningStatus(signing);
+
+		assertThat(result).isNotNull().hasNoNullFieldsOrPropertiesExcept("letterState");
+		assertThat(result.getLetterState()).isNull();
+		assertThat(result.getSigningProcessState()).isEqualTo(status);
+	}
+
+	@Test
+	void toESigningStatusFromEmptySource() {
+		final var entity = new SigningEntity();
+
+		// Act
+		final var result = HISTORY_MAPPER.toESigningStatus(entity);
+
+		assertThat(result).isNotNull().hasAllNullFieldsOrProperties();
+	}
+
+	@Test
+	void toESigningStatusFromNull() {
+		assertThat(HISTORY_MAPPER.toESigningStatus(null)).isNull();
+	}
+
 }

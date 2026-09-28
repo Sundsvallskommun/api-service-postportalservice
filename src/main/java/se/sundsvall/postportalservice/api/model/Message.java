@@ -17,14 +17,14 @@ public class Message {
 	private String subject;
 
 	@Schema(description = "Type of message", accessMode = READ_ONLY, examples = {
-		"SMS", "LETTER", "DIGITAL_REGISTERED_LETTER"
+		"SMS", "LETTER", "DIGITAL_REGISTERED_LETTER", "E_SIGNING"
 	})
 	private String type;
 
 	@Schema(description = "When the message was sent", accessMode = READ_ONLY, examples = "2021-01-01T12:00:00")
 	private LocalDateTime sentAt;
 
-	@Schema(description = "Status for signing process. Only applicable for message type DIGITAL_REGISTERED_LETTER", requiredMode = NOT_REQUIRED, accessMode = READ_ONLY)
+	@Schema(description = "Status for signing process. Only applicable for message type DIGITAL_REGISTERED_LETTER and E_SIGNING", requiredMode = NOT_REQUIRED, accessMode = READ_ONLY)
 	private SigningStatus signingStatus;
 
 	@Schema(description = "Total number of recipients to whom the message has been sent", accessMode = READ_ONLY, examples = "12")

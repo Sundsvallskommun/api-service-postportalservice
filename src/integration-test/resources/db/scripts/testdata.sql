@@ -308,10 +308,9 @@ INSERT INTO message (id, subject, municipality_id, user_id, message_type, create
 VALUES ('e5160000-0000-4000-8000-000000000001', 'E-signing subject', '2281',
         'e5160000-0000-4000-8000-0000000000aa', 'E_SIGNING', '2025-09-10 10:00:00');
 
--- Recipient status -> letterState
 INSERT INTO recipient (id, message_id, type, status, created)
 VALUES ('e5160000-0000-4000-8000-0000000000b1', 'e5160000-0000-4000-8000-000000000001',
-        'E_SIGNING', 'SENT', '2025-09-10 10:01:00');
+        'E_SIGNING', 'PENDING', '2025-09-10 10:01:00');
 
 -- Signing status -> signingProcessState
 INSERT INTO signing (id, message_id, provider_case_id, provider, status, created)

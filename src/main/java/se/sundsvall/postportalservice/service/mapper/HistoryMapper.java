@@ -11,6 +11,7 @@ import se.sundsvall.postportalservice.api.model.SigningStatus;
 import se.sundsvall.postportalservice.integration.db.AttachmentEntity;
 import se.sundsvall.postportalservice.integration.db.MessageEntity;
 import se.sundsvall.postportalservice.integration.db.RecipientEntity;
+import se.sundsvall.postportalservice.integration.db.SigningEntity;
 import se.sundsvall.postportalservice.integration.db.converter.MessageType;
 
 import static java.util.Collections.emptyList;
@@ -91,6 +92,13 @@ public class HistoryMapper {
 			.map(_ -> SigningStatus.create()
 				.withLetterState(letterStatus.getStatus())
 				.withSigningProcessState(letterStatus.getSigningInformation()))
+			.orElse(null);
+	}
+
+	public SigningStatus toESigningStatus(final SigningEntity signing) {
+		return ofNullable(signing)
+			.map(_ -> SigningStatus.create()
+				.withSigningProcessState(signing.getStatus()))
 			.orElse(null);
 	}
 

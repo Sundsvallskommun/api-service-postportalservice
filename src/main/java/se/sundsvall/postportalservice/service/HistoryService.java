@@ -1,11 +1,9 @@
 package se.sundsvall.postportalservice.service;
 
-import generated.se.sundsvall.digitalregisteredletter.LetterStatus;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.springframework.data.domain.Page;
@@ -19,10 +17,8 @@ import se.sundsvall.postportalservice.api.model.Message;
 import se.sundsvall.postportalservice.api.model.MessageDetails;
 import se.sundsvall.postportalservice.api.model.Messages;
 import se.sundsvall.postportalservice.api.model.SigningInformation;
-import se.sundsvall.postportalservice.api.model.SigningStatus;
 import se.sundsvall.postportalservice.integration.db.AttachmentEntity;
 import se.sundsvall.postportalservice.integration.db.MessageEntity;
-import se.sundsvall.postportalservice.integration.db.RecipientEntity;
 import se.sundsvall.postportalservice.integration.db.SigningEntity;
 import se.sundsvall.postportalservice.integration.db.dao.MessageRepository;
 import se.sundsvall.postportalservice.integration.db.dao.SigningRepository;
@@ -182,32 +178,11 @@ public class HistoryService {
 			.map(MessageEntity::getId)
 			.toList();
 
-		final var signingByMessageId = signingRepository.findAllByMessageIdIn(messageIds)
-			.stream().collect(Collectors.toMap(
-				signing -> signing.getMessage().getId(),
-				Function.identity()));
-
-		eSigningEntities.stream().filter(entity -> signingByMessageId.containsKey(entity.getId()))
-			.forEach(entity -> messageById.get(entity.getId())
-				.setSigningStatus(toESigningStatus(entity, signingByMessageId.get(entity.getId()))));
+		signingRepository.findAllByMessageIdIn(messageIds).forEach(signing -> {
+			final var message = messageById.get(signing.getMessage().getId());
+			if (message != null) {
+				message.setSigningStatus(historyMapper.toESigningStatus(signing));
+			}
+		});
 	}
-
-	private SigningStatus toESigningStatus(final MessageEntity message, final SigningEntity signing) {
-		final var signingStatus = Optional.ofNullable(signing)
-			.map(SigningEntity::getStatus)
-			.orElse(null);
-		final var recipientStatus = Optional.ofNullable(message.getRecipients()).orElse(List.of()).stream()
-			.map(RecipientEntity::getStatus)
-			.filter(Objects::nonNull)
-			.findFirst()
-			.orElse(null);
-
-		final var letterStatus = new LetterStatus()
-			.letterId(message.getId())
-			.status(recipientStatus)
-			.signingInformation(signingStatus);
-
-		return historyMapper.toSigningStatus(letterStatus);
-	}
-
 }

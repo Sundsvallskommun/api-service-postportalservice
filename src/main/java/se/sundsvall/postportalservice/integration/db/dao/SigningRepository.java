@@ -22,6 +22,6 @@ public interface SigningRepository extends JpaRepository<SigningEntity, String> 
 	 */
 	Optional<SigningEntity> findByMessageId(String messageId);
 
-	List<SigningEntity> findAllByMessageIdIn(List<String> messageId);
+	List<SigningEntity> findAllByMessageIdIn(List<String> messageIds);
 
 }
