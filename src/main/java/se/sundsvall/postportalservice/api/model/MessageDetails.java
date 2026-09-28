@@ -228,7 +228,7 @@ public class MessageDetails {
 		@Schema(description = "Mobile number", accessMode = Schema.AccessMode.READ_ONLY, examples = "+46701234567")
 		private String mobileNumber;
 
-		@Schema(description = "E-mail adress", accessMode = Schema.AccessMode.READ_ONLY, examples = "johnDoe@email.com")
+		@Schema(description = "E-mail address", accessMode = Schema.AccessMode.READ_ONLY, examples = "johnDoe@email.com")
 		private String email;
 
 		@Schema(description = "Street address", accessMode = Schema.AccessMode.READ_ONLY, examples = "Main Street 5")
