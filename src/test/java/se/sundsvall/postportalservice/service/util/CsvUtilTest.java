@@ -126,6 +126,18 @@ class CsvUtilTest {
 	}
 
 	@Test
+	void parseLetterCsvStripsSixteenPrefixFromOrgNumbers() throws IOException {
+		final var csv = "Identitetsnummer\n165523456789\n16552345-6789\n5523456789\n";
+		var multipartFileMock = Mockito.mock(MultipartFile.class);
+		when(multipartFileMock.getInputStream()).thenReturn(new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8)));
+
+		var result = CsvUtil.parseLetterCsv(multipartFileMock);
+
+		assertThat(result.privateIds()).isEmpty();
+		assertThat(result.enterpriseIds()).containsExactlyInAnyOrderEntriesOf(java.util.Map.of("5523456789", 3));
+	}
+
+	@Test
 	void parseLetterCsv_throws() throws IOException {
 		var multipartFileMock = Mockito.mock(MultipartFile.class);
 

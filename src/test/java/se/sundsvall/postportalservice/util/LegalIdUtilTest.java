@@ -29,12 +29,28 @@ class LegalIdUtilTest {
 		assertThat(LegalIdUtil.isPrivateLegalId(legalId)).isEqualTo(expectedResult);
 	}
 
+	@ParameterizedTest(name = "{0}")
+	@MethodSource("toOrgNumberProvider")
+	void testToOrgNumber(String testName, String legalId, String expectedResult) {
+		assertThat(LegalIdUtil.toOrgNumber(legalId)).isEqualTo(expectedResult);
+	}
+
+	public static Stream<Arguments> toOrgNumberProvider() {
+		return Stream.of(
+			Arguments.of("12-digit '16'-prefixed org number", "165565914523", "5565914523"),
+			Arguments.of("10-digit org number", "5565914523", "5565914523"),
+			Arguments.of("12-digit personnummer", "198601010000", "198601010000"),
+			Arguments.of("10-digit starting with '16'", "1655659145", "1655659145"),
+			Arguments.of("Null", null, null));
+	}
+
 	public static Stream<Arguments> orgNumberProvider() {
 		return Stream.of(
 			// Valid org numbers (3rd digit >= 2)
 			Arguments.of("10-digit org number, 3rd digit 2", "5523456789", true),
 			Arguments.of("10-digit org number, 3rd digit 9", "5593456789", true),
 			Arguments.of("12-digit '16'-prefixed org number", "165523456789", true),
+			Arguments.of("12-digit org number with other prefix than '16'", "205523456789", false),
 
 			// Sole proprietors (enskilda firmor) - 3rd digit < 2 means NOT classified as org number
 			Arguments.of("10-digit enskild firma, 3rd digit 0", "5503456789", false),

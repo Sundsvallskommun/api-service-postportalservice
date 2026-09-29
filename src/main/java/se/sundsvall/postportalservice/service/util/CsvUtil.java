@@ -114,7 +114,7 @@ public final class CsvUtil {
 				if (LegalIdUtil.isPrivateLegalId(normalized)) {
 					privateIds.merge(normalized, 1, Integer::sum);
 				} else if (LegalIdUtil.isOrgNumber(normalized)) {
-					enterpriseIds.merge(normalized, 1, Integer::sum);
+					enterpriseIds.merge(LegalIdUtil.toOrgNumber(normalized), 1, Integer::sum);
 				} else {
 					// 10-digit IDs with the 3rd digit < 2 are sole proprietors using a personal identity number as their
 					// organization number. The Party PRIVATE batch endpoint expects a 12-digit personal identity number,
