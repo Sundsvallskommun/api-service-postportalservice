@@ -22,6 +22,15 @@ public interface SigningRepository extends JpaRepository<SigningEntity, String> 
 	 */
 	Optional<SigningEntity> findByMessageId(String messageId);
 
+	/**
+	 * Same as {@link #findByMessageId(String)} but only matches a case whose message belongs to the given municipality.
+	 *
+	 * @param  messageId      the id of the owning message
+	 * @param  municipalityId the municipality the message must belong to
+	 * @return                the signing case, or empty if the message has none in that municipality
+	 */
+	Optional<SigningEntity> findByMessageIdAndMessageMunicipalityId(String messageId, String municipalityId);
+
 	List<SigningEntity> findAllByMessageIdIn(List<String> messageIds);
 
 }

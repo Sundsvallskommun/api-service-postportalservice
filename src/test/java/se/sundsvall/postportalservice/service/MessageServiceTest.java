@@ -17,6 +17,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Answers;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
@@ -236,12 +238,12 @@ class MessageServiceTest {
 	void cancelESigning() {
 		final var messageId = "msg-1";
 		final var signing = SigningEntity.create().withProviderCaseId("case-1").withStatus("PENDING");
-		when(signingRepositoryMock.findByMessageId(messageId)).thenReturn(Optional.of(signing));
+		when(signingRepositoryMock.findByMessageIdAndMessageMunicipalityId(messageId, MUNICIPALITY_ID)).thenReturn(Optional.of(signing));
 
 		messageService.cancelESigning(MUNICIPALITY_ID, messageId);
 
 		assertThat(signing.getStatus()).isEqualTo(CANCELLED);
-		verify(signingRepositoryMock).findByMessageId(messageId);
+		verify(signingRepositoryMock).findByMessageIdAndMessageMunicipalityId(messageId, MUNICIPALITY_ID);
 		verify(esigningIntegrationMock).cancelSigning(MUNICIPALITY_ID, "case-1");
 		verify(signingRepositoryMock).save(signing);
 	}
@@ -249,28 +251,46 @@ class MessageServiceTest {
 	@Test
 	void cancelESigning_notFound() {
 		final var messageId = "msg-1";
-		when(signingRepositoryMock.findByMessageId(messageId)).thenReturn(Optional.empty());
+		when(signingRepositoryMock.findByMessageIdAndMessageMunicipalityId(messageId, MUNICIPALITY_ID)).thenReturn(Optional.empty());
 
 		assertThatThrownBy(() -> messageService.cancelESigning(MUNICIPALITY_ID, messageId))
 			.isInstanceOf(Problem.class)
 			.hasFieldOrPropertyWithValue("status", NOT_FOUND)
 			.hasMessageContaining("No e-signing case found for message with id '%s'".formatted(messageId));
 
-		verify(signingRepositoryMock).findByMessageId(messageId);
+		verify(signingRepositoryMock).findByMessageIdAndMessageMunicipalityId(messageId, MUNICIPALITY_ID);
 	}
 
 	@Test
 	void cancelESigning_alreadyCompleted() {
 		final var messageId = "msg-1";
 		final var signing = SigningEntity.create().withProviderCaseId("case-1").withStatus("SIGNED");
-		when(signingRepositoryMock.findByMessageId(messageId)).thenReturn(Optional.of(signing));
+		when(signingRepositoryMock.findByMessageIdAndMessageMunicipalityId(messageId, MUNICIPALITY_ID)).thenReturn(Optional.of(signing));
 
 		assertThatThrownBy(() -> messageService.cancelESigning(MUNICIPALITY_ID, messageId))
 			.isInstanceOf(Problem.class)
 			.hasFieldOrPropertyWithValue("status", BAD_REQUEST)
 			.hasMessageContaining("Cannot cancel a signing that is already completed");
 
-		verify(signingRepositoryMock).findByMessageId(messageId);
+		verify(signingRepositoryMock).findByMessageIdAndMessageMunicipalityId(messageId, MUNICIPALITY_ID);
+	}
+
+	@ParameterizedTest
+	@ValueSource(strings = {
+		"EXPIRED", "CANCELLED"
+	})
+	void cancelESigning_alreadyExpiredOrCancelled(final String status) {
+		final var messageId = "msg-1";
+		final var signing = SigningEntity.create().withProviderCaseId("case-1").withStatus(status);
+		when(signingRepositoryMock.findByMessageIdAndMessageMunicipalityId(messageId, MUNICIPALITY_ID)).thenReturn(Optional.of(signing));
+
+		assertThatThrownBy(() -> messageService.cancelESigning(MUNICIPALITY_ID, messageId))
+			.isInstanceOf(Problem.class)
+			.hasFieldOrPropertyWithValue("status", BAD_REQUEST)
+			.hasMessageContaining("Cannot cancel a signing that is already " + status.toLowerCase());
+
+		verify(signingRepositoryMock).findByMessageIdAndMessageMunicipalityId(messageId, MUNICIPALITY_ID);
+		verifyNoInteractions(esigningIntegrationMock);
 	}
 
 	/**

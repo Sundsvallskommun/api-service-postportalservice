@@ -59,4 +59,16 @@ class SigningRepositoryTest {
 
 		assertThat(result).isEmpty();
 	}
+
+	@Test
+	void findByMessageIdAndMessageMunicipalityId() {
+		assertThat(signingRepository.findByMessageIdAndMessageMunicipalityId(MESSAGE_ID, "2281"))
+			.isPresent()
+			.hasValueSatisfying(signing -> assertThat(signing.getMessage().getId()).isEqualTo(MESSAGE_ID));
+	}
+
+	@Test
+	void findByMessageIdAndMessageMunicipalityIdOtherMunicipality() {
+		assertThat(signingRepository.findByMessageIdAndMessageMunicipalityId(MESSAGE_ID, "1984")).isEmpty();
+	}
 }

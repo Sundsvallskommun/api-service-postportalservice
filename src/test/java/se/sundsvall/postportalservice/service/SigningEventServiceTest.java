@@ -6,6 +6,9 @@ import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -114,6 +117,104 @@ class SigningEventServiceTest {
 		assertThat(signing.getStatus()).isEqualTo("SIGNED");
 		verify(signingRepositoryMock).save(signing);
 		verifyNoInteractions(recipientRepositoryMock, blobUtilMock);
+	}
+
+	@Test
+	void handleSigningEvent_withdrawnEventKeepsCaseCancelled() {
+		// The provider normalizes a withdrawal to FAILED; the local cancel has already set CANCELLED.
+		final var signing = SigningEntity.create().withId("s1").withStatus("CANCELLED").withMessage(MessageEntity.create().withId(MESSAGE_ID));
+		final var event = SigningEvent.create().withEventType("CASE_WITHDRAWN").withStatus("FAILED");
+
+		when(signingRepositoryMock.findByMessageId(MESSAGE_ID)).thenReturn(Optional.of(signing));
+
+		service.handleSigningEvent(MUNICIPALITY_ID, MESSAGE_ID, event);
+
+		assertThat(signing.getStatus()).isEqualTo("CANCELLED");
+		verify(signingRepositoryMock).save(signing);
+	}
+
+	@Test
+	void handleSigningEvent_withdrawnEventCancelsActiveCase() {
+		final var signing = SigningEntity.create().withId("s1").withStatus("PENDING").withMessage(MessageEntity.create().withId(MESSAGE_ID));
+		final var event = SigningEvent.create().withEventType("CASE_WITHDRAWN").withStatus("FAILED");
+
+		when(signingRepositoryMock.findByMessageId(MESSAGE_ID)).thenReturn(Optional.of(signing));
+
+		service.handleSigningEvent(MUNICIPALITY_ID, MESSAGE_ID, event);
+
+		assertThat(signing.getStatus()).isEqualTo("CANCELLED");
+		verify(signingRepositoryMock).save(signing);
+	}
+
+	@Test
+	void handleSigningEvent_expiredEventExpiresCase() {
+		final var signing = SigningEntity.create().withId("s1").withStatus("PENDING").withMessage(MessageEntity.create().withId(MESSAGE_ID));
+		final var event = SigningEvent.create().withEventType("CASE_EXPIRED").withStatus("EXPIRED");
+
+		when(signingRepositoryMock.findByMessageId(MESSAGE_ID)).thenReturn(Optional.of(signing));
+
+		service.handleSigningEvent(MUNICIPALITY_ID, MESSAGE_ID, event);
+
+		assertThat(signing.getStatus()).isEqualTo("EXPIRED");
+		verify(signingRepositoryMock).save(signing);
+	}
+
+	@ParameterizedTest
+	@ValueSource(strings = {
+		"EXPIRED", "CANCELLED"
+	})
+	void handleSigningEvent_expiredAndCancelledNotRegressedByLateEvents(final String currentStatus) {
+		final var signing = SigningEntity.create().withId("s1").withStatus(currentStatus).withMessage(MessageEntity.create().withId(MESSAGE_ID));
+		final var event = SigningEvent.create().withEventType("SIGNATORY_APPROVED").withStatus("PENDING");
+
+		when(signingRepositoryMock.findByMessageId(MESSAGE_ID)).thenReturn(Optional.of(signing));
+
+		service.handleSigningEvent(MUNICIPALITY_ID, MESSAGE_ID, event);
+
+		assertThat(signing.getStatus()).isEqualTo(currentStatus);
+		verify(signingRepositoryMock).save(signing);
+	}
+
+	@Test
+	void handleSigningEvent_reactivationLiftsExpiredCase() {
+		final var signing = SigningEntity.create().withId("s1").withStatus("EXPIRED").withMessage(MessageEntity.create().withId(MESSAGE_ID));
+		final var event = SigningEvent.create().withEventType("CASE_REACTIVATED").withStatus("PENDING");
+
+		when(signingRepositoryMock.findByMessageId(MESSAGE_ID)).thenReturn(Optional.of(signing));
+
+		service.handleSigningEvent(MUNICIPALITY_ID, MESSAGE_ID, event);
+
+		assertThat(signing.getStatus()).isEqualTo("PENDING");
+		verify(signingRepositoryMock).save(signing);
+	}
+
+	@Test
+	void handleSigningEvent_reactivationDoesNotLiftCancelledCase() {
+		final var signing = SigningEntity.create().withId("s1").withStatus("CANCELLED").withMessage(MessageEntity.create().withId(MESSAGE_ID));
+		final var event = SigningEvent.create().withEventType("CASE_REACTIVATED").withStatus("PENDING");
+
+		when(signingRepositoryMock.findByMessageId(MESSAGE_ID)).thenReturn(Optional.of(signing));
+
+		service.handleSigningEvent(MUNICIPALITY_ID, MESSAGE_ID, event);
+
+		assertThat(signing.getStatus()).isEqualTo("CANCELLED");
+		verify(signingRepositoryMock).save(signing);
+	}
+
+	@ParameterizedTest
+	@CsvSource({
+		"SIGNATORY_DECLINED, DECLINED", "CASE_HALTED, HALTED"
+	})
+	void handleSigningEvent_declinedAndHaltedAreNotReportedAsFailed(final String eventType, final String expectedStatus) {
+		final var signing = SigningEntity.create().withId("s1").withStatus("PENDING").withMessage(MessageEntity.create().withId(MESSAGE_ID));
+		final var event = SigningEvent.create().withEventType(eventType).withStatus("FAILED");
+
+		when(signingRepositoryMock.findByMessageId(MESSAGE_ID)).thenReturn(Optional.of(signing));
+
+		service.handleSigningEvent(MUNICIPALITY_ID, MESSAGE_ID, event);
+
+		assertThat(signing.getStatus()).isEqualTo(expectedStatus);
+		verify(signingRepositoryMock).save(signing);
 	}
 
 	@Test

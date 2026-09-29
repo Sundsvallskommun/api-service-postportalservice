@@ -12,7 +12,9 @@ public final class Constants {
 	public static final String UNDELIVERABLE = "UNDELIVERABLE";
 	public static final String INELIGIBLE_MINOR = "INELIGIBLE_MINOR";
 
-	// E-signing recipient (signatory) and case status. SIGNED is terminal for signing cases.
+	// E-signing recipient (signatory) and case status. SIGNED, EXPIRED and CANCELLED are terminal for signing cases.
 	public static final String SIGNED = "SIGNED";
+	public static final String EXPIRED = "EXPIRED";
+	public static final String HALTED = "HALTED";
 	public static final String DECLINED = "DECLINED";
 }

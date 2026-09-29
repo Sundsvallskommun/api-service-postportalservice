@@ -20,7 +20,7 @@ public class MessageDetails {
 	@Schema(description = "When the message was sent", accessMode = Schema.AccessMode.READ_ONLY, examples = "2021-01-01T12:00:00")
 	private LocalDateTime sentAt;
 
-	@Schema(description = "Status for signing process. Only applicable for message type DIGITAL_REGISTERED_LETTER", requiredMode = NOT_REQUIRED, accessMode = Schema.AccessMode.READ_ONLY)
+	@Schema(description = "Status for signing process. Only applicable for message type DIGITAL_REGISTERED_LETTER and E_SIGNING", requiredMode = NOT_REQUIRED, accessMode = Schema.AccessMode.READ_ONLY)
 	private SigningStatus signingStatus;
 
 	@ArraySchema(schema = @Schema(description = "List of attachment details", implementation = AttachmentDetails.class, accessMode = Schema.AccessMode.READ_ONLY))

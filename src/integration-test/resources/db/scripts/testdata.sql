@@ -319,3 +319,19 @@ VALUES ('e5160000-0000-4000-8000-0000000000b1', 'e5160000-0000-4000-8000-0000000
 INSERT INTO signing (id, message_id, provider_case_id, provider, status, created)
 VALUES ('e5160000-0000-4000-8000-0000000000c1', 'e5160000-0000-4000-8000-000000000001',
         'comfact-case-2', 'comfact', 'PENDING', '2025-09-10 10:02:00');
+
+-- E-signing that has expired while a recipient never acted: recipient stays PENDING, the case is EXPIRED
+INSERT INTO user (id, username)
+VALUES ('e5160000-0000-4000-8000-0000000000ab', 'user5');
+
+INSERT INTO message (id, subject, municipality_id, user_id, message_type, created)
+VALUES ('e5160000-0000-4000-8000-000000000002', 'Expired e-signing subject', '2281',
+        'e5160000-0000-4000-8000-0000000000ab', 'E_SIGNING', '2025-09-11 10:00:00');
+
+INSERT INTO recipient (id, message_id, type, status, created)
+VALUES ('e5160000-0000-4000-8000-0000000000b2', 'e5160000-0000-4000-8000-000000000002',
+        'E_SIGNING', 'PENDING', '2025-09-11 10:01:00');
+
+INSERT INTO signing (id, message_id, provider_case_id, provider, status, created)
+VALUES ('e5160000-0000-4000-8000-0000000000c2', 'e5160000-0000-4000-8000-000000000002',
+        'comfact-case-3', 'comfact', 'EXPIRED', '2025-09-11 10:02:00');

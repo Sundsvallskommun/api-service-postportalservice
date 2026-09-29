@@ -1905,7 +1905,7 @@ components:
             Present state for the signing process.
 
             - DIGITAL_REGISTERED_LETTER: PENDING, COMPLETED or FAILED
-            - E-SIGNING: INITIATED, PENDING, SIGNED, EXPIRED, FAILED or CANCELLED
+            - E_SIGNING: INITIATED, PENDING, SIGNED, EXPIRED, CANCELLED, DECLINED, HALTED or FAILED
           examples:
             - PENDING
             - COMPLETED
@@ -1958,7 +1958,7 @@ components:
         signingStatus:
           $ref: "#/components/schemas/SigningStatus"
           description: Status for signing process. Only applicable for message type
-            DIGITAL_REGISTERED_LETTER
+            DIGITAL_REGISTERED_LETTER and E_SIGNING
           readOnly: true
         attachments:
           type: array
