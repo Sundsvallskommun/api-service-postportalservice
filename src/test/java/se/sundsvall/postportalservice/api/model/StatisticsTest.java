@@ -18,6 +18,7 @@ class StatisticsTest {
 	private static final Long DIGITAL_MAIL = 20L;
 	private static final Long SMS = 30L;
 	private static final Long DIGITAL_REGISTERED_LETTER = 40L;
+	private static final Long E_SIGNING = 35L;
 
 	@Test
 	void testBean() {
@@ -37,7 +38,8 @@ class StatisticsTest {
 			.withSnailMail(SNAIL_MAIL)
 			.withDigitalMail(DIGITAL_MAIL)
 			.withSms(SMS)
-			.withDigitalRegisteredLetter(DIGITAL_REGISTERED_LETTER);
+			.withDigitalRegisteredLetter(DIGITAL_REGISTERED_LETTER)
+			.withESigning(E_SIGNING);
 
 		assertThat(statistics.getId()).isEqualTo(ID);
 		assertThat(statistics.getName()).isEqualTo(NAME);
@@ -45,6 +47,7 @@ class StatisticsTest {
 		assertThat(statistics.getDigitalMail()).isEqualTo(DIGITAL_MAIL);
 		assertThat(statistics.getSms()).isEqualTo(SMS);
 		assertThat(statistics.getDigitalRegisteredLetter()).isEqualTo(DIGITAL_REGISTERED_LETTER);
+		assertThat(statistics.getESigning()).isEqualTo(E_SIGNING);
 		assertThat(statistics).hasNoNullFieldsOrProperties();
 	}
 
@@ -57,6 +60,7 @@ class StatisticsTest {
 		statistics.setDigitalMail(DIGITAL_MAIL);
 		statistics.setSms(SMS);
 		statistics.setDigitalRegisteredLetter(DIGITAL_REGISTERED_LETTER);
+		statistics.setESigning(E_SIGNING);
 
 		assertThat(statistics.getId()).isEqualTo(ID);
 		assertThat(statistics.getName()).isEqualTo(NAME);
@@ -64,6 +68,7 @@ class StatisticsTest {
 		assertThat(statistics.getDigitalMail()).isEqualTo(DIGITAL_MAIL);
 		assertThat(statistics.getSms()).isEqualTo(SMS);
 		assertThat(statistics.getDigitalRegisteredLetter()).isEqualTo(DIGITAL_REGISTERED_LETTER);
+		assertThat(statistics.getESigning()).isEqualTo(E_SIGNING);
 		assertThat(statistics).hasNoNullFieldsOrProperties();
 	}
 

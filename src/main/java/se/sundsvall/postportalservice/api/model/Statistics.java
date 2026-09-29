@@ -24,6 +24,9 @@ public class Statistics {
 	@Schema(description = "Number of registered letters sent", examples = "5")
 	private Long digitalRegisteredLetter;
 
+	@Schema(description = "Number of e-signing signatures requested", examples = "9")
+	private Long eSigning;
+
 	public static Statistics create() {
 		return new Statistics();
 	}
@@ -106,6 +109,19 @@ public class Statistics {
 		this.digitalRegisteredLetter = digitalRegisteredLetter;
 	}
 
+	public Long getESigning() {
+		return eSigning;
+	}
+
+	public Statistics withESigning(Long eSigning) {
+		this.eSigning = eSigning;
+		return this;
+	}
+
+	public void setESigning(Long eSigning) {
+		this.eSigning = eSigning;
+	}
+
 	@Override
 	public String toString() {
 		return "Statistics{" +
@@ -115,6 +131,7 @@ public class Statistics {
 			", digitalMail=" + digitalMail +
 			", sms=" + sms +
 			", digitalRegisteredLetter=" + digitalRegisteredLetter +
+			", ESigning=" + eSigning +
 			'}';
 	}
 
@@ -124,11 +141,11 @@ public class Statistics {
 			return false;
 		Statistics that = (Statistics) o;
 		return Objects.equals(id, that.id) && Objects.equals(name, that.name) && Objects.equals(snailMail, that.snailMail) && Objects.equals(digitalMail, that.digitalMail) && Objects.equals(sms, that.sms)
-			&& Objects.equals(digitalRegisteredLetter, that.digitalRegisteredLetter);
+			&& Objects.equals(digitalRegisteredLetter, that.digitalRegisteredLetter) && Objects.equals(eSigning, that.eSigning);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(id, name, snailMail, digitalMail, sms, digitalRegisteredLetter);
+		return Objects.hash(id, name, snailMail, digitalMail, sms, digitalRegisteredLetter, eSigning);
 	}
 }

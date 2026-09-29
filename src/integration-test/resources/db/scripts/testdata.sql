@@ -302,3 +302,12 @@ VALUES ('a1b2c3d4-0000-4000-8000-000000000001', '1decdead-52b8-42d9-aa62-5ef08c4
 
 -- Mail to showcase in recipients response
 UPDATE recipient SET email = 'john.wick@example.com' WHERE party_id = 'b2b2b2b2-b2b2-b2b2-b2b2-b2b2b2b2b2b2';
+
+-- Add E-signings for statistics
+INSERT INTO message (id, subject, municipality_id, department_id, user_id, message_type, created)
+VALUES ('e5160000-0000-4000-8000-0000000000f1', 'E-signing statistics', '2281', 'e3e146fb-aac9-467c-a19a-c90ee82caed4',
+        NULL, 'E_SIGNING', '2025-09-10 10:00:00');
+
+INSERT INTO recipient (id, message_id, type, status, created)
+VALUES ('e5160000-0000-4000-8000-0000000000f2', 'e5160000-0000-4000-8000-0000000000f1', 'E_SIGNING', 'PENDING', '2025-09-10 10:01:00'),
+       ('e5160000-0000-4000-8000-0000000000f3', 'e5160000-0000-4000-8000-0000000000f1', 'E_SIGNING', 'SIGNED',  '2025-09-10 10:01:00');
