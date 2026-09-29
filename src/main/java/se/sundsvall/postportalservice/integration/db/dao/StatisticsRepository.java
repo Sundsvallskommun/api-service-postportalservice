@@ -24,7 +24,7 @@ public class StatisticsRepository {
 	public List<Statistics> getDepartmentStatisticsByYearAndMonth(final String year, final String month) {
 		var parameters = Map.of("year", year, "month", month);
 		var sql = """
-			SELECT department_id, department_name, snail_mail_count, digital_mail_count, sms_count, digital_registered_letter_count
+			SELECT department_id, department_name, snail_mail_count, digital_mail_count, sms_count, digital_registered_letter_count, e_signing_count
 			FROM v_department_monthly_statistics stats
 			WHERE stats.month = :month AND stats.year = :year
 			""";
@@ -42,7 +42,8 @@ public class StatisticsRepository {
 				.withSnailMail(resultSet.getLong("snail_mail_count"))
 				.withDigitalMail(resultSet.getLong("digital_mail_count"))
 				.withSms(resultSet.getLong("sms_count"))
-				.withDigitalRegisteredLetter(resultSet.getLong("digital_registered_letter_count"));
+				.withDigitalRegisteredLetter(resultSet.getLong("digital_registered_letter_count"))
+				.withEsigning(resultSet.getLong("e_signing_count"));
 		}
 	}
 
