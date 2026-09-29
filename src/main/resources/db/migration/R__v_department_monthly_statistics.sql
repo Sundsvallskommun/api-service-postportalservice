@@ -11,7 +11,8 @@ SELECT d.id                                                       AS department_
        SUM(IF(UPPER(r.type) = 'SNAIL_MAIL', 1, 0))                AS snail_mail_count,
        SUM(IF(UPPER(r.type) = 'DIGITAL_MAIL', 1, 0))              AS digital_mail_count,
        SUM(IF(UPPER(r.type) = 'DIGITAL_REGISTERED_LETTER', 1, 0)) AS digital_registered_letter_count,
-       SUM(IF(UPPER(r.type) = 'SMS', 1, 0))                       AS sms_count
+       SUM(IF(UPPER(r.type) = 'SMS', 1, 0))                       AS sms_count,
+       SUM(IF(UPPER(r.type) = 'E_SIGNING', 1, 0))                 AS e_signing_count
 
 FROM message m
          JOIN department d ON d.id = m.department_id

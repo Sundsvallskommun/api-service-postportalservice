@@ -49,13 +49,14 @@ class StatisticsRepositoryTest {
 				Statistics::getSnailMail,
 				Statistics::getDigitalMail,
 				Statistics::getDigitalRegisteredLetter,
+				Statistics::getEsigning,
 				Statistics::getSms)
 			.containsExactlyInAnyOrder(
-				tuple("9a8b6e67-6007-4379-a717-cca245448400", "Miljöförvaltningen", 3L, 0L, 0L, 0L),
-				tuple("7b137896-cc1d-479b-bf2f-fc663eb8b943", "Socialförvaltningen", 0L, 2L, 0L, 1L),
-				tuple("e3e146fb-aac9-467c-a19a-c90ee82caed4", "IT-avdelningen", 0L, 0L, 1L, 0L),
-				tuple("0072f95f-c1fa-426a-87e9-adb8e0112bf1", "HR-avdelningen", 0L, 0L, 0L, 3L),
-				tuple("e9c2ebba-4b71-4cc1-bc56-46434f8693cc", "Kulturförvaltningen", 1L, 1L, 0L, 1L));
+				tuple("9a8b6e67-6007-4379-a717-cca245448400", "Miljöförvaltningen", 3L, 0L, 0L, 0L, 0L),
+				tuple("7b137896-cc1d-479b-bf2f-fc663eb8b943", "Socialförvaltningen", 0L, 2L, 0L, 0L, 1L),
+				tuple("e3e146fb-aac9-467c-a19a-c90ee82caed4", "IT-avdelningen", 0L, 0L, 1L, 2L, 0L),
+				tuple("0072f95f-c1fa-426a-87e9-adb8e0112bf1", "HR-avdelningen", 0L, 0L, 0L, 0L, 3L),
+				tuple("e9c2ebba-4b71-4cc1-bc56-46434f8693cc", "Kulturförvaltningen", 1L, 1L, 0L, 0L, 1L));
 	}
 
 	@Test
@@ -71,9 +72,10 @@ class StatisticsRepositoryTest {
 			Statistics::getSnailMail,
 			Statistics::getDigitalMail,
 			Statistics::getDigitalRegisteredLetter,
+			Statistics::getEsigning,
 			Statistics::getSms).containsExactlyInAnyOrder(
-				tuple("9a8b6e67-6007-4379-a717-cca245448400", "Miljöförvaltningen", 25L, 5L, 0L, 5L),
-				tuple("7b137896-cc1d-479b-bf2f-fc663eb8b943", "Socialförvaltningen", 0L, 20L, 10L, 5L));
+				tuple("9a8b6e67-6007-4379-a717-cca245448400", "Miljöförvaltningen", 25L, 5L, 0L, 0L, 5L),
+				tuple("7b137896-cc1d-479b-bf2f-fc663eb8b943", "Socialförvaltningen", 0L, 20L, 10L, 0L, 5L));
 	}
 
 	@Test
@@ -83,6 +85,7 @@ class StatisticsRepositoryTest {
 		final var snailMailCount = 10L;
 		final var digitalMailCount = 20L;
 		final var digitalRegisteredLetterCount = 5L;
+		final var esigning = 25L;
 		final var smsCount = 15L;
 
 		final var resultSetMock = Mockito.mock(ResultSet.class);
@@ -91,6 +94,7 @@ class StatisticsRepositoryTest {
 		when(resultSetMock.getLong("snail_mail_count")).thenReturn(snailMailCount);
 		when(resultSetMock.getLong("digital_mail_count")).thenReturn(digitalMailCount);
 		when(resultSetMock.getLong("digital_registered_letter_count")).thenReturn(digitalRegisteredLetterCount);
+		when(resultSetMock.getLong("e_signing_count")).thenReturn(esigning);
 		when(resultSetMock.getLong("sms_count")).thenReturn(smsCount);
 
 		final var mapper = new StatisticsRepository.StatisticsMapper();
@@ -103,6 +107,7 @@ class StatisticsRepositoryTest {
 			assertThat(statistics.getSnailMail()).isEqualTo(snailMailCount);
 			assertThat(statistics.getDigitalMail()).isEqualTo(digitalMailCount);
 			assertThat(statistics.getDigitalRegisteredLetter()).isEqualTo(digitalRegisteredLetterCount);
+			assertThat(statistics.getEsigning()).isEqualTo(esigning);
 			assertThat(statistics.getSms()).isEqualTo(smsCount);
 		});
 
@@ -111,6 +116,7 @@ class StatisticsRepositoryTest {
 		verify(resultSetMock).getLong("snail_mail_count");
 		verify(resultSetMock).getLong("digital_mail_count");
 		verify(resultSetMock).getLong("digital_registered_letter_count");
+		verify(resultSetMock).getLong("e_signing_count");
 		verify(resultSetMock).getLong("sms_count");
 	}
 
