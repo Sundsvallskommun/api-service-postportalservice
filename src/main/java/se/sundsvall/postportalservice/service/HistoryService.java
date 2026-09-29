@@ -29,6 +29,7 @@ import se.sundsvall.postportalservice.service.mapper.HistoryMapper;
 import static org.springframework.http.HttpHeaders.CONTENT_DISPOSITION;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static se.sundsvall.postportalservice.integration.db.converter.MessageType.DIGITAL_REGISTERED_LETTER;
+import static se.sundsvall.postportalservice.integration.db.converter.MessageType.E_SIGNING;
 
 @Service
 public class HistoryService {
@@ -87,6 +88,14 @@ public class HistoryService {
 					if (message != null)
 						message.setSigningStatus(historyMapper.toSigningStatus(status));
 				});
+		}
+
+		final var eSigningEntities = page.getContent().stream()
+			.filter(entity -> E_SIGNING.equals(entity.getMessageType()))
+			.toList();
+
+		if (!eSigningEntities.isEmpty()) {
+			decorateESigningMessagesWithStatus(eSigningEntities, messageById);
 		}
 
 		return messages;
@@ -164,4 +173,16 @@ public class HistoryService {
 		return message.getRecipients().getFirst().getExternalId();
 	}
 
+	private void decorateESigningMessagesWithStatus(final List<MessageEntity> eSigningEntities, final Map<String, Message> messageById) {
+		final var messageIds = eSigningEntities.stream()
+			.map(MessageEntity::getId)
+			.toList();
+
+		signingRepository.findAllByMessageIdIn(messageIds).forEach(signing -> {
+			final var message = messageById.get(signing.getMessage().getId());
+			if (message != null) {
+				message.setSigningStatus(historyMapper.toESigningStatus(signing));
+			}
+		});
+	}
 }
