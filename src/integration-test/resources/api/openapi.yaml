@@ -1905,7 +1905,7 @@ components:
             Present state for the signing process.
 
             - DIGITAL_REGISTERED_LETTER: PENDING, COMPLETED or FAILED
-            - E-SIGNING: INITIATED, PENDING, SIGNED, EXPIRED, FAILED or CANCELLED
+            - E_SIGNING: INITIATED, PENDING, SIGNED, EXPIRED, FAILED or CANCELLED
           examples:
             - PENDING
             - COMPLETED

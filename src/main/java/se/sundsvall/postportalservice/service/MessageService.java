@@ -212,7 +212,9 @@ public class MessageService {
 	/**
 	 * Cancels an ongoing e-signing case: withdraws it at the provider (via api-service-e-signing) and marks the local
 	 * case as {@code CANCELLED}. A case that has already completed ({@code SIGNED}) cannot be cancelled. The provider also
-	 * confirms the withdrawal asynchronously through the signing-event callback, which re-applies the terminal state.
+	 * confirms the withdrawal asynchronously through the signing-event callback ({@code CASE_WITHDRAWN}), which keeps the
+	 * case
+	 * {@code CANCELLED}.
 	 */
 	@Transactional
 	public void cancelESigning(final String municipalityId, final String messageId) {

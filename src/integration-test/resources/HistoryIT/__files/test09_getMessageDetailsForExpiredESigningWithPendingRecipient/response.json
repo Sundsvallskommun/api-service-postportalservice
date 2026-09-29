@@ -1,0 +1,14 @@
+{
+	"subject": "Expired e-signing subject",
+	"sentAt": "2025-09-11T10:00:00",
+	"signingStatus": {
+		"signingProcessState": "EXPIRED"
+	},
+	"attachments": [],
+	"recipients": [
+		{
+			"messageType": "E_SIGNING",
+			"status": "PENDING"
+		}
+	]
+}

@@ -18,7 +18,9 @@ import se.sundsvall.postportalservice.service.util.BlobUtil;
 
 import static org.springframework.http.MediaType.APPLICATION_PDF_VALUE;
 import static se.sundsvall.dept44.util.LogUtils.sanitizeForLogging;
+import static se.sundsvall.postportalservice.Constants.CANCELLED;
 import static se.sundsvall.postportalservice.Constants.DECLINED;
+import static se.sundsvall.postportalservice.Constants.EXPIRED;
 import static se.sundsvall.postportalservice.Constants.SIGNED;
 
 /**
@@ -60,7 +62,7 @@ public class SigningEventService {
 		}
 		final var message = signing.getMessage();
 
-		applyStatus(signing, event.getStatus());
+		applyStatus(signing, event);
 		Optional.ofNullable(event.getSignatory()).ifPresent(signatory -> updateRecipient(message, signatory));
 		Optional.ofNullable(event.getSignedDocument()).ifPresent(document -> storeSignedDocument(signing, document));
 
@@ -68,15 +70,36 @@ public class SigningEventService {
 	}
 
 	/**
-	 * Guarded status transition: {@code SIGNED} is terminal (a signed case stays signed), everything else applies the
-	 * incoming status (forward progress and reactivation both flow through).
+	 * Guarded status transition. {@code SIGNED}, {@code EXPIRED} and {@code CANCELLED} are terminal: a late, redelivered or
+	 * out-of-order event never moves the case out of them ({@code CASE_REACTIVATED} may lift an {@code EXPIRED} case).
+	 * The provider folds withdrawn, declined and halted cases into {@code FAILED}, so a withdrawal or expiry is derived
+	 * from the event type instead of the normalized status; otherwise a withdrawn case would lose its {@code CANCELLED}.
 	 */
-	void applyStatus(final SigningEntity signing, final String newStatus) {
-		if (SIGNED.equals(signing.getStatus())) {
-			LOG.info("Signing case {} is already {} (terminal); ignoring status {}", sanitizeForLogging(signing.getId()), SIGNED, sanitizeForLogging(newStatus));
+	void applyStatus(final SigningEntity signing, final SigningEvent event) {
+		final var currentStatus = signing.getStatus();
+		final var newStatus = resolveStatus(event);
+
+		if (isTerminal(currentStatus) && !isReactivationOfExpired(currentStatus, event)) {
+			LOG.info("Signing case {} is already {} (terminal); ignoring status {}", sanitizeForLogging(signing.getId()), sanitizeForLogging(currentStatus), sanitizeForLogging(newStatus));
 			return;
 		}
 		signing.setStatus(newStatus);
+	}
+
+	private static String resolveStatus(final SigningEvent event) {
+		return switch (Optional.ofNullable(event.getEventType()).orElse("")) {
+			case "CASE_WITHDRAWN" -> CANCELLED;
+			case "CASE_EXPIRED" -> EXPIRED;
+			default -> event.getStatus();
+		};
+	}
+
+	private static boolean isTerminal(final String status) {
+		return SIGNED.equals(status) || EXPIRED.equals(status) || CANCELLED.equals(status);
+	}
+
+	private static boolean isReactivationOfExpired(final String currentStatus, final SigningEvent event) {
+		return EXPIRED.equals(currentStatus) && "CASE_REACTIVATED".equals(event.getEventType());
 	}
 
 	void updateRecipient(final MessageEntity message, final EventSignatory signatory) {
