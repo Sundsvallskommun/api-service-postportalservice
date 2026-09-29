@@ -1817,6 +1817,7 @@ components:
             - SMS
             - LETTER
             - DIGITAL_REGISTERED_LETTER
+            - E_SIGNING
           readOnly: true
         sentAt:
           type: string
@@ -1828,7 +1829,7 @@ components:
         signingStatus:
           $ref: "#/components/schemas/SigningStatus"
           description: Status for signing process. Only applicable for message type
-            DIGITAL_REGISTERED_LETTER
+            DIGITAL_REGISTERED_LETTER and E_SIGNING
           readOnly: true
         numberOfRecipients:
           type: integer
@@ -1894,7 +1895,7 @@ components:
       properties:
         letterState:
           type: string
-          description: Present state for the letter
+          description: Present state for the letter. Not used for E_SIGNING
           examples:
             - NEW
             - SENT
@@ -1906,7 +1907,11 @@ components:
           readOnly: true
         signingProcessState:
           type: string
-          description: Present state for the signing process
+          description: |
+            Present state for the signing process.
+
+            - DIGITAL_REGISTERED_LETTER: PENDING, COMPLETED or FAILED
+            - E_SIGNING: INITIATED, PENDING, SIGNED, EXPIRED, CANCELLED, DECLINED, HALTED or FAILED
           examples:
             - PENDING
             - COMPLETED
@@ -1959,7 +1964,7 @@ components:
         signingStatus:
           $ref: "#/components/schemas/SigningStatus"
           description: Status for signing process. Only applicable for message type
-            DIGITAL_REGISTERED_LETTER
+            DIGITAL_REGISTERED_LETTER and E_SIGNING
           readOnly: true
         attachments:
           type: array

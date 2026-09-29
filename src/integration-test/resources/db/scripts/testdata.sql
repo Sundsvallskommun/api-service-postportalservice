@@ -303,6 +303,39 @@ VALUES ('a1b2c3d4-0000-4000-8000-000000000001', '1decdead-52b8-42d9-aa62-5ef08c4
 -- Mail to showcase in recipients response
 UPDATE recipient SET email = 'john.wick@example.com' WHERE party_id = 'b2b2b2b2-b2b2-b2b2-b2b2-b2b2b2b2b2b2';
 
+-- E-signing test data (added user intentionally jumps to user4, since user3 is used for tests covering non-existing users)
+INSERT INTO user (id, username)
+VALUES ('e5160000-0000-4000-8000-0000000000aa', 'user4');
+
+INSERT INTO message (id, subject, municipality_id, user_id, message_type, created)
+VALUES ('e5160000-0000-4000-8000-000000000001', 'E-signing subject', '2281',
+        'e5160000-0000-4000-8000-0000000000aa', 'E_SIGNING', '2025-09-10 10:00:00');
+
+INSERT INTO recipient (id, message_id, type, status, created)
+VALUES ('e5160000-0000-4000-8000-0000000000b1', 'e5160000-0000-4000-8000-000000000001',
+        'E_SIGNING', 'PENDING', '2025-09-10 10:01:00');
+
+-- Signing status -> signingProcessState
+INSERT INTO signing (id, message_id, provider_case_id, provider, status, created)
+VALUES ('e5160000-0000-4000-8000-0000000000c1', 'e5160000-0000-4000-8000-000000000001',
+        'comfact-case-2', 'comfact', 'PENDING', '2025-09-10 10:02:00');
+
+-- E-signing that has expired while a recipient never acted: recipient stays PENDING, the case is EXPIRED
+INSERT INTO user (id, username)
+VALUES ('e5160000-0000-4000-8000-0000000000ab', 'user5');
+
+INSERT INTO message (id, subject, municipality_id, user_id, message_type, created)
+VALUES ('e5160000-0000-4000-8000-000000000002', 'Expired e-signing subject', '2281',
+        'e5160000-0000-4000-8000-0000000000ab', 'E_SIGNING', '2025-09-11 10:00:00');
+
+INSERT INTO recipient (id, message_id, type, status, created)
+VALUES ('e5160000-0000-4000-8000-0000000000b2', 'e5160000-0000-4000-8000-000000000002',
+        'E_SIGNING', 'PENDING', '2025-09-11 10:01:00');
+
+INSERT INTO signing (id, message_id, provider_case_id, provider, status, created)
+VALUES ('e5160000-0000-4000-8000-0000000000c2', 'e5160000-0000-4000-8000-000000000002',
+        'comfact-case-3', 'comfact', 'EXPIRED', '2025-09-11 10:02:00');
+
 -- Add E-signings for statistics
 INSERT INTO message (id, subject, municipality_id, department_id, user_id, message_type, created)
 VALUES ('e5160000-0000-4000-8000-0000000000f1', 'E-signing statistics', '2281', 'e3e146fb-aac9-467c-a19a-c90ee82caed4',

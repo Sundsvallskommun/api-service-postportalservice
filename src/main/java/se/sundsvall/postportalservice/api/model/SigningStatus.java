@@ -8,12 +8,17 @@ import static io.swagger.v3.oas.annotations.media.Schema.AccessMode.READ_ONLY;
 @Schema(description = "Signing status model")
 public class SigningStatus {
 
-	@Schema(description = "Present state for the letter", examples = {
+	@Schema(description = "Present state for the letter. Not used for E_SIGNING", examples = {
 		"NEW", "SENT", "SIGNED", "EXPIRED", "FAILED - Client Error", "FAILED - Server Error", "FAILED - Unknown Error"
 	}, accessMode = READ_ONLY)
 	private String letterState;
 
-	@Schema(description = "Present state for the signing process", examples = {
+	@Schema(description = """
+		Present state for the signing process.
+
+		- DIGITAL_REGISTERED_LETTER: PENDING, COMPLETED or FAILED
+		- E_SIGNING: INITIATED, PENDING, SIGNED, EXPIRED, CANCELLED, DECLINED, HALTED or FAILED
+		""", examples = {
 		"PENDING", "COMPLETED", "FAILED"
 	}, accessMode = READ_ONLY)
 	private String signingProcessState;

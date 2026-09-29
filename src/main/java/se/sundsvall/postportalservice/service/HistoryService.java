@@ -4,6 +4,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.springframework.data.domain.Page;
@@ -29,6 +30,7 @@ import se.sundsvall.postportalservice.service.mapper.HistoryMapper;
 import static org.springframework.http.HttpHeaders.CONTENT_DISPOSITION;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static se.sundsvall.postportalservice.integration.db.converter.MessageType.DIGITAL_REGISTERED_LETTER;
+import static se.sundsvall.postportalservice.integration.db.converter.MessageType.E_SIGNING;
 
 @Service
 public class HistoryService {
@@ -89,6 +91,14 @@ public class HistoryService {
 				});
 		}
 
+		final var eSigningEntities = page.getContent().stream()
+			.filter(entity -> E_SIGNING.equals(entity.getMessageType()))
+			.toList();
+
+		if (!eSigningEntities.isEmpty()) {
+			decorateESigningMessagesWithStatus(eSigningEntities, messageById);
+		}
+
 		return messages;
 	}
 
@@ -118,6 +128,12 @@ public class HistoryService {
 				.ifPresent(letterStatus -> messageDetails.setSigningStatus(historyMapper.toSigningStatus(letterStatus)));
 		}
 
+		// Decorate with the case status if this is an e-signing
+		if (E_SIGNING.equals(messageEntity.getMessageType())) {
+			signingRepository.findByMessageId(messageId)
+				.ifPresent(signing -> messageDetails.setSigningStatus(historyMapper.toESigningStatus(signing)));
+		}
+
 		return messageDetails;
 	}
 
@@ -141,7 +157,7 @@ public class HistoryService {
 	 * download and a 404 is returned.
 	 */
 	public ResponseEntity<StreamingResponseBody> getSignedDocument(final String municipalityId, final String messageId) {
-		final var signedAttachmentId = signingRepository.findByMessageId(messageId)
+		final var signedAttachmentId = signingRepository.findByMessageIdAndMessageMunicipalityId(messageId, municipalityId)
 			.map(SigningEntity::getAttachment)
 			.map(AttachmentEntity::getId)
 			.orElseThrow(() -> Problem.valueOf(NOT_FOUND, "No signed document available for message with id '%s'".formatted(messageId)));
@@ -164,4 +180,12 @@ public class HistoryService {
 		return message.getRecipients().getFirst().getExternalId();
 	}
 
+	private void decorateESigningMessagesWithStatus(final List<MessageEntity> eSigningEntities, final Map<String, Message> messageById) {
+		final var messageIds = eSigningEntities.stream()
+			.map(MessageEntity::getId)
+			.toList();
+
+		signingRepository.findAllByMessageIdIn(messageIds).forEach(signing -> Optional.ofNullable(messageById.get(signing.getMessage().getId()))
+			.ifPresent(message -> message.setSigningStatus(historyMapper.toESigningStatus(signing))));
+	}
 }
