@@ -199,6 +199,52 @@ class HistoryServiceTest {
 	}
 
 	@Test
+	void getUserMessages_twoLettersSharingExternalIdOnlyQueriesLetterOnce() {
+		final var username = "username";
+		final var letterId = "letterId123";
+		final var first = MessageEntity.create()
+			.withCreated(FIXED_CREATED)
+			.withSubject("first")
+			.withMessageType(DIGITAL_REGISTERED_LETTER)
+			.withId("first-id")
+			.withRecipients(List.of(new RecipientEntity().withExternalId(letterId)));
+		final var second = MessageEntity.create()
+			.withCreated(FIXED_CREATED)
+			.withSubject("second")
+			.withMessageType(DIGITAL_REGISTERED_LETTER)
+			.withId("second-id")
+			.withRecipients(List.of(new RecipientEntity().withExternalId(letterId)));
+		final var messageEntities = List.of(first, second);
+		final var letterStatus = new LetterStatus().letterId(letterId).status("SENT");
+		final var signingStatus = SigningStatus.create().withLetterState("SENT");
+
+		when(messageRepositoryMock.findAllByMunicipalityIdAndUserUsernameIgnoreCase(eq(MUNICIPALITY_ID), eq(username), any(Pageable.class))).thenReturn(pageMock);
+		when(digitalRegisteredLetterIntegrationMock.getLetterStatuses(MUNICIPALITY_ID, List.of(letterId))).thenReturn(List.of(letterStatus));
+		when(historyMapperMock.toSigningStatus(letterStatus)).thenReturn(signingStatus);
+		when(pageMock.getContent()).thenReturn(messageEntities);
+		when(pageMock.getSort()).thenReturn(Sort.unsorted());
+		when(pageMock.getSize()).thenReturn(2);
+		when(pageMock.getNumber()).thenReturn(0);
+		when(pageMock.getNumberOfElements()).thenReturn(2);
+		when(pageMock.getTotalElements()).thenReturn(2L);
+		when(pageMock.getTotalPages()).thenReturn(1);
+
+		final var messages = historyService.getUserMessages(MUNICIPALITY_ID, username, Pageable.unpaged());
+
+		assertThat(messages.getMessages()).hasSize(2);
+		assertThat(messages.getMessages().getFirst().getSigningStatus()).isEqualTo(signingStatus);
+		assertThat(messages.getMessages().getLast().getSigningStatus()).isNull();
+
+		verify(messageRepositoryMock).findAllByMunicipalityIdAndUserUsernameIgnoreCase(eq(MUNICIPALITY_ID), eq(username), any(Pageable.class));
+		verify(digitalRegisteredLetterIntegrationMock).getLetterStatuses(MUNICIPALITY_ID, List.of(letterId));
+		verify(historyMapperMock).toMessageList(messageEntities);
+		verify(historyMapperMock).toMessage(first);
+		verify(historyMapperMock).toMessage(second);
+		verify(historyMapperMock).toSigningStatus(letterStatus);
+		verify(pageMock, times(3)).getContent();
+	}
+
+	@Test
 	void getUserMessages_digitalRegisteredLettersCommunicationWithNonMatchingStatus() {
 		final var username = "username";
 		final var messageId = "messageId";

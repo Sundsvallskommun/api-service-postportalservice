@@ -7,6 +7,7 @@ import generated.se.sundsvall.messaging.MessageStatus;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Stream;
@@ -214,8 +215,7 @@ public class MessageService {
 	 * Cancels an ongoing e-signing case: withdraws it at the provider (via api-service-e-signing) and marks the local
 	 * case as {@code CANCELLED}. A case that has already completed ({@code SIGNED}) cannot be cancelled. The provider also
 	 * confirms the withdrawal asynchronously through the signing-event callback ({@code CASE_WITHDRAWN}), which keeps the
-	 * case
-	 * {@code CANCELLED}.
+	 * case {@code CANCELLED}. A case that has already expired or been cancelled is rejected as well.
 	 */
 	@Transactional
 	public void cancelESigning(final String municipalityId, final String messageId) {
@@ -226,7 +226,7 @@ public class MessageService {
 			throw Problem.valueOf(BAD_REQUEST, "Cannot cancel a signing that is already completed");
 		}
 		if (EXPIRED.equals(signing.getStatus()) || CANCELLED.equals(signing.getStatus())) {
-			throw Problem.valueOf(BAD_REQUEST, "Cannot cancel a signing that is already %s".formatted(signing.getStatus().toLowerCase()));
+			throw Problem.valueOf(BAD_REQUEST, "Cannot cancel a signing that is already %s".formatted(signing.getStatus().toLowerCase(Locale.ROOT)));
 		}
 
 		esigningIntegration.cancelSigning(municipalityId, signing.getProviderCaseId());

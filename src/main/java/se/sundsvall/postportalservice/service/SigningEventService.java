@@ -118,7 +118,10 @@ public class SigningEventService {
 	}
 
 	static String toRecipientStatus(final String action) {
-		return "DECLINED".equals(action) ? DECLINED : SIGNED;
+		if (DECLINED.equals(action)) {
+			return DECLINED;
+		}
+		return SIGNED;
 	}
 
 	/**

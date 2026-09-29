@@ -4,6 +4,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.springframework.data.domain.Page;
@@ -184,11 +185,7 @@ public class HistoryService {
 			.map(MessageEntity::getId)
 			.toList();
 
-		signingRepository.findAllByMessageIdIn(messageIds).forEach(signing -> {
-			final var message = messageById.get(signing.getMessage().getId());
-			if (message != null) {
-				message.setSigningStatus(historyMapper.toESigningStatus(signing));
-			}
-		});
+		signingRepository.findAllByMessageIdIn(messageIds).forEach(signing -> Optional.ofNullable(messageById.get(signing.getMessage().getId()))
+			.ifPresent(message -> message.setSigningStatus(historyMapper.toESigningStatus(signing))));
 	}
 }
