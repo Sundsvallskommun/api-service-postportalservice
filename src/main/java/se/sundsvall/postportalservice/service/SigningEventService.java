@@ -21,6 +21,7 @@ import static se.sundsvall.dept44.util.LogUtils.sanitizeForLogging;
 import static se.sundsvall.postportalservice.Constants.CANCELLED;
 import static se.sundsvall.postportalservice.Constants.DECLINED;
 import static se.sundsvall.postportalservice.Constants.EXPIRED;
+import static se.sundsvall.postportalservice.Constants.HALTED;
 import static se.sundsvall.postportalservice.Constants.SIGNED;
 
 /**
@@ -72,8 +73,9 @@ public class SigningEventService {
 	/**
 	 * Guarded status transition. {@code SIGNED}, {@code EXPIRED} and {@code CANCELLED} are terminal: a late, redelivered or
 	 * out-of-order event never moves the case out of them ({@code CASE_REACTIVATED} may lift an {@code EXPIRED} case).
-	 * The provider folds withdrawn, declined and halted cases into {@code FAILED}, so a withdrawal or expiry is derived
-	 * from the event type instead of the normalized status; otherwise a withdrawn case would lose its {@code CANCELLED}.
+	 * The provider folds withdrawn, declined and halted cases into {@code FAILED}, so those are derived from the event type
+	 * instead of the normalized status ({@code CANCELLED}, {@code DECLINED}, {@code HALTED}); {@code FAILED} is then left
+	 * for cases that actually failed, and a withdrawn case does not lose its {@code CANCELLED}.
 	 */
 	void applyStatus(final SigningEntity signing, final SigningEvent event) {
 		final var currentStatus = signing.getStatus();
@@ -90,6 +92,8 @@ public class SigningEventService {
 		return switch (Optional.ofNullable(event.getEventType()).orElse("")) {
 			case "CASE_WITHDRAWN" -> CANCELLED;
 			case "CASE_EXPIRED" -> EXPIRED;
+			case "SIGNATORY_DECLINED" -> DECLINED;
+			case "CASE_HALTED" -> HALTED;
 			default -> event.getStatus();
 		};
 	}

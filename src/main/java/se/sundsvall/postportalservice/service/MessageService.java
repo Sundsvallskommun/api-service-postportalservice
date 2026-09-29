@@ -54,6 +54,7 @@ import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.http.MediaType.TEXT_PLAIN_VALUE;
 import static se.sundsvall.postportalservice.Constants.CANCELLED;
+import static se.sundsvall.postportalservice.Constants.EXPIRED;
 import static se.sundsvall.postportalservice.Constants.FAILED;
 import static se.sundsvall.postportalservice.Constants.PENDING;
 import static se.sundsvall.postportalservice.Constants.SIGNED;
@@ -218,11 +219,14 @@ public class MessageService {
 	 */
 	@Transactional
 	public void cancelESigning(final String municipalityId, final String messageId) {
-		final var signing = signingRepository.findByMessageId(messageId)
+		final var signing = signingRepository.findByMessageIdAndMessageMunicipalityId(messageId, municipalityId)
 			.orElseThrow(() -> Problem.valueOf(NOT_FOUND, "No e-signing case found for message with id '%s'".formatted(messageId)));
 
 		if (SIGNED.equals(signing.getStatus())) {
 			throw Problem.valueOf(BAD_REQUEST, "Cannot cancel a signing that is already completed");
+		}
+		if (EXPIRED.equals(signing.getStatus()) || CANCELLED.equals(signing.getStatus())) {
+			throw Problem.valueOf(BAD_REQUEST, "Cannot cancel a signing that is already %s".formatted(signing.getStatus().toLowerCase()));
 		}
 
 		esigningIntegration.cancelSigning(municipalityId, signing.getProviderCaseId());

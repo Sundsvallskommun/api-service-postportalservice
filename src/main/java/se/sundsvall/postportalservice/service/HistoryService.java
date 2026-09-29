@@ -156,7 +156,7 @@ public class HistoryService {
 	 * download and a 404 is returned.
 	 */
 	public ResponseEntity<StreamingResponseBody> getSignedDocument(final String municipalityId, final String messageId) {
-		final var signedAttachmentId = signingRepository.findByMessageId(messageId)
+		final var signedAttachmentId = signingRepository.findByMessageIdAndMessageMunicipalityId(messageId, municipalityId)
 			.map(SigningEntity::getAttachment)
 			.map(AttachmentEntity::getId)
 			.orElseThrow(() -> Problem.valueOf(NOT_FOUND, "No signed document available for message with id '%s'".formatted(messageId)));

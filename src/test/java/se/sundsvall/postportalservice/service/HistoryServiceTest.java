@@ -858,7 +858,7 @@ class HistoryServiceTest {
 		final var contentDisposition = ContentDisposition.attachment().filename("signed.pdf").build();
 		final var attachmentData = new AttachmentService.AttachmentData(contentDisposition, APPLICATION_PDF, stream);
 
-		when(signingRepositoryMock.findByMessageId(messageId)).thenReturn(Optional.of(signing));
+		when(signingRepositoryMock.findByMessageIdAndMessageMunicipalityId(messageId, MUNICIPALITY_ID)).thenReturn(Optional.of(signing));
 		when(attachmentServiceMock.getAttachmentData(MUNICIPALITY_ID, attachmentId)).thenReturn(attachmentData);
 
 		final var result = historyService.getSignedDocument(MUNICIPALITY_ID, messageId);
@@ -867,33 +867,33 @@ class HistoryServiceTest {
 		assertThat(result.getHeaders().getFirst(CONTENT_DISPOSITION)).isEqualTo(contentDisposition.toString());
 		assertThat(result.getHeaders().getContentType()).isEqualTo(APPLICATION_PDF);
 		assertThat(result.getBody()).isSameAs(stream);
-		verify(signingRepositoryMock).findByMessageId(messageId);
+		verify(signingRepositoryMock).findByMessageIdAndMessageMunicipalityId(messageId, MUNICIPALITY_ID);
 		verify(attachmentServiceMock).getAttachmentData(MUNICIPALITY_ID, attachmentId);
 	}
 
 	@Test
 	void getSignedDocument_noSigningCase() {
 		final var messageId = "messageId";
-		when(signingRepositoryMock.findByMessageId(messageId)).thenReturn(Optional.empty());
+		when(signingRepositoryMock.findByMessageIdAndMessageMunicipalityId(messageId, MUNICIPALITY_ID)).thenReturn(Optional.empty());
 
 		assertThatThrownBy(() -> historyService.getSignedDocument(MUNICIPALITY_ID, messageId))
 			.isInstanceOf(Problem.class)
 			.hasMessageContaining("Not Found: No signed document available for message with id '%s'".formatted(messageId));
 
-		verify(signingRepositoryMock).findByMessageId(messageId);
+		verify(signingRepositoryMock).findByMessageIdAndMessageMunicipalityId(messageId, MUNICIPALITY_ID);
 		verifyNoInteractions(attachmentServiceMock);
 	}
 
 	@Test
 	void getSignedDocument_notSignedYet() {
 		final var messageId = "messageId";
-		when(signingRepositoryMock.findByMessageId(messageId)).thenReturn(Optional.of(SigningEntity.create()));
+		when(signingRepositoryMock.findByMessageIdAndMessageMunicipalityId(messageId, MUNICIPALITY_ID)).thenReturn(Optional.of(SigningEntity.create()));
 
 		assertThatThrownBy(() -> historyService.getSignedDocument(MUNICIPALITY_ID, messageId))
 			.isInstanceOf(Problem.class)
 			.hasMessageContaining("Not Found: No signed document available for message with id '%s'".formatted(messageId));
 
-		verify(signingRepositoryMock).findByMessageId(messageId);
+		verify(signingRepositoryMock).findByMessageIdAndMessageMunicipalityId(messageId, MUNICIPALITY_ID);
 		verifyNoInteractions(attachmentServiceMock);
 	}
 

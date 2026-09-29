@@ -7,6 +7,7 @@ import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -197,6 +198,22 @@ class SigningEventServiceTest {
 		service.handleSigningEvent(MUNICIPALITY_ID, MESSAGE_ID, event);
 
 		assertThat(signing.getStatus()).isEqualTo("CANCELLED");
+		verify(signingRepositoryMock).save(signing);
+	}
+
+	@ParameterizedTest
+	@CsvSource({
+		"SIGNATORY_DECLINED, DECLINED", "CASE_HALTED, HALTED"
+	})
+	void handleSigningEvent_declinedAndHaltedAreNotReportedAsFailed(final String eventType, final String expectedStatus) {
+		final var signing = SigningEntity.create().withId("s1").withStatus("PENDING").withMessage(MessageEntity.create().withId(MESSAGE_ID));
+		final var event = SigningEvent.create().withEventType(eventType).withStatus("FAILED");
+
+		when(signingRepositoryMock.findByMessageId(MESSAGE_ID)).thenReturn(Optional.of(signing));
+
+		service.handleSigningEvent(MUNICIPALITY_ID, MESSAGE_ID, event);
+
+		assertThat(signing.getStatus()).isEqualTo(expectedStatus);
 		verify(signingRepositoryMock).save(signing);
 	}
 

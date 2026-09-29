@@ -15,5 +15,6 @@ public final class Constants {
 	// E-signing recipient (signatory) and case status. SIGNED, EXPIRED and CANCELLED are terminal for signing cases.
 	public static final String SIGNED = "SIGNED";
 	public static final String EXPIRED = "EXPIRED";
+	public static final String HALTED = "HALTED";
 	public static final String DECLINED = "DECLINED";
 }
