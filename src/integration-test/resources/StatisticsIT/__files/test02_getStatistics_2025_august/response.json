@@ -6,7 +6,7 @@
 		"digitalMail": 20,
 		"sms": 5,
 		"digitalRegisteredLetter": 10,
-		"eSigning": 0
+		"esigning": 0
 	},
 	{
 		"id": "9a8b6e67-6007-4379-a717-cca245448400",
@@ -15,6 +15,6 @@
 		"digitalMail": 5,
 		"sms": 5,
 		"digitalRegisteredLetter": 0,
-		"eSigning": 0
+		"esigning": 0
 	}
 ]

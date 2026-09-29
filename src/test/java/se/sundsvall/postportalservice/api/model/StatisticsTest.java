@@ -39,7 +39,7 @@ class StatisticsTest {
 			.withDigitalMail(DIGITAL_MAIL)
 			.withSms(SMS)
 			.withDigitalRegisteredLetter(DIGITAL_REGISTERED_LETTER)
-			.withESigning(E_SIGNING);
+			.withEsigning(E_SIGNING);
 
 		assertThat(statistics.getId()).isEqualTo(ID);
 		assertThat(statistics.getName()).isEqualTo(NAME);
@@ -47,7 +47,7 @@ class StatisticsTest {
 		assertThat(statistics.getDigitalMail()).isEqualTo(DIGITAL_MAIL);
 		assertThat(statistics.getSms()).isEqualTo(SMS);
 		assertThat(statistics.getDigitalRegisteredLetter()).isEqualTo(DIGITAL_REGISTERED_LETTER);
-		assertThat(statistics.getESigning()).isEqualTo(E_SIGNING);
+		assertThat(statistics.getEsigning()).isEqualTo(E_SIGNING);
 		assertThat(statistics).hasNoNullFieldsOrProperties();
 	}
 
@@ -60,7 +60,7 @@ class StatisticsTest {
 		statistics.setDigitalMail(DIGITAL_MAIL);
 		statistics.setSms(SMS);
 		statistics.setDigitalRegisteredLetter(DIGITAL_REGISTERED_LETTER);
-		statistics.setESigning(E_SIGNING);
+		statistics.setEsigning(E_SIGNING);
 
 		assertThat(statistics.getId()).isEqualTo(ID);
 		assertThat(statistics.getName()).isEqualTo(NAME);
@@ -68,7 +68,7 @@ class StatisticsTest {
 		assertThat(statistics.getDigitalMail()).isEqualTo(DIGITAL_MAIL);
 		assertThat(statistics.getSms()).isEqualTo(SMS);
 		assertThat(statistics.getDigitalRegisteredLetter()).isEqualTo(DIGITAL_REGISTERED_LETTER);
-		assertThat(statistics.getESigning()).isEqualTo(E_SIGNING);
+		assertThat(statistics.getEsigning()).isEqualTo(E_SIGNING);
 		assertThat(statistics).hasNoNullFieldsOrProperties();
 	}
 

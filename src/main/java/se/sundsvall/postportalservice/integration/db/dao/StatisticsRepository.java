@@ -43,7 +43,7 @@ public class StatisticsRepository {
 				.withDigitalMail(resultSet.getLong("digital_mail_count"))
 				.withSms(resultSet.getLong("sms_count"))
 				.withDigitalRegisteredLetter(resultSet.getLong("digital_registered_letter_count"))
-				.withESigning(resultSet.getLong("e_signing_count"));
+				.withEsigning(resultSet.getLong("e_signing_count"));
 		}
 	}
 

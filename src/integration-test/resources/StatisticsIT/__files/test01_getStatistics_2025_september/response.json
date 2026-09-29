@@ -6,7 +6,7 @@
 		"digitalMail": 0,
 		"sms": 3,
 		"digitalRegisteredLetter": 0,
-		"eSigning": 0
+		"esigning": 0
 	},
 	{
 		"id": "7b137896-cc1d-479b-bf2f-fc663eb8b943",
@@ -15,7 +15,7 @@
 		"digitalMail": 2,
 		"sms": 1,
 		"digitalRegisteredLetter": 0,
-		"eSigning": 0
+		"esigning": 0
 	},
 	{
 		"id": "9a8b6e67-6007-4379-a717-cca245448400",
@@ -24,7 +24,7 @@
 		"digitalMail": 0,
 		"sms": 0,
 		"digitalRegisteredLetter": 0,
-		"eSigning": 0
+		"esigning": 0
 	},
 	{
 		"id": "e3e146fb-aac9-467c-a19a-c90ee82caed4",
@@ -33,7 +33,7 @@
 		"digitalMail": 0,
 		"sms": 0,
 		"digitalRegisteredLetter": 1,
-		"eSigning": 2
+		"esigning": 2
 	},
 	{
 		"id": "e9c2ebba-4b71-4cc1-bc56-46434f8693cc",
@@ -42,6 +42,6 @@
 		"digitalMail": 1,
 		"sms": 1,
 		"digitalRegisteredLetter": 0,
-		"eSigning": 0
+		"esigning": 0
 	}
 ]

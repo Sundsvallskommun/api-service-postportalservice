@@ -49,7 +49,7 @@ class StatisticsRepositoryTest {
 				Statistics::getSnailMail,
 				Statistics::getDigitalMail,
 				Statistics::getDigitalRegisteredLetter,
-				Statistics::getESigning,
+				Statistics::getEsigning,
 				Statistics::getSms)
 			.containsExactlyInAnyOrder(
 				tuple("9a8b6e67-6007-4379-a717-cca245448400", "Miljöförvaltningen", 3L, 0L, 0L, 0L, 0L),
@@ -72,7 +72,7 @@ class StatisticsRepositoryTest {
 			Statistics::getSnailMail,
 			Statistics::getDigitalMail,
 			Statistics::getDigitalRegisteredLetter,
-			Statistics::getESigning,
+			Statistics::getEsigning,
 			Statistics::getSms).containsExactlyInAnyOrder(
 				tuple("9a8b6e67-6007-4379-a717-cca245448400", "Miljöförvaltningen", 25L, 5L, 0L, 0L, 5L),
 				tuple("7b137896-cc1d-479b-bf2f-fc663eb8b943", "Socialförvaltningen", 0L, 20L, 10L, 0L, 5L));
@@ -85,7 +85,7 @@ class StatisticsRepositoryTest {
 		final var snailMailCount = 10L;
 		final var digitalMailCount = 20L;
 		final var digitalRegisteredLetterCount = 5L;
-		final var eSigning = 25L;
+		final var esigning = 25L;
 		final var smsCount = 15L;
 
 		final var resultSetMock = Mockito.mock(ResultSet.class);
@@ -94,7 +94,7 @@ class StatisticsRepositoryTest {
 		when(resultSetMock.getLong("snail_mail_count")).thenReturn(snailMailCount);
 		when(resultSetMock.getLong("digital_mail_count")).thenReturn(digitalMailCount);
 		when(resultSetMock.getLong("digital_registered_letter_count")).thenReturn(digitalRegisteredLetterCount);
-		when(resultSetMock.getLong("e_signing_count")).thenReturn(eSigning);
+		when(resultSetMock.getLong("e_signing_count")).thenReturn(esigning);
 		when(resultSetMock.getLong("sms_count")).thenReturn(smsCount);
 
 		final var mapper = new StatisticsRepository.StatisticsMapper();
@@ -107,7 +107,7 @@ class StatisticsRepositoryTest {
 			assertThat(statistics.getSnailMail()).isEqualTo(snailMailCount);
 			assertThat(statistics.getDigitalMail()).isEqualTo(digitalMailCount);
 			assertThat(statistics.getDigitalRegisteredLetter()).isEqualTo(digitalRegisteredLetterCount);
-			assertThat(statistics.getESigning()).isEqualTo(eSigning);
+			assertThat(statistics.getEsigning()).isEqualTo(esigning);
 			assertThat(statistics.getSms()).isEqualTo(smsCount);
 		});
 
