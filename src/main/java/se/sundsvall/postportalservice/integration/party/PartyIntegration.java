@@ -17,6 +17,7 @@ import se.sundsvall.postportalservice.integration.party.configuration.PartyPrope
 
 import static java.util.Collections.emptyMap;
 import static java.util.Optional.ofNullable;
+import static se.sundsvall.postportalservice.util.LegalIdUtil.toOrgNumber;
 
 @Component
 public class PartyIntegration {
@@ -82,7 +83,8 @@ public class PartyIntegration {
 	}
 
 	/**
-	 * Get partyIds for the provided enterprise legalIds via parallel individual GET calls.
+	 * Get partyIds for the provided enterprise legalIds via parallel individual GET calls. A "16"-prefixed 12-digit
+	 * organization number is sent to Party in its 10-digit form, but keeps the provided form as key in the result.
 	 *
 	 * @param  municipalityId the municipality id
 	 * @param  legalIds       the enterprise legalIds (organization numbers)
@@ -92,7 +94,7 @@ public class PartyIntegration {
 		if (legalIds == null || legalIds.isEmpty()) {
 			return emptyMap();
 		}
-		return fanOutLookup(legalIds, legalId -> partyClient.getEnterprisePartyIdByLegalId(municipalityId, legalId));
+		return fanOutLookup(legalIds, legalId -> partyClient.getEnterprisePartyIdByLegalId(municipalityId, toOrgNumber(legalId)));
 	}
 
 	/**

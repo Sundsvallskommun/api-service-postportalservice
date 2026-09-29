@@ -13,6 +13,7 @@ public final class LegalIdUtil {
 		.withResolverStyle(ResolverStyle.STRICT);
 	private static final int ORG_NUMBER_LENGTH = 10;
 	private static final int ORG_NUMBER_PREFIXED_WITH_16_LENGTH = 12;
+	private static final String ORG_NUMBER_PREFIX = "16";
 	private static final int PERSON_ID_LENGTH = 12;
 	private static final int ADULT_AGE = 18;
 
@@ -33,12 +34,10 @@ public final class LegalIdUtil {
 			return false;
 		}
 
-		final var length = legalId.length();
-		if (length != ORG_NUMBER_LENGTH && length != ORG_NUMBER_PREFIXED_WITH_16_LENGTH) {
+		final var stripped = toOrgNumber(legalId);
+		if (stripped.length() != ORG_NUMBER_LENGTH) {
 			return false;
 		}
-
-		final var stripped = length == ORG_NUMBER_PREFIXED_WITH_16_LENGTH ? legalId.substring(2) : legalId;
 
 		try {
 			final var monthPart = Integer.parseInt(stripped.substring(2, 3));
@@ -46,6 +45,20 @@ public final class LegalIdUtil {
 		} catch (final NumberFormatException _) {
 			return false;
 		}
+	}
+
+	/**
+	 * Strip the "16" prefix from a 12-digit organization number, since Party only accepts the 10-digit form. Any other
+	 * value is returned unchanged.
+	 *
+	 * @param  legalId the id to normalize
+	 * @return         the 10-digit organization number if the id is "16"-prefixed, otherwise the id as given
+	 */
+	public static String toOrgNumber(final String legalId) {
+		if (legalId != null && legalId.length() == ORG_NUMBER_PREFIXED_WITH_16_LENGTH && legalId.startsWith(ORG_NUMBER_PREFIX)) {
+			return legalId.substring(ORG_NUMBER_PREFIX.length());
+		}
+		return legalId;
 	}
 
 	/**

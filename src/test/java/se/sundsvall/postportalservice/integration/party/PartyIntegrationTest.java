@@ -16,6 +16,7 @@ import se.sundsvall.postportalservice.integration.party.configuration.PartyPrope
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.entry;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.times;
@@ -191,6 +192,16 @@ class PartyIntegrationTest {
 			.doesNotContainKey("5593456789");
 		verify(partyClientMock).getEnterprisePartyIdByLegalId(MUNICIPALITY_ID, "5523456789");
 		verify(partyClientMock).getEnterprisePartyIdByLegalId(MUNICIPALITY_ID, "5593456789");
+	}
+
+	@Test
+	void getEnterprisePartyIds_stripsSixteenPrefix() {
+		when(partyClientMock.getEnterprisePartyIdByLegalId(MUNICIPALITY_ID, "5565914523")).thenReturn("28fba79e-73aa-4ecb-939f-301f326d2d4c");
+
+		final var result = partyIntegration.getEnterprisePartyIds(MUNICIPALITY_ID, List.of("165565914523"));
+
+		assertThat(result).containsExactly(entry("165565914523", "28fba79e-73aa-4ecb-939f-301f326d2d4c"));
+		verify(partyClientMock).getEnterprisePartyIdByLegalId(MUNICIPALITY_ID, "5565914523");
 	}
 
 	@Test
