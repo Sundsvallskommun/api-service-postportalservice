@@ -91,4 +91,14 @@ class HistoryIT extends AbstractAppTest {
 				.withExpectedResponse(RESPONSE_FILE)
 				.sendRequestAndVerifyResponse();
 	}
+
+	@Test
+	void test08_getMessageDetailsForESigningWithSigningStatus() {
+		setupCall()
+			.withServicePath("/2281/history/users/user4/messages/e5160000-0000-4000-8000-000000000001")
+			.withHttpMethod(GET)
+			.withExpectedResponseStatus(OK)
+			.withExpectedResponse(RESPONSE_FILE)
+			.sendRequestAndVerifyResponse();
+	}
 }

@@ -127,6 +127,12 @@ public class HistoryService {
 				.ifPresent(letterStatus -> messageDetails.setSigningStatus(historyMapper.toSigningStatus(letterStatus)));
 		}
 
+		// Decorate with the case status if this is an e-signing
+		if (E_SIGNING.equals(messageEntity.getMessageType())) {
+			signingRepository.findByMessageId(messageId)
+				.ifPresent(signing -> messageDetails.setSigningStatus(historyMapper.toESigningStatus(signing)));
+		}
+
 		return messageDetails;
 	}
 

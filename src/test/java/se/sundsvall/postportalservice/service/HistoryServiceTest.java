@@ -558,6 +558,69 @@ class HistoryServiceTest {
 	}
 
 	@Test
+	void getMessageDetails_withESigningAndSigningStatus() {
+		final var messageId = "messageId";
+		final var userId = "userId";
+		final var message = MessageEntity.create()
+			.withSubject("subject")
+			.withCreated(FIXED_CREATED)
+			.withAttachments(List.of())
+			.withRecipients(List.of(new RecipientEntity().withStatus("PENDING")))
+			.withMessageType(MessageType.E_SIGNING)
+			.withId(messageId);
+		final var signingEntity = SigningEntity.create().withMessage(message).withStatus("EXPIRED");
+
+		when(messageRepositoryMock.findByMunicipalityIdAndIdAndUserUsernameIgnoreCase(MUNICIPALITY_ID, messageId, userId)).thenReturn(Optional.of(message));
+		when(signingRepositoryMock.findByMessageId(messageId)).thenReturn(Optional.of(signingEntity));
+
+		final var result = historyService.getMessageDetails(MUNICIPALITY_ID, userId, messageId);
+
+		assertThat(result.getSigningStatus()).isNotNull().satisfies(status -> {
+			assertThat(status.getLetterState()).isNull();
+			assertThat(status.getSigningProcessState()).isEqualTo("EXPIRED");
+		});
+
+		verify(messageRepositoryMock).findByMunicipalityIdAndIdAndUserUsernameIgnoreCase(MUNICIPALITY_ID, messageId, userId);
+		verify(partyIntegrationMock).getLegalIds(MUNICIPALITY_ID, List.of());
+		verify(signingRepositoryMock).findByMessageId(messageId);
+		verify(historyMapperMock).toMessageDetails(message);
+		verify(historyMapperMock).toAttachmentList(message.getAttachments());
+		verify(historyMapperMock).toRecipientList(message.getRecipients());
+		verify(historyMapperMock).toRecipient(message.getRecipients().getFirst());
+		verify(historyMapperMock).toESigningStatus(signingEntity);
+		verifyNoInteractions(digitalRegisteredLetterIntegrationMock);
+	}
+
+	@Test
+	void getMessageDetails_withESigningButNoSigningFound() {
+		final var messageId = "messageId";
+		final var userId = "userId";
+		final var message = MessageEntity.create()
+			.withSubject("subject")
+			.withCreated(FIXED_CREATED)
+			.withAttachments(List.of())
+			.withRecipients(List.of(new RecipientEntity().withStatus("PENDING")))
+			.withMessageType(MessageType.E_SIGNING)
+			.withId(messageId);
+
+		when(messageRepositoryMock.findByMunicipalityIdAndIdAndUserUsernameIgnoreCase(MUNICIPALITY_ID, messageId, userId)).thenReturn(Optional.of(message));
+		when(signingRepositoryMock.findByMessageId(messageId)).thenReturn(Optional.empty());
+
+		final var result = historyService.getMessageDetails(MUNICIPALITY_ID, userId, messageId);
+
+		assertThat(result.getSigningStatus()).isNull();
+
+		verify(messageRepositoryMock).findByMunicipalityIdAndIdAndUserUsernameIgnoreCase(MUNICIPALITY_ID, messageId, userId);
+		verify(partyIntegrationMock).getLegalIds(MUNICIPALITY_ID, List.of());
+		verify(signingRepositoryMock).findByMessageId(messageId);
+		verify(historyMapperMock).toMessageDetails(message);
+		verify(historyMapperMock).toAttachmentList(message.getAttachments());
+		verify(historyMapperMock).toRecipientList(message.getRecipients());
+		verify(historyMapperMock).toRecipient(message.getRecipients().getFirst());
+		verifyNoInteractions(digitalRegisteredLetterIntegrationMock);
+	}
+
+	@Test
 	void getMessageDetails_withDigitalRegisteredLetterButNoSigningStatus() {
 		final var messageId = "messageId";
 		final var letterId = "letterId123";

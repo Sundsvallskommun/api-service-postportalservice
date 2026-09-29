@@ -1958,7 +1958,7 @@ components:
         signingStatus:
           $ref: "#/components/schemas/SigningStatus"
           description: Status for signing process. Only applicable for message type
-            DIGITAL_REGISTERED_LETTER
+            DIGITAL_REGISTERED_LETTER and E_SIGNING
           readOnly: true
         attachments:
           type: array
