@@ -18,6 +18,7 @@ import se.sundsvall.postportalservice.integration.db.DepartmentEntity;
 import se.sundsvall.postportalservice.integration.db.MessageEntity;
 
 import static java.util.Collections.emptyList;
+import static se.sundsvall.postportalservice.Constants.NO_REPLY_EMAIL;
 
 @Component
 public final class EsigningMapper {
@@ -63,7 +64,7 @@ public final class EsigningMapper {
 			.map(d -> new Initiator()
 				.name(d.getName())
 				.organization(d.getName())
-				.email(d.getContactInformationEmail()))
+				.email(NO_REPLY_EMAIL)) // To not spam the "real" mailbox
 			.orElseGet(Initiator::new);
 	}
 
