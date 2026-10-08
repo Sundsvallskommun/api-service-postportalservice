@@ -20,7 +20,7 @@ class EsigningMapperTest {
 	void toStartSigningRequest() {
 		final var department = DepartmentEntity.create()
 			.withName("Sundsvall Municipality")
-			.withContactInformationEmail("dept@sundsvall.se");
+			.withContactInformationEmail("should-be-overwritten@sundsvall.se");
 		final var message = MessageEntity.create()
 			.withId("msg-1")
 			.withSubject("Please sign")
@@ -55,7 +55,7 @@ class EsigningMapperTest {
 		assertThat(result.getAttachments().getFirst().getContent()).isEqualTo("attachmentBase64");
 		assertThat(result.getInitiator().getName()).isEqualTo("Sundsvall Municipality");
 		assertThat(result.getInitiator().getOrganization()).isEqualTo("Sundsvall Municipality");
-		assertThat(result.getInitiator().getEmail()).isEqualTo("dept@sundsvall.se");
+		assertThat(result.getInitiator().getEmail()).isEqualTo("noreply@sundsvall.se");
 		assertThat(result.getNotificationMessage().getSubject()).isEqualTo("Please sign");
 		assertThat(result.getNotificationMessage().getBody()).isEqualTo("Please sign the document");
 		assertThat(result.getSignatories()).hasSize(1);
