@@ -1,18 +1,5 @@
 package se.sundsvall.postportalservice.apptest;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.tuple;
-import static org.awaitility.Awaitility.await;
-import static org.springframework.http.HttpHeaders.LOCATION;
-import static org.springframework.http.HttpMethod.POST;
-import static org.springframework.http.HttpStatus.CREATED;
-import static org.springframework.http.MediaType.MULTIPART_FORM_DATA;
-import static se.sundsvall.postportalservice.Constants.SENT;
-import static se.sundsvall.postportalservice.integration.db.converter.MessageType.DIGITAL_MAIL;
-import static se.sundsvall.postportalservice.integration.db.converter.MessageType.LETTER;
-import static se.sundsvall.postportalservice.integration.db.converter.MessageType.SNAIL_MAIL;
-import static se.sundsvall.postportalservice.integration.db.converter.PartyType.ENTERPRISE;
-
 import java.io.FileNotFoundException;
 import java.time.Duration;
 import java.util.List;
@@ -25,6 +12,19 @@ import se.sundsvall.postportalservice.Application;
 import se.sundsvall.postportalservice.integration.db.RecipientEntity;
 import se.sundsvall.postportalservice.integration.db.converter.MessageType;
 import se.sundsvall.postportalservice.integration.db.dao.MessageRepository;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
+import static org.awaitility.Awaitility.await;
+import static org.springframework.http.HttpHeaders.LOCATION;
+import static org.springframework.http.HttpMethod.POST;
+import static org.springframework.http.HttpStatus.CREATED;
+import static org.springframework.http.MediaType.MULTIPART_FORM_DATA;
+import static se.sundsvall.postportalservice.Constants.SENT;
+import static se.sundsvall.postportalservice.integration.db.converter.MessageType.DIGITAL_MAIL;
+import static se.sundsvall.postportalservice.integration.db.converter.MessageType.LETTER;
+import static se.sundsvall.postportalservice.integration.db.converter.MessageType.SNAIL_MAIL;
+import static se.sundsvall.postportalservice.integration.db.converter.PartyType.ENTERPRISE;
 
 @WireMockAppTestSuite(files = "classpath:/MessageLetterIT/", classes = Application.class)
 class MessageLetterIT extends AbstractAppTest {
@@ -55,7 +55,8 @@ class MessageLetterIT extends AbstractAppTest {
 
 		final var messageId = location.substring(location.lastIndexOf("/") + 1);
 
-		// There are asynchronous processes involved in updating the recipient status, hence we need to wait until the expected state is reached
+		// There are asynchronous processes involved in updating the recipient status, hence we need to wait until the expected
+		// state is reached
 		await().atMost(Duration.ofSeconds(3))
 			.pollInterval(Duration.ofMillis(100))
 			.untilAsserted(() -> {
@@ -89,7 +90,8 @@ class MessageLetterIT extends AbstractAppTest {
 
 		final var messageId = location.substring(location.lastIndexOf("/") + 1);
 
-		// There are asynchronous processes involved in updating the recipient status, hence we need to wait until the expected state is reached
+		// There are asynchronous processes involved in updating the recipient status, hence we need to wait until the expected
+		// state is reached
 		await().atMost(Duration.ofSeconds(3))
 			.pollInterval(Duration.ofMillis(100))
 			.untilAsserted(() -> {
@@ -123,7 +125,8 @@ class MessageLetterIT extends AbstractAppTest {
 
 		final var messageId = location.substring(location.lastIndexOf("/") + 1);
 
-		// There are asynchronous processes involved in updating the recipient status, hence we need to wait until the expected state is reached
+		// There are asynchronous processes involved in updating the recipient status, hence we need to wait until the expected
+		// state is reached
 		await().atMost(Duration.ofSeconds(3))
 			.pollInterval(Duration.ofMillis(100))
 			.untilAsserted(() -> {
@@ -158,7 +161,8 @@ class MessageLetterIT extends AbstractAppTest {
 
 		final var messageId = location.substring(location.lastIndexOf("/") + 1);
 
-		// There are asynchronous processes involved in updating the recipient status, hence we need to wait until the expected state is reached
+		// There are asynchronous processes involved in updating the recipient status, hence we need to wait until the expected
+		// state is reached
 		await().atMost(Duration.ofSeconds(3))
 			.pollInterval(Duration.ofMillis(100))
 			.untilAsserted(() -> {
@@ -190,7 +194,8 @@ class MessageLetterIT extends AbstractAppTest {
 
 		final var messageId = location.substring(location.lastIndexOf("/") + 1);
 
-		// There are asynchronous processes involved in updating the recipient status, hence we need to wait until the expected state is reached
+		// There are asynchronous processes involved in updating the recipient status, hence we need to wait until the expected
+		// state is reached
 		await().atMost(Duration.ofSeconds(3))
 			.pollInterval(Duration.ofMillis(100))
 			.untilAsserted(() -> {
@@ -224,7 +229,8 @@ class MessageLetterIT extends AbstractAppTest {
 
 		final var messageId = location.substring(location.lastIndexOf("/") + 1);
 
-		// There are asynchronous processes involved in updating the recipient status, hence we need to wait until the expected state is reached
+		// There are asynchronous processes involved in updating the recipient status, hence we need to wait until the expected
+		// state is reached
 		await().atMost(Duration.ofSeconds(3))
 			.pollInterval(Duration.ofMillis(100))
 			.untilAsserted(() -> {
@@ -258,7 +264,8 @@ class MessageLetterIT extends AbstractAppTest {
 
 		final var messageId = location.substring(location.lastIndexOf("/") + 1);
 
-		// There are asynchronous processes involved in updating the recipient status, hence we need to wait until the expected state is reached
+		// There are asynchronous processes involved in updating the recipient status, hence we need to wait until the expected
+		// state is reached
 		await().atMost(Duration.ofSeconds(3))
 			.pollInterval(Duration.ofMillis(100))
 			.untilAsserted(() -> {
