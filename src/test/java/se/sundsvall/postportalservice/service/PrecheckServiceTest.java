@@ -2,7 +2,7 @@ package se.sundsvall.postportalservice.service;
 
 import generated.se.sundsvall.citizen.CitizenAddress;
 import generated.se.sundsvall.citizen.CitizenExtended;
-import generated.se.sundsvall.legalentity.LEAddress;
+import generated.se.sundsvall.legalentity.LEPostAddress;
 import generated.se.sundsvall.legalentity.LegalEntity2;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -505,7 +505,7 @@ class PrecheckServiceTest {
 		when(mailboxStatusServiceMock.checkMailboxStatus(MUNICIPALITY_ID, partyIds)).thenReturn(mailboxStatus);
 
 		final var legalEntity = new LegalEntity2()
-			.address(new LEAddress().postalCode("85222"));
+			.postAddress(new LEPostAddress().address1("Storgatan 1").postalCode("85222").city("Sundsvall"));
 		when(legalEntityIntegrationMock.getLegalEntities(MUNICIPALITY_ID, List.of(partyId)))
 			.thenReturn(Map.of(partyId, legalEntity));
 
@@ -528,6 +528,30 @@ class PrecheckServiceTest {
 			.thenReturn(Map.of(partyId, ENTERPRISE));
 		when(mailboxStatusServiceMock.checkMailboxStatus(MUNICIPALITY_ID, partyIds)).thenReturn(mailboxStatus);
 		when(legalEntityIntegrationMock.getLegalEntities(MUNICIPALITY_ID, List.of(partyId))).thenReturn(Map.of());
+
+		final var result = precheckService.precheckPartyIds(MUNICIPALITY_ID, partyIds);
+
+		assertThat(result.precheckRecipients()).hasSize(1)
+			.extracting(PrecheckRecipient::partyId, PrecheckRecipient::deliveryMethod)
+			.containsExactly(tuple(partyId, "DELIVERY_NOT_POSSIBLE"));
+		verify(partyIntegrationMock).getPartyTypes(MUNICIPALITY_ID, partyIds);
+		verify(mailboxStatusServiceMock).checkMailboxStatus(MUNICIPALITY_ID, partyIds);
+		verify(legalEntityIntegrationMock).getLegalEntities(MUNICIPALITY_ID, List.of(partyId));
+	}
+
+	@Test
+	void precheckPartyIds_enterprise_unreachable_incompletePostAddress_returnsUndeliverable() {
+		final var partyId = "5c1b2636-5ffc-467d-95be-156aeb73ec8e";
+		final var partyIds = List.of(partyId);
+		final var mailboxStatus = new MailboxStatus(List.of(), List.of(new PrecheckUtil.UnreachableMailbox(partyId, "no mailbox")));
+		when(partyIntegrationMock.getPartyTypes(MUNICIPALITY_ID, partyIds))
+			.thenReturn(Map.of(partyId, ENTERPRISE));
+		when(mailboxStatusServiceMock.checkMailboxStatus(MUNICIPALITY_ID, partyIds)).thenReturn(mailboxStatus);
+
+		final var legalEntity = new LegalEntity2()
+			.postAddress(new LEPostAddress().city("Sundsvall"));
+		when(legalEntityIntegrationMock.getLegalEntities(MUNICIPALITY_ID, List.of(partyId)))
+			.thenReturn(Map.of(partyId, legalEntity));
 
 		final var result = precheckService.precheckPartyIds(MUNICIPALITY_ID, partyIds);
 
@@ -571,7 +595,7 @@ class PrecheckServiceTest {
 			.thenReturn(new MailboxStatus(List.of(), List.of(new PrecheckUtil.UnreachableMailbox(partyId, "no mailbox"))));
 		final var legalEntity = new LegalEntity2()
 			.name("Acme AB")
-			.address(new LEAddress().postalCode("85222"));
+			.postAddress(new LEPostAddress().address1("Storgatan 1").postalCode("85222").city("Sundsvall"));
 		when(legalEntityIntegrationMock.getLegalEntities(MUNICIPALITY_ID, List.of(partyId))).thenReturn(Map.of(partyId, legalEntity));
 
 		final var result = precheckService.precheckLegalIds(MUNICIPALITY_ID, List.of(), List.of(legalId));

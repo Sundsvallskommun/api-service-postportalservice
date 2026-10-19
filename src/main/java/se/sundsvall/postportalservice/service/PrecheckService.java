@@ -1,13 +1,11 @@
 package se.sundsvall.postportalservice.service;
 
 import generated.se.sundsvall.citizen.CitizenExtended;
-import generated.se.sundsvall.legalentity.LegalEntity2;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -39,6 +37,7 @@ import static java.util.Optional.ofNullable;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static se.sundsvall.postportalservice.Constants.INELIGIBLE_MINOR;
 import static se.sundsvall.postportalservice.service.util.MessagingSettingsUtil.ORGANIZATION_NUMBER;
+import static se.sundsvall.postportalservice.service.util.PrecheckUtil.hasCompletePostAddress;
 
 @Service
 public class PrecheckService {
@@ -162,10 +161,7 @@ public class PrecheckService {
 
 		final var fallback = mailboxStatus.unreachable().stream()
 			.map(partyId -> {
-				final var hasAddress = Optional.ofNullable(legalEntities.get(partyId))
-					.map(LegalEntity2::getAddress)
-					.isPresent();
-				if (hasAddress) {
+				if (hasCompletePostAddress(legalEntities.get(partyId))) {
 					return new PrecheckRecipient(null, partyId, DeliveryMethod.SNAIL_MAIL.name(), null);
 				}
 				return new PrecheckRecipient(null, partyId, DeliveryMethod.DELIVERY_NOT_POSSIBLE.name(), reasonByPartyId.get(partyId));

@@ -1,12 +1,9 @@
 package se.sundsvall.postportalservice.service.mapper;
 
 import generated.se.sundsvall.citizen.CitizenExtended;
-import generated.se.sundsvall.legalentity.LEAddress;
-import generated.se.sundsvall.legalentity.LEPostAddress;
 import generated.se.sundsvall.legalentity.LegalEntity2;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Stream;
 import org.springframework.stereotype.Component;
 import se.sundsvall.postportalservice.api.model.Address;
 import se.sundsvall.postportalservice.api.model.Recipient;
@@ -16,19 +13,14 @@ import se.sundsvall.postportalservice.integration.db.converter.MessageType;
 import se.sundsvall.postportalservice.integration.db.converter.PartyType;
 
 import static java.util.Collections.emptyList;
+import static org.apache.commons.lang3.StringUtils.firstNonBlank;
 import static se.sundsvall.postportalservice.Constants.INELIGIBLE_MINOR;
 import static se.sundsvall.postportalservice.Constants.PENDING;
 import static se.sundsvall.postportalservice.Constants.UNDELIVERABLE;
+import static se.sundsvall.postportalservice.service.util.PrecheckUtil.hasCompletePostAddress;
 
 @Component
 public class EntityMapper {
-
-	private static String joinNonBlank(final String left, final String right) {
-		return Stream.of(left, right)
-			.filter(string -> string != null && !string.isBlank())
-			.reduce((a, b) -> a + " " + b)
-			.orElse(null);
-	}
 
 	public RecipientEntity toRecipientEntity(final SmsRecipient smsRecipient) {
 		return Optional.ofNullable(smsRecipient).map(recipient -> RecipientEntity.create()
@@ -120,22 +112,13 @@ public class EntityMapper {
 	}
 
 	public RecipientEntity toEnterpriseSnailMailRecipientEntity(final String partyId, final LegalEntity2 legalEntity) {
-		if (partyId == null || legalEntity == null) {
+		if (partyId == null || !hasCompletePostAddress(legalEntity)) {
 			return null;
 		}
 
-		final var address = legalEntity.getAddress();
 		final var postAddress = legalEntity.getPostAddress();
-
-		final var streetAddress = Optional.ofNullable(address)
-			.map(addr -> joinNonBlank(addr.getAddressArea(), addr.getAdressNumber()))
-			.orElse(null);
-		final var zipCode = Optional.ofNullable(address).map(LEAddress::getPostalCode).orElse(null);
-		final var city = Optional.ofNullable(address).map(LEAddress::getCity).orElse(null);
-
-		if ((streetAddress == null || streetAddress.isBlank()) && (zipCode == null || zipCode.isBlank())) {
-			return null;
-		}
+		// postAddress is non-null here, hasCompletePostAddress checked it.
+		final var streetAddress = firstNonBlank(postAddress.getAddress1(), postAddress.getAddress2());
 
 		return RecipientEntity.create()
 			.withPartyId(partyId)
@@ -143,10 +126,10 @@ public class EntityMapper {
 			.withOrganizationName(legalEntity.getName())
 			.withMessageType(MessageType.SNAIL_MAIL)
 			.withStreetAddress(streetAddress)
-			.withCareOf(Optional.ofNullable(postAddress).map(LEPostAddress::getCoAdress).orElse(null))
-			.withZipCode(zipCode)
-			.withCity(city)
-			.withCountry(Optional.ofNullable(postAddress).map(LEPostAddress::getCountry).orElse(null))
+			.withCareOf(postAddress.getCoAdress())
+			.withZipCode(postAddress.getPostalCode())
+			.withCity(postAddress.getCity())
+			.withCountry(postAddress.getCountry())
 			.withStatus(PENDING);
 	}
 

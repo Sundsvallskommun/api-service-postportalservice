@@ -10,9 +10,8 @@
 		},
 		"jsonBody": {
 			"name": "Acme AB",
-			"address": {
-				"addressArea": "Acme Street",
-				"adressNumber": "1",
+			"postAddress": {
+				"address1": "Acme Street 1",
 				"postalCode": "85222",
 				"city": "Sundsvall"
 			}
