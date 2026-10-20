@@ -20,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import se.sundsvall.dept44.problem.Problem;
 import se.sundsvall.dept44.support.Identifier;
+import se.sundsvall.postportalservice.api.model.DigitalLetterRequest;
 import se.sundsvall.postportalservice.api.model.DigitalRegisteredLetterRequest;
 import se.sundsvall.postportalservice.api.model.ESigningRequest;
 import se.sundsvall.postportalservice.api.model.LetterCsvRequest;
@@ -28,6 +29,7 @@ import se.sundsvall.postportalservice.api.model.Recipient;
 import se.sundsvall.postportalservice.api.model.SmsCsvRequest;
 import se.sundsvall.postportalservice.api.model.SmsRequest;
 import se.sundsvall.postportalservice.integration.citizen.CitizenIntegration;
+import se.sundsvall.postportalservice.integration.db.AttachmentEntity;
 import se.sundsvall.postportalservice.integration.db.DepartmentEntity;
 import se.sundsvall.postportalservice.integration.db.MessageEntity;
 import se.sundsvall.postportalservice.integration.db.RecipientEntity;
@@ -427,4 +429,40 @@ public class MessageService {
 			.withBody(body)
 			.withContentType(contentType);
 	}
+
+	public String sendSignedDocumentAsLetter(final String municipalityId, final String messageId, final DigitalLetterRequest digitalLetterRequest) {
+		final var signing = signingRepository.findByMessageIdAndMessageMunicipalityId(messageId, municipalityId)
+			.orElseThrow(() -> Problem.valueOf(NOT_FOUND, "No e-signing case found for message with id '%s'".formatted(messageId)));
+
+		if (!SIGNED.equals(signing.getStatus()) || signing.getAttachment() == null) {
+			throw Problem.valueOf(BAD_REQUEST, "Message with id '%s' does not contain a document with a completed e-signing".formatted(messageId));
+		}
+
+		return sendDigitalLetter(municipalityId, digitalLetterRequest, new ArrayList<>(List.of(attachmentMapper.copyOf(signing.getAttachment()))));
+	}
+
+	String sendDigitalLetter(final String municipalityId, final DigitalLetterRequest request, final List<AttachmentEntity> attachmentEntities) {
+		final var settingsMap = messagingSettingsIntegration.getMessagingSettingsForUser(municipalityId);
+		final var message = createMessage(municipalityId, settingsMap, LETTER, request.getSubject(), request.getBody(), request.getContentType());
+
+		final var partyIds = request.getRecipientPartyIds();
+		final var partyTypes = partyIntegration.getPartyTypes(municipalityId, partyIds);
+
+		final var recipients = partyIds.stream()
+			.map(partyId -> RecipientEntity.create()
+				.withPartyId(partyId)
+				.withPartyType(partyTypes.getOrDefault(partyId, PartyType.PRIVATE))
+				.withMessageType(MessageType.DIGITAL_MAIL)
+				.withStatus(PENDING))
+			.toList();
+
+		message.setRecipients(recipients);
+		message.setAttachments(attachmentEntities);
+
+		messageRepository.save(message);
+
+		processRecipients(message, settingsMap);
+		return message.getId();
+	}
+
 }
