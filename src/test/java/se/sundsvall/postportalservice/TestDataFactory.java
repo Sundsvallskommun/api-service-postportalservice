@@ -5,6 +5,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import se.sundsvall.postportalservice.api.model.Address;
+import se.sundsvall.postportalservice.api.model.DigitalLetterRequest;
 import se.sundsvall.postportalservice.api.model.DigitalRegisteredLetterRequest;
 import se.sundsvall.postportalservice.api.model.LetterCsvRequest;
 import se.sundsvall.postportalservice.api.model.LetterRequest;
@@ -70,6 +71,14 @@ public final class TestDataFactory {
 			.withRecipients(List.of(createValidRecipient()))
 			.withContentType("text/plain")
 			.withAddresses(List.of(createValidAddress()));
+	}
+
+	public static DigitalLetterRequest createValidDigitalLetterRequest() {
+		return DigitalLetterRequest.create()
+			.withSubject("Test Subject")
+			.withBody("body")
+			.withContentType("text/plain")
+			.withRecipientPartyIds(List.of("6d0773d6-3e7f-4552-81bc-f0007af95adf"));
 	}
 
 	public static SmsCsvRequest createValidSmsCsvRequest() {

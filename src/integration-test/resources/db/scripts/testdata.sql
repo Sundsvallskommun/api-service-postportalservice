@@ -344,3 +344,18 @@ VALUES ('e5160000-0000-4000-8000-0000000000f1', 'E-signing statistics', '2281', 
 INSERT INTO recipient (id, message_id, type, status, created)
 VALUES ('e5160000-0000-4000-8000-0000000000f2', 'e5160000-0000-4000-8000-0000000000f1', 'E_SIGNING', 'PENDING', '2025-09-10 10:01:00'),
        ('e5160000-0000-4000-8000-0000000000f3', 'e5160000-0000-4000-8000-0000000000f1', 'E_SIGNING', 'SIGNED',  '2025-09-10 10:01:00');
+
+-- Completed e-signing with a signed document
+-- No user, department or recipients, so it does not affect history lists or statistics.
+INSERT INTO message (id, subject, municipality_id, message_type, created)
+VALUES ('5e1d0000-0000-4000-8000-000000000001', 'Signed e-signing', '2281', 'E_SIGNING', '2025-10-01 10:00:00');
+
+-- Document for a message with Signed status
+INSERT INTO attachment (id, file_name, content_type, created, content)
+VALUES ('5e1d0000-0000-4000-8000-0000000000d1', 'signed_document.pdf', 'application/pdf', '2025-10-01 11:00:00',
+        FROM_BASE64('JVBERi0xLjQKJSBTaWduZWQgYXJiZXRzZ2l2YXJpbnR5ZyAoSVQgdGVzdCkKJSVFT0YK'));
+
+-- Signing with a Signed status and attached document
+INSERT INTO signing (id, message_id, provider_case_id, provider, status, attachment_id, created)
+VALUES ('5e1d0000-0000-4000-8000-0000000000c1', '5e1d0000-0000-4000-8000-000000000001', 'comfact-case-10', 'comfact',
+        'SIGNED', '5e1d0000-0000-4000-8000-0000000000d1', '2025-10-01 11:00:00');
