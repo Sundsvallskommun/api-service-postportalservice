@@ -37,6 +37,7 @@ import static org.springframework.http.MediaType.MULTIPART_FORM_DATA;
 import static org.springframework.http.MediaType.parseMediaType;
 import static org.springframework.web.reactive.function.BodyInserters.fromMultipartData;
 import static se.sundsvall.postportalservice.TestDataFactory.MUNICIPALITY_ID;
+import static se.sundsvall.postportalservice.TestDataFactory.createValidDigitalLetterRequest;
 import static se.sundsvall.postportalservice.TestDataFactory.createValidDigitalRegisteredLetterRequest;
 import static se.sundsvall.postportalservice.TestDataFactory.createValidLetterRequest;
 import static se.sundsvall.postportalservice.TestDataFactory.createValidSmsCsvRequest;
@@ -224,6 +225,26 @@ class MessageResourceTest {
 			.expectStatus().isNoContent();
 
 		verify(messageServiceMock).cancelESigning(MUNICIPALITY_ID, messageId);
+	}
+
+	@Test
+	void sendSignedDocumentAsDigitalLetter_Created() {
+		final var messageId = "9ce333ec-a473-438b-8406-a71e957dc107";
+		final var request = createValidDigitalLetterRequest();
+
+		when(messageServiceMock.sendSignedDocumentAsLetter(MUNICIPALITY_ID, messageId, request)).thenReturn("letterId");
+
+		webTestClient.post()
+			.uri(uriBuilder -> uriBuilder.replacePath("/{municipalityId}/messages/e-signing/{messageId}/letter").build(MUNICIPALITY_ID, messageId))
+			.header("X-Sent-By", "type=adAccount; joe01doe")
+			.contentType(APPLICATION_JSON)
+			.bodyValue(request)
+			.exchange()
+			.expectStatus().isCreated()
+			.expectHeader().contentType(ALL_VALUE)
+			.expectHeader().location("/2281/history/users/joe01doe/messages/letterId");
+
+		verify(messageServiceMock).sendSignedDocumentAsLetter(MUNICIPALITY_ID, messageId, request);
 	}
 
 }

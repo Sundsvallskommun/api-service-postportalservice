@@ -26,6 +26,7 @@ import se.sundsvall.dept44.common.validators.annotation.ValidMunicipalityId;
 import se.sundsvall.dept44.common.validators.annotation.ValidUuid;
 import se.sundsvall.dept44.problem.Problem;
 import se.sundsvall.dept44.support.Identifier;
+import se.sundsvall.postportalservice.api.model.DigitalLetterRequest;
 import se.sundsvall.postportalservice.api.model.DigitalRegisteredLetterRequest;
 import se.sundsvall.postportalservice.api.model.ESigningRequest;
 import se.sundsvall.postportalservice.api.model.LetterCsvRequest;
@@ -189,6 +190,26 @@ class MessageResource {
 
 		return created(fromPath(MESSAGE_HISTORY_PATH)
 			.buildAndExpand(municipalityId, Identifier.get().getValue(), messageId).toUri())
+			.header(CONTENT_TYPE, ALL_VALUE)
+			.build();
+	}
+
+	@Operation(summary = "Send the signed document of a completed e-signing as a digital letter", responses = {
+		@ApiResponse(responseCode = "201", description = "Created"),
+		@ApiResponse(responseCode = "404", description = "Not Found", content = @Content(mediaType = APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = Problem.class)))
+	})
+	@PostMapping(value = "/e-signing/{messageId}/letter")
+	ResponseEntity<Void> sendSignedDocumentAsADigitalLetter(
+		@RequestHeader(value = Identifier.HEADER_NAME) @ValidIdentifier final String xSentBy,
+		@Parameter(name = "municipalityId", description = "Municipality ID", example = "2281") @ValidMunicipalityId @PathVariable final String municipalityId,
+		@Parameter(name = "messageId", description = "Id of the e-signing message", example = "9ce333ec-a473-438b-8406-a71e957dc107") @ValidUuid @PathVariable final String messageId,
+		@RequestBody @Valid final DigitalLetterRequest request) {
+		Identifier.set(Identifier.parse(xSentBy));
+
+		final var letterId = messageService.sendSignedDocumentAsLetter(municipalityId, messageId, request);
+
+		return created(fromPath(MESSAGE_HISTORY_PATH)
+			.buildAndExpand(municipalityId, Identifier.get().getValue(), letterId).toUri())
 			.header(CONTENT_TYPE, ALL_VALUE)
 			.build();
 	}
