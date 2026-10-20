@@ -5,7 +5,7 @@ info:
   license:
     name: MIT License
     url: https://opensource.org/licenses/MIT
-  version: "1.9"
+  version: "1.10"
 servers:
   - url: http://localhost:50224
     description: Generated server url
@@ -1084,6 +1084,67 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/Problem"
+  /{municipalityId}/messages/e-signing/{messageId}/letter:
+    post:
+      tags:
+        - Message Resources
+      summary: Send the signed document of a completed e-signing as a digital letter
+      operationId: sendSignedDocumentAsADigitalLetter
+      parameters:
+        - name: X-Sent-By
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: municipalityId
+          in: path
+          description: Municipality ID
+          required: true
+          schema:
+            type: string
+          example: 2281
+        - name: messageId
+          in: path
+          description: Id of the e-signing message
+          required: true
+          schema:
+            type: string
+          example: 9ce333ec-a473-438b-8406-a71e957dc107
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DigitalLetterRequest"
+        required: true
+      responses:
+        "201":
+          description: Created
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/Problem"
+                  - $ref: "#/components/schemas/ConstraintViolationProblem"
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "502":
+          description: Bad Gateway
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
 components:
   schemas:
     PrecheckRequest:
@@ -1542,6 +1603,37 @@ components:
             \ method"
       required:
         - deliveryMethod
+    DigitalLetterRequest:
+      type: object
+      description: Digital letter request model
+      properties:
+        subject:
+          type: string
+          description: The subject of the letter
+          examples:
+            - This is the subject of the letter
+          minLength: 1
+        body:
+          type: string
+          description: The body of the letter
+          examples:
+            - This is the body of the letter
+        contentType:
+          type: string
+          description: The content type of the body
+          examples:
+            - text/plain
+        recipientPartyIds:
+          type: array
+          description: List of party ids of the recipients
+          examples:
+            - - 6d0773d6-3e7f-4552-81bc-f0007af95adf
+          items:
+            type: string
+          minItems: 1
+      required:
+        - recipientPartyIds
+        - subject
     LetterCsvRequest:
       type: object
       description: Letter CSV request model
