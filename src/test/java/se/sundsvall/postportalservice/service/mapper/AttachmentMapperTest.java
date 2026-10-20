@@ -11,9 +11,11 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.multipart.MultipartFile;
+import se.sundsvall.postportalservice.integration.db.AttachmentEntity;
 import se.sundsvall.postportalservice.service.util.BlobUtil;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
@@ -72,6 +74,34 @@ class AttachmentMapperTest {
 		assertThat(attachmentEntity.getFileName()).isEqualTo("file");
 		assertThat(attachmentEntity.getContentType()).isEqualTo("application/pdf");
 		assertThat(attachmentEntity.getContent()).isEqualTo(blob);
+	}
+
+	@Test
+	void copyOf() throws SQLException {
+		var originalBlob = Mockito.mock(Blob.class);
+		var copiedBlob = Mockito.mock(Blob.class);
+		when(originalBlob.length()).thenReturn(3L);
+		when(originalBlob.getBytes(1L, 3)).thenReturn(new byte[] {
+			1, 2, 3
+		});
+		when(blobUtil.convertBase64ToBlob("AQID")).thenReturn(copiedBlob);
+
+		var source = new AttachmentEntity()
+			.withId("sourceId")
+			.withFileName("signed_document.pdf")
+			.withContentType("application/pdf")
+			.withContent(originalBlob);
+
+		var copy = attachmentMapper.copyOf(source);
+
+		assertThat(copy).isNotSameAs(source);
+		assertThat(copy.getId()).isNull();
+		assertThat(copy.getFileName()).isEqualTo("signed_document.pdf");
+		assertThat(copy.getContentType()).isEqualTo("application/pdf");
+		assertThat(copy.getContent()).isSameAs(copiedBlob);
+		assertThat(copy.getContentString()).isEqualTo("AQID");
+		assertThat(source.getContent()).isSameAs(originalBlob);
+		verify(blobUtil).convertBase64ToBlob("AQID");
 	}
 
 }
