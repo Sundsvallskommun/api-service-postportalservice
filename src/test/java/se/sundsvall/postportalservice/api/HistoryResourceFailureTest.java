@@ -2,7 +2,6 @@ package se.sundsvall.postportalservice.api;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webtestclient.autoconfigure.AutoConfigureWebTestClient;
@@ -16,6 +15,7 @@ import se.sundsvall.postportalservice.Application;
 import se.sundsvall.postportalservice.service.HistoryService;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 import static se.sundsvall.postportalservice.TestDataFactory.INVALID_MUNICIPALITY_ID;
@@ -65,7 +65,7 @@ class HistoryResourceFailureTest {
 	@Test
 	void getUserMessages_BadRequest() {
 		final var userId = "12345";
-		final var pageableMock = Mockito.mock(Pageable.class);
+		final var pageableMock = mock(Pageable.class);
 
 		final var response = webTestClient.get()
 			.uri(uriBuilder -> uriBuilder.replacePath("/{municipalityId}/history/users/{userId}/messages")

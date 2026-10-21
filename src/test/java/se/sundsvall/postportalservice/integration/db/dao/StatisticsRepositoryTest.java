@@ -3,7 +3,6 @@ package se.sundsvall.postportalservice.integration.db.dao;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
@@ -14,6 +13,7 @@ import se.sundsvall.postportalservice.api.model.Statistics;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.groups.Tuple.tuple;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase.Replace.NONE;
@@ -88,7 +88,7 @@ class StatisticsRepositoryTest {
 		final var esigning = 25L;
 		final var smsCount = 15L;
 
-		final var resultSetMock = Mockito.mock(ResultSet.class);
+		final var resultSetMock = mock(ResultSet.class);
 		when(resultSetMock.getString("department_id")).thenReturn(departmentId);
 		when(resultSetMock.getString("department_name")).thenReturn(departmentName);
 		when(resultSetMock.getLong("snail_mail_count")).thenReturn(snailMailCount);

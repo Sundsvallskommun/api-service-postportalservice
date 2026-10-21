@@ -8,13 +8,13 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.multipart.MultipartFile;
 import se.sundsvall.postportalservice.integration.db.AttachmentEntity;
 import se.sundsvall.postportalservice.service.util.BlobUtil;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -35,12 +35,12 @@ class AttachmentMapperTest {
 
 	@Test
 	void toAttachmentEntities() throws SQLException {
-		var blob = Mockito.mock(Blob.class);
+		var blob = mock(Blob.class);
 		when(blob.length()).thenReturn(3L);
 		when(blob.getBytes(1L, 3)).thenReturn(new byte[] {
 			1, 2, 3
 		});
-		var multipartFile = Mockito.mock(MultipartFile.class);
+		var multipartFile = mock(MultipartFile.class);
 		when(multipartFile.getOriginalFilename()).thenReturn("file");
 		when(multipartFile.getContentType()).thenReturn("application/pdf");
 		when(blobUtil.convertToBlob(multipartFile)).thenReturn(blob);
@@ -58,12 +58,12 @@ class AttachmentMapperTest {
 
 	@Test
 	void toAttachmentEntity() throws SQLException {
-		var blob = Mockito.mock(Blob.class);
+		var blob = mock(Blob.class);
 		when(blob.length()).thenReturn(3L);
 		when(blob.getBytes(1L, 3)).thenReturn(new byte[] {
 			1, 2, 3
 		});
-		var multipartFile = Mockito.mock(MultipartFile.class);
+		var multipartFile = mock(MultipartFile.class);
 		when(multipartFile.getOriginalFilename()).thenReturn("file");
 		when(multipartFile.getContentType()).thenReturn("application/pdf");
 		when(blobUtil.convertToBlob(multipartFile)).thenReturn(blob);
@@ -78,8 +78,8 @@ class AttachmentMapperTest {
 
 	@Test
 	void copyOf() throws SQLException {
-		var originalBlob = Mockito.mock(Blob.class);
-		var copiedBlob = Mockito.mock(Blob.class);
+		var originalBlob = mock(Blob.class);
+		var copiedBlob = mock(Blob.class);
 		when(originalBlob.length()).thenReturn(3L);
 		when(originalBlob.getBytes(1L, 3)).thenReturn(new byte[] {
 			1, 2, 3

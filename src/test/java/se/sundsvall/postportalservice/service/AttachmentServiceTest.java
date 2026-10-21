@@ -12,7 +12,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
 import se.sundsvall.dept44.problem.Problem;
@@ -21,6 +20,7 @@ import se.sundsvall.postportalservice.integration.db.dao.AttachmentRepository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -44,7 +44,7 @@ class AttachmentServiceTest {
 	@Test
 	void getAttachmentById() {
 		var attachmentId = "attachmentId";
-		var attachmentEntityMock = Mockito.mock(AttachmentEntity.class);
+		var attachmentEntityMock = mock(AttachmentEntity.class);
 
 		when(attachmentRepositoryMock.findById(attachmentId)).thenReturn(Optional.of(attachmentEntityMock));
 
@@ -71,11 +71,11 @@ class AttachmentServiceTest {
 	@Test
 	void getAttachmentData() throws IOException, SQLException {
 		var attachmentId = "attachmentId";
-		var attachmentEntityMock = Mockito.mock(AttachmentEntity.class);
+		var attachmentEntityMock = mock(AttachmentEntity.class);
 		var fileName = "fileName";
 		var contentType = "application/pdf";
 
-		var blob = Mockito.mock(Blob.class);
+		var blob = mock(Blob.class);
 		var payload = "hello".getBytes(StandardCharsets.UTF_8);
 		when(blob.getBinaryStream()).thenReturn(new ByteArrayInputStream(payload));
 
@@ -109,7 +109,7 @@ class AttachmentServiceTest {
 	@Test
 	void getAttachmentData_noContent() {
 		var attachmentId = "attachmentId";
-		var attachmentEntityMock = Mockito.mock(AttachmentEntity.class);
+		var attachmentEntityMock = mock(AttachmentEntity.class);
 		var fileName = "fileName";
 		var contentType = "application/pdf";
 
@@ -137,11 +137,11 @@ class AttachmentServiceTest {
 	@Test
 	void getAttachmentData_sqlException() throws SQLException {
 		var attachmentId = "attachmentId";
-		var attachmentEntityMock = Mockito.mock(AttachmentEntity.class);
+		var attachmentEntityMock = mock(AttachmentEntity.class);
 		var fileName = "fileName";
 		var contentType = "application/pdf";
 
-		var blob = Mockito.mock(Blob.class);
+		var blob = mock(Blob.class);
 		when(blob.getBinaryStream()).thenThrow(SQLException.class);
 
 		when(attachmentEntityMock.getId()).thenReturn(attachmentId);
@@ -169,11 +169,11 @@ class AttachmentServiceTest {
 	@Test
 	void getAttachmentData_ioException() throws SQLException {
 		var attachmentId = "attachmentId";
-		var attachmentEntityMock = Mockito.mock(AttachmentEntity.class);
+		var attachmentEntityMock = mock(AttachmentEntity.class);
 		var fileName = "fileName";
 		var contentType = "application/pdf";
 
-		var blob = Mockito.mock(Blob.class);
+		var blob = mock(Blob.class);
 		var payload = "hello".getBytes(StandardCharsets.UTF_8);
 		when(blob.getBinaryStream()).thenReturn(new ByteArrayInputStream(payload));
 
@@ -210,11 +210,11 @@ class AttachmentServiceTest {
 	@Test
 	void getAttachmentData_InvalidMediaType() throws IOException, SQLException {
 		var attachmentId = "attachmentId";
-		var attachmentEntityMock = Mockito.mock(AttachmentEntity.class);
+		var attachmentEntityMock = mock(AttachmentEntity.class);
 		var fileName = "fileName";
 		var contentType = "invalid/content type";
 
-		var blob = Mockito.mock(Blob.class);
+		var blob = mock(Blob.class);
 		var payload = "hello".getBytes(StandardCharsets.UTF_8);
 
 		when(blob.getBinaryStream()).thenReturn(new ByteArrayInputStream(payload));

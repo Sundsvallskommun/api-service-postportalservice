@@ -23,7 +23,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.multipart.MultipartFile;
 import se.sundsvall.dept44.problem.ThrowableProblem;
@@ -128,7 +127,7 @@ class DigitalRegisteredLetterIntegrationTest {
 			.status("SENT")
 			.id("externalId");
 
-		final var multipartMock = Mockito.mock(MultipartFile.class);
+		final var multipartMock = mock(MultipartFile.class);
 		final var multipartList = List.of(multipartMock);
 		when(digitalRegisteredLetterMapperMock.toLetterRequest(messageEntity, recipientEntity)).thenReturn(letterRequest);
 		when(digitalRegisteredLetterMapperMock.toMultipartFiles(any())).thenReturn(multipartList);
@@ -156,7 +155,7 @@ class DigitalRegisteredLetterIntegrationTest {
 
 		final var letterRequest = new LetterRequest();
 
-		final var multipartMock = Mockito.mock(MultipartFile.class);
+		final var multipartMock = mock(MultipartFile.class);
 		final var multipartList = List.of(multipartMock);
 		when(digitalRegisteredLetterMapperMock.toLetterRequest(messageEntity, recipientEntity)).thenReturn(letterRequest);
 		when(digitalRegisteredLetterMapperMock.toMultipartFiles(any())).thenReturn(multipartList);

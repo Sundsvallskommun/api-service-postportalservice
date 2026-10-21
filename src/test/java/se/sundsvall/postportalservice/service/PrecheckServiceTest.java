@@ -17,7 +17,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Answers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.multipart.MultipartFile;
 import se.sundsvall.dept44.problem.Problem;
@@ -41,6 +40,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -340,7 +340,7 @@ class PrecheckServiceTest {
 
 	@Test
 	void precheckLetterCsv(@Load(value = "/testfile/legalIds.csv") final String csv) throws IOException {
-		final var multipartFileMock = Mockito.mock(MultipartFile.class);
+		final var multipartFileMock = mock(MultipartFile.class);
 		when(multipartFileMock.getInputStream()).thenReturn(new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8)));
 
 		// Mock partyIntegration - one entry has no partyId
@@ -365,7 +365,7 @@ class PrecheckServiceTest {
 
 	@Test
 	void precheckCSV_Letter_withDuplicates(@Load(value = "/testfile/legalIds-duplicates.csv") final String csv) throws IOException {
-		final var multipartFileMock = Mockito.mock(MultipartFile.class);
+		final var multipartFileMock = mock(MultipartFile.class);
 		when(multipartFileMock.getInputStream()).thenReturn(new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8)));
 
 		// Mock partyIntegration - all entries have partyIds
@@ -388,7 +388,7 @@ class PrecheckServiceTest {
 
 	@Test
 	void precheckCSV_Letter_withInvalidFormat(@Load(value = "/testfile/legalIds-invalid-format.csv") final String csv) throws IOException {
-		final var multipartFileMock = Mockito.mock(MultipartFile.class);
+		final var multipartFileMock = mock(MultipartFile.class);
 		when(multipartFileMock.getInputStream()).thenReturn(new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8)));
 
 		assertThatThrownBy(() -> precheckService.precheckLetterCsv(MUNICIPALITY_ID, multipartFileMock))
@@ -399,7 +399,7 @@ class PrecheckServiceTest {
 
 	@Test
 	void precheckCSV_Letter_allEntriesWithoutPartyId(@Load(value = "/testfile/legalIds.csv") final String csv) throws IOException {
-		final var multipartFileMock = Mockito.mock(MultipartFile.class);
+		final var multipartFileMock = mock(MultipartFile.class);
 		when(multipartFileMock.getInputStream()).thenReturn(new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8)));
 
 		// Mock partyIntegration to throw exception when no partyIds can be found
@@ -415,7 +415,7 @@ class PrecheckServiceTest {
 
 	@Test
 	void precheckCSV_Letter_noValidPartyIds(@Load(value = "/testfile/legalIds.csv") final String csv) throws IOException {
-		final var multipartFileMock = Mockito.mock(MultipartFile.class);
+		final var multipartFileMock = mock(MultipartFile.class);
 		when(multipartFileMock.getInputStream()).thenReturn(new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8)));
 
 		// Mock partyIntegration - all entries have null partyId
@@ -433,7 +433,7 @@ class PrecheckServiceTest {
 
 	@Test
 	void precheckSmsCsv_validNoDuplicatesNoInvalid(@Load(value = "/testfile/phoneNumbers.csv") final String csv) throws IOException {
-		final var multipartFileMock = Mockito.mock(MultipartFile.class);
+		final var multipartFileMock = mock(MultipartFile.class);
 		when(multipartFileMock.getInputStream()).thenReturn(new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8)));
 
 		final var result = precheckService.precheckSmsCsv(multipartFileMock);
@@ -444,7 +444,7 @@ class PrecheckServiceTest {
 
 	@Test
 	void precheckSmsCsv_withDuplicates(@Load(value = "/testfile/phoneNumbers-duplicates.csv") final String csv) throws IOException {
-		final var multipartFileMock = Mockito.mock(MultipartFile.class);
+		final var multipartFileMock = mock(MultipartFile.class);
 		when(multipartFileMock.getInputStream()).thenReturn(new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8)));
 
 		final var result = precheckService.precheckSmsCsv(multipartFileMock);
@@ -457,7 +457,7 @@ class PrecheckServiceTest {
 
 	@Test
 	void precheckSmsCsv_noValidEntries_throwsProblem(@Load(value = "/testfile/phoneNumbers-all-invalid.csv") final String csv) throws IOException {
-		final var multipartFileMock = Mockito.mock(MultipartFile.class);
+		final var multipartFileMock = mock(MultipartFile.class);
 		when(multipartFileMock.getInputStream()).thenReturn(new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8)));
 
 		assertThatThrownBy(() -> precheckService.precheckSmsCsv(multipartFileMock))
@@ -467,7 +467,7 @@ class PrecheckServiceTest {
 
 	@Test
 	void precheckSmsCsv_withDuplicatesAndInvalid(@Load(value = "/testfile/phoneNumbers-mixed.csv") final String csv) throws IOException {
-		final var multipartFileMock = Mockito.mock(MultipartFile.class);
+		final var multipartFileMock = mock(MultipartFile.class);
 		when(multipartFileMock.getInputStream()).thenReturn(new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8)));
 
 		final var result = precheckService.precheckSmsCsv(multipartFileMock);

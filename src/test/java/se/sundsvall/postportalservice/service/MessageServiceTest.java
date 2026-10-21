@@ -302,7 +302,7 @@ class MessageServiceTest {
 	@Test
 	void processDigitalRegisteredLetterRequest_messagingSettingsThrows() {
 		final var request = TestDataFactory.createValidDigitalRegisteredLetterRequest();
-		final var multipartFile = Mockito.mock(MultipartFile.class);
+		final var multipartFile = mock(MultipartFile.class);
 		final var multipartFiles = List.of(multipartFile);
 		Identifier.set(new Identifier().withValue("test01user"));
 
@@ -329,7 +329,7 @@ class MessageServiceTest {
 	@Test
 	void processDigitalRegisteredLetterRequest_digitalRegisteredLetterThrows() {
 		final var request = TestDataFactory.createValidDigitalRegisteredLetterRequest();
-		final var multipartFile = Mockito.mock(MultipartFile.class);
+		final var multipartFile = mock(MultipartFile.class);
 		final var multipartFiles = List.of(multipartFile);
 
 		final var attachmentEntities = List.of(new AttachmentEntity(), new AttachmentEntity());
@@ -394,7 +394,7 @@ class MessageServiceTest {
 	@Test
 	void processDigitalRegisteredLetterRequest_happyCase() {
 		final var request = TestDataFactory.createValidDigitalRegisteredLetterRequest();
-		final var multipartFile = Mockito.mock(MultipartFile.class);
+		final var multipartFile = mock(MultipartFile.class);
 		final var multipartFileList = List.of(multipartFile);
 		final var attachmentEntities = List.of(new AttachmentEntity(), new AttachmentEntity());
 		final var userEntity = new UserEntity().withUsername(USERNAME).withId("userId");
@@ -457,7 +457,7 @@ class MessageServiceTest {
 	@Test
 	void processDigitalRegisteredLetterRequest_enterprisePartyId_returnsBadRequest() {
 		final var request = TestDataFactory.createValidDigitalRegisteredLetterRequest();
-		final var multipartFiles = List.of(Mockito.mock(MultipartFile.class));
+		final var multipartFiles = List.of(mock(MultipartFile.class));
 
 		when(partyIntegrationMock.getPartyTypes(MUNICIPALITY_ID, List.of(request.getPartyId())))
 			.thenReturn(Map.of(request.getPartyId(), PartyType.ENTERPRISE));
@@ -473,7 +473,7 @@ class MessageServiceTest {
 	@Test
 	void processLetterRequest() {
 		final var spy = spy(messageService);
-		final var multipartFile = Mockito.mock(MultipartFile.class);
+		final var multipartFile = mock(MultipartFile.class);
 		final var multipartFileList = List.of(multipartFile);
 		final var letterRequest = TestDataFactory.createValidLetterRequest();
 		final var userEntity = new UserEntity().withUsername("username");
@@ -542,7 +542,7 @@ class MessageServiceTest {
 	void processCsvSmsRequest() {
 		final var spy = spy(messageService);
 		final var smsCsvRequest = TestDataFactory.createValidSmsCsvRequest();
-		final var csvFile = Mockito.mock(MultipartFile.class);
+		final var csvFile = mock(MultipartFile.class);
 		final var userEntity = new UserEntity().withUsername("username");
 		final var departmentEntity = new DepartmentEntity().withName("departmentName").withOrganizationId("departmentId");
 		final var messageId = "adc63e5c-b92f-4c75-b14f-819473cef5b6";
