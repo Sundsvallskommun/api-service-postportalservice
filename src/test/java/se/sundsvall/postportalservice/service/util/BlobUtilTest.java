@@ -74,7 +74,7 @@ class BlobUtilTest {
 
 	@Test
 	void createBlob_OK() throws IOException {
-		final var spy = Mockito.spy(blobUtil);
+		final var spy = spy(blobUtil);
 		final var multipartFile = Mockito.mock(MultipartFile.class);
 
 		when(multipartFile.getBytes()).thenReturn(new byte[123]);
@@ -96,7 +96,7 @@ class BlobUtilTest {
 
 	@Test
 	void createBlob_IOException() throws IOException {
-		final var spy = Mockito.spy(blobUtil);
+		final var spy = spy(blobUtil);
 		final var multipartFile = Mockito.mock(MultipartFile.class);
 		when(multipartFile.getOriginalFilename()).thenReturn("TestFile.txt");
 
@@ -109,7 +109,7 @@ class BlobUtilTest {
 
 	@Test
 	void convertToBlobTest() throws IOException {
-		final var spy = Mockito.spy(blobUtil);
+		final var spy = spy(blobUtil);
 		final var multipartFile = Mockito.mock(MultipartFile.class);
 
 		when(multipartFile.getBytes()).thenReturn(new byte[123]);

@@ -70,6 +70,7 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -471,7 +472,7 @@ class MessageServiceTest {
 
 	@Test
 	void processLetterRequest() {
-		final var spy = Mockito.spy(messageService);
+		final var spy = spy(messageService);
 		final var multipartFile = Mockito.mock(MultipartFile.class);
 		final var multipartFileList = List.of(multipartFile);
 		final var letterRequest = TestDataFactory.createValidLetterRequest();
@@ -514,7 +515,7 @@ class MessageServiceTest {
 
 	@Test
 	void processSmsRequest() {
-		final var spy = Mockito.spy(messageService);
+		final var spy = spy(messageService);
 		final var smsRequest = TestDataFactory.createValidSmsRequest();
 		final var userEntity = new UserEntity().withUsername("username");
 		final var departmentEntity = new DepartmentEntity().withName("departmentName").withOrganizationId("departmentId");
@@ -539,7 +540,7 @@ class MessageServiceTest {
 
 	@Test
 	void processCsvSmsRequest() {
-		final var spy = Mockito.spy(messageService);
+		final var spy = spy(messageService);
 		final var smsCsvRequest = TestDataFactory.createValidSmsCsvRequest();
 		final var csvFile = Mockito.mock(MultipartFile.class);
 		final var userEntity = new UserEntity().withUsername("username");
@@ -585,7 +586,7 @@ class MessageServiceTest {
 
 	@Test
 	void processRecipients() {
-		final var spy = Mockito.spy(messageService);
+		final var spy = spy(messageService);
 		final var recipient1 = new RecipientEntity().withFirstName("john");
 		final var recipient2 = new RecipientEntity().withFirstName("sarah");
 
@@ -603,7 +604,7 @@ class MessageServiceTest {
 
 	@Test
 	void processRecipients_skipsUndeliverable() {
-		final var spy = Mockito.spy(messageService);
+		final var spy = spy(messageService);
 		final var deliverable = new RecipientEntity().withFirstName("john");
 		final var undeliverable = new RecipientEntity().withFirstName("sarah").withStatus("UNDELIVERABLE");
 
@@ -793,7 +794,7 @@ class MessageServiceTest {
 
 	@Test
 	void sendSignedDocumentAsLetter() {
-		final var spy = Mockito.spy(messageService);
+		final var spy = spy(messageService);
 		final var messageId = "msg-1";
 		final var enterprisePartyId = "1a2b3c4d-1111-2222-3333-444455556666";
 		final var unresolvedPartyId = "6d0773d6-3e7f-4552-81bc-f0007af95adf";

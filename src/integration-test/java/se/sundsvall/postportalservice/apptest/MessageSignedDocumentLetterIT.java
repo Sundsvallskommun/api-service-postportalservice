@@ -1,5 +1,17 @@
 package se.sundsvall.postportalservice.apptest;
 
+import java.time.Duration;
+import java.util.List;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.jdbc.Sql;
+import se.sundsvall.dept44.support.Identifier;
+import se.sundsvall.dept44.test.AbstractAppTest;
+import se.sundsvall.dept44.test.annotation.wiremock.WireMockAppTestSuite;
+import se.sundsvall.postportalservice.Application;
+import se.sundsvall.postportalservice.integration.db.dao.MessageRepository;
+import se.sundsvall.postportalservice.integration.db.dao.SigningRepository;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 import static org.springframework.http.HttpHeaders.LOCATION;
@@ -12,22 +24,9 @@ import static se.sundsvall.postportalservice.Constants.SENT;
 import static se.sundsvall.postportalservice.Constants.SIGNED;
 import static se.sundsvall.postportalservice.integration.db.converter.MessageType.DIGITAL_MAIL;
 
-import java.time.Duration;
-import java.util.List;
-
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.context.jdbc.Sql;
-import se.sundsvall.dept44.support.Identifier;
-import se.sundsvall.dept44.test.AbstractAppTest;
-import se.sundsvall.dept44.test.annotation.wiremock.WireMockAppTestSuite;
-import se.sundsvall.postportalservice.Application;
-import se.sundsvall.postportalservice.integration.db.dao.MessageRepository;
-import se.sundsvall.postportalservice.integration.db.dao.SigningRepository;
-
 @Sql(scripts = {
-		"/db/scripts/truncate.sql",
-		"/db/scripts/testdata.sql"
+	"/db/scripts/truncate.sql",
+	"/db/scripts/testdata.sql"
 })
 @WireMockAppTestSuite(files = "classpath:/MessageSignedDocumentLetterIT/", classes = Application.class)
 class MessageSignedDocumentLetterIT extends AbstractAppTest {
@@ -64,7 +63,8 @@ class MessageSignedDocumentLetterIT extends AbstractAppTest {
 
 		final var letterId = location.substring(location.lastIndexOf("/") + 1);
 
-		// There are asynchronous processes involved in updating the recipient status, hence we need to wait until the expected state is reached
+		// There are asynchronous processes involved in updating the recipient status, hence we need to wait until the expected
+		// state is reached
 		await().atMost(Duration.ofSeconds(3))
 			.pollInterval(Duration.ofMillis(100))
 			.untilAsserted(() -> {
@@ -99,13 +99,13 @@ class MessageSignedDocumentLetterIT extends AbstractAppTest {
 	@Test
 	void test03_sendSignedDocumentWhenSigningDoesNotExist() {
 		setupCall()
-				.withServicePath("/%s/messages/e-signing/%s/letter".formatted(MUNICIPALITY_ID, "00000000-0000-4000-8000-000000000000"))
-				.withHttpMethod(POST)
-				.withHeader(Identifier.HEADER_NAME, IDENTIFIER)
-				.withContentType(APPLICATION_JSON)
-				.withRequest(REQUEST_FILE)
-				.withExpectedResponseStatus(NOT_FOUND)
-				.withExpectedResponse(RESPONSE_FILE)
-				.sendRequestAndVerifyResponse();
+			.withServicePath("/%s/messages/e-signing/%s/letter".formatted(MUNICIPALITY_ID, "00000000-0000-4000-8000-000000000000"))
+			.withHttpMethod(POST)
+			.withHeader(Identifier.HEADER_NAME, IDENTIFIER)
+			.withContentType(APPLICATION_JSON)
+			.withRequest(REQUEST_FILE)
+			.withExpectedResponseStatus(NOT_FOUND)
+			.withExpectedResponse(RESPONSE_FILE)
+			.sendRequestAndVerifyResponse();
 	}
 }
