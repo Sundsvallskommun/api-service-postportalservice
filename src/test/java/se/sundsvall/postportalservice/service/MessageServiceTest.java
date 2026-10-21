@@ -35,6 +35,7 @@ import se.sundsvall.postportalservice.TestDataFactory;
 import se.sundsvall.postportalservice.api.model.Address;
 import se.sundsvall.postportalservice.api.model.ESigningRequest;
 import se.sundsvall.postportalservice.api.model.ESigningSignatory;
+import se.sundsvall.postportalservice.api.model.LetterRequest;
 import se.sundsvall.postportalservice.api.model.Recipient;
 import se.sundsvall.postportalservice.api.model.SmsRecipient;
 import se.sundsvall.postportalservice.integration.citizen.CitizenIntegration;
@@ -63,11 +64,11 @@ import se.sundsvall.postportalservice.service.util.CsvUtil;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
@@ -510,7 +511,8 @@ class MessageServiceTest {
 		verify(entityMapperMock).toRecipientEntity(any(Address.class));
 		verify(entityMapperMock).toRecipientEntity(any(Recipient.class), eq(PartyType.PRIVATE));
 		verify(spy).processRecipients(any(), any());
-		verify(messageRepositoryMock).save(any());
+		verify(messageRepositoryMock).save(messageEntityCaptor.capture());
+		assertThat(messageEntityCaptor.getValue().getMessageType()).isEqualTo(MessageType.LETTER);
 	}
 
 	@Test
@@ -796,42 +798,28 @@ class MessageServiceTest {
 	void sendSignedDocumentAsLetter() {
 		final var spy = spy(messageService);
 		final var messageId = "msg-1";
-		final var enterprisePartyId = "1a2b3c4d-1111-2222-3333-444455556666";
-		final var unresolvedPartyId = "6d0773d6-3e7f-4552-81bc-f0007af95adf";
-		final var request = TestDataFactory.createValidDigitalLetterRequest().withRecipientPartyIds(List.of(enterprisePartyId, unresolvedPartyId));
+		final var request = TestDataFactory.createValidForwardDocumentRequest();
 		final var signedDocument = AttachmentEntity.create().withId("signed-1").withFileName("signed.pdf").withContentType("application/pdf");
 		final var copy = AttachmentEntity.create().withFileName("signed.pdf").withContentType("application/pdf").withContentString("base64signed");
 		final var signing = SigningEntity.create().withStatus("SIGNED").withAttachment(signedDocument);
+		final var expectedLetterRequest = LetterRequest.create()
+			.withSubject("Test Subject")
+			.withBody("body")
+			.withContentType("text/plain")
+			.withRecipients(List.of(Recipient.create()
+				.withPartyId("6d0773d6-3e7f-4552-81bc-f0007af95adf")
+				.withDeliveryMethod("DIGITAL_MAIL")));
 
 		when(signingRepositoryMock.findByMessageIdAndMessageMunicipalityId(messageId, MUNICIPALITY_ID)).thenReturn(Optional.of(signing));
 		when(attachmentMapperMock.copyOf(signedDocument)).thenReturn(copy);
-		when(messagingSettingsIntegrationMock.getMessagingSettingsForUser(MUNICIPALITY_ID)).thenReturn(SETTINGS_MAP);
-		when(userRepositoryMock.findByUsernameIgnoreCase(USERNAME)).thenReturn(Optional.empty());
-		when(departmentRepositoryMock.findByOrganizationId("departmentId")).thenReturn(Optional.empty());
-		when(partyIntegrationMock.getPartyTypes(MUNICIPALITY_ID, List.of(enterprisePartyId, unresolvedPartyId))).thenReturn(Map.of(enterprisePartyId, PartyType.ENTERPRISE));
-		when(messageRepositoryMock.save(any())).thenAnswer(invocation -> invocation.getArgument(0, MessageEntity.class).withId("letter-1"));
-		doNothing().when(spy).processRecipients(any(), any());
+		doReturn("letter-1").when(spy).sendLetter(any(), any(), any(), any());
 
 		final var result = spy.sendSignedDocumentAsLetter(MUNICIPALITY_ID, messageId, request);
 
 		assertThat(result).isEqualTo("letter-1");
 		verify(signingRepositoryMock).findByMessageIdAndMessageMunicipalityId(messageId, MUNICIPALITY_ID);
 		verify(attachmentMapperMock).copyOf(signedDocument);
-		verify(messagingSettingsIntegrationMock).getMessagingSettingsForUser(MUNICIPALITY_ID);
-		verify(userRepositoryMock).findByUsernameIgnoreCase(USERNAME);
-		verify(departmentRepositoryMock).findByOrganizationId("departmentId");
-		verify(partyIntegrationMock).getPartyTypes(MUNICIPALITY_ID, List.of(enterprisePartyId, unresolvedPartyId));
-		verify(messageRepositoryMock).save(messageEntityCaptor.capture());
-		verify(spy).processRecipients(any(), any());
-
-		final var savedMessage = messageEntityCaptor.getValue();
-		assertThat(savedMessage.getMessageType()).isEqualTo(MessageType.LETTER);
-		assertThat(savedMessage.getAttachments()).containsExactly(copy);
-		assertThat(savedMessage.getRecipients())
-			.extracting(RecipientEntity::getPartyId, RecipientEntity::getPartyType, RecipientEntity::getMessageType, RecipientEntity::getStatus)
-			.containsExactly(
-				tuple(enterprisePartyId, PartyType.ENTERPRISE, MessageType.DIGITAL_MAIL, "PENDING"),
-				tuple(unresolvedPartyId, PartyType.PRIVATE, MessageType.DIGITAL_MAIL, "PENDING"));
+		verify(spy).sendLetter(MUNICIPALITY_ID, MessageType.DIGITAL_MAIL, expectedLetterRequest, List.of(copy));
 	}
 
 	@Test
@@ -839,7 +827,7 @@ class MessageServiceTest {
 		final var messageId = "msg-1";
 		when(signingRepositoryMock.findByMessageIdAndMessageMunicipalityId(messageId, MUNICIPALITY_ID)).thenReturn(Optional.empty());
 
-		assertThatThrownBy(() -> messageService.sendSignedDocumentAsLetter(MUNICIPALITY_ID, messageId, TestDataFactory.createValidDigitalLetterRequest()))
+		assertThatThrownBy(() -> messageService.sendSignedDocumentAsLetter(MUNICIPALITY_ID, messageId, TestDataFactory.createValidForwardDocumentRequest()))
 			.isInstanceOf(Problem.class)
 			.hasFieldOrPropertyWithValue("status", NOT_FOUND)
 			.hasMessageContaining("No e-signing case found for message with id '%s'".formatted(messageId));
@@ -853,7 +841,7 @@ class MessageServiceTest {
 		final var signing = SigningEntity.create().withStatus(CANCELLED).withAttachment(AttachmentEntity.create());
 		when(signingRepositoryMock.findByMessageIdAndMessageMunicipalityId(messageId, MUNICIPALITY_ID)).thenReturn(Optional.of(signing));
 
-		assertThatThrownBy(() -> messageService.sendSignedDocumentAsLetter(MUNICIPALITY_ID, messageId, TestDataFactory.createValidDigitalLetterRequest()))
+		assertThatThrownBy(() -> messageService.sendSignedDocumentAsLetter(MUNICIPALITY_ID, messageId, TestDataFactory.createValidForwardDocumentRequest()))
 			.isInstanceOf(Problem.class)
 			.hasFieldOrPropertyWithValue("status", BAD_REQUEST)
 			.hasMessageContaining("Message with id '%s' does not contain a document with a completed e-signing".formatted(messageId));
@@ -867,7 +855,7 @@ class MessageServiceTest {
 		final var signing = SigningEntity.create().withStatus("SIGNED");
 		when(signingRepositoryMock.findByMessageIdAndMessageMunicipalityId(messageId, MUNICIPALITY_ID)).thenReturn(Optional.of(signing));
 
-		assertThatThrownBy(() -> messageService.sendSignedDocumentAsLetter(MUNICIPALITY_ID, messageId, TestDataFactory.createValidDigitalLetterRequest()))
+		assertThatThrownBy(() -> messageService.sendSignedDocumentAsLetter(MUNICIPALITY_ID, messageId, TestDataFactory.createValidForwardDocumentRequest()))
 			.isInstanceOf(Problem.class)
 			.hasFieldOrPropertyWithValue("status", BAD_REQUEST)
 			.hasMessageContaining("Message with id '%s' does not contain a document with a completed e-signing".formatted(messageId));

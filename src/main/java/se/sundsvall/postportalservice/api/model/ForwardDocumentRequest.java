@@ -10,8 +10,8 @@ import se.sundsvall.dept44.common.validators.annotation.ValidUuid;
 import static io.swagger.v3.oas.annotations.media.Schema.RequiredMode.NOT_REQUIRED;
 import static io.swagger.v3.oas.annotations.media.Schema.RequiredMode.REQUIRED;
 
-@Schema(description = "Digital letter request model")
-public class DigitalLetterRequest {
+@Schema(description = "Forward document request model")
+public class ForwardDocumentRequest {
 
 	@Schema(description = "The subject of the letter", examples = "This is the subject of the letter", requiredMode = REQUIRED)
 	@NotBlank
@@ -27,8 +27,8 @@ public class DigitalLetterRequest {
 	@NotEmpty
 	private List<@ValidUuid String> recipientPartyIds;
 
-	public static DigitalLetterRequest create() {
-		return new DigitalLetterRequest();
+	public static ForwardDocumentRequest create() {
+		return new ForwardDocumentRequest();
 	}
 
 	public String getSubject() {
@@ -39,7 +39,7 @@ public class DigitalLetterRequest {
 		this.subject = subject;
 	}
 
-	public DigitalLetterRequest withSubject(String subject) {
+	public ForwardDocumentRequest withSubject(String subject) {
 		this.subject = subject;
 		return this;
 	}
@@ -52,7 +52,7 @@ public class DigitalLetterRequest {
 		this.body = body;
 	}
 
-	public DigitalLetterRequest withBody(String body) {
+	public ForwardDocumentRequest withBody(String body) {
 		this.body = body;
 		return this;
 	}
@@ -65,7 +65,7 @@ public class DigitalLetterRequest {
 		this.contentType = contentType;
 	}
 
-	public DigitalLetterRequest withContentType(String contentType) {
+	public ForwardDocumentRequest withContentType(String contentType) {
 		this.contentType = contentType;
 		return this;
 	}
@@ -78,14 +78,14 @@ public class DigitalLetterRequest {
 		this.recipientPartyIds = recipientPartyIds;
 	}
 
-	public DigitalLetterRequest withRecipientPartyIds(List<String> recipientPartyIds) {
+	public ForwardDocumentRequest withRecipientPartyIds(List<String> recipientPartyIds) {
 		this.recipientPartyIds = recipientPartyIds;
 		return this;
 	}
 
 	@Override
 	public String toString() {
-		return "DigitalLetterRequest{" +
+		return "ForwardDocumentRequest{" +
 			"subject='" + subject + '\'' +
 			", body='" + body + '\'' +
 			", contentType='" + contentType + '\'' +
@@ -97,7 +97,7 @@ public class DigitalLetterRequest {
 	public boolean equals(Object o) {
 		if (o == null || getClass() != o.getClass())
 			return false;
-		DigitalLetterRequest that = (DigitalLetterRequest) o;
+		ForwardDocumentRequest that = (ForwardDocumentRequest) o;
 		return Objects.equals(subject, that.subject) && Objects.equals(body, that.body) && Objects.equals(contentType, that.contentType) && Objects.equals(recipientPartyIds, that.recipientPartyIds);
 	}
 

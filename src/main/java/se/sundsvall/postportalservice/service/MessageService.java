@@ -20,9 +20,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import se.sundsvall.dept44.problem.Problem;
 import se.sundsvall.dept44.support.Identifier;
-import se.sundsvall.postportalservice.api.model.DigitalLetterRequest;
 import se.sundsvall.postportalservice.api.model.DigitalRegisteredLetterRequest;
 import se.sundsvall.postportalservice.api.model.ESigningRequest;
+import se.sundsvall.postportalservice.api.model.ForwardDocumentRequest;
 import se.sundsvall.postportalservice.api.model.LetterCsvRequest;
 import se.sundsvall.postportalservice.api.model.LetterRequest;
 import se.sundsvall.postportalservice.api.model.Recipient;
@@ -62,6 +62,7 @@ import static se.sundsvall.postportalservice.Constants.FAILED;
 import static se.sundsvall.postportalservice.Constants.PENDING;
 import static se.sundsvall.postportalservice.Constants.SIGNED;
 import static se.sundsvall.postportalservice.configuration.DeliveryExecutorConfiguration.DELIVERY_EXECUTOR;
+import static se.sundsvall.postportalservice.integration.db.converter.MessageType.DIGITAL_MAIL;
 import static se.sundsvall.postportalservice.integration.db.converter.MessageType.DIGITAL_REGISTERED_LETTER;
 import static se.sundsvall.postportalservice.integration.db.converter.MessageType.E_SIGNING;
 import static se.sundsvall.postportalservice.integration.db.converter.MessageType.LETTER;
@@ -275,34 +276,7 @@ public class MessageService {
 	}
 
 	public String processLetterRequest(final String municipalityId, final LetterRequest letterRequest, final List<MultipartFile> attachments) {
-		final var settingsMap = messagingSettingsIntegration.getMessagingSettingsForUser(municipalityId);
-		final var message = createMessage(municipalityId, settingsMap, LETTER, letterRequest.getSubject(), letterRequest.getBody(), letterRequest.getContentType());
-
-		final var letterRecipients = ofNullable(letterRequest.getRecipients()).orElse(emptyList());
-		final var partyIds = letterRecipients.stream()
-			.map(Recipient::getPartyId)
-			.filter(Objects::nonNull)
-			.toList();
-		final var partyTypes = partyIntegration.getPartyTypes(municipalityId, partyIds);
-
-		final var recipientEntities = letterRecipients.stream()
-			.map(recipient -> entityMapper.toRecipientEntity(recipient, partyTypes.getOrDefault(recipient.getPartyId(), PartyType.PRIVATE)))
-			.filter(Objects::nonNull);
-
-		final var addressRecipients = ofNullable(letterRequest.getAddresses()).orElse(emptyList()).stream()
-			.map(entityMapper::toRecipientEntity)
-			.filter(Objects::nonNull);
-
-		final var recipients = Stream.concat(recipientEntities, addressRecipients).toList();
-		message.setRecipients(recipients);
-
-		final var attachmentEntities = attachmentMapper.toAttachmentEntities(attachments);
-		message.setAttachments(attachmentEntities);
-
-		messageRepository.save(message);
-
-		processRecipients(message, settingsMap);
-		return message.getId();
+		return sendLetter(municipalityId, LETTER, letterRequest, attachmentMapper.toAttachmentEntities(attachments));
 	}
 
 	/**
@@ -430,39 +404,55 @@ public class MessageService {
 			.withContentType(contentType);
 	}
 
-	public String sendSignedDocumentAsLetter(final String municipalityId, final String messageId, final DigitalLetterRequest digitalLetterRequest) {
+	public String sendSignedDocumentAsLetter(final String municipalityId, final String messageId, final ForwardDocumentRequest forwardDocumentRequest) {
 		final var signing = signingRepository.findByMessageIdAndMessageMunicipalityId(messageId, municipalityId)
 			.orElseThrow(() -> Problem.valueOf(NOT_FOUND, "No e-signing case found for message with id '%s'".formatted(messageId)));
 
 		if (!SIGNED.equals(signing.getStatus()) || signing.getAttachment() == null) {
 			throw Problem.valueOf(BAD_REQUEST, "Message with id '%s' does not contain a document with a completed e-signing".formatted(messageId));
 		}
-
-		return sendDigitalLetter(municipalityId, digitalLetterRequest, new ArrayList<>(List.of(attachmentMapper.copyOf(signing.getAttachment()))));
+		return sendLetter(municipalityId, DIGITAL_MAIL, toLetterRequest(forwardDocumentRequest), new ArrayList<>(List.of(attachmentMapper.copyOf(signing.getAttachment()))));
 	}
 
-	String sendDigitalLetter(final String municipalityId, final DigitalLetterRequest request, final List<AttachmentEntity> attachmentEntities) {
+	public String sendLetter(final String municipalityId, final MessageType messageType, final LetterRequest letterRequest, final List<AttachmentEntity> attachmentEntities) {
 		final var settingsMap = messagingSettingsIntegration.getMessagingSettingsForUser(municipalityId);
-		final var message = createMessage(municipalityId, settingsMap, LETTER, request.getSubject(), request.getBody(), request.getContentType());
+		final var message = createMessage(municipalityId, settingsMap, messageType, letterRequest.getSubject(), letterRequest.getBody(), letterRequest.getContentType());
 
-		final var partyIds = request.getRecipientPartyIds();
-		final var partyTypes = partyIntegration.getPartyTypes(municipalityId, partyIds);
-
-		final var recipients = partyIds.stream()
-			.map(partyId -> RecipientEntity.create()
-				.withPartyId(partyId)
-				.withPartyType(partyTypes.getOrDefault(partyId, PartyType.PRIVATE))
-				.withMessageType(MessageType.DIGITAL_MAIL)
-				.withStatus(PENDING))
+		final var letterRecipients = ofNullable(letterRequest.getRecipients()).orElse(emptyList());
+		final var partyIds = letterRecipients.stream()
+			.map(Recipient::getPartyId)
+			.filter(Objects::nonNull)
 			.toList();
 
-		message.setRecipients(recipients);
+		final var partyTypes = partyIntegration.getPartyTypes(municipalityId, partyIds);
+
+		final var recipientEntities = letterRecipients.stream()
+			.map(recipient -> entityMapper.toRecipientEntity(recipient, partyTypes.getOrDefault(recipient.getPartyId(), PartyType.PRIVATE)))
+			.filter(Objects::nonNull);
+
+		final var addressRecipients = ofNullable(letterRequest.getAddresses()).orElse(emptyList()).stream()
+			.map(entityMapper::toRecipientEntity)
+			.filter(Objects::nonNull);
+
+		message.setRecipients(Stream.concat(recipientEntities, addressRecipients).toList());
 		message.setAttachments(attachmentEntities);
 
 		messageRepository.save(message);
 
 		processRecipients(message, settingsMap);
 		return message.getId();
+	}
+
+	private LetterRequest toLetterRequest(final ForwardDocumentRequest request) {
+		return LetterRequest.create()
+			.withSubject(request.getSubject())
+			.withBody(request.getBody())
+			.withContentType(request.getContentType())
+			.withRecipients(request.getRecipientPartyIds().stream()
+				.map(partyId -> Recipient.create()
+					.withPartyId(partyId)
+					.withDeliveryMethod(MessageType.DIGITAL_MAIL.name()))
+				.toList());
 	}
 
 }

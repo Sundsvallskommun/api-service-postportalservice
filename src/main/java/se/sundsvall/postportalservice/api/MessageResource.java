@@ -26,9 +26,9 @@ import se.sundsvall.dept44.common.validators.annotation.ValidMunicipalityId;
 import se.sundsvall.dept44.common.validators.annotation.ValidUuid;
 import se.sundsvall.dept44.problem.Problem;
 import se.sundsvall.dept44.support.Identifier;
-import se.sundsvall.postportalservice.api.model.DigitalLetterRequest;
 import se.sundsvall.postportalservice.api.model.DigitalRegisteredLetterRequest;
 import se.sundsvall.postportalservice.api.model.ESigningRequest;
+import se.sundsvall.postportalservice.api.model.ForwardDocumentRequest;
 import se.sundsvall.postportalservice.api.model.LetterCsvRequest;
 import se.sundsvall.postportalservice.api.model.LetterRequest;
 import se.sundsvall.postportalservice.api.model.SmsCsvRequest;
@@ -198,12 +198,12 @@ class MessageResource {
 		@ApiResponse(responseCode = "201", description = "Created"),
 		@ApiResponse(responseCode = "404", description = "Not Found", content = @Content(mediaType = APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = Problem.class)))
 	})
-	@PostMapping(value = "/e-signing/{messageId}/letter")
-	ResponseEntity<Void> sendSignedDocumentAsADigitalLetter(
+	@PostMapping(value = "/e-signing/{messageId}/forward")
+	ResponseEntity<Void> forwardSignedDocumentAsADigitalLetter(
 		@RequestHeader(value = Identifier.HEADER_NAME) @ValidIdentifier final String xSentBy,
 		@Parameter(name = "municipalityId", description = "Municipality ID", example = "2281") @ValidMunicipalityId @PathVariable final String municipalityId,
 		@Parameter(name = "messageId", description = "Id of the e-signing message", example = "9ce333ec-a473-438b-8406-a71e957dc107") @ValidUuid @PathVariable final String messageId,
-		@RequestBody @Valid final DigitalLetterRequest request) {
+		@RequestBody @Valid final ForwardDocumentRequest request) {
 		Identifier.set(Identifier.parse(xSentBy));
 
 		final var letterId = messageService.sendSignedDocumentAsLetter(municipalityId, messageId, request);

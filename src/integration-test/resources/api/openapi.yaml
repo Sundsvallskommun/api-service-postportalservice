@@ -1084,12 +1084,12 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/Problem"
-  /{municipalityId}/messages/e-signing/{messageId}/letter:
+  /{municipalityId}/messages/e-signing/{messageId}/forward:
     post:
       tags:
         - Message Resources
       summary: Send the signed document of a completed e-signing as a digital letter
-      operationId: sendSignedDocumentAsADigitalLetter
+      operationId: forwardSignedDocumentAsADigitalLetter
       parameters:
         - name: X-Sent-By
           in: header
@@ -1114,7 +1114,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/DigitalLetterRequest"
+              $ref: "#/components/schemas/ForwardDocumentRequest"
         required: true
       responses:
         "201":
@@ -1603,9 +1603,9 @@ components:
             \ method"
       required:
         - deliveryMethod
-    DigitalLetterRequest:
+    ForwardDocumentRequest:
       type: object
-      description: Digital letter request model
+      description: Forward document request model
       properties:
         subject:
           type: string

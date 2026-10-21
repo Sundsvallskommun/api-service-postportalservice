@@ -15,7 +15,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.hamcrest.CoreMatchers.allOf;
 
-public class DigitalLetterRequestTest {
+class ForwardDocumentRequestTest {
 	private final String subject = "This is the subject of the letter";
 	private final String body = "This is the body of the letter";
 	private final String contentType = "text/plain";
@@ -25,7 +25,7 @@ public class DigitalLetterRequestTest {
 
 	@Test
 	void testBean() {
-		org.hamcrest.MatcherAssert.assertThat(DigitalLetterRequest.class, allOf(
+		org.hamcrest.MatcherAssert.assertThat(ForwardDocumentRequest.class, allOf(
 			hasValidBeanConstructor(),
 			hasValidGettersAndSetters(),
 			hasValidBeanHashCode(),
@@ -35,7 +35,7 @@ public class DigitalLetterRequestTest {
 
 	@Test
 	void builderPattern() {
-		final var request = DigitalLetterRequest.create()
+		final var request = ForwardDocumentRequest.create()
 			.withSubject(subject)
 			.withBody(body)
 			.withContentType(contentType)
@@ -50,7 +50,7 @@ public class DigitalLetterRequestTest {
 
 	@Test
 	void settersAndGetters() {
-		final var request = new DigitalLetterRequest();
+		final var request = new ForwardDocumentRequest();
 		request.setSubject(subject);
 		request.setBody(body);
 		request.setContentType(contentType);
@@ -65,7 +65,7 @@ public class DigitalLetterRequestTest {
 
 	@Test
 	void validateEmptyBean() {
-		final var request = new DigitalLetterRequest();
+		final var request = new ForwardDocumentRequest();
 
 		final var violations = validator.validate(request);
 
@@ -79,7 +79,7 @@ public class DigitalLetterRequestTest {
 
 	@Test
 	void validatePopulatedBean() {
-		final var request = DigitalLetterRequest.create()
+		final var request = ForwardDocumentRequest.create()
 			.withSubject(subject)
 			.withBody(body)
 			.withContentType(contentType)
@@ -93,7 +93,7 @@ public class DigitalLetterRequestTest {
 
 	@Test
 	void noDirtOnCreatedBean() {
-		assertThat(DigitalLetterRequest.create()).hasAllNullFieldsOrProperties();
-		assertThat(new DigitalLetterRequest()).hasAllNullFieldsOrProperties();
+		assertThat(ForwardDocumentRequest.create()).hasAllNullFieldsOrProperties();
+		assertThat(new ForwardDocumentRequest()).hasAllNullFieldsOrProperties();
 	}
 }

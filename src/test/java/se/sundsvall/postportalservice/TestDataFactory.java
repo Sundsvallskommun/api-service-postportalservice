@@ -5,8 +5,8 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import se.sundsvall.postportalservice.api.model.Address;
-import se.sundsvall.postportalservice.api.model.DigitalLetterRequest;
 import se.sundsvall.postportalservice.api.model.DigitalRegisteredLetterRequest;
+import se.sundsvall.postportalservice.api.model.ForwardDocumentRequest;
 import se.sundsvall.postportalservice.api.model.LetterCsvRequest;
 import se.sundsvall.postportalservice.api.model.LetterRequest;
 import se.sundsvall.postportalservice.api.model.Recipient;
@@ -73,8 +73,8 @@ public final class TestDataFactory {
 			.withAddresses(List.of(createValidAddress()));
 	}
 
-	public static DigitalLetterRequest createValidDigitalLetterRequest() {
-		return DigitalLetterRequest.create()
+	public static ForwardDocumentRequest createValidForwardDocumentRequest() {
+		return ForwardDocumentRequest.create()
 			.withSubject("Test Subject")
 			.withBody("body")
 			.withContentType("text/plain")

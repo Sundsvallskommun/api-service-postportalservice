@@ -49,7 +49,7 @@ class MessageSignedDocumentLetterIT extends AbstractAppTest {
 	void test01_sendSignedDocumentAsDigitalLetter() {
 		final var appTest = setupCall();
 		final var location = appTest
-			.withServicePath("/%s/messages/e-signing/%s/letter".formatted(MUNICIPALITY_ID, SIGNED_MESSAGE_ID))
+			.withServicePath("/%s/messages/e-signing/%s/forward".formatted(MUNICIPALITY_ID, SIGNED_MESSAGE_ID))
 			.withHttpMethod(POST)
 			.withHeader(Identifier.HEADER_NAME, IDENTIFIER)
 			.withContentType(APPLICATION_JSON)
@@ -86,7 +86,7 @@ class MessageSignedDocumentLetterIT extends AbstractAppTest {
 	@Test
 	void test02_sendSignedDocumentWhenNotSigned() {
 		setupCall()
-			.withServicePath("/%s/messages/e-signing/%s/letter".formatted(MUNICIPALITY_ID, PENDING_MESSAGE_ID))
+			.withServicePath("/%s/messages/e-signing/%s/forward".formatted(MUNICIPALITY_ID, PENDING_MESSAGE_ID))
 			.withHttpMethod(POST)
 			.withHeader(Identifier.HEADER_NAME, IDENTIFIER)
 			.withContentType(APPLICATION_JSON)
@@ -99,7 +99,7 @@ class MessageSignedDocumentLetterIT extends AbstractAppTest {
 	@Test
 	void test03_sendSignedDocumentWhenSigningDoesNotExist() {
 		setupCall()
-			.withServicePath("/%s/messages/e-signing/%s/letter".formatted(MUNICIPALITY_ID, "00000000-0000-4000-8000-000000000000"))
+			.withServicePath("/%s/messages/e-signing/%s/forward".formatted(MUNICIPALITY_ID, "00000000-0000-4000-8000-000000000000"))
 			.withHttpMethod(POST)
 			.withHeader(Identifier.HEADER_NAME, IDENTIFIER)
 			.withContentType(APPLICATION_JSON)
