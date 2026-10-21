@@ -14,6 +14,7 @@ import static se.sundsvall.postportalservice.integration.db.converter.MessageTyp
 
 import java.time.Duration;
 import java.util.List;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.jdbc.Sql;
@@ -49,31 +50,31 @@ class MessageSignedDocumentLetterIT extends AbstractAppTest {
 	void test01_sendSignedDocumentAsDigitalLetter() {
 		final var appTest = setupCall();
 		final var location = appTest
-				.withServicePath("/%s/messages/e-signing/%s/letter".formatted(MUNICIPALITY_ID, SIGNED_MESSAGE_ID))
-				.withHttpMethod(POST)
-				.withHeader(Identifier.HEADER_NAME, IDENTIFIER)
-				.withContentType(APPLICATION_JSON)
-				.withRequest(REQUEST_FILE)
-				.withExpectedResponseStatus(CREATED)
-				.withExpectedResponseHeader(LOCATION, List.of("/%s/history/users/joe01doe/messages/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}".formatted(MUNICIPALITY_ID)))
-				.withExpectedResponseBodyIsNull()
-				.sendRequest()
-				.getResponseHeaders()
-				.getFirst(LOCATION);
+			.withServicePath("/%s/messages/e-signing/%s/letter".formatted(MUNICIPALITY_ID, SIGNED_MESSAGE_ID))
+			.withHttpMethod(POST)
+			.withHeader(Identifier.HEADER_NAME, IDENTIFIER)
+			.withContentType(APPLICATION_JSON)
+			.withRequest(REQUEST_FILE)
+			.withExpectedResponseStatus(CREATED)
+			.withExpectedResponseHeader(LOCATION, List.of("/%s/history/users/joe01doe/messages/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}".formatted(MUNICIPALITY_ID)))
+			.withExpectedResponseBodyIsNull()
+			.sendRequest()
+			.getResponseHeaders()
+			.getFirst(LOCATION);
 
 		final var letterId = location.substring(location.lastIndexOf("/") + 1);
 
 		// There are asynchronous processes involved in updating the recipient status, hence we need to wait until the expected state is reached
 		await().atMost(Duration.ofSeconds(3))
-				.pollInterval(Duration.ofMillis(100))
-				.untilAsserted(() -> {
-					final var letter = messageRepository.findById(letterId).orElseThrow();
-					assertThat(letter.getRecipients()).hasSize(1);
-					assertThat(letter.getRecipients()).allSatisfy(recipient -> {
-						assertThat(recipient.getStatus()).isEqualTo(SENT);
-						assertThat(recipient.getMessageType()).isEqualTo(DIGITAL_MAIL);
-					});
+			.pollInterval(Duration.ofMillis(100))
+			.untilAsserted(() -> {
+				final var letter = messageRepository.findById(letterId).orElseThrow();
+				assertThat(letter.getRecipients()).hasSize(1);
+				assertThat(letter.getRecipients()).allSatisfy(recipient -> {
+					assertThat(recipient.getStatus()).isEqualTo(SENT);
+					assertThat(recipient.getMessageType()).isEqualTo(DIGITAL_MAIL);
 				});
+			});
 
 		final var signing = signingRepository.findByMessageId(SIGNED_MESSAGE_ID).orElseThrow();
 		assertThat(signing.getStatus()).isEqualTo(SIGNED);
@@ -85,14 +86,14 @@ class MessageSignedDocumentLetterIT extends AbstractAppTest {
 	@Test
 	void test02_sendSignedDocumentWhenNotSigned() {
 		setupCall()
-				.withServicePath("/%s/messages/e-signing/%s/letter".formatted(MUNICIPALITY_ID, PENDING_MESSAGE_ID))
-				.withHttpMethod(POST)
-				.withHeader(Identifier.HEADER_NAME, IDENTIFIER)
-				.withContentType(APPLICATION_JSON)
-				.withRequest(REQUEST_FILE)
-				.withExpectedResponseStatus(BAD_REQUEST)
-				.withExpectedResponse(RESPONSE_FILE)
-				.sendRequestAndVerifyResponse();
+			.withServicePath("/%s/messages/e-signing/%s/letter".formatted(MUNICIPALITY_ID, PENDING_MESSAGE_ID))
+			.withHttpMethod(POST)
+			.withHeader(Identifier.HEADER_NAME, IDENTIFIER)
+			.withContentType(APPLICATION_JSON)
+			.withRequest(REQUEST_FILE)
+			.withExpectedResponseStatus(BAD_REQUEST)
+			.withExpectedResponse(RESPONSE_FILE)
+			.sendRequestAndVerifyResponse();
 	}
 
 	@Test
