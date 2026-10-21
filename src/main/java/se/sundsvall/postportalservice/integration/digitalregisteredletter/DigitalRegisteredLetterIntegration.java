@@ -1,5 +1,6 @@
 package se.sundsvall.postportalservice.integration.digitalregisteredletter;
 
+import feign.Response;
 import generated.se.sundsvall.digitalregisteredletter.LetterStatus;
 import java.io.IOException;
 import java.io.InputStream;
@@ -90,22 +91,10 @@ public class DigitalRegisteredLetterIntegration {
 
 	public ResponseEntity<StreamingResponseBody> getLetterReceipt(final String municipalityId, final String letterId) {
 		final var feignResponse = client.getLetterReceipt(municipalityId, letterId);
-		final var headers = feignResponse.headers();
 
 		final var newHeaders = new HttpHeaders();
-		Optional.ofNullable(headers.get("Content-Type"))
-			.flatMap(values -> values.stream().findFirst())
-			.ifPresentOrElse(value1 -> newHeaders.set("Content-Type", value1),
-				() -> {
-					throw Problem.valueOf(INTERNAL_SERVER_ERROR, "Missing Content-Type header in letter receipt response");
-				});
-
-		Optional.ofNullable(headers.get("Content-Disposition"))
-			.flatMap(values -> values.stream().findFirst())
-			.ifPresentOrElse(value1 -> newHeaders.set("Content-Disposition", value1),
-				() -> {
-					throw Problem.valueOf(INTERNAL_SERVER_ERROR, "Missing Content-Disposition header in letter receipt response");
-				});
+		newHeaders.set("Content-Type", requiredReceiptHeader(feignResponse, "Content-Type"));
+		newHeaders.set("Content-Disposition", requiredReceiptHeader(feignResponse, "Content-Disposition"));
 
 		final StreamingResponseBody streamingResponseBody = outputStream -> {
 			try (final InputStream inputStream = feignResponse.body().asInputStream()) {
@@ -119,6 +108,19 @@ public class DigitalRegisteredLetterIntegration {
 			.status(feignResponse.status())
 			.headers(newHeaders)
 			.body(streamingResponseBody);
+	}
+
+	/**
+	 * Closes the response before failing, since its body will never be streamed and would otherwise hold on to the
+	 * connection.
+	 */
+	private static String requiredReceiptHeader(final Response feignResponse, final String name) {
+		return Optional.ofNullable(feignResponse.headers().get(name))
+			.flatMap(values -> values.stream().findFirst())
+			.orElseThrow(() -> {
+				feignResponse.close();
+				return Problem.valueOf(INTERNAL_SERVER_ERROR, "Missing " + name + " header in letter receipt response");
+			});
 	}
 
 }

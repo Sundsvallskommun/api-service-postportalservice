@@ -17,4 +17,6 @@ public final class Constants {
 	public static final String EXPIRED = "EXPIRED";
 	public static final String HALTED = "HALTED";
 	public static final String DECLINED = "DECLINED";
+
+	public static final String NO_REPLY_EMAIL = "noreply@sundsvall.se";
 }

@@ -283,6 +283,7 @@ class DigitalRegisteredLetterIntegrationTest {
 			.hasFieldOrPropertyWithValue("status", INTERNAL_SERVER_ERROR);
 
 		verify(clientMock).getLetterReceipt(MUNICIPALITY_ID, LETTER_ID);
+		verify(mockFeignResponse).close();
 	}
 
 	@Test
@@ -300,5 +301,6 @@ class DigitalRegisteredLetterIntegrationTest {
 			.hasFieldOrPropertyWithValue("status", INTERNAL_SERVER_ERROR);
 
 		verify(clientMock).getLetterReceipt(MUNICIPALITY_ID, LETTER_ID);
+		verify(mockFeignResponse).close();
 	}
 }

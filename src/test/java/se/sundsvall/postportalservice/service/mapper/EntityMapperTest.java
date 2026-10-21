@@ -2,13 +2,16 @@ package se.sundsvall.postportalservice.service.mapper;
 
 import generated.se.sundsvall.citizen.CitizenAddress;
 import generated.se.sundsvall.citizen.CitizenExtended;
-import generated.se.sundsvall.legalentity.LEAddress;
 import generated.se.sundsvall.legalentity.LEPostAddress;
 import generated.se.sundsvall.legalentity.LegalEntity2;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
 import se.sundsvall.postportalservice.api.model.Address;
@@ -323,14 +326,12 @@ class EntityMapperTest {
 		final var partyId = UUID.randomUUID().toString();
 		final var legalEntity = new LegalEntity2()
 			.name("Acme AB")
-			.address(new LEAddress()
-				.addressArea("Storgatan")
-				.adressNumber("12B")
-				.postalCode("85222")
-				.city("Sundsvall"))
 			.postAddress(new LEPostAddress()
 				.coAdress("c/o CEO")
-				.country("Sweden"));
+				.country("Sweden")
+				.postalCode("12345")
+				.city("Sundsvall")
+				.address1("Ankeborgsvägen 12B"));
 
 		final var result = entityMapper.toEnterpriseSnailMailRecipientEntity(partyId, legalEntity);
 
@@ -341,9 +342,9 @@ class EntityMapperTest {
 		assertThat(result.getFirstName()).isNull();
 		assertThat(result.getLastName()).isNull();
 		assertThat(result.getOrganizationName()).isEqualTo("Acme AB");
-		assertThat(result.getStreetAddress()).isEqualTo("Storgatan 12B");
+		assertThat(result.getStreetAddress()).isEqualTo("Ankeborgsvägen 12B");
 		assertThat(result.getCareOf()).isEqualTo("c/o CEO");
-		assertThat(result.getZipCode()).isEqualTo("85222");
+		assertThat(result.getZipCode()).isEqualTo("12345");
 		assertThat(result.getCity()).isEqualTo("Sundsvall");
 		assertThat(result.getCountry()).isEqualTo("Sweden");
 		assertThat(result.getStatus()).isEqualTo(PENDING);
@@ -360,7 +361,7 @@ class EntityMapperTest {
 	}
 
 	@Test
-	void toEnterpriseSnailMailRecipientEntity_missingAddressAndZip_returnsNull() {
+	void toEnterpriseSnailMailRecipientEntity_missingPostAddress_returnsNull() {
 		final var partyId = UUID.randomUUID().toString();
 		final var legalEntity = new LegalEntity2().name("Acme");
 
@@ -369,44 +370,50 @@ class EntityMapperTest {
 		assertThat(result).isNull();
 	}
 
-	@Test
-	void toEnterpriseSnailMailRecipientEntity_onlyZipCode_keeps() {
-		final var partyId = UUID.randomUUID().toString();
+	@ParameterizedTest(name = "{0}")
+	@MethodSource("streetAddressProvider")
+	void toEnterpriseSnailMailRecipientEntity_streetAddress(String testName, String address1, String address2, String expectedStreetAddress) {
 		final var legalEntity = new LegalEntity2()
 			.name("Acme")
-			.address(new LEAddress().postalCode("85222"));
+			.postAddress(new LEPostAddress()
+				.address1(address1)
+				.address2(address2)
+				.postalCode("85222")
+				.city("Sundsvall"));
 
-		final var result = entityMapper.toEnterpriseSnailMailRecipientEntity(partyId, legalEntity);
+		final var result = entityMapper.toEnterpriseSnailMailRecipientEntity(UUID.randomUUID().toString(), legalEntity);
 
 		assertThat(result).isNotNull();
-		assertThat(result.getZipCode()).isEqualTo("85222");
-		assertThat(result.getStreetAddress()).isNull();
+		assertThat(result.getStreetAddress()).isEqualTo(expectedStreetAddress);
 	}
 
-	@Test
-	void toEnterpriseSnailMailRecipientEntity_onlyAddressArea_keeps() {
-		final var partyId = UUID.randomUUID().toString();
+	@ParameterizedTest(name = "{0}")
+	@MethodSource("incompletePostAddressProvider")
+	void toEnterpriseSnailMailRecipientEntity_incompletePostAddress_returnsNull(String testName, LEPostAddress postAddress) {
 		final var legalEntity = new LegalEntity2()
 			.name("Acme")
-			.address(new LEAddress().addressArea("Only Street"));
+			.postAddress(postAddress);
 
-		final var result = entityMapper.toEnterpriseSnailMailRecipientEntity(partyId, legalEntity);
+		final var result = entityMapper.toEnterpriseSnailMailRecipientEntity(UUID.randomUUID().toString(), legalEntity);
 
-		assertThat(result).isNotNull();
-		assertThat(result.getStreetAddress()).isEqualTo("Only Street");
-		assertThat(result.getZipCode()).isNull();
+		assertThat(result).isNull();
 	}
 
-	@Test
-	void toEnterpriseSnailMailRecipientEntity_onlyAddressNumber_keeps() {
-		final var partyId = UUID.randomUUID().toString();
-		final var legalEntity = new LegalEntity2()
-			.name("Acme")
-			.address(new LEAddress().adressNumber("42"));
+	public static Stream<Arguments> streetAddressProvider() {
+		return Stream.of(
+			Arguments.of("Only address1", "Storgatan 1", null, "Storgatan 1"),
+			Arguments.of("address1 preferred over address2", "Storgatan 1", "Box 123", "Storgatan 1"),
+			Arguments.of("Null address1 falls back to address2", null, "Box 123", "Box 123"),
+			Arguments.of("Blank address1 falls back to address2", " ", "Box 123", "Box 123"));
+	}
 
-		final var result = entityMapper.toEnterpriseSnailMailRecipientEntity(partyId, legalEntity);
-
-		assertThat(result).isNotNull();
-		assertThat(result.getStreetAddress()).isEqualTo("42");
+	public static Stream<Arguments> incompletePostAddressProvider() {
+		return Stream.of(
+			Arguments.of("Null address1 and address2", new LEPostAddress().postalCode("85222").city("Sundsvall")),
+			Arguments.of("Blank address1 and address2", new LEPostAddress().address1(" ").address2(" ").postalCode("85222").city("Sundsvall")),
+			Arguments.of("Null postal code", new LEPostAddress().address1("Storgatan 1").city("Sundsvall")),
+			Arguments.of("Blank postal code", new LEPostAddress().address1("Storgatan 1").postalCode(" ").city("Sundsvall")),
+			Arguments.of("Null city", new LEPostAddress().address1("Storgatan 1").postalCode("85222")),
+			Arguments.of("Blank city", new LEPostAddress().address1("Storgatan 1").postalCode("85222").city(" ")));
 	}
 }
