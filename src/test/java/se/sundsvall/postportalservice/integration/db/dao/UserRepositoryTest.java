@@ -19,7 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Sql(scripts = {
 	"/db/scripts/testdata.sql"
 })
-@DataJpaTest
+@DataJpaTest(showSql = false)
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @ActiveProfiles("junit")
 class UserRepositoryTest {
