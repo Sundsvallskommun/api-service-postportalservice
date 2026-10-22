@@ -18,7 +18,7 @@ import static org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTest
 @Sql(scripts = {
 	"/db/scripts/testdata.sql"
 })
-@DataJpaTest
+@DataJpaTest(showSql = false)
 @AutoConfigureTestDatabase(replace = NONE)
 @ActiveProfiles("junit")
 class DepartmentRepositoryTest {
