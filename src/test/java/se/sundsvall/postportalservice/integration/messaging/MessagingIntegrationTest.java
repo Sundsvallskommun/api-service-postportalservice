@@ -22,7 +22,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import se.sundsvall.dept44.problem.Problem;
 import se.sundsvall.postportalservice.integration.db.AttachmentEntity;
@@ -36,6 +35,7 @@ import se.sundsvall.postportalservice.integration.messaging.configuration.Messag
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -81,7 +81,7 @@ class MessagingIntegrationTest {
 
 	@Test
 	void sendDigitalMail() {
-		var blob = Mockito.mock(Blob.class);
+		var blob = mock(Blob.class);
 
 		var departmentEntity = DepartmentEntity.create()
 			.withName("Jönssonligan")
@@ -199,7 +199,7 @@ class MessagingIntegrationTest {
 	void sendCallbackEmail() throws SQLException {
 		final var partyId = "00000000-0000-0000-0000-000000000001";
 		final var recipientId = "recipient-id-1";
-		final var blob = Mockito.mock(Blob.class);
+		final var blob = mock(Blob.class);
 		when(blob.length()).thenReturn(5L);
 		when(blob.getBytes(1, 5)).thenReturn("hello".getBytes());
 
@@ -273,7 +273,7 @@ class MessagingIntegrationTest {
 	@Test
 	void sendCallbackEmail_blobToBase64Fails() throws SQLException {
 		final var partyId = "00000000-0000-0000-0000-000000000001";
-		final var blob = Mockito.mock(Blob.class);
+		final var blob = mock(Blob.class);
 		when(blob.length()).thenReturn(5L);
 		when(blob.getBytes(1, 5)).thenThrow(new SQLException("DB error"));
 

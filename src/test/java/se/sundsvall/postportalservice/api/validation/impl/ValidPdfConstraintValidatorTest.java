@@ -6,11 +6,11 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.multipart.MultipartFile;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -24,7 +24,7 @@ class ValidPdfConstraintValidatorTest {
 
 	@Test
 	void validMultipartFilesTest() {
-		var multipartFile = Mockito.mock(MultipartFile.class);
+		var multipartFile = mock(MultipartFile.class);
 		when(multipartFile.getContentType()).thenReturn("application/pdf");
 		var files = List.of(multipartFile, multipartFile);
 
@@ -35,7 +35,7 @@ class ValidPdfConstraintValidatorTest {
 
 	@Test
 	void invalidMultipartFilesTest() {
-		var multipartFile = Mockito.mock(MultipartFile.class);
+		var multipartFile = mock(MultipartFile.class);
 		when(multipartFile.getContentType()).thenReturn("text/plain");
 		var files = List.of(multipartFile, multipartFile);
 

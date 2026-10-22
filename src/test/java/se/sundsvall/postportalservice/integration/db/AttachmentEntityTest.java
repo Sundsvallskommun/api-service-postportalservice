@@ -5,7 +5,6 @@ import java.time.OffsetDateTime;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 
 import static com.google.code.beanmatchers.BeanMatchers.hasValidBeanConstructor;
 import static com.google.code.beanmatchers.BeanMatchers.hasValidBeanEquals;
@@ -17,6 +16,7 @@ import static java.time.ZoneOffset.UTC;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.mockito.Mockito.mock;
 
 class AttachmentEntityTest {
 
@@ -26,7 +26,7 @@ class AttachmentEntityTest {
 	private static final String CONTENT_STRING = "contentString";
 	private static final OffsetDateTime CREATED = OffsetDateTime.of(2024, 6, 15, 12, 0, 0, 0, UTC);
 	private static final AtomicInteger SEQUENCE = new AtomicInteger();
-	private final Blob blobMock = Mockito.mock(Blob.class);
+	private final Blob blobMock = mock(Blob.class);
 
 	@BeforeAll
 	static void setup() {

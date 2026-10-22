@@ -4,7 +4,6 @@ import java.time.OffsetDateTime;
 import java.util.UUID;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webtestclient.autoconfigure.AutoConfigureWebTestClient;
@@ -26,6 +25,7 @@ import static java.time.ZoneOffset.UTC;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -125,7 +125,7 @@ class HistoryResourceTest {
 	void getUserMessages_OK() {
 		final var userId = "12345";
 		final var messages = new Messages();
-		final var pageableMock = Mockito.mock(Pageable.class);
+		final var pageableMock = mock(Pageable.class);
 
 		when(historyServiceMock.getUserMessages(eq(MUNICIPALITY_ID), eq(userId), any(Pageable.class))).thenReturn(messages);
 

@@ -35,6 +35,7 @@ import se.sundsvall.postportalservice.TestDataFactory;
 import se.sundsvall.postportalservice.api.model.Address;
 import se.sundsvall.postportalservice.api.model.ESigningRequest;
 import se.sundsvall.postportalservice.api.model.ESigningSignatory;
+import se.sundsvall.postportalservice.api.model.LetterRequest;
 import se.sundsvall.postportalservice.api.model.Recipient;
 import se.sundsvall.postportalservice.api.model.SmsRecipient;
 import se.sundsvall.postportalservice.integration.citizen.CitizenIntegration;
@@ -67,8 +68,10 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -300,7 +303,7 @@ class MessageServiceTest {
 	@Test
 	void processDigitalRegisteredLetterRequest_messagingSettingsThrows() {
 		final var request = TestDataFactory.createValidDigitalRegisteredLetterRequest();
-		final var multipartFile = Mockito.mock(MultipartFile.class);
+		final var multipartFile = mock(MultipartFile.class);
 		final var multipartFiles = List.of(multipartFile);
 		Identifier.set(new Identifier().withValue("test01user"));
 
@@ -327,7 +330,7 @@ class MessageServiceTest {
 	@Test
 	void processDigitalRegisteredLetterRequest_digitalRegisteredLetterThrows() {
 		final var request = TestDataFactory.createValidDigitalRegisteredLetterRequest();
-		final var multipartFile = Mockito.mock(MultipartFile.class);
+		final var multipartFile = mock(MultipartFile.class);
 		final var multipartFiles = List.of(multipartFile);
 
 		final var attachmentEntities = List.of(new AttachmentEntity(), new AttachmentEntity());
@@ -392,7 +395,7 @@ class MessageServiceTest {
 	@Test
 	void processDigitalRegisteredLetterRequest_happyCase() {
 		final var request = TestDataFactory.createValidDigitalRegisteredLetterRequest();
-		final var multipartFile = Mockito.mock(MultipartFile.class);
+		final var multipartFile = mock(MultipartFile.class);
 		final var multipartFileList = List.of(multipartFile);
 		final var attachmentEntities = List.of(new AttachmentEntity(), new AttachmentEntity());
 		final var userEntity = new UserEntity().withUsername(USERNAME).withId("userId");
@@ -455,7 +458,7 @@ class MessageServiceTest {
 	@Test
 	void processDigitalRegisteredLetterRequest_enterprisePartyId_returnsBadRequest() {
 		final var request = TestDataFactory.createValidDigitalRegisteredLetterRequest();
-		final var multipartFiles = List.of(Mockito.mock(MultipartFile.class));
+		final var multipartFiles = List.of(mock(MultipartFile.class));
 
 		when(partyIntegrationMock.getPartyTypes(MUNICIPALITY_ID, List.of(request.getPartyId())))
 			.thenReturn(Map.of(request.getPartyId(), PartyType.ENTERPRISE));
@@ -470,8 +473,8 @@ class MessageServiceTest {
 
 	@Test
 	void processLetterRequest() {
-		final var spy = Mockito.spy(messageService);
-		final var multipartFile = Mockito.mock(MultipartFile.class);
+		final var spy = spy(messageService);
+		final var multipartFile = mock(MultipartFile.class);
 		final var multipartFileList = List.of(multipartFile);
 		final var letterRequest = TestDataFactory.createValidLetterRequest();
 		final var userEntity = new UserEntity().withUsername("username");
@@ -508,12 +511,13 @@ class MessageServiceTest {
 		verify(entityMapperMock).toRecipientEntity(any(Address.class));
 		verify(entityMapperMock).toRecipientEntity(any(Recipient.class), eq(PartyType.PRIVATE));
 		verify(spy).processRecipients(any(), any());
-		verify(messageRepositoryMock).save(any());
+		verify(messageRepositoryMock).save(messageEntityCaptor.capture());
+		assertThat(messageEntityCaptor.getValue().getMessageType()).isEqualTo(MessageType.LETTER);
 	}
 
 	@Test
 	void processSmsRequest() {
-		final var spy = Mockito.spy(messageService);
+		final var spy = spy(messageService);
 		final var smsRequest = TestDataFactory.createValidSmsRequest();
 		final var userEntity = new UserEntity().withUsername("username");
 		final var departmentEntity = new DepartmentEntity().withName("departmentName").withOrganizationId("departmentId");
@@ -538,9 +542,9 @@ class MessageServiceTest {
 
 	@Test
 	void processCsvSmsRequest() {
-		final var spy = Mockito.spy(messageService);
+		final var spy = spy(messageService);
 		final var smsCsvRequest = TestDataFactory.createValidSmsCsvRequest();
-		final var csvFile = Mockito.mock(MultipartFile.class);
+		final var csvFile = mock(MultipartFile.class);
 		final var userEntity = new UserEntity().withUsername("username");
 		final var departmentEntity = new DepartmentEntity().withName("departmentName").withOrganizationId("departmentId");
 		final var messageId = "adc63e5c-b92f-4c75-b14f-819473cef5b6";
@@ -584,7 +588,7 @@ class MessageServiceTest {
 
 	@Test
 	void processRecipients() {
-		final var spy = Mockito.spy(messageService);
+		final var spy = spy(messageService);
 		final var recipient1 = new RecipientEntity().withFirstName("john");
 		final var recipient2 = new RecipientEntity().withFirstName("sarah");
 
@@ -602,7 +606,7 @@ class MessageServiceTest {
 
 	@Test
 	void processRecipients_skipsUndeliverable() {
-		final var spy = Mockito.spy(messageService);
+		final var spy = spy(messageService);
 		final var deliverable = new RecipientEntity().withFirstName("john");
 		final var undeliverable = new RecipientEntity().withFirstName("sarah").withStatus("UNDELIVERABLE");
 
@@ -790,4 +794,72 @@ class MessageServiceTest {
 		verify(departmentRepositoryMock).findByOrganizationId("orgId");
 	}
 
+	@Test
+	void sendSignedDocumentAsLetter() {
+		final var spy = spy(messageService);
+		final var messageId = "msg-1";
+		final var request = TestDataFactory.createValidForwardDocumentRequest();
+		final var signedDocument = AttachmentEntity.create().withId("signed-1").withFileName("signed.pdf").withContentType("application/pdf");
+		final var copy = AttachmentEntity.create().withFileName("signed.pdf").withContentType("application/pdf").withContentString("base64signed");
+		final var signing = SigningEntity.create().withStatus("SIGNED").withAttachment(signedDocument);
+		final var expectedLetterRequest = LetterRequest.create()
+			.withSubject("Test Subject")
+			.withBody("body")
+			.withContentType("text/plain")
+			.withRecipients(List.of(Recipient.create()
+				.withPartyId("6d0773d6-3e7f-4552-81bc-f0007af95adf")
+				.withDeliveryMethod("DIGITAL_MAIL")));
+
+		when(signingRepositoryMock.findByMessageIdAndMessageMunicipalityId(messageId, MUNICIPALITY_ID)).thenReturn(Optional.of(signing));
+		when(attachmentMapperMock.copyOf(signedDocument)).thenReturn(copy);
+		doReturn("letter-1").when(spy).sendLetter(any(), any(), any(), any());
+
+		final var result = spy.sendSignedDocumentAsLetter(MUNICIPALITY_ID, messageId, request);
+
+		assertThat(result).isEqualTo("letter-1");
+		verify(signingRepositoryMock).findByMessageIdAndMessageMunicipalityId(messageId, MUNICIPALITY_ID);
+		verify(attachmentMapperMock).copyOf(signedDocument);
+		verify(spy).sendLetter(MUNICIPALITY_ID, MessageType.DIGITAL_MAIL, expectedLetterRequest, List.of(copy));
+	}
+
+	@Test
+	void sendSignedDocumentAsLetter_notFound() {
+		final var messageId = "msg-1";
+		when(signingRepositoryMock.findByMessageIdAndMessageMunicipalityId(messageId, MUNICIPALITY_ID)).thenReturn(Optional.empty());
+
+		assertThatThrownBy(() -> messageService.sendSignedDocumentAsLetter(MUNICIPALITY_ID, messageId, TestDataFactory.createValidForwardDocumentRequest()))
+			.isInstanceOf(Problem.class)
+			.hasFieldOrPropertyWithValue("status", NOT_FOUND)
+			.hasMessageContaining("No e-signing case found for message with id '%s'".formatted(messageId));
+
+		verify(signingRepositoryMock).findByMessageIdAndMessageMunicipalityId(messageId, MUNICIPALITY_ID);
+	}
+
+	@Test
+	void sendSignedDocumentAsLetter_notSigned() {
+		final var messageId = "msg-1";
+		final var signing = SigningEntity.create().withStatus(CANCELLED).withAttachment(AttachmentEntity.create());
+		when(signingRepositoryMock.findByMessageIdAndMessageMunicipalityId(messageId, MUNICIPALITY_ID)).thenReturn(Optional.of(signing));
+
+		assertThatThrownBy(() -> messageService.sendSignedDocumentAsLetter(MUNICIPALITY_ID, messageId, TestDataFactory.createValidForwardDocumentRequest()))
+			.isInstanceOf(Problem.class)
+			.hasFieldOrPropertyWithValue("status", BAD_REQUEST)
+			.hasMessageContaining("Message with id '%s' does not contain a document with a completed e-signing".formatted(messageId));
+
+		verify(signingRepositoryMock).findByMessageIdAndMessageMunicipalityId(messageId, MUNICIPALITY_ID);
+	}
+
+	@Test
+	void sendSignedDocumentAsLetter_signedWithoutDocument() {
+		final var messageId = "msg-1";
+		final var signing = SigningEntity.create().withStatus("SIGNED");
+		when(signingRepositoryMock.findByMessageIdAndMessageMunicipalityId(messageId, MUNICIPALITY_ID)).thenReturn(Optional.of(signing));
+
+		assertThatThrownBy(() -> messageService.sendSignedDocumentAsLetter(MUNICIPALITY_ID, messageId, TestDataFactory.createValidForwardDocumentRequest()))
+			.isInstanceOf(Problem.class)
+			.hasFieldOrPropertyWithValue("status", BAD_REQUEST)
+			.hasMessageContaining("Message with id '%s' does not contain a document with a completed e-signing".formatted(messageId));
+
+		verify(signingRepositoryMock).findByMessageIdAndMessageMunicipalityId(messageId, MUNICIPALITY_ID);
+	}
 }
