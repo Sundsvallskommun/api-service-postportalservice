@@ -362,29 +362,21 @@ class MessageServiceTest {
 		verify(digitalRegisteredLetterIntegrationMock).sendLetter(any(), any());
 		verify(messageRepositoryMock).save(messageEntityCaptor.capture());
 		final var messageEntity = messageEntityCaptor.getValue();
-		assertThat(messageEntity).isNotNull();
-		assertThat(messageEntity.getId()).isEqualTo("messageId");
-		assertThat(messageEntity.getAttachments()).isEqualTo(attachmentEntities);
-		assertThat(messageEntity.getDepartment()).isNotNull().isInstanceOf(DepartmentEntity.class).satisfies(departmentEntity -> {
+		assertThat(messageEntity).isNotNull()
+			.extracting(MessageEntity::getId, MessageEntity::getAttachments)
+			.containsExactly("messageId", attachmentEntities);
+		assertThat(messageEntity.getDepartment()).isNotNull().isInstanceOf(DepartmentEntity.class)
 			// Asserts that a new department was created with the correct values since none existed previously
-			assertThat(departmentEntity.getId()).isNull();
-			assertThat(departmentEntity.getName()).isEqualTo("departmentName");
-			assertThat(departmentEntity.getOrganizationId()).isEqualTo("departmentId");
-		});
-		assertThat(messageEntity.getUser()).isNotNull().isInstanceOf(UserEntity.class).satisfies(userEntity -> {
+			.extracting(DepartmentEntity::getId, DepartmentEntity::getName, DepartmentEntity::getOrganizationId)
+			.containsExactly(null, "departmentName", "departmentId");
+		assertThat(messageEntity.getUser()).isNotNull().isInstanceOf(UserEntity.class)
 			// Asserts that a new user was created with the correct values since none existed previously
-			assertThat(userEntity.getId()).isNull();
-			assertThat(userEntity.getUsername()).isEqualTo(USERNAME);
-		});
-		assertThat(messageEntity.getRecipients().getFirst()).isNotNull().isInstanceOf(RecipientEntity.class).satisfies(recipientEntity -> {
-			assertThat(recipientEntity.getPartyId()).isEqualTo(request.getPartyId());
-			assertThat(recipientEntity.getFirstName()).isEqualTo("John");
-			assertThat(recipientEntity.getLastName()).isEqualTo("Doe");
-			assertThat(recipientEntity.getMessageType()).isEqualTo(MessageType.DIGITAL_REGISTERED_LETTER);
-			assertThat(recipientEntity.getStatus()).isEqualTo(FAILED);
-			assertThat(recipientEntity.getStatusDetail()).isEqualTo("Something when wrong");
-			assertThat(recipientEntity.getExternalId()).isNull();
-		});
+			.extracting(UserEntity::getId, UserEntity::getUsername)
+			.containsExactly(null, USERNAME);
+		assertThat(messageEntity.getRecipients().getFirst()).isNotNull().isInstanceOf(RecipientEntity.class)
+			.extracting(RecipientEntity::getPartyId, RecipientEntity::getFirstName, RecipientEntity::getLastName, RecipientEntity::getMessageType,
+				RecipientEntity::getStatus, RecipientEntity::getStatusDetail, RecipientEntity::getExternalId)
+			.containsExactly(request.getPartyId(), "John", "Doe", MessageType.DIGITAL_REGISTERED_LETTER, FAILED, "Something when wrong", null);
 
 		verifyNoInteractions(messagingIntegrationMock);
 	}
@@ -428,29 +420,21 @@ class MessageServiceTest {
 		verify(digitalRegisteredLetterIntegrationMock).sendLetter(any(), any());
 		verify(messageRepositoryMock).save(messageEntityCaptor.capture());
 		final var messageEntity = messageEntityCaptor.getValue();
-		assertThat(messageEntity).isNotNull();
-		assertThat(messageEntity.getId()).isEqualTo("messageId");
-		assertThat(messageEntity.getAttachments()).isEqualTo(attachmentEntities);
-		assertThat(messageEntity.getDepartment()).isNotNull().isInstanceOf(DepartmentEntity.class).satisfies(entity -> {
+		assertThat(messageEntity).isNotNull()
+			.extracting(MessageEntity::getId, MessageEntity::getAttachments)
+			.containsExactly("messageId", attachmentEntities);
+		assertThat(messageEntity.getDepartment()).isNotNull().isInstanceOf(DepartmentEntity.class)
 			// Asserts that a new department was created with the correct values since none existed previously
-			assertThat(departmentEntity.getId()).isEqualTo("departmentId");
-			assertThat(departmentEntity.getName()).isEqualTo("departmentName");
-			assertThat(departmentEntity.getOrganizationId()).isEqualTo("departmentId");
-		});
-		assertThat(messageEntity.getUser()).isNotNull().isInstanceOf(UserEntity.class).satisfies(entity -> {
+			.extracting(DepartmentEntity::getId, DepartmentEntity::getName, DepartmentEntity::getOrganizationId)
+			.containsExactly("departmentId", "departmentName", "departmentId");
+		assertThat(messageEntity.getUser()).isNotNull().isInstanceOf(UserEntity.class)
 			// Asserts that a new user was created with the correct values since none existed previously
-			assertThat(userEntity.getId()).isEqualTo("userId");
-			assertThat(userEntity.getUsername()).isEqualTo(USERNAME);
-		});
-		assertThat(messageEntity.getRecipients().getFirst()).isNotNull().isInstanceOf(RecipientEntity.class).satisfies(recipientEntity -> {
-			assertThat(recipientEntity.getPartyId()).isEqualTo(request.getPartyId());
-			assertThat(recipientEntity.getFirstName()).isEqualTo("Jane");
-			assertThat(recipientEntity.getLastName()).isEqualTo("Smith");
-			assertThat(recipientEntity.getMessageType()).isEqualTo(MessageType.DIGITAL_REGISTERED_LETTER);
-			assertThat(recipientEntity.getStatus()).isEqualTo(SENT);
-			assertThat(recipientEntity.getExternalId()).isEqualTo("229a3e3e-17ae-423a-9a14-671b5b1bbd17");
-			assertThat(recipientEntity.getStatusDetail()).isNull();
-		});
+			.extracting(UserEntity::getId, UserEntity::getUsername)
+			.containsExactly("userId", USERNAME);
+		assertThat(messageEntity.getRecipients().getFirst()).isNotNull().isInstanceOf(RecipientEntity.class)
+			.extracting(RecipientEntity::getPartyId, RecipientEntity::getFirstName, RecipientEntity::getLastName, RecipientEntity::getMessageType,
+				RecipientEntity::getStatus, RecipientEntity::getStatusDetail, RecipientEntity::getExternalId)
+			.containsExactly(request.getPartyId(), "Jane", "Smith", MessageType.DIGITAL_REGISTERED_LETTER, SENT, null, "229a3e3e-17ae-423a-9a14-671b5b1bbd17");
 
 		verifyNoInteractions(messagingIntegrationMock);
 	}
