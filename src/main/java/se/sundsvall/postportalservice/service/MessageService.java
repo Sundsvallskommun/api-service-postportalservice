@@ -92,6 +92,7 @@ public class MessageService {
 	private final MessagingIntegration messagingIntegration;
 	private final MessagingSettingsIntegration messagingSettingsIntegration;
 	private final PrecheckService precheckService;
+	private final MailboxStatusService mailboxStatusService;
 
 	private final AttachmentMapper attachmentMapper;
 	private final EntityMapper entityMapper;
@@ -112,6 +113,7 @@ public class MessageService {
 		final MessagingIntegration messagingIntegration,
 		final MessagingSettingsIntegration messagingSettingsIntegration,
 		final PrecheckService precheckService,
+		final MailboxStatusService mailboxStatusService,
 		final AttachmentMapper attachmentMapper,
 		final EntityMapper entityMapper,
 		final DepartmentRepository departmentRepository,
@@ -128,6 +130,7 @@ public class MessageService {
 		this.messagingIntegration = messagingIntegration;
 		this.messagingSettingsIntegration = messagingSettingsIntegration;
 		this.precheckService = precheckService;
+		this.mailboxStatusService = mailboxStatusService;
 		this.attachmentMapper = attachmentMapper;
 		this.entityMapper = entityMapper;
 		this.departmentRepository = departmentRepository;
@@ -410,6 +413,11 @@ public class MessageService {
 
 		if (!SIGNED.equals(signing.getStatus()) || signing.getAttachment() == null) {
 			throw Problem.valueOf(BAD_REQUEST, "Message with id '%s' does not contain a document with a completed e-signing".formatted(messageId));
+		}
+		final var mailboxStatus = mailboxStatusService.checkMailboxStatus(municipalityId, forwardDocumentRequest.getRecipientPartyIds());
+		if (!mailboxStatus.unreachable().isEmpty()) {
+			throw Problem.valueOf(BAD_REQUEST, "The following recipients do not have a reachable digital mailbox: %s"
+				.formatted(String.join(", ", mailboxStatus.unreachable())));
 		}
 		return sendLetter(municipalityId, DIGITAL_MAIL, toLetterRequest(forwardDocumentRequest), new ArrayList<>(List.of(attachmentMapper.copyOf(signing.getAttachment()))));
 	}

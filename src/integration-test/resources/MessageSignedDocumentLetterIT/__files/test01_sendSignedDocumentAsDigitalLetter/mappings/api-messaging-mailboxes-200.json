@@ -1,0 +1,30 @@
+{
+	"request": {
+		"method": "POST",
+		"url": "/api-messaging/2281/1234567890/mailboxes",
+		"headers": {
+			"Authorization": {
+				"equalTo": "Bearer 0000000000000000AAAAAAAAAAAAAAAA"
+			}
+		},
+		"bodyPatterns": [
+			{
+				"equalToJson": [
+					"6d0773d6-3e7f-4552-81bc-f0007af95adf"
+				]
+			}
+		]
+	},
+	"response": {
+		"status": 200,
+		"headers": {
+			"Content-Type": "application/json"
+		},
+		"jsonBody": [
+			{
+				"partyId": "6d0773d6-3e7f-4552-81bc-f0007af95adf",
+				"reachable": true
+			}
+		]
+	}
+}

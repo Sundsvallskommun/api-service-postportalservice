@@ -61,6 +61,7 @@ import se.sundsvall.postportalservice.integration.party.PartyIntegration;
 import se.sundsvall.postportalservice.service.mapper.AttachmentMapper;
 import se.sundsvall.postportalservice.service.mapper.EntityMapper;
 import se.sundsvall.postportalservice.service.util.CsvUtil;
+import se.sundsvall.postportalservice.service.util.PrecheckUtil;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -153,6 +154,9 @@ class MessageServiceTest {
 	@Mock
 	private SigningRepository signingRepositoryMock;
 
+	@Mock
+	private MailboxStatusService mailboxStatusServiceMock;
+
 	@Captor
 	private ArgumentCaptor<MessageEntity> messageEntityCaptor;
 
@@ -174,9 +178,11 @@ class MessageServiceTest {
 		verifyNoMoreInteractions(attachmentMapperMock, entityMapperMock,
 			messagingIntegrationMock, messagingSettingsIntegrationMock,
 			departmentRepositoryMock, userRepositoryMock,
-			messageRepositoryMock, recipientRepositoryMock, digitalRegisteredLetterIntegrationMock,
-			citizenIntegrationMock, partyIntegrationMock,
-			esigningIntegrationMock, esigningMapperMock, signingRepositoryMock);
+			messageRepositoryMock, recipientRepositoryMock,
+			digitalRegisteredLetterIntegrationMock, citizenIntegrationMock,
+			partyIntegrationMock, esigningIntegrationMock,
+			esigningMapperMock, signingRepositoryMock,
+			mailboxStatusServiceMock);
 	}
 
 	@Test
@@ -797,12 +803,15 @@ class MessageServiceTest {
 		when(signingRepositoryMock.findByMessageIdAndMessageMunicipalityId(messageId, MUNICIPALITY_ID)).thenReturn(Optional.of(signing));
 		when(attachmentMapperMock.copyOf(signedDocument)).thenReturn(copy);
 		doReturn("letter-1").when(spy).sendLetter(any(), any(), any(), any());
+		when(mailboxStatusServiceMock.checkMailboxStatus(MUNICIPALITY_ID, request.getRecipientPartyIds()))
+			.thenReturn(new MailboxStatusService.MailboxStatus(request.getRecipientPartyIds(), List.of()));
 
 		final var result = spy.sendSignedDocumentAsLetter(MUNICIPALITY_ID, messageId, request);
 
 		assertThat(result).isEqualTo("letter-1");
 		verify(signingRepositoryMock).findByMessageIdAndMessageMunicipalityId(messageId, MUNICIPALITY_ID);
 		verify(attachmentMapperMock).copyOf(signedDocument);
+		verify(mailboxStatusServiceMock).checkMailboxStatus(MUNICIPALITY_ID, request.getRecipientPartyIds());
 		verify(spy).sendLetter(MUNICIPALITY_ID, MessageType.DIGITAL_MAIL, expectedLetterRequest, List.of(copy));
 	}
 
@@ -845,5 +854,24 @@ class MessageServiceTest {
 			.hasMessageContaining("Message with id '%s' does not contain a document with a completed e-signing".formatted(messageId));
 
 		verify(signingRepositoryMock).findByMessageIdAndMessageMunicipalityId(messageId, MUNICIPALITY_ID);
+	}
+
+	@Test
+	void sendSignedDocumentAsLetter_recipientWithoutReachableMailbox() {
+		final var messageId = "msg-1";
+		final var request = TestDataFactory.createValidForwardDocumentRequest();
+		final var partyId = request.getRecipientPartyIds().getFirst();
+		final var signing = SigningEntity.create().withStatus("SIGNED").withAttachment(AttachmentEntity.create());
+		when(signingRepositoryMock.findByMessageIdAndMessageMunicipalityId(messageId, MUNICIPALITY_ID)).thenReturn(Optional.of(signing));
+		when(mailboxStatusServiceMock.checkMailboxStatus(MUNICIPALITY_ID, request.getRecipientPartyIds()))
+			.thenReturn(new MailboxStatusService.MailboxStatus(List.of(), List.of(new PrecheckUtil.UnreachableMailbox(partyId, "Sender not accepted by recipient"))));
+
+		assertThatThrownBy(() -> messageService.sendSignedDocumentAsLetter(MUNICIPALITY_ID, messageId, request))
+			.isInstanceOf(Problem.class)
+			.hasFieldOrPropertyWithValue("status", BAD_REQUEST)
+			.hasMessageContaining("The following recipients do not have a reachable digital mailbox: %s".formatted(partyId));
+
+		verify(signingRepositoryMock).findByMessageIdAndMessageMunicipalityId(messageId, MUNICIPALITY_ID);
+		verify(mailboxStatusServiceMock).checkMailboxStatus(MUNICIPALITY_ID, request.getRecipientPartyIds());
 	}
 }
