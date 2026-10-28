@@ -108,4 +108,17 @@ class MessageSignedDocumentLetterIT extends AbstractAppTest {
 			.withExpectedResponse(RESPONSE_FILE)
 			.sendRequestAndVerifyResponse();
 	}
+
+	@Test
+	void test04_sendSignedDocumentWhenRecipientHasNoDigitalMailbox() {
+		setupCall()
+			.withServicePath("/%s/messages/e-signing/%s/forward".formatted(MUNICIPALITY_ID, SIGNED_MESSAGE_ID))
+			.withHttpMethod(POST)
+			.withHeader(Identifier.HEADER_NAME, IDENTIFIER)
+			.withContentType(APPLICATION_JSON)
+			.withRequest(REQUEST_FILE)
+			.withExpectedResponseStatus(BAD_REQUEST)
+			.withExpectedResponse(RESPONSE_FILE)
+			.sendRequestAndVerifyResponse();
+	}
 }

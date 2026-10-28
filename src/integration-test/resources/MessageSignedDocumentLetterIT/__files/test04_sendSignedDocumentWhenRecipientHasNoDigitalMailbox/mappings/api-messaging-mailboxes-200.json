@@ -1,0 +1,31 @@
+{
+	"request": {
+		"method": "POST",
+		"url": "/api-messaging/2281/1234567890/mailboxes",
+		"headers": {
+			"Authorization": {
+				"equalTo": "Bearer 0000000000000000AAAAAAAAAAAAAAAA"
+			}
+		},
+		"bodyPatterns": [
+			{
+				"equalToJson": [
+					"67676767-6767-6767-6767-676767676767"
+				]
+			}
+		]
+	},
+	"response": {
+		"status": 200,
+		"headers": {
+			"Content-Type": "application/json"
+		},
+		"jsonBody": [
+			{
+				"partyId": "67676767-6767-6767-6767-676767676767",
+				"reason": "Sender not accepted by recipient",
+				"reachable": false
+			}
+		]
+	}
+}
