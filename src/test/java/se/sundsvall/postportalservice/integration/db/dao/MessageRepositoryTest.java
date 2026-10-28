@@ -24,7 +24,7 @@ import static se.sundsvall.postportalservice.integration.db.converter.MessageTyp
 @Sql(scripts = {
 	"/db/scripts/testdata.sql"
 })
-@DataJpaTest
+@DataJpaTest(showSql = false)
 @AutoConfigureTestDatabase(replace = NONE)
 @ActiveProfiles("junit")
 class MessageRepositoryTest {
