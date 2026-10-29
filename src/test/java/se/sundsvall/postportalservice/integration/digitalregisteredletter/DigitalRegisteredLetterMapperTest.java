@@ -13,7 +13,6 @@ import org.assertj.core.api.iterable.ThrowingExtractor;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.multipart.MultipartFile;
 import se.sundsvall.postportalservice.integration.db.AttachmentEntity;
@@ -23,6 +22,7 @@ import se.sundsvall.postportalservice.integration.db.RecipientEntity;
 
 import static java.time.ZoneOffset.UTC;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -135,7 +135,7 @@ class DigitalRegisteredLetterMapperTest {
 
 	@Test
 	void toMultipartFiles() throws SQLException {
-		final var blobMock = Mockito.mock(Blob.class);
+		final var blobMock = mock(Blob.class);
 		final var content = "content".getBytes();
 		when(blobMock.length()).thenReturn((long) 5);
 		when(blobMock.getBytes(1, 5)).thenReturn(content);
@@ -166,7 +166,7 @@ class DigitalRegisteredLetterMapperTest {
 
 	@Test
 	void toMultipartFile() throws SQLException, IOException {
-		final var blobMock = Mockito.mock(Blob.class);
+		final var blobMock = mock(Blob.class);
 		final var content = "content".getBytes();
 		when(blobMock.length()).thenReturn((long) 5);
 		when(blobMock.getBytes(1, 5)).thenReturn(content);
@@ -185,7 +185,7 @@ class DigitalRegisteredLetterMapperTest {
 
 	@Test
 	void createMultipartFile() throws Exception {
-		final var blobMock = Mockito.mock(Blob.class);
+		final var blobMock = mock(Blob.class);
 		final var content = "content".getBytes();
 		when(blobMock.length()).thenReturn((long) 5);
 		when(blobMock.getBytes(1, 5)).thenReturn(content);

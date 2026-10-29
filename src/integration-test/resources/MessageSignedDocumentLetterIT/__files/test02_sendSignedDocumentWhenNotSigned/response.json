@@ -1,0 +1,5 @@
+{
+	"title": "Bad Request",
+	"status": 400,
+	"detail": "Message with id 'b2cd4957-228f-46f0-a263-d4eae2eb5f52' does not contain a document with a completed e-signing"
+}

@@ -21,6 +21,7 @@ import se.sundsvall.dept44.problem.violations.Violation;
 import se.sundsvall.postportalservice.Application;
 import se.sundsvall.postportalservice.api.model.Address;
 import se.sundsvall.postportalservice.api.model.DigitalRegisteredLetterRequest;
+import se.sundsvall.postportalservice.api.model.ForwardDocumentRequest;
 import se.sundsvall.postportalservice.api.model.LetterRequest;
 import se.sundsvall.postportalservice.api.model.Recipient;
 import se.sundsvall.postportalservice.api.model.SmsCsvRequest;
@@ -41,6 +42,7 @@ import static org.springframework.web.reactive.function.BodyInserters.fromMultip
 import static se.sundsvall.postportalservice.TestDataFactory.INVALID_MUNICIPALITY_ID;
 import static se.sundsvall.postportalservice.TestDataFactory.MUNICIPALITY_ID;
 import static se.sundsvall.postportalservice.TestDataFactory.createValidDigitalRegisteredLetterRequest;
+import static se.sundsvall.postportalservice.TestDataFactory.createValidForwardDocumentRequest;
 import static se.sundsvall.postportalservice.TestDataFactory.createValidLetterRequest;
 import static se.sundsvall.postportalservice.TestDataFactory.createValidSmsCsvRequest;
 import static se.sundsvall.postportalservice.TestDataFactory.createValidSmsRequest;
@@ -562,6 +564,87 @@ class MessageResourceFailureTest {
 				assertThat(violation.field()).isEqualTo("cancelESigning.messageId");
 				assertThat(violation.message()).isEqualTo("not a valid UUID");
 			});
+	}
+
+	@Test
+	void forwardSignedDocumentAsADigitalLetter_BadHeaderContent() {
+		final var response = webTestClient.post()
+			.uri(uriBuilder -> uriBuilder.replacePath("/{municipalityId}/messages/e-signing/{messageId}/forward").build(MUNICIPALITY_ID, UUID.randomUUID().toString()))
+			.contentType(APPLICATION_JSON)
+			.bodyValue(createValidForwardDocumentRequest())
+			.exchange()
+			.expectStatus().isBadRequest()
+			.expectBody(Problem.class)
+			.returnResult()
+			.getResponseBody();
+
+		assertThat(response.getTitle()).isEqualTo("Bad Request");
+		assertThat(response.getDetail()).isEqualTo("Required header 'X-Sent-By' is not present.");
+	}
+
+	@Test
+	void forwardSignedDocumentAsADigitalLetter_BadPathContent() {
+		final var response = webTestClient.post()
+			.uri(uriBuilder -> uriBuilder.replacePath("/{municipalityId}/messages/e-signing/{messageId}/forward").build(INVALID_MUNICIPALITY_ID, "invalid"))
+			.header("X-Sent-By", "type=adAccount; joe01doe")
+			.contentType(APPLICATION_JSON)
+			.bodyValue(createValidForwardDocumentRequest())
+			.exchange()
+			.expectStatus().isBadRequest()
+			.expectBody(ConstraintViolationProblem.class)
+			.returnResult()
+			.getResponseBody();
+
+		assertThat(response.getTitle()).isEqualTo("Constraint Violation");
+		assertThat(response.getViolations()).hasSize(2).satisfiesExactlyInAnyOrder(
+			violation -> {
+				assertThat(violation.field()).isEqualTo("forwardSignedDocumentAsADigitalLetter.municipalityId");
+				assertThat(violation.message()).isEqualTo("not a valid municipality ID");
+			},
+			violation -> {
+				assertThat(violation.field()).isEqualTo("forwardSignedDocumentAsADigitalLetter.messageId");
+				assertThat(violation.message()).isEqualTo("not a valid UUID");
+			});
+	}
+
+	@ParameterizedTest(name = "{0}")
+	@MethodSource("forwardSignedDocumentAsADigitalLetterBadBodyContentProvider")
+	void forwardSignedDocumentAsADigitalLetter_BadBodyContent(String testDescription, ForwardDocumentRequest request, List<Violation> expectedViolations) {
+		final var response = webTestClient.post()
+			.uri(uriBuilder -> uriBuilder.replacePath("/{municipalityId}/messages/e-signing/{messageId}/forward").build(MUNICIPALITY_ID, UUID.randomUUID().toString()))
+			.header("X-Sent-By", "type=adAccount; joe01doe")
+			.contentType(APPLICATION_JSON)
+			.bodyValue(request)
+			.exchange()
+			.expectStatus().isBadRequest()
+			.expectBody(ConstraintViolationProblem.class)
+			.returnResult()
+			.getResponseBody();
+
+		assertThat(response.getTitle()).isEqualTo("Constraint Violation");
+		assertThat(response.getViolations()).usingRecursiveComparison().ignoringCollectionOrder().isEqualTo(expectedViolations);
+	}
+
+	private static Stream<Arguments> forwardSignedDocumentAsADigitalLetterBadBodyContentProvider() {
+		return Stream.of(
+			Arguments.of("Empty request", ForwardDocumentRequest.create(), List.of(
+				new Violation("subject", "must not be blank"),
+				new Violation("recipientPartyIds", "must not be empty"))),
+
+			Arguments.of("Request with blank subject and empty recipient list",
+				ForwardDocumentRequest.create()
+					.withSubject(" ")
+					.withRecipientPartyIds(emptyList()),
+				List.of(
+					new Violation("subject", "must not be blank"),
+					new Violation("recipientPartyIds", "must not be empty"))),
+
+			Arguments.of("Request with invalid party id",
+				ForwardDocumentRequest.create()
+					.withSubject("subject")
+					.withRecipientPartyIds(List.of("invalid")),
+				List.of(
+					new Violation("recipientPartyIds[0]", "not a valid UUID"))));
 	}
 
 }

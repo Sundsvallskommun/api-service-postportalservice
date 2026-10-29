@@ -4,10 +4,10 @@ import java.io.InputStream;
 import java.sql.Blob;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -19,7 +19,7 @@ class AttachmentMultipartFileTest {
 		final var name = "file";
 		final var contentType = "application/pdf";
 
-		final var blob = Mockito.mock(Blob.class);
+		final var blob = mock(Blob.class);
 		when(blob.length()).thenReturn(10L);
 		when(blob.getBytes(1, 10)).thenReturn(content);
 

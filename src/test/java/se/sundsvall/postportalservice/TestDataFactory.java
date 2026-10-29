@@ -6,6 +6,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import se.sundsvall.postportalservice.api.model.Address;
 import se.sundsvall.postportalservice.api.model.DigitalRegisteredLetterRequest;
+import se.sundsvall.postportalservice.api.model.ForwardDocumentRequest;
 import se.sundsvall.postportalservice.api.model.LetterCsvRequest;
 import se.sundsvall.postportalservice.api.model.LetterRequest;
 import se.sundsvall.postportalservice.api.model.Recipient;
@@ -70,6 +71,14 @@ public final class TestDataFactory {
 			.withRecipients(List.of(createValidRecipient()))
 			.withContentType("text/plain")
 			.withAddresses(List.of(createValidAddress()));
+	}
+
+	public static ForwardDocumentRequest createValidForwardDocumentRequest() {
+		return ForwardDocumentRequest.create()
+			.withSubject("Test Subject")
+			.withBody("body")
+			.withContentType("text/plain")
+			.withRecipientPartyIds(List.of("6d0773d6-3e7f-4552-81bc-f0007af95adf"));
 	}
 
 	public static SmsCsvRequest createValidSmsCsvRequest() {

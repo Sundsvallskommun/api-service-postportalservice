@@ -6,12 +6,12 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.multipart.MultipartFile;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -25,9 +25,9 @@ class NoDuplicateFileNamesConstraintValidatorTest {
 
 	@Test
 	void validMultipartFilesTest() {
-		var multipartFile1 = Mockito.mock(MultipartFile.class);
+		var multipartFile1 = mock(MultipartFile.class);
 		when(multipartFile1.getOriginalFilename()).thenReturn("file1.pdf");
-		var multipartFile2 = Mockito.mock(MultipartFile.class);
+		var multipartFile2 = mock(MultipartFile.class);
 		when(multipartFile2.getOriginalFilename()).thenReturn("file2.pdf");
 		var files = List.of(multipartFile1, multipartFile2);
 
@@ -38,9 +38,9 @@ class NoDuplicateFileNamesConstraintValidatorTest {
 
 	@Test
 	void duplicatedNamesTest() {
-		var multipartFile1 = Mockito.mock(MultipartFile.class);
+		var multipartFile1 = mock(MultipartFile.class);
 		when(multipartFile1.getOriginalFilename()).thenReturn("duplicate-name.pdf");
-		var multipartFile2 = Mockito.mock(MultipartFile.class);
+		var multipartFile2 = mock(MultipartFile.class);
 		when(multipartFile2.getOriginalFilename()).thenReturn("duplicate-name.pdf");
 		var files = List.of(multipartFile1, multipartFile2);
 
@@ -51,11 +51,11 @@ class NoDuplicateFileNamesConstraintValidatorTest {
 
 	@Test
 	void blankNameTest() {
-		var multipartFile = Mockito.mock(MultipartFile.class);
+		var multipartFile = mock(MultipartFile.class);
 		when(multipartFile.getOriginalFilename()).thenReturn("");
 		var files = List.of(multipartFile);
 
-		var constraintValidatorContextBuilder = Mockito.mock(ConstraintValidatorContext.ConstraintViolationBuilder.class);
+		var constraintValidatorContextBuilder = mock(ConstraintValidatorContext.ConstraintViolationBuilder.class);
 		when(context.buildConstraintViolationWithTemplate(any())).thenReturn(constraintValidatorContextBuilder);
 		when(constraintValidatorContextBuilder.addConstraintViolation()).thenReturn(context);
 

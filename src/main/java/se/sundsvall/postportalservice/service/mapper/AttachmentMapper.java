@@ -40,4 +40,14 @@ public final class AttachmentMapper {
 			.withContentString(contentString);
 	}
 
+	public AttachmentEntity copyOf(final AttachmentEntity source) {
+		final var contentString = convertBlobToBase64String(source.getContent());
+
+		return new AttachmentEntity()
+			.withFileName(source.getFileName())
+			.withContentType(source.getContentType())
+			.withContent(blobUtil.convertBase64ToBlob(contentString))
+			.withContentString(contentString);
+	}
+
 }
