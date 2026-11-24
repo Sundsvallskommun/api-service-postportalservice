@@ -25,6 +25,7 @@ public final class CsvUtil {
 	// Accepts either 12-digit personal identity number (with optional hyphen between digits 8 and 9) or 10-digit
 	// organization number (with optional hyphen between digits 6 and 7)
 	private static final String VALID_LETTER_ID_REGEX = "^(\\d{8}-?\\d{4}|\\d{6}-?\\d{4})$";
+	private static final char BYTE_ORDER_MARK = '\uFEFF';
 
 	private CsvUtil() {}
 
@@ -33,7 +34,7 @@ public final class CsvUtil {
 		final Set<String> invalidEntries = new HashSet<>();
 		boolean headerRead = false;
 
-		try (final var reader = new BufferedReader(new InputStreamReader(csvFile.getInputStream(), StandardCharsets.UTF_8))) {
+		try (final var reader = createReader(csvFile)) {
 			String line;
 			while ((line = reader.readLine()) != null) {
 				final var trimmed = line.trim();
@@ -89,7 +90,7 @@ public final class CsvUtil {
 		final Map<String, Integer> enterpriseIds = new LinkedHashMap<>();
 		boolean headerRead = false;
 
-		try (final var reader = new BufferedReader(new InputStreamReader(csvFile.getInputStream(), StandardCharsets.UTF_8))) {
+		try (final var reader = createReader(csvFile)) {
 			String line;
 			while ((line = reader.readLine()) != null) {
 				final var trimmed = line.trim();
@@ -137,5 +138,19 @@ public final class CsvUtil {
 	public record LetterCsvParseResult(
 		Map<String, Integer> privateIds,
 		Map<String, Integer> enterpriseIds) {
+	}
+
+	/**
+	 * Creates a reader for the CSV file and skips a leading BOM if there is one.
+	 * Saving CSV UTF-8 in Excel adds a BOM which would end up with the value of the
+	 * first row when read normally.
+	 */
+	private static BufferedReader createReader(final MultipartFile csvFile) throws IOException {
+		final var reader = new BufferedReader(new InputStreamReader(csvFile.getInputStream(), StandardCharsets.UTF_8));
+		reader.mark(1);
+		if (reader.read() != BYTE_ORDER_MARK) {
+			reader.reset();
+		}
+		return reader;
 	}
 }

@@ -239,4 +239,39 @@ class CsvUtilTest {
 			.hasMessageContaining("Internal Server Error: Could not read CSV file: %s".formatted(customExceptionMessage));
 	}
 
+	@ParameterizedTest
+	@ValueSource(strings = {
+		"/testfile/legalIds-bom.csv", "/testfile/legalIds-bom-without-header.csv"
+	})
+	void parseLetterCsvIgnoresBom(final String resourcePath) throws IOException {
+		final var csv = new String(getClass().getResourceAsStream(resourcePath).readAllBytes(), StandardCharsets.UTF_8);
+		var multipartFileMock = mock(MultipartFile.class);
+		when(multipartFileMock.getInputStream()).thenReturn(new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8)));
+
+		var result = CsvUtil.parseLetterCsv(multipartFileMock);
+
+		assertThat(csv).startsWith("\uFEFF");
+		assertCsvContent(result.privateIds());
+		assertThat(result.enterpriseIds()).isEmpty();
+	}
+
+	@ParameterizedTest
+	@ValueSource(strings = {
+		"/testfile/phoneNumbers-bom.csv", "/testfile/phoneNumbers-bom-without-header.csv"
+	})
+	void validateSmsCsvIgnoresBom(final String resourcePath) throws IOException {
+		final var csv = new String(getClass().getResourceAsStream(resourcePath).readAllBytes(), StandardCharsets.UTF_8);
+		var multipartFileMock = mock(MultipartFile.class);
+		when(multipartFileMock.getInputStream()).thenReturn(new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8)));
+
+		var result = CsvUtil.validateSmsCsv(multipartFileMock);
+
+		assertThat(csv).startsWith("\uFEFF");
+		assertThat(result.validEntries()).containsExactlyInAnyOrderEntriesOf(Map.of(
+			"+46701740610", 1,
+			"+46701740620", 1,
+			"+46701740630", 1));
+		assertThat(result.invalidEntries()).isEmpty();
+	}
+
 }
