@@ -7,7 +7,9 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 import org.springframework.web.multipart.MultipartFile;
 import se.sundsvall.dept44.problem.Problem;
 import se.sundsvall.postportalservice.util.LegalIdUtil;
@@ -108,7 +110,7 @@ public final class CsvUtil {
 				if (!trimmed.matches(VALID_LETTER_ID_REGEX)) {
 					throw Problem.valueOf(BAD_REQUEST,
 						"Invalid CSV format. CSV may contain an optional 'Personnummer' or 'Identitetsnummer' header. Each data row must contain either a 12-digit personal identity number (optional hyphen between digit 8 and 9) or a 10-digit organisation number (optional hyphen between digit 6 and 7). Invalid entry: "
-							+ trimmed);
+							+ toVisibleValue(trimmed));
 				}
 
 				final var normalized = trimmed.replace("-", "");
@@ -141,16 +143,36 @@ public final class CsvUtil {
 	}
 
 	/**
-	 * Creates a reader for the CSV file and skips a leading BOM if there is one.
-	 * Saving CSV UTF-8 in Excel adds a BOM which would end up with the value of the
-	 * first row when read normally.
+	 * Creates a UTF-8 reader for the CSV file, skipping a leading byte order mark (BOM) if present.
 	 */
 	private static BufferedReader createReader(final MultipartFile csvFile) throws IOException {
 		final var reader = new BufferedReader(new InputStreamReader(csvFile.getInputStream(), StandardCharsets.UTF_8));
-		reader.mark(1);
-		if (reader.read() != BYTE_ORDER_MARK) {
-			reader.reset();
+		try {
+			reader.mark(1);
+			if (reader.read() != BYTE_ORDER_MARK) {
+				reader.reset();
+			}
+			return reader;
+		} catch (final IOException e) {
+			reader.close();
+			throw e;
 		}
-		return reader;
 	}
+
+	private static String toVisibleValue(final String value) {
+		return value.codePoints()
+			.mapToObj(codePoint -> Optional.of(codePoint)
+				.filter(CsvUtil::isInvisible)
+				.map("\\u%04X"::formatted)
+				.orElseGet(() -> Character.toString(codePoint)))
+			.collect(Collectors.joining());
+	}
+
+	private static boolean isInvisible(final int codePoint) {
+		return codePoint != ' '
+			&& (Character.isISOControl(codePoint)
+				|| Character.isSpaceChar(codePoint)
+				|| Character.getType(codePoint) == Character.FORMAT);
+	}
+
 }

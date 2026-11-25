@@ -274,4 +274,14 @@ class CsvUtilTest {
 		assertThat(result.invalidEntries()).isEmpty();
 	}
 
+	@Test
+	void parseLetterCsvShowsInvisibleCharactersInErrorMessage() throws IOException {
+		final var csv = "Personnummer\n\u200B196806107832\n";
+		var multipartFileMock = mock(MultipartFile.class);
+		when(multipartFileMock.getInputStream()).thenReturn(new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8)));
+
+		assertThatThrownBy(() -> CsvUtil.parseLetterCsv(multipartFileMock))
+			.isInstanceOf(Problem.class)
+			.hasMessageContaining("Invalid entry: \\u200B196806107832");
+	}
 }
