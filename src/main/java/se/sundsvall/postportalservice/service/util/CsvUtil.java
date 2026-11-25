@@ -7,7 +7,9 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 import org.springframework.web.multipart.MultipartFile;
 import se.sundsvall.dept44.problem.Problem;
 import se.sundsvall.postportalservice.util.LegalIdUtil;
@@ -25,6 +27,7 @@ public final class CsvUtil {
 	// Accepts either 12-digit personal identity number (with optional hyphen between digits 8 and 9) or 10-digit
 	// organization number (with optional hyphen between digits 6 and 7)
 	private static final String VALID_LETTER_ID_REGEX = "^(\\d{8}-?\\d{4}|\\d{6}-?\\d{4})$";
+	private static final char BYTE_ORDER_MARK = '\uFEFF';
 
 	private CsvUtil() {}
 
@@ -33,7 +36,7 @@ public final class CsvUtil {
 		final Set<String> invalidEntries = new HashSet<>();
 		boolean headerRead = false;
 
-		try (final var reader = new BufferedReader(new InputStreamReader(csvFile.getInputStream(), StandardCharsets.UTF_8))) {
+		try (final var reader = createReader(csvFile)) {
 			String line;
 			while ((line = reader.readLine()) != null) {
 				final var trimmed = line.trim();
@@ -89,7 +92,7 @@ public final class CsvUtil {
 		final Map<String, Integer> enterpriseIds = new LinkedHashMap<>();
 		boolean headerRead = false;
 
-		try (final var reader = new BufferedReader(new InputStreamReader(csvFile.getInputStream(), StandardCharsets.UTF_8))) {
+		try (final var reader = createReader(csvFile)) {
 			String line;
 			while ((line = reader.readLine()) != null) {
 				final var trimmed = line.trim();
@@ -107,7 +110,7 @@ public final class CsvUtil {
 				if (!trimmed.matches(VALID_LETTER_ID_REGEX)) {
 					throw Problem.valueOf(BAD_REQUEST,
 						"Invalid CSV format. CSV may contain an optional 'Personnummer' or 'Identitetsnummer' header. Each data row must contain either a 12-digit personal identity number (optional hyphen between digit 8 and 9) or a 10-digit organisation number (optional hyphen between digit 6 and 7). Invalid entry: "
-							+ trimmed);
+							+ toVisibleValue(trimmed));
 				}
 
 				final var normalized = trimmed.replace("-", "");
@@ -138,4 +141,38 @@ public final class CsvUtil {
 		Map<String, Integer> privateIds,
 		Map<String, Integer> enterpriseIds) {
 	}
+
+	/**
+	 * Creates a UTF-8 reader for the CSV file, skipping a leading byte order mark (BOM) if present.
+	 */
+	private static BufferedReader createReader(final MultipartFile csvFile) throws IOException {
+		final var reader = new BufferedReader(new InputStreamReader(csvFile.getInputStream(), StandardCharsets.UTF_8));
+		try {
+			reader.mark(1);
+			if (reader.read() != BYTE_ORDER_MARK) {
+				reader.reset();
+			}
+			return reader;
+		} catch (final IOException e) {
+			reader.close();
+			throw e;
+		}
+	}
+
+	private static String toVisibleValue(final String value) {
+		return value.codePoints()
+			.mapToObj(codePoint -> Optional.of(codePoint)
+				.filter(CsvUtil::isInvisible)
+				.map("\\u%04X"::formatted)
+				.orElseGet(() -> Character.toString(codePoint)))
+			.collect(Collectors.joining());
+	}
+
+	private static boolean isInvisible(final int codePoint) {
+		return codePoint != ' '
+			&& (Character.isISOControl(codePoint)
+				|| Character.isSpaceChar(codePoint)
+				|| Character.getType(codePoint) == Character.FORMAT);
+	}
+
 }
